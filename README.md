@@ -22,3 +22,10 @@ To use the action, add the following step to your workflow:
       {"title": "New Features 🎉", "label": "feature"},
       {"title": "Bugfixes 🛠", "label": "bugfix"}
     ]'
+
+
+To build
+npm install
+npm run build
+
+commit action.yml and dist/index.js

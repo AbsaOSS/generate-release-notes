@@ -1494,13 +1494,17 @@ async function fetchLatestRelease(octokit, owner, repo) {
 }
 
 async function run() {
+    const repoOwner = core.getInput('repo_owner');
+    const repoName = core.getInput('repo_name');
+    const tagName = core.getInput('tag_name');
+    const chapters = core.getInput('chapters');
+
     const githubToken = process.env.GITHUB_TOKEN;
-    const repoOwner = process.env.REPOSITORY_OWNER;
-    const repoName = process.env.REPOSITORY_NAME;
+
 
     // Validate environment variables and arguments
-    if (!githubToken || !repoOwner || !repoName) {
-        console.error("Missing required environment variables or arguments.");
+    if (!githubToken || !repoOwner || !repoName || !tagName) {
+        console.error("Missing required inputs or environment variables.");
         process.exit(1);
     }
 
