@@ -180,7 +180,7 @@ async function run() {
 
             // Check for issues without release notes
             if (!foundReleaseNotes || releaseNotes.startsWith('x#')) {
-                issuesWithoutReleaseNotes += releaseNotes.replace(/^x#/, 'x') + "\n\n";
+                issuesWithoutReleaseNotes += releaseNotes.replace(/^x#/, '#') + "\n\n";
             }
         }
 
