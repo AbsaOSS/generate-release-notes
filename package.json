@@ -3,5 +3,11 @@
   "version": "1.0.0",
   "dependencies": {
     "@octokit/core": "^5.0.2"
+  },
+  "devDependencies": {
+    "@vercel/ncc": "^0.33.0"
+  },
+  "scripts": {
+    "build": "ncc build scripts/generate-release-notes.js -o dist"
   }
 }
