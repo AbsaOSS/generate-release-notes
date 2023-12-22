@@ -1,4 +1,4 @@
-const { Octokit } = require("@octokit/core");
+const { Octokit } = require("@octokit/rest");
 const core = require('@actions/core');
 
 // Fetch the latest release
