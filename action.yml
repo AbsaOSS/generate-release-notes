@@ -1,0 +1,25 @@
+name: 'Generate Release Notes'
+description: 'Automatically generates release notes for a given release tag, categorized into chapters based on labels.'
+inputs:
+  github_token:
+    description: 'GitHub token needed to access repository data.'
+    required: true
+  repo_owner:
+    description: 'The owner of the repository for which to generate notes.'
+    required: true
+  repo_name:
+    description: 'The name of the repository for which to generate notes.'
+    required: true
+  tag_name:
+    description: 'The tag for the release for which to generate notes.'
+    required: true
+  chapters:
+    description: 'JSON string defining chapters and corresponding labels for categorization.'
+    required: true
+branding:
+  icon: 'notebook'
+  color: 'yellow'
+
+runs:
+  using: 'node12'
+  main: 'scripts/generate-release-notes.js'

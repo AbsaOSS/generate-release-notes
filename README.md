@@ -1,2 +1,24 @@
-# generate-release-notes
-Efficiently automate your release note generation with 'generate-release-notes'. This tool scans your target GitHub repository's issues, sorting and organizing them into well-formatted release notes. Perfect for maintaining a streamlined and organized release process.
+# Generate Release Notes Action
+
+TODO - update the file content after implementation
+
+
+This GitHub Action automatically generates release notes for a given release tag, categorizing contributions into user-defined chapters based on labels.
+
+## Usage
+
+To use the action, add the following step to your workflow:
+
+```yaml
+- name: Generate Release Notes
+  uses: AbsaOSS/generate-release-notes@v1-notes
+  with:
+    github_token: ${{ secrets.GITHUB_TOKEN }}
+    tag_name: ${{ steps.set_tag.outputs.tag }}
+    release_name: v${{ steps.set_tag.outputs.tag }}
+    chapters: '[
+      {"title": "Breaking Changes 💥", "label": "breaking-change"},
+      {"title": "New Features 🎉", "label": "enhancement"},
+      {"title": "New Features 🎉", "label": "feature"},
+      {"title": "Bugfixes 🛠", "label": "bugfix"}
+    ]'
