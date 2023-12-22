@@ -4,6 +4,7 @@ const core = require('@actions/core');
 // Fetch the latest release
 async function fetchLatestRelease(octokit, owner, repo) {
     try {
+        console.log(`Owner: ${owner}, Repo: ${repo}`);
         const response = await octokit.rest.repos.getLatestRelease({
             owner,
             repo
@@ -21,7 +22,6 @@ async function run() {
     const chapters = core.getInput('chapters');
 
     const githubToken = process.env.GITHUB_TOKEN;
-
 
     // Validate environment variables and arguments
     if (!githubToken || !repoOwner || !repoName || !tagName) {
