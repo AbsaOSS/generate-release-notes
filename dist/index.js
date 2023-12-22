@@ -30666,8 +30666,9 @@ async function fetchLatestRelease(octokit, owner, repo) {
 }
 
 async function run() {
-    const repoOwner = core.getInput('repo_owner');
-    const repoName = core.getInput('repo_name');
+    const repoFullName = core.getInput('repo');
+    const [repoOwner, repoName] = repoFullName.split('/');
+
     const tagName = core.getInput('tag_name');
     const chapters = core.getInput('chapters');
 

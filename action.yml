@@ -1,11 +1,8 @@
 name: 'Generate Release Notes'
 description: 'Automatically generates release notes for a given release tag, categorized into chapters based on labels.'
 inputs:
-  repo_owner:
-    description: 'The owner of the repository for which to generate notes.'
-    required: true
-  repo_name:
-    description: 'The name of the repository for which to generate notes.'
+  repo:
+    description: 'The GitHub repository in the format "owner/name".'
     required: true
   tag_name:
     description: 'The tag for the release for which to generate notes.'
