@@ -157,6 +157,7 @@ async function run() {
         // Initialize variables for each chapter
         const chapterContents = new Map(Array.from(chaptersMap.keys()).map(label => [label, '']));
         let issuesWithoutReleaseNotes = '';
+        let prsWithoutLinkedIssue = '';
 
         // Categorize issues and PRs
         for (const issue of closedIssuesResponse.data) {
