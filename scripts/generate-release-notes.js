@@ -106,18 +106,6 @@ async function isPrLinkedToIssue(octokit, prNumber, repoOwner, repoName) {
     return /#\d+/.test(pr.data.body);
 }
 
-// Function to prepare release notes
-async function prepareReleaseNotes(breakingChanges, newFeatures, bugfixes, noLabels, issuesWithoutReleaseNotes, prsWithoutLinkedIssue, changelog) {
-    let releaseNotes = "### Breaking Changes 💥\n" + (breakingChanges || "No breaking changes detected.") + "\n\n";
-    releaseNotes += "### New Features 🎉\n" + (newFeatures || "No new features detected.") + "\n\n";
-    releaseNotes += "### Bugfixes 🛠\n" + (bugfixes || "No bugfixes detected.") + "\n\n";
-    releaseNotes += "### Issues without defined labels\n" + (noLabels || "All issues have defined labels.") + "\n\n";
-    releaseNotes += "### Issues without Release Notes\n" + (issuesWithoutReleaseNotes || "All issues have release notes.") + "\n\n";
-    releaseNotes += "### PRs without Linked Issue\n" + (prsWithoutLinkedIssue || "All PRs are linked to issues.") + "\n\n";
-    releaseNotes += "#### Full Changelog : \n" + changelog;
-    return releaseNotes;
-}
-
 // Function to parse chapters JSON and create a map
 function parseChaptersJson(chaptersJson) {
     try {
@@ -168,6 +156,7 @@ async function run() {
 
         // Initialize variables for each chapter
         const chapterContents = new Map(Array.from(chaptersMap.keys()).map(label => [label, '']));
+        let issuesWithoutReleaseNotes = '';
 
         // Categorize issues and PRs
         for (const issue of closedIssuesResponse.data) {
