@@ -30760,15 +30760,15 @@ async function isPrLinkedToIssue(octokit, prNumber, repoOwner, repoName) {
 function parseChaptersJson(chaptersJson) {
     try {
         const chaptersArray = JSON.parse(chaptersJson);
-        const chaptersMap = new Map();
+        const titlesToLabelsMap = new Map();
         chaptersArray.forEach(chapter => {
-            if (chaptersMap.has(chapter.label)) {
-                chaptersMap.get(chapter.label).push(chapter.title);
+            if (titlesToLabelsMap.has(chapter.title)) {
+                titlesToLabelsMap.get(chapter.title).push(chapter.label);
             } else {
-                chaptersMap.set(chapter.label, [chapter.title]);
+                titlesToLabelsMap.set(chapter.title, [chapter.label]);
             }
         });
-        return chaptersMap;
+        return titlesToLabelsMap;
     } catch (error) {
         throw new Error(`Error parsing chapters JSON: ${error.message}`);
     }
@@ -30779,7 +30779,7 @@ async function run() {
     const [repoOwner, repoName] = repoFullName.split('/');
     const tagName = core.getInput('tag_name');
     const chaptersJson = core.getInput('chapters');
-    const chaptersMap = parseChaptersJson(chaptersJson);
+    const titlesToLabelsMap = parseChaptersJson(chaptersJson);
 
     const githubToken = process.env.GITHUB_TOKEN;
 
@@ -30804,26 +30804,29 @@ async function run() {
             since: new Date(latestRelease.data.created_at)
         });
 
+        // Reverse the order of issues (from oldest to newest)
+        const closedIssues = closedIssuesResponse.data.reverse();
+
         // Initialize variables for each chapter
-        const chapterContents = new Map(Array.from(chaptersMap.keys()).map(label => [label, '']));
+        const chapterContents = new Map(Array.from(titlesToLabelsMap.keys()).map(label => [label, '']));
         let issuesWithoutReleaseNotes = '';
         let prsWithoutLinkedIssue = '';
 
         // Categorize issues and PRs
-        for (const issue of closedIssuesResponse.data) {
+        for (const issue of closedIssues) {
             const releaseNotes = await getReleaseNotesFromComments(octokit, issue.number, issue.title, issue.user.login, issue.assignees, repoOwner, repoName);
 
-            for (const label of issue.labels.map(l => l.name)) {
-                if (chaptersMap.has(label)) {
-                    chaptersMap.get(label).forEach(title => {
-                        chapterContents.set(label, chapterContents.get(label) + releaseNotes);
-                    });
+            let foundReleaseNotes = false;
+            titlesToLabelsMap.forEach((labels, title) => {
+                if (labels.some(label => issue.labels.map(l => l.name).includes(label))) {
+                    chapterContents.set(title, chapterContents.get(title) + releaseNotes);
+                    foundReleaseNotes = true;
                 }
-            }
+            });
 
             // Check for issues without release notes
-            if (releaseNotes.startsWith('x#')) {
-                issuesWithoutReleaseNotes += releaseNotes.substring(1); // Remove 'x#' marker
+            if (!foundReleaseNotes || releaseNotes.startsWith('x#')) {
+                issuesWithoutReleaseNotes += releaseNotes.startsWith('x#') ? releaseNotes.substring(1) : releaseNotes; // Remove 'x#' marker if present
             }
         }
 
@@ -30850,10 +30853,9 @@ async function run() {
 
         // Prepare Release Notes using chapterContents
         let releaseNotes = '';
-        chaptersMap.forEach((titles, label) => {
-            titles.forEach(title => {
-                releaseNotes += `### ${title}\n` + (chapterContents.get(label) || `No ${title.toLowerCase()} detected.`) + "\n\n";
-            });
+        titlesToLabelsMap.forEach((_, title) => {
+            const content = chapterContents.get(title);
+            releaseNotes += `### ${title}\n` + (content && content.trim() !== '' ? content : "No entries detected.") + "\n\n";
         });
 
         releaseNotes += "### Issues without Release Notes\n" + (issuesWithoutReleaseNotes || "All issues have release notes.") + "\n\n";
