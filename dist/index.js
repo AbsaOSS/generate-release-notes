@@ -30819,14 +30819,14 @@ async function run() {
             let foundReleaseNotes = false;
             titlesToLabelsMap.forEach((labels, title) => {
                 if (labels.some(label => issue.labels.map(l => l.name).includes(label))) {
-                    chapterContents.set(title, chapterContents.get(title) + releaseNotes);
+                    chapterContents.set(title, chapterContents.get(title) + releaseNotes + "\n\n");
                     foundReleaseNotes = true;
                 }
             });
 
             // Check for issues without release notes
             if (!foundReleaseNotes || releaseNotes.startsWith('x#')) {
-                issuesWithoutReleaseNotes += releaseNotes.startsWith('x#') ? releaseNotes.substring(1) : releaseNotes; // Remove 'x#' marker if present
+                issuesWithoutReleaseNotes += releaseNotes.substring(1) + "\n\n";
             }
         }
 
