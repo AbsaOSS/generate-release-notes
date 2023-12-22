@@ -1,4 +1,5 @@
 const { Octokit } = require("@octokit/core");
+const core = require('@actions/core');
 
 // Fetch the latest release
 async function fetchLatestRelease(octokit, owner, repo) {
