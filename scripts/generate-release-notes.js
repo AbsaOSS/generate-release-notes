@@ -154,8 +154,12 @@ async function run() {
             since: new Date(latestRelease.data.created_at)
         });
 
+        // Filter out pull requests and reverse the order of issues
+        const closedIssuesOnlyIssues = closedIssuesResponse.data.filter(issue => !issue.pull_request).reverse();
+        console.log(`Found ${closedIssuesOnlyIssues.length} closed issues (only Issues) since last release`);
+
         // Reverse the order of issues (from oldest to newest)
-        const closedIssues = closedIssuesResponse.data.reverse();
+        const closedIssues = closedIssuesOnlyIssues.reverse();
 
         // Initialize variables for each chapter
         const chapterContents = new Map(Array.from(titlesToLabelsMap.keys()).map(label => [label, '']));
