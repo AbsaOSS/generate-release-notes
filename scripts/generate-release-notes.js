@@ -3,10 +3,15 @@ const core = require('@actions/core');
 
 // Fetch the latest release
 async function fetchLatestRelease(octokit, owner, repo) {
-    return await octokit.rest.repos.getLatestRelease({
-        owner,
-        repo
-    });
+    try {
+        const response = await octokit.rest.repos.getLatestRelease({
+            owner,
+            repo
+        });
+        return response;
+    } catch (error) {
+        throw new Error(`Error fetching latest release: ${error.message}`);
+    }
 }
 
 async function run() {
