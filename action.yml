@@ -19,6 +19,7 @@ inputs:
 branding:
   icon: 'notebook'
   color: 'yellow'
+
 runs:
   using: 'node12'
-  main: 'dist/generate-release-notes.js'
+  main: 'dist/index.js'
