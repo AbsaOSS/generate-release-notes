@@ -1496,7 +1496,7 @@ async function fetchLatestRelease(octokit, owner, repo) {
 async function run() {
     const githubToken = process.env.GITHUB_TOKEN;
     const repoOwner = process.env.REPOSITORY_OWNER;
-    const repoName = process.REPOSITORY_NAME;
+    const repoName = process.env.REPOSITORY_NAME;
 
     // Validate environment variables and arguments
     if (!githubToken || !repoOwner || !repoName) {
