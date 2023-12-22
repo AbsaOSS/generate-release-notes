@@ -1,0 +1,7 @@
+{
+  "name": "generate-release-notes_initial",
+  "version": "1.0.0",
+  "dependencies": {
+    "@octokit/core": "^5.0.2"
+  }
+}
