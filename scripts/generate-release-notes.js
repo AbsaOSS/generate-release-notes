@@ -44,7 +44,7 @@ async function getIssueContributors(issueAssignees, commitAuthors) {
 
 async function getPRCommitAuthors(octokit, repoOwner, repoName, relatedPRs) {
     let commitAuthors = new Set();
-    for (const event of relatedPRs) {
+    for (const event of relatedPRs.data) {
         if (event.event === 'cross-referenced' && event.source && event.source.issue.pull_request) {
             const prNumber = event.source.issue.number;
             const commits = await octokit.rest.pulls.listCommits({
