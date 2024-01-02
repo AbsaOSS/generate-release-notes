@@ -30,9 +30,9 @@ async function getRelatedPRsForIssue(octokit, issueNumber, repoOwner, repoName) 
     const pullRequestEvents2 = relatedPRs.data.filter(event => event.source && event.source.type === 'pull_request');
 
     console.log(`Found ${pullRequestEvents.length} related PRs for issue #${issueNumber}`);
-    console.log(`Found #2 ${pullRequestEvents.length} related PRs for issue #${issueNumber}`);
+    console.log(`Found #2 ${pullRequestEvents2.length} related PRs for issue #${issueNumber}`);
     console.log("Linked pull requests:", pullRequestEvents);
-    console.log("Linked pull requests #2:", pullRequestEvents);
+    console.log("Linked pull requests #2:", pullRequestEvents2);
     return pullRequestEvents;
 }
 
