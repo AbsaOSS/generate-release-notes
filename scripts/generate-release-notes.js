@@ -256,10 +256,10 @@ async function run() {
             releaseNotes += `### ${title}\n` + (content && content.trim() !== '' ? content : "No entries detected.") + "\n\n";
         });
 
-        releaseNotes += "### Issues without Pull Request\n" + (issuesWithoutPR || "All issues linked to a Pull Request.") + "\n\n";
-        releaseNotes += "### Issues without User Defined Labels\n" + (issuesWithoutUserLabels || "All issues contain at least one of user defined labels.") + "\n\n";
-        releaseNotes += "### Issues without Release Notes\n" + (issuesWithoutReleaseNotes || "All issues have release notes.") + "\n\n";
-        releaseNotes += "### PRs without Linked Issue\n" + (prsWithoutLinkedIssue || "All PRs are linked to issues.") + "\n\n";
+        releaseNotes += "###Warning: Issues without Pull Request\n" + (issuesWithoutPR || "All issues linked to a Pull Request.") + "\n\n";
+        releaseNotes += "###Warning: Issues without User Defined Labels\n" + (issuesWithoutUserLabels || "All issues contain at least one of user defined labels.") + "\n\n";
+        releaseNotes += "###Warning: Issues without Release Notes\n" + (issuesWithoutReleaseNotes || "All issues have release notes.") + "\n\n";
+        releaseNotes += "###Warning: PRs without Linked Issue\n" + (prsWithoutLinkedIssue || "All PRs are linked to issues.") + "\n\n";
         releaseNotes += "#### Full Changelog\n" + changelogUrl;
 
         console.log('Release Notes:', releaseNotes);
