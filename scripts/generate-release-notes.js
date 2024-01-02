@@ -92,11 +92,11 @@ async function getIssueComments(octokit, issueNumber, repoOwner, repoName) {
     });
 }
 
-async function getReleaseNotesFromComments(octokit, issueNumber, issueTitle, issueAssignees, repoOwner, repoName, relatedPRs) {
+async function getReleaseNotesFromComments(octokit, issueNumber, issueTitle, issueAssignees, repoOwner, repoName, relatedPRLinks) {
     console.log(`Fetching release notes from comments for issue #${issueNumber}`);
     const comments = await getIssueComments(octokit, issueNumber, repoOwner, repoName);
 
-    let commitAuthors = await getPRCommitAuthors(octokit, repoOwner, repoName, relatedPRs);
+    let commitAuthors = await getPRCommitAuthors(octokit, repoOwner, repoName, relatedPRLinks);
     let contributors = await getIssueContributors(issueAssignees, commitAuthors);
 
     for (const comment of comments.data) {
@@ -104,13 +104,13 @@ async function getReleaseNotesFromComments(octokit, issueNumber, issueTitle, iss
             const noteContent = comment.body.replace(/^release notes\s*/i, '').trim();
             console.log(`Found release notes in comments for issue #${issueNumber}`);
             const contributorsList = Array.from(contributors).join(', ');
-            return `#${issueNumber} ${issueTitle} implemented by ${contributorsList} in ${prLinks}\n${noteContent.replace(/^\s*[\r\n]/gm, '').replace(/^/gm, '  ')}\n`;
+            return `#${issueNumber} ${issueTitle} implemented by ${contributorsList} in ${relatedPRLinks}\n${noteContent.replace(/^\s*[\r\n]/gm, '').replace(/^/gm, '  ')}\n`;
         }
     }
 
     console.log(`No specific release notes found in comments for issue #${issueNumber}`);
     const contributorsList = Array.from(contributors).join(', ');
-    return `x#${issueNumber} ${issueTitle} implemented by ${contributorsList} in ${prLinks}\n`;
+    return `x#${issueNumber} ${issueTitle} implemented by ${contributorsList} in ${relatedPRLinks}\n`;
 }
 
 async function isPrLinkedToIssue(octokit, prNumber, repoOwner, repoName) {
