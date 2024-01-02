@@ -10,6 +10,11 @@ inputs:
   chapters:
     description: 'JSON string defining chapters and corresponding labels for categorization.'
     required: true
+  warnings:
+    description: 'Print warning chapter if true.'
+    required: false
+    default: 'false'
+
 branding:
   icon: 'notebook'
   color: 'yellow'
