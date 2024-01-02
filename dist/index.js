@@ -30757,6 +30757,9 @@ async function getReleaseNotesFromComments(octokit, issueNumber, issueTitle, iss
             const noteContent = comment.body.replace(/^release notes\s*/i, '').trim();
             console.log(`Found release notes in comments for issue #${issueNumber}`);
             const contributorsList = Array.from(contributors).join(', ');
+
+            console.log(`Related PRs (string) for issue #${issueNumber}: ${relatedPRLinksString}`);
+            console.log(`Related PRs (Set) for issue #${issueNumber}: ${relatedPRs.data}`);
             if (relatedPRs.data.length === 0) {
                 return `#${issueNumber} ${issueTitle} implemented by ${contributorsList}\n${noteContent.replace(/^\s*[\r\n]/gm, '').replace(/^/gm, '  ')}\n`;
             } else {
@@ -30906,10 +30909,10 @@ async function run() {
             releaseNotes += `### ${title}\n` + (content && content.trim() !== '' ? content : "No entries detected.") + "\n\n";
         });
 
-        releaseNotes += "###Warning: Issues without Pull Request\n" + (issuesWithoutPR || "All issues linked to a Pull Request.") + "\n\n";
-        releaseNotes += "###Warning: Issues without User Defined Labels\n" + (issuesWithoutUserLabels || "All issues contain at least one of user defined labels.") + "\n\n";
-        releaseNotes += "###Warning: Issues without Release Notes\n" + (issuesWithoutReleaseNotes || "All issues have release notes.") + "\n\n";
-        releaseNotes += "###Warning: PRs without Linked Issue\n" + (prsWithoutLinkedIssue || "All PRs are linked to issues.") + "\n\n";
+        releaseNotes += "### Warning: Issues without Pull Request\n" + (issuesWithoutPR || "All issues linked to a Pull Request.") + "\n\n";
+        releaseNotes += "### Warning: Issues without User Defined Labels\n" + (issuesWithoutUserLabels || "All issues contain at least one of user defined labels.") + "\n\n";
+        releaseNotes += "### Warning: Issues without Release Notes\n" + (issuesWithoutReleaseNotes || "All issues have release notes.") + "\n\n";
+        releaseNotes += "### Warning: PRs without Linked Issue\n" + (prsWithoutLinkedIssue || "All PRs are linked to issues.") + "\n\n";
         releaseNotes += "#### Full Changelog\n" + changelogUrl;
 
         console.log('Release Notes:', releaseNotes);
