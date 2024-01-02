@@ -30663,7 +30663,8 @@ async function fetchLatestRelease(octokit, owner, repo) {
     }
 }
 
-async function getReleaseNotesFromComments(octokit, issueNumber, issueTitle, issueAuthor, issueAssignees, repoOwner, repoName) {
+
+async function getRelatedPRsForIssue(octokit, issueNumber, repoOwner, repoName) {
     console.log(`Fetching related PRs for issue #${issueNumber}`);
     const relatedPRs = await octokit.rest.issues.listEventsForTimeline({
         owner: repoOwner,
@@ -30678,9 +30679,19 @@ async function getReleaseNotesFromComments(octokit, issueNumber, issueTitle, iss
 
     console.log(`Found ${prLinks.length} related PRs for issue #${issueNumber}`);
     console.log(`Related PRs for issue #${issueNumber}: ${prLinks}`);
+    return prLinks;
+}
 
+async function getIssueContributors(issueAssignees, commitAuthors) {
+    return  new Set([
+        ...issueAssignees.map(assignee => '@' + assignee.login),
+        ...commitAuthors
+    ]);
+}
+
+async function getPRCommitAuthors(octokit, repoOwner, repoName, relatedPRs) {
     let commitAuthors = new Set();
-    for (const event of relatedPRs.data) {
+    for (const event of relatedPRs) {
         if (event.event === 'cross-referenced' && event.source && event.source.issue.pull_request) {
             const prNumber = event.source.issue.number;
             const commits = await octokit.rest.pulls.listCommits({
@@ -30720,17 +30731,23 @@ async function getReleaseNotesFromComments(octokit, issueNumber, issueTitle, iss
         }
     }
 
-    let contributors = new Set([
-        ...issueAssignees.map(assignee => '@' + assignee.login),
-        ...commitAuthors
-    ]);
+    return commitAuthors;
+}
 
-    console.log(`Fetching release notes from comments for issue #${issueNumber}`);
-    const comments = await octokit.rest.issues.listComments({
+async function getIssueComments(octokit, issueNumber, repoOwner, repoName) {
+    return await octokit.rest.issues.listComments({
         owner: repoOwner,
         repo: repoName,
         issue_number: issueNumber
     });
+}
+
+async function getReleaseNotesFromComments(octokit, issueNumber, issueTitle, issueAssignees, repoOwner, repoName, relatedPRs) {
+    console.log(`Fetching release notes from comments for issue #${issueNumber}`);
+    const comments = await getIssueComments(octokit, issueNumber, repoOwner, repoName);
+
+    let commitAuthors = await getPRCommitAuthors(octokit, repoOwner, repoName, relatedPRs);
+    let contributors = await getIssueContributors(issueAssignees, commitAuthors);
 
     for (const comment of comments.data) {
         if (comment.body.toLowerCase().startsWith('release notes')) {
@@ -30807,20 +30824,17 @@ async function run() {
         const closedIssuesOnlyIssues = closedIssuesResponse.data.filter(issue => !issue.pull_request).reverse();
         console.log(`Found ${closedIssuesOnlyIssues.length} closed issues (only Issues) since last release`);
 
-        // Reverse the order of issues (from oldest to newest)
-        // TODO - check of ordering is needed in this code
-        // const closedIssues = closedIssuesOnlyIssues.reverse();
-        const closedIssues = closedIssuesOnlyIssues;
-
         // Initialize variables for each chapter
         const chapterContents = new Map(Array.from(titlesToLabelsMap.keys()).map(label => [label, '']));
         let issuesWithoutReleaseNotes = '';
         let issuesWithoutUserLabels = '';
+        let issuesWithoutPR = '';
         let prsWithoutLinkedIssue = '';
 
         // Categorize issues and PRs
-        for (const issue of closedIssues) {
-            const releaseNotesRaw = await getReleaseNotesFromComments(octokit, issue.number, issue.title, issue.user.login, issue.assignees, repoOwner, repoName);
+        for (const issue of closedIssuesOnlyIssues) {
+            const relatedPRs = await getRelatedPRsForIssue(octokit, issue.number, repoOwner, repoName);
+            const releaseNotesRaw = await getReleaseNotesFromComments(octokit, issue.number, issue.title, issue.assignees, repoOwner, repoName, relatedPRs);
             const releaseNotes = releaseNotesRaw.replace(/^x#/, '#');
 
             // Check for issues without release notes
@@ -30838,7 +30852,12 @@ async function run() {
 
             // Check for issues without user defined labels
             if (!foundUserLabels) {
-                issuesWithoutUserLabels += releaseNotes.replace(/^x#/, '#') + "\n\n";
+                issuesWithoutUserLabels += releaseNotes + "\n\n";
+            }
+
+            // Check for issues without PR
+            if (!relatedPRs.length) {
+                issuesWithoutPR += releaseNotes + "\n\n";
             }
         }
 
@@ -30870,10 +30889,11 @@ async function run() {
             releaseNotes += `### ${title}\n` + (content && content.trim() !== '' ? content : "No entries detected.") + "\n\n";
         });
 
+        releaseNotes += "### Issues without Pull Request\n" + (issuesWithoutPR || "All issues linked to a Pull Request.") + "\n\n";
         releaseNotes += "### Issues without Labels\n" + (issuesWithoutUserLabels || "All issues contain at least one of user defined labels.") + "\n\n";
         releaseNotes += "### Issues without Release Notes\n" + (issuesWithoutReleaseNotes || "All issues have release notes.") + "\n\n";
         releaseNotes += "### PRs without Linked Issue\n" + (prsWithoutLinkedIssue || "All PRs are linked to issues.") + "\n\n";
-        releaseNotes += "#### Full Changelog : \n" + changelogUrl;
+        releaseNotes += "#### Full Changelog\n" + changelogUrl;
 
         console.log('Release Notes:', releaseNotes);
 
