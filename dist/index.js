@@ -30672,21 +30672,24 @@ async function getRelatedPRsForIssue(octokit, issueNumber, repoOwner, repoName) 
         issue_number: issueNumber
     });
 
-    const prLinks = relatedPRs.data
-        .filter(event => event.event === 'cross-referenced' && event.source && event.source.issue.pull_request)
-        .map(event => `[#${event.source.issue.number}](${event.source.issue.html_url})`)
-        .join(', ');
-
-    console.log(`Found ${prLinks.length} related PRs for issue #${issueNumber}`);
-    console.log(`Related PRs for issue #${issueNumber}: ${prLinks}`);
-    return prLinks;
+    console.log(`Found ${relatedPRs.data.length} related PRs for issue #${issueNumber}`);
+    return relatedPRs;
 }
 
 async function getIssueContributors(issueAssignees, commitAuthors) {
-    return  new Set([
-        ...issueAssignees.map(assignee => '@' + assignee.login),
-        ...commitAuthors
-    ]);
+    // Map the issueAssignees to the required format
+    const assignees = issueAssignees.map(assignee => '@' + assignee.login);
+
+    // Combine the assignees and commit authors
+    const combined = [...assignees, ...commitAuthors];
+
+    // Check if the combined array is empty
+    if (combined.length === 0) {
+        return new Set(["\"Missing Assignee or Contributor\""]);
+    }
+
+    // If not empty, return the Set of combined values
+    return new Set(combined);
 }
 
 async function getPRCommitAuthors(octokit, repoOwner, repoName, relatedPRs) {
@@ -30754,7 +30757,11 @@ async function getReleaseNotesFromComments(octokit, issueNumber, issueTitle, iss
             const noteContent = comment.body.replace(/^release notes\s*/i, '').trim();
             console.log(`Found release notes in comments for issue #${issueNumber}`);
             const contributorsList = Array.from(contributors).join(', ');
-            return `#${issueNumber} ${issueTitle} implemented by ${contributorsList} in ${relatedPRLinks}\n${noteContent.replace(/^\s*[\r\n]/gm, '').replace(/^/gm, '  ')}\n`;
+            if (relatedPRLinks.length === 0) {
+                return `#${issueNumber} ${issueTitle} implemented by ${contributorsList}\n${noteContent.replace(/^\s*[\r\n]/gm, '').replace(/^/gm, '  ')}\n`;
+            } else {
+                return `#${issueNumber} ${issueTitle} implemented by ${contributorsList} in ${relatedPRLinks}\n${noteContent.replace(/^\s*[\r\n]/gm, '').replace(/^/gm, '  ')}\n`;
+            }
         }
     }
 
@@ -30834,7 +30841,13 @@ async function run() {
         // Categorize issues and PRs
         for (const issue of closedIssuesOnlyIssues) {
             const relatedPRs = await getRelatedPRsForIssue(octokit, issue.number, repoOwner, repoName);
-            const releaseNotesRaw = await getReleaseNotesFromComments(octokit, issue.number, issue.title, issue.assignees, repoOwner, repoName, relatedPRs);
+            const prLinks = relatedPRs.data
+                .filter(event => event.event === 'cross-referenced' && event.source && event.source.issue.pull_request)
+                .map(event => `[#${event.source.issue.number}](${event.source.issue.html_url})`)
+                .join(', ');
+            console.log(`Related PRs for issue #${issue.number}: ${prLinks}`);
+
+            const releaseNotesRaw = await getReleaseNotesFromComments(octokit, issue.number, issue.title, issue.assignees, repoOwner, repoName, prLinks);
             const releaseNotes = releaseNotesRaw.replace(/^x#/, '#');
 
             // Check for issues without release notes
@@ -30856,7 +30869,7 @@ async function run() {
             }
 
             // Check for issues without PR
-            if (!relatedPRs.length) {
+            if (!relatedPRs.data.length) {
                 issuesWithoutPR += releaseNotes + "\n\n";
             }
         }
@@ -30890,7 +30903,7 @@ async function run() {
         });
 
         releaseNotes += "### Issues without Pull Request\n" + (issuesWithoutPR || "All issues linked to a Pull Request.") + "\n\n";
-        releaseNotes += "### Issues without Labels\n" + (issuesWithoutUserLabels || "All issues contain at least one of user defined labels.") + "\n\n";
+        releaseNotes += "### Issues without User Defined Labels\n" + (issuesWithoutUserLabels || "All issues contain at least one of user defined labels.") + "\n\n";
         releaseNotes += "### Issues without Release Notes\n" + (issuesWithoutReleaseNotes || "All issues have release notes.") + "\n\n";
         releaseNotes += "### PRs without Linked Issue\n" + (prsWithoutLinkedIssue || "All PRs are linked to issues.") + "\n\n";
         releaseNotes += "#### Full Changelog\n" + changelogUrl;
