@@ -22,8 +22,11 @@ async function getRelatedPRsForIssue(octokit, issueNumber, repoOwner, repoName) 
         issue_number: issueNumber
     });
 
-    console.log(`Found ${relatedPRs.data.length} related PRs for issue #${issueNumber}`);
-    return relatedPRs;
+    // Filter events to get only those that are linked pull requests
+    const pullRequestEvents = relatedPRs.data.filter(event => event.event === 'cross-referenced' && event.source && event.source.type === 'pull_request');
+
+    console.log(`Found ${pullRequestEvents.length} related PRs for issue #${issueNumber}`);
+    return pullRequestEvents;
 }
 
 async function getIssueContributors(issueAssignees, commitAuthors) {
@@ -45,38 +48,36 @@ async function getIssueContributors(issueAssignees, commitAuthors) {
 async function getPRCommitAuthors(octokit, repoOwner, repoName, relatedPRs) {
     let commitAuthors = new Set();
     for (const event of relatedPRs.data) {
-        if (event.event === 'cross-referenced' && event.source && event.source.issue.pull_request) {
-            const prNumber = event.source.issue.number;
-            const commits = await octokit.rest.pulls.listCommits({
-                owner: repoOwner,
-                repo: repoName,
-                pull_number: prNumber
-            });
+        const prNumber = event.source.issue.number;
+        const commits = await octokit.rest.pulls.listCommits({
+            owner: repoOwner,
+            repo: repoName,
+            pull_number: prNumber
+        });
 
-            for (const commit of commits.data) {
-                commitAuthors.add('@' + commit.author.login);
+        for (const commit of commits.data) {
+            commitAuthors.add('@' + commit.author.login);
 
-                const coAuthorMatches = commit.commit.message.match(/Co-authored-by: (.+ <.+>)/gm);
-                if (coAuthorMatches) {
-                    for (const coAuthorLine of coAuthorMatches) {
-                        const emailRegex = /<([^>]+)>/;
-                        const nameRegex = /Co-authored-by: (.+) </;
-                        const emailMatch = emailRegex.exec(coAuthorLine);
-                        const nameMatch = nameRegex.exec(coAuthorLine);
-                        if (emailMatch && nameMatch) {
-                            const email = emailMatch[1];
-                            const name = nameMatch[1].trim();
-                            console.log(`Searching for GitHub user with email: ${email}`);
-                            const searchResult = await octokit.rest.search.users({
-                                q: `${email} in:email`
-                            });
-                            const user = searchResult.data.items[0];
-                            if (user && user.login) {
-                                commitAuthors.add('@' + user.login);
-                            } else {
-                                console.log(`No public GitHub account found for email: ${email}`);
-                                commitAuthors.add(name);
-                            }
+            const coAuthorMatches = commit.commit.message.match(/Co-authored-by: (.+ <.+>)/gm);
+            if (coAuthorMatches) {
+                for (const coAuthorLine of coAuthorMatches) {
+                    const emailRegex = /<([^>]+)>/;
+                    const nameRegex = /Co-authored-by: (.+) </;
+                    const emailMatch = emailRegex.exec(coAuthorLine);
+                    const nameMatch = nameRegex.exec(coAuthorLine);
+                    if (emailMatch && nameMatch) {
+                        const email = emailMatch[1];
+                        const name = nameMatch[1].trim();
+                        console.log(`Searching for GitHub user with email: ${email}`);
+                        const searchResult = await octokit.rest.search.users({
+                            q: `${email} in:email`
+                        });
+                        const user = searchResult.data.items[0];
+                        if (user && user.login) {
+                            commitAuthors.add('@' + user.login);
+                        } else {
+                            console.log(`No public GitHub account found for email: ${email}`);
+                            commitAuthors.add(name);
                         }
                     }
                 }
@@ -110,7 +111,7 @@ async function getReleaseNotesFromComments(octokit, issueNumber, issueTitle, iss
 
             console.log(`Related PRs (string) for issue #${issueNumber}: ${relatedPRLinksString}`);
             console.log(`Related PRs (Set) for issue #${issueNumber}: ${relatedPRs.data}`);
-            if (relatedPRs.data.length === 0) {
+            if (relatedPRs.length === 0) {
                 return `#${issueNumber} ${issueTitle} implemented by ${contributorsList}\n${noteContent.replace(/^\s*[\r\n]/gm, '').replace(/^/gm, '  ')}\n`;
             } else {
                 return `#${issueNumber} ${issueTitle} implemented by ${contributorsList} in ${relatedPRLinksString}\n${noteContent.replace(/^\s*[\r\n]/gm, '').replace(/^/gm, '  ')}\n`;
@@ -120,7 +121,7 @@ async function getReleaseNotesFromComments(octokit, issueNumber, issueTitle, iss
 
     console.log(`No specific release notes found in comments for issue #${issueNumber}`);
     const contributorsList = Array.from(contributors).join(', ');
-    if (relatedPRs.data.length === 0) {
+    if (relatedPRs.length === 0) {
         return `x#${issueNumber} ${issueTitle} implemented by ${contributorsList}\n`;
     } else {
         return `x#${issueNumber} ${issueTitle} implemented by ${contributorsList} in ${relatedPRLinksString}\n`;
@@ -197,9 +198,8 @@ async function run() {
 
         // Categorize issues and PRs
         for (const issue of closedIssuesOnlyIssues) {
-            const relatedPRs = await getRelatedPRsForIssue(octokit, issue.number, repoOwner, repoName);
-            const prLinks = relatedPRs.data
-                .filter(event => event.event === 'cross-referenced' && event.source && event.source.issue.pull_request)
+            let relatedPRs = await getRelatedPRsForIssue(octokit, issue.number, repoOwner, repoName);
+            let prLinks = relatedPRs
                 .map(event => `[#${event.source.issue.number}](${event.source.issue.html_url})`)
                 .join(', ');
             console.log(`Related PRs for issue #${issue.number}: ${prLinks}`);
@@ -226,7 +226,7 @@ async function run() {
             }
 
             // Check for issues without PR
-            if (!relatedPRs.data.length) {
+            if (!relatedPRs.length) {
                 issuesWithoutPR += releaseNotes + "\n\n";
             }
         }
