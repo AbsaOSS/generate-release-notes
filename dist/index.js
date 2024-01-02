@@ -30808,28 +30808,36 @@ async function run() {
         console.log(`Found ${closedIssuesOnlyIssues.length} closed issues (only Issues) since last release`);
 
         // Reverse the order of issues (from oldest to newest)
-        const closedIssues = closedIssuesOnlyIssues.reverse();
+        // TODO - check of ordering is needed in this code
+        // const closedIssues = closedIssuesOnlyIssues.reverse();
 
         // Initialize variables for each chapter
         const chapterContents = new Map(Array.from(titlesToLabelsMap.keys()).map(label => [label, '']));
         let issuesWithoutReleaseNotes = '';
+        let issuesWithoutUserLabels = '';
         let prsWithoutLinkedIssue = '';
 
         // Categorize issues and PRs
         for (const issue of closedIssues) {
-            const releaseNotes = await getReleaseNotesFromComments(octokit, issue.number, issue.title, issue.user.login, issue.assignees, repoOwner, repoName);
+            const releaseNotesRaw = await getReleaseNotesFromComments(octokit, issue.number, issue.title, issue.user.login, issue.assignees, repoOwner, repoName);
+            const releaseNotes = releaseNotesRaw.replace(/^x#/, '#');
 
-            let foundReleaseNotes = false;
+            // Check for issues without release notes
+            if (releaseNotesRaw.startsWith('x#')) {
+                issuesWithoutReleaseNotes += releaseNotes + "\n\n";
+            }
+
+            let foundUserLabels = false;
             titlesToLabelsMap.forEach((labels, title) => {
                 if (labels.some(label => issue.labels.map(l => l.name).includes(label))) {
                     chapterContents.set(title, chapterContents.get(title) + releaseNotes + "\n\n");
-                    foundReleaseNotes = true;
+                    foundUserLabels = true;
                 }
             });
 
-            // Check for issues without release notes
-            if (!foundReleaseNotes || releaseNotes.startsWith('x#')) {
-                issuesWithoutReleaseNotes += releaseNotes.replace(/^x#/, '#') + "\n\n";
+            // Check for issues without user defined labels
+            if (!foundUserLabels) {
+                issuesWithoutUserLabels += releaseNotes.replace(/^x#/, '#') + "\n\n";
             }
         }
 
@@ -30861,6 +30869,7 @@ async function run() {
             releaseNotes += `### ${title}\n` + (content && content.trim() !== '' ? content : "No entries detected.") + "\n\n";
         });
 
+        releaseNotes += "### Issues without Labels\n" + (issuesWithoutUserLabels || "All issues contain at least one of user defined labels.") + "\n\n";
         releaseNotes += "### Issues without Release Notes\n" + (issuesWithoutReleaseNotes || "All issues have release notes.") + "\n\n";
         releaseNotes += "### PRs without Linked Issue\n" + (prsWithoutLinkedIssue || "All PRs are linked to issues.") + "\n\n";
         releaseNotes += "#### Full Changelog : \n" + changelogUrl;
