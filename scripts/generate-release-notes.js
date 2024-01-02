@@ -160,6 +160,7 @@ async function run() {
         // Reverse the order of issues (from oldest to newest)
         // TODO - check of ordering is needed in this code
         // const closedIssues = closedIssuesOnlyIssues.reverse();
+        const closedIssues = closedIssuesOnlyIssues;
 
         // Initialize variables for each chapter
         const chapterContents = new Map(Array.from(titlesToLabelsMap.keys()).map(label => [label, '']));
