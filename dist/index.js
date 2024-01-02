@@ -30762,9 +30762,9 @@ async function getReleaseNotesFromComments(octokit, issueNumber, issueTitle, iss
             console.log(`Related PRs (string) for issue #${issueNumber}: ${relatedPRLinksString}`);
             console.log(`Related PRs (Set) for issue #${issueNumber}: ${relatedPRs}`);
             if (relatedPRs.length === 0) {
-                return `#${issueNumber} ${issueTitle} implemented by ${contributorsList}\n${noteContent.replace(/^\s*[\r\n]/gm, '').replace(/^/gm, '  ')}\n`;
+                return `- #${issueNumber} ${issueTitle} implemented by ${contributorsList}\n${noteContent.replace(/^\s*[\r\n]/gm, '').replace(/^/gm, '  ')}\n`;
             } else {
-                return `#${issueNumber} ${issueTitle} implemented by ${contributorsList} in ${relatedPRLinksString}\n${noteContent.replace(/^\s*[\r\n]/gm, '').replace(/^/gm, '  ')}\n`;
+                return `- #${issueNumber} ${issueTitle} implemented by ${contributorsList} in ${relatedPRLinksString}\n${noteContent.replace(/^\s*[\r\n]/gm, '').replace(/^/gm, '  ')}\n`;
             }
         }
     }
@@ -30772,9 +30772,9 @@ async function getReleaseNotesFromComments(octokit, issueNumber, issueTitle, iss
     console.log(`No specific release notes found in comments for issue #${issueNumber}`);
     const contributorsList = Array.from(contributors).join(', ');
     if (relatedPRs.length === 0) {
-        return `x#${issueNumber} ${issueTitle} implemented by ${contributorsList}\n`;
+        return `- x#${issueNumber} ${issueTitle} implemented by ${contributorsList}\n`;
     } else {
-        return `x#${issueNumber} ${issueTitle} implemented by ${contributorsList} in ${relatedPRLinksString}\n`;
+        return `- x#${issueNumber} ${issueTitle} implemented by ${contributorsList} in ${relatedPRLinksString}\n`;
     }
 }
 
@@ -30856,10 +30856,10 @@ async function run() {
             console.log(`Related PRs for issue #${issue.number}: ${prLinks}`);
 
             const releaseNotesRaw = await getReleaseNotesFromComments(octokit, issue.number, issue.title, issue.assignees, repoOwner, repoName, relatedPRs, prLinks);
-            const releaseNotes = releaseNotesRaw.replace(/^x#/, '#');
+            const releaseNotes = releaseNotesRaw.replace(/^- x#/, '- #');
 
             // Check for issues without release notes
-            if (warnings && releaseNotesRaw.startsWith('x#')) {
+            if (warnings && releaseNotesRaw.startsWith('- x#')) {
                 issuesWithoutReleaseNotes += releaseNotes + "\n\n";
             }
 
