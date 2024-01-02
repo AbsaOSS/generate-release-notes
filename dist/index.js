@@ -30697,7 +30697,7 @@ async function getIssueContributors(issueAssignees, commitAuthors) {
 
 async function getPRCommitAuthors(octokit, repoOwner, repoName, relatedPRs) {
     let commitAuthors = new Set();
-    for (const event of relatedPRs.data) {
+    for (const event of relatedPRs) {
         const prNumber = event.source.issue.number;
         const commits = await octokit.rest.pulls.listCommits({
             owner: repoOwner,
@@ -30760,7 +30760,7 @@ async function getReleaseNotesFromComments(octokit, issueNumber, issueTitle, iss
             const contributorsList = Array.from(contributors).join(', ');
 
             console.log(`Related PRs (string) for issue #${issueNumber}: ${relatedPRLinksString}`);
-            console.log(`Related PRs (Set) for issue #${issueNumber}: ${relatedPRs.data}`);
+            console.log(`Related PRs (Set) for issue #${issueNumber}: ${relatedPRs}`);
             if (relatedPRs.length === 0) {
                 return `#${issueNumber} ${issueTitle} implemented by ${contributorsList}\n${noteContent.replace(/^\s*[\r\n]/gm, '').replace(/^/gm, '  ')}\n`;
             } else {
