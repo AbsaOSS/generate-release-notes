@@ -26,8 +26,8 @@ async function getRelatedPRsForIssue(octokit, issueNumber, repoOwner, repoName) 
     console.log("All events:", relatedPRs.data);
 
     // Filter events to get only those that are linked pull requests
-    const pullRequestEvents = relatedPRs.data.filter(event => event.event === 'cross-referenced' && event.source && event.source.type === 'pull_request');
-    const pullRequestEvents2 = relatedPRs.data.filter(event => event.source && event.source.type === 'pull_request');
+    const pullRequestEvents = relatedPRs.data.filter(event => event.event === 'cross-referenced' && event.source && event.source.issue.pull_request);
+    const pullRequestEvents2 = relatedPRs.data.filter(event => event.source && event.source.issue.pull_request);
 
     console.log(`Found ${pullRequestEvents.length} related PRs for issue #${issueNumber}`);
     console.log(`Found #2 ${pullRequestEvents2.length} related PRs for issue #${issueNumber}`);
