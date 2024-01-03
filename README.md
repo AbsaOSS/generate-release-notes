@@ -2,11 +2,19 @@
 
 This GitHub Action automatically generates release notes for a given release tag by categorizing contributions into user-defined chapters based on labels. It streamlines the process of documenting new features, bug fixes, and breaking changes in your project releases.
 
-## Prerequisites
+## Motivation
 
-Before we begin, ensure you have a GitHub Token with permission to fetch repository data such as Issues and Pull Requests.
+Purpose of this tool is:
+- Provide the ability to categorize release notes by labels, aligning with project's organizational needs. 
+- Support detailed contributor acknowledgment, enhancing team recognition. 
+- Include a feature for detecting potential documentation gaps, ensuring thoroughness in our release notes.
+- This tool is essential for maintaining high-quality, well-organized documentation in our development process.
 
 ## Setup and Usage
+
+### Prerequisites
+
+Before we begin, ensure you have a GitHub Token with permission to fetch repository data such as Issues and Pull Requests.
 
 ### Adding the Action to Your Workflow
 
@@ -17,7 +25,6 @@ Add the following step to your GitHub workflow:
   uses: AbsaOSS/generate-release-notes@0.1.0
   with:
     github_token: ${{ secrets.GITHUB_TOKEN }}
-    release_name: v${{ inputs.release_name }}
     chapters: '[
       {"title": "Breaking Changes 💥", "label": "breaking-change"},
       {"title": "New Features 🎉", "label": "enhancement"},

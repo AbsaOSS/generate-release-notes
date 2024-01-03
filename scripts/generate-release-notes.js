@@ -1,5 +1,6 @@
 const { Octokit } = require("@octokit/rest");
 const core = require('@actions/core');
+const github = require('@actions/github');
 
 /**
  * Fetches the latest release information for a given repository.
@@ -246,8 +247,8 @@ async function fetchPullRequests(octokit, repoOwner, repoName, latestRelease) {
 }
 
 async function run() {
-    const repoFullName = core.getInput('repo');
-    const [repoOwner, repoName] = repoFullName.split('/');
+    const repoOwner = github.context.repo.owner;
+    const repoName = github.context.repo.repo;
     const chaptersJson = core.getInput('chapters');
     const warnings = core.getInput('warnings').toLowerCase() === 'true';
     const githubToken = process.env.GITHUB_TOKEN;

@@ -2,6 +2,7 @@
   "name": "generate-release-notes_initial",
   "version": "1.0.0",
   "dependencies": {
+    "@actions/github": "^6.0.0",
     "@octokit/core": "^5.0.2",
     "@octokit/rest": "^20.0.2"
   },
