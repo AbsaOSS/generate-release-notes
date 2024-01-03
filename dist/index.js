@@ -30808,7 +30808,6 @@ function parseChaptersJson(chaptersJson) {
 async function run() {
     const repoFullName = core.getInput('repo');
     const [repoOwner, repoName] = repoFullName.split('/');
-    const tagName = core.getInput('tag_name');
     const chaptersJson = core.getInput('chapters');
     const titlesToLabelsMap = parseChaptersJson(chaptersJson);
     const warnings = core.getInput('warnings').toLowerCase() === 'true';
@@ -30816,7 +30815,7 @@ async function run() {
     const githubToken = process.env.GITHUB_TOKEN;
 
     // Validate environment variables and arguments
-    if (!githubToken || !repoOwner || !repoName || !tagName) {
+    if (!githubToken || !repoOwner || !repoName) {
         console.error("Missing required inputs or environment variables.");
         process.exit(1);
     }
