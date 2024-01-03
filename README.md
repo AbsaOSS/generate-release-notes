@@ -4,11 +4,7 @@ This GitHub Action automatically generates release notes for a given release tag
 
 ## Motivation
 
-Purpose of this tool is:
-- Provide the ability to categorize release notes by labels, aligning with project's organizational needs. 
-- Support detailed contributor acknowledgment, enhancing team recognition. 
-- Include a feature for detecting potential documentation gaps, ensuring thoroughness in our release notes.
-- This tool is essential for maintaining high-quality, well-organized documentation in our development process.
+Generate Release Notes action is dedicated to enhance the quality and organization of project documentation. Its primary purpose is to categorize release notes according to various labels, perfectly aligning with the unique organizational needs of each project. In addition, it offers robust support for acknowledging the efforts of contributors, thereby fostering a sense of recognition and appreciation within the team. Another noteworthy feature of this tool is its capability to detect potential gaps in documentation, ensuring that release notes are comprehensive and leave no stone unturned. Well maintained release notes are a vital component in maintaining high-quality, meticulously organized documentation, which is indispensable in the development process. This repository reflects our commitment to excellence in project documentation and team collaboration.
 
 ## Setup and Usage
 
