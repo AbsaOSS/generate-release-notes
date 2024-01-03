@@ -4,9 +4,7 @@ This GitHub Action automatically generates release notes for a given release tag
 
 ## Prerequisites
 
-Before you begin, ensure you have:
-- A GitHub account with appropriate permissions to access the repository.
-- A GitHub token with permissions to fetch repository data.
+Before we begin, ensure you have a GitHub Token with permission to fetch repository data such as Issues and Pull Requests.
 
 ## Setup and Usage
 
