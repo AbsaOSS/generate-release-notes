@@ -30989,7 +30989,7 @@ async function run() {
         }
         releaseNotes += "#### Full Changelog\n" + changelogUrl;
 
-        console.log('Release Notes:', releaseNoteas);
+        console.log('Release Notes:', releaseNotes);
 
         // Set outputs (only needed if this script is part of a GitHub Action)
         core.setOutput('releaseNotes', releaseNotes);
