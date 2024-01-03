@@ -224,7 +224,7 @@ async function fetchClosedIssues(octokit, repoOwner, repoName, latestRelease) {
     });
     console.log(`Found ${closedIssues.data.length} closed issues since last release`);
 
-    const onlyIssues = closedIssues.filter(issue => !issue.pull_request).reverse();
+    const onlyIssues = closedIssues.data.filter(issue => !issue.pull_request).reverse();
     console.log(`Found ${onlyIssues.length} closed issues (only Issues) since last release`);
 
     return onlyIssues;
