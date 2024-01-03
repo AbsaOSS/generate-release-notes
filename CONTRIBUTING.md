@@ -6,7 +6,7 @@
 
 ## **Proposing New Features**
 
-* **Check if the feature has already been requested** by searching through our **[GitHub Issues](https://github.com/AbsaOSS/enceladus/issues)**.
+* **Check if the feature has already been requested** by searching through our **[GitHub Issues](https://github.com/AbsaOSS/generate-release-notes/issues)**.
 * If the feature request doesn't exist, feel free to create a new one. Tag it with the **request** label.
 
 ## **Contributing to Development**
