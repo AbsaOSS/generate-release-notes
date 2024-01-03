@@ -30871,7 +30871,7 @@ async function fetchClosedIssues(octokit, repoOwner, repoName, latestRelease) {
         repo: repoName,
         state: 'closed',
         since: new Date(latestRelease.created_at)
-    }).data.filter(issue => !issue.pull_request).reverse();
+    });
     console.log(`Found ${arr.length} closed issues since last release`);
 
     const arr2 = arr.data.filter(issue => !issue.pull_request).reverse();
