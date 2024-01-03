@@ -246,7 +246,7 @@ async function run() {
         if (warnings) {
             for (const pr of prsSinceLastRelease.data) {
                 if (!await isPrLinkedToIssue(octokit, pr.number, repoOwner, repoName)) {
-                    prsWithoutLinkedIssue += `#${pr.number} ${pr.title}\n`;
+                    prsWithoutLinkedIssue += `#${pr.number} _${pr.title}_\n`;
                 }
             }
         }
