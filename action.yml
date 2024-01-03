@@ -4,14 +4,11 @@ inputs:
   repo:
     description: 'The GitHub repository in the format "owner/name".'
     required: true
-  tag_name:
-    description: 'The tag for the release for which to generate notes.'
-    required: true
   chapters:
     description: 'JSON string defining chapters and corresponding labels for categorization.'
     required: true
   warnings:
-    description: 'Print warning chapter if true.'
+    description: 'Print warning chapters if true.'
     required: false
     default: 'false'
 
