@@ -30866,12 +30866,14 @@ function parseChaptersJson(chaptersJson) {
 async function fetchClosedIssues(octokit, repoOwner, repoName, latestRelease) {
     console.log(`Fetching closed issues since ${latestRelease.created_at}`);
 
-    return await octokit.rest.issues.listForRepo({
+    const closedIssues = await octokit.rest.issues.listForRepo({
         owner: repoOwner,
         repo: repoName,
         state: 'closed',
         since: new Date(latestRelease.created_at)
-    }).data.filter(issue => !issue.pull_request).reverse();
+    });
+    const onlyIssues = closedIssues.data.filter(issue => !issue.pull_request).reverse();
+    return onlyIssues;
 }
 
 /**
