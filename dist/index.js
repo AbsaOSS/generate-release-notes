@@ -30650,7 +30650,6 @@ var __webpack_exports__ = {};
 (() => {
 const { Octokit } = __nccwpck_require__(5375);
 const core = __nccwpck_require__(2186);
-const fs = __nccwpck_require__(7147);
 
 /**
  * Fetches the latest release information for a given repository.
@@ -30994,7 +30993,6 @@ async function run() {
 
         // Set outputs (only needed if this script is part of a GitHub Action)
         core.setOutput('releaseNotes', releaseNotes);
-        // fs.writeFileSync(githubToken, `releaseNotes=${releaseNotes}`);
         console.log('GitHub Action completed successfully');
     } catch (error) {
         if (error.status === 404) {

@@ -1,6 +1,5 @@
 const { Octokit } = require("@octokit/rest");
 const core = require('@actions/core');
-const fs = require('fs');
 
 /**
  * Fetches the latest release information for a given repository.
@@ -344,7 +343,6 @@ async function run() {
 
         // Set outputs (only needed if this script is part of a GitHub Action)
         core.setOutput('releaseNotes', releaseNotes);
-        // fs.writeFileSync(githubToken, `releaseNotes=${releaseNotes}`);
         console.log('GitHub Action completed successfully');
     } catch (error) {
         if (error.status === 404) {
