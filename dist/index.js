@@ -30663,7 +30663,7 @@ async function fetchLatestRelease(octokit, owner, repo) {
     try {
         const release = await octokit.rest.repos.getLatestRelease({owner, repo});
         console.log(`Latest Release - Date: ${release.data.created_at}, Tag Name: ${release.data.tag_name}`);
-        return release;
+        return release.data;
     } catch (error) {
         console.error(`Error fetching latest release for ${owner}/${repo}: ${error.message}`);
         throw new Error(`Error fetching latest release: ${error.message}`);
@@ -30864,11 +30864,13 @@ function parseChaptersJson(chaptersJson) {
  * @returns {Promise<Array>} An array of closed issues since the latest release.
  */
 async function fetchClosedIssues(octokit, repoOwner, repoName, latestRelease) {
+    console.log(`Fetching closed issues since ${latestRelease.created_at}`);
+
     return await octokit.rest.issues.listForRepo({
         owner: repoOwner,
         repo: repoName,
         state: 'closed',
-        since: new Date(latestRelease.data.created_at)
+        since: new Date(latestRelease.created_at)
     }).data.filter(issue => !issue.pull_request).reverse();
 }
 
