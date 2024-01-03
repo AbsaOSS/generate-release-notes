@@ -30651,34 +30651,49 @@ var __webpack_exports__ = {};
 const { Octokit } = __nccwpck_require__(5375);
 const core = __nccwpck_require__(2186);
 
-// Fetch the latest release
+/**
+ * Fetches the latest release information for a given repository.
+ * @param {Octokit} octokit - The Octokit instance.
+ * @param {string} owner - The owner of the repository.
+ * @param {string} repo - The name of the repository.
+ * @returns {Promise<Object>} The latest release data.
+ */
 async function fetchLatestRelease(octokit, owner, repo) {
+    console.log(`Starting to fetch the latest release for ${owner}/${repo}`);
     try {
-        return await octokit.rest.repos.getLatestRelease({
-            owner,
-            repo
-        });
+        const release = await octokit.rest.repos.getLatestRelease({owner, repo});
+        console.log(`Latest Release - Date: ${release.data.created_at}, Tag Name: ${release.data.tag_name}`);
+        return release;
     } catch (error) {
+        console.error(`Error fetching latest release for ${owner}/${repo}: ${error.message}`);
         throw new Error(`Error fetching latest release: ${error.message}`);
     }
 }
 
-
+/**
+ * Retrieves related pull requests for a specific issue.
+ * @param {Octokit} octokit - The Octokit instance.
+ * @param {number} issueNumber - The issue number.
+ * @param {string} repoOwner - The owner of the repository.
+ * @param {string} repoName - The name of the repository.
+ * @returns {Promise<Array>} An array of related pull requests.
+ */
 async function getRelatedPRsForIssue(octokit, issueNumber, repoOwner, repoName) {
     console.log(`Fetching related PRs for issue #${issueNumber}`);
-    const relatedPRs = await octokit.rest.issues.listEventsForTimeline({
-        owner: repoOwner,
-        repo: repoName,
-        issue_number: issueNumber
-    });
+    const relatedPRs = await octokit.rest.issues.listEventsForTimeline({owner: repoOwner, repo: repoName, issue_number: issueNumber});
 
     // Filter events to get only those that are linked pull requests
     const pullRequestEvents = relatedPRs.data.filter(event => event.event === 'cross-referenced' && event.source && event.source.issue.pull_request);
-
     console.log(`Found ${pullRequestEvents.length} related PRs for issue #${issueNumber}`);
     return pullRequestEvents;
 }
 
+/**
+ * Fetches contributors for an issue.
+ * @param {Array} issueAssignees - List of assignees for the issue.
+ * @param {Array} commitAuthors - List of authors of commits.
+ * @returns {Set<string>} A set of contributors' usernames.
+ */
 async function getIssueContributors(issueAssignees, commitAuthors) {
     // Map the issueAssignees to the required format
     const assignees = issueAssignees.map(assignee => '@' + assignee.login);
@@ -30695,6 +30710,14 @@ async function getIssueContributors(issueAssignees, commitAuthors) {
     return new Set(combined);
 }
 
+/**
+ * Retrieves authors of commits from pull requests related to an issue.
+ * @param {Octokit} octokit - The Octokit instance.
+ * @param {string} repoOwner - The owner of the repository.
+ * @param {string} repoName - The name of the repository.
+ * @param {Array} relatedPRs - Related pull requests.
+ * @returns {Set<string>} A set of commit authors' usernames.
+ */
 async function getPRCommitAuthors(octokit, repoOwner, repoName, relatedPRs) {
     let commitAuthors = new Set();
     for (const event of relatedPRs) {
@@ -30738,18 +30761,33 @@ async function getPRCommitAuthors(octokit, repoOwner, repoName, relatedPRs) {
     return commitAuthors;
 }
 
+/**
+ * Fetches comments for a specific issue.
+ * @param {Octokit} octokit - The Octokit instance.
+ * @param {number} issueNumber - The issue number.
+ * @param {string} repoOwner - The owner of the repository.
+ * @param {string} repoName - The name of the repository.
+ * @returns {Promise<Array>} An array of issue comments.
+ */
 async function getIssueComments(octokit, issueNumber, repoOwner, repoName) {
-    return await octokit.rest.issues.listComments({
-        owner: repoOwner,
-        repo: repoName,
-        issue_number: issueNumber
-    });
+    return await octokit.rest.issues.listComments({owner: repoOwner, repo: repoName, issue_number: issueNumber});
 }
 
+/**
+ * Generates release notes from issue comments.
+ * @param {Octokit} octokit - The Octokit instance.
+ * @param {number} issueNumber - The issue number.
+ * @param {string} issueTitle - The title of the issue.
+ * @param {Array} issueAssignees - List of assignees for the issue.
+ * @param {string} repoOwner - The owner of the repository.
+ * @param {string} repoName - The name of the repository.
+ * @param {Array} relatedPRs - Related pull requests.
+ * @param {string} relatedPRLinksString - String of related PR links.
+ * @returns {Promise<string>} The formatted release note for the issue.
+ */
 async function getReleaseNotesFromComments(octokit, issueNumber, issueTitle, issueAssignees, repoOwner, repoName, relatedPRs, relatedPRLinksString) {
     console.log(`Fetching release notes from comments for issue #${issueNumber}`);
     const comments = await getIssueComments(octokit, issueNumber, repoOwner, repoName);
-
     let commitAuthors = await getPRCommitAuthors(octokit, repoOwner, repoName, relatedPRs);
     let contributors = await getIssueContributors(issueAssignees, commitAuthors);
 
@@ -30778,6 +30816,14 @@ async function getReleaseNotesFromComments(octokit, issueNumber, issueTitle, iss
     }
 }
 
+/**
+ * Checks if a pull request is linked to an issue.
+ * @param {Octokit} octokit - The Octokit instance.
+ * @param {number} prNumber - The pull request number.
+ * @param {string} repoOwner - The owner of the repository.
+ * @param {string} repoName - The name of the repository.
+ * @returns {Promise<boolean>} True if the pull request is linked to an issue, false otherwise.
+ */
 async function isPrLinkedToIssue(octokit, prNumber, repoOwner, repoName) {
     const pr = await octokit.rest.pulls.get({
         owner: repoOwner,
@@ -30787,7 +30833,11 @@ async function isPrLinkedToIssue(octokit, prNumber, repoOwner, repoName) {
     return /#\d+/.test(pr.data.body);
 }
 
-// Function to parse chapters JSON and create a map
+/**
+ * Parses the JSON string of chapters into a map.
+ * @param {string} chaptersJson - The JSON string of chapters.
+ * @returns {Map<string, string[]>} A map where each key is a chapter title and the value is an array of corresponding labels.
+ */
 function parseChaptersJson(chaptersJson) {
     try {
         const chaptersArray = JSON.parse(chaptersJson);
@@ -30805,13 +30855,47 @@ function parseChaptersJson(chaptersJson) {
     }
 }
 
+/**
+ * Fetches a list of closed issues since the latest release.
+ * @param {Octokit} octokit - The Octokit instance.
+ * @param {string} repoOwner - The owner of the repository.
+ * @param {string} repoName - The name of the repository.
+ * @param {Object} latestRelease - The latest release object.
+ * @returns {Promise<Array>} An array of closed issues since the latest release.
+ */
+async function fetchClosedIssues(octokit, repoOwner, repoName, latestRelease) {
+    return await octokit.rest.issues.listForRepo({
+        owner: repoOwner,
+        repo: repoName,
+        state: 'closed',
+        since: new Date(latestRelease.data.created_at)
+    }).data.filter(issue => !issue.pull_request).reverse();
+}
+
+/**
+ * Fetches a list of closed pull requests since the latest release.
+ * @param {Octokit} octokit - The Octokit instance.
+ * @param {string} repoOwner - The owner of the repository.
+ * @param {string} repoName - The name of the repository.
+ * @param {Object} latestRelease - The latest release object.
+ * @returns {Promise<Array>} An array of closed pull requests since the latest release.
+ */
+async function fetchPullRequests(octokit, repoOwner, repoName, latestRelease) {
+    return await octokit.rest.pulls.list({
+        owner: repoOwner,
+        repo: repoName,
+        state: 'closed',
+        sort: 'updated',
+        direction: 'desc',
+        since: new Date(latestRelease.data.created_at)
+    });
+}
+
 async function run() {
     const repoFullName = core.getInput('repo');
     const [repoOwner, repoName] = repoFullName.split('/');
     const chaptersJson = core.getInput('chapters');
-    const titlesToLabelsMap = parseChaptersJson(chaptersJson);
     const warnings = core.getInput('warnings').toLowerCase() === 'true';
-
     const githubToken = process.env.GITHUB_TOKEN;
 
     // Validate environment variables and arguments
@@ -30824,27 +30908,15 @@ async function run() {
 
     try {
         const latestRelease = await fetchLatestRelease(octokit, repoOwner, repoName);
-        console.log('Latest Release Date:', latestRelease.data.created_at);
-        console.log('Latest Release Tag Name:', latestRelease.data.tag_name);
 
         // Fetch closed issues since the latest release
-        const closedIssuesResponse = await octokit.rest.issues.listForRepo({
-            owner: repoOwner,
-            repo: repoName,
-            state: 'closed',
-            since: new Date(latestRelease.data.created_at)
-        });
-
-        // Filter out pull requests and reverse the order of issues
-        const closedIssuesOnlyIssues = closedIssuesResponse.data.filter(issue => !issue.pull_request).reverse();
+        const closedIssuesOnlyIssues = await fetchClosedIssues(octokit, repoOwner, repoName, latestRelease);
         console.log(`Found ${closedIssuesOnlyIssues.length} closed issues (only Issues) since last release`);
 
         // Initialize variables for each chapter
+        const titlesToLabelsMap = parseChaptersJson(chaptersJson);
         const chapterContents = new Map(Array.from(titlesToLabelsMap.keys()).map(label => [label, '']));
-        let issuesWithoutReleaseNotes = '';
-        let issuesWithoutUserLabels = '';
-        let issuesWithoutPR = '';
-        let prsWithoutLinkedIssue = '';
+        let issuesWithoutReleaseNotes = '', issuesWithoutUserLabels = '', issuesWithoutPR = '', prsWithoutLinkedIssue = '';
 
         // Categorize issues and PRs
         for (const issue of closedIssuesOnlyIssues) {
@@ -30881,18 +30953,12 @@ async function run() {
             }
         }
 
-        // Fetch pull requests since the latest release
-        const prsSinceLastRelease = await octokit.rest.pulls.list({
-            owner: repoOwner,
-            repo: repoName,
-            state: 'closed',
-            sort: 'updated',
-            direction: 'desc',
-            since: new Date(latestRelease.data.created_at)
-        });
-
         // Check PRs for linked issues
         if (warnings) {
+            // Fetch pull requests since the latest release
+            const prsSinceLastRelease = await fetchPullRequests(octokit, repoOwner, repoName, latestRelease);
+            console.log(`Found ${prsSinceLastRelease.data.length} closed PRs since last release`);
+
             for (const pr of prsSinceLastRelease.data) {
                 if (!await isPrLinkedToIssue(octokit, pr.number, repoOwner, repoName)) {
                     prsWithoutLinkedIssue += `#${pr.number} _${pr.title}_\n`;
@@ -30919,11 +30985,11 @@ async function run() {
         }
         releaseNotes += "#### Full Changelog\n" + changelogUrl;
 
-        console.log('Release Notes:', releaseNotes);
+        console.log('Release Notes:', releaseNoteas);
 
         // Set outputs (only needed if this script is part of a GitHub Action)
         core.setOutput('releaseNotes', releaseNotes);
-
+        console.log('GitHub Action completed successfully');
     } catch (error) {
         if (error.status === 404) {
             console.error('Repository not found. Please check the owner and repository name.');
