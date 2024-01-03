@@ -18,6 +18,7 @@ Add the following step to your GitHub workflow:
 
 ```yaml
 - name: Generate Release Notes
+  id: release_notes
   uses: AbsaOSS/generate-release-notes@0.1.0
   with:
     github_token: ${{ secrets.GITHUB_TOKEN }}
