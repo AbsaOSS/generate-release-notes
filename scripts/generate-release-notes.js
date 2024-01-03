@@ -343,7 +343,8 @@ async function run() {
         console.log('Release Notes:', releaseNotes);
 
         // Set outputs (only needed if this script is part of a GitHub Action)
-        fs.writeFileSync(githubToken, `releaseNotes=${releaseNotes}`);
+        core.setOutput('releaseNotes', releaseNotes);
+        // fs.writeFileSync(githubToken, `releaseNotes=${releaseNotes}`);
         console.log('GitHub Action completed successfully');
     } catch (error) {
         if (error.status === 404) {
