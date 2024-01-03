@@ -17,7 +17,7 @@ Add the following step to your GitHub workflow:
   uses: AbsaOSS/generate-release-notes@0.1.0
   with:
     github_token: ${{ secrets.GITHUB_TOKEN }}
-    release_name: v${{ steps.set_tag.outputs.tag }}
+    release_name: v${{ inputs.release_name }}
     chapters: '[
       {"title": "Breaking Changes 💥", "label": "breaking-change"},
       {"title": "New Features 🎉", "label": "enhancement"},
