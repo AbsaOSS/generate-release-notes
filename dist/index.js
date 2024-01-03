@@ -30662,7 +30662,7 @@ async function fetchLatestRelease(octokit, owner, repo) {
     console.log(`Starting to fetch the latest release for ${owner}/${repo}`);
     try {
         const release = await octokit.rest.repos.getLatestRelease({owner, repo});
-        console.log(`Latest Release - Date: ${release.data.created_at}, Tag Name: ${release.data.tag_name}`);
+        console.log(`Latest Release - Date: ${release.created_at}, Tag Name: ${release.tag_name}`);
         return release.data;
     } catch (error) {
         console.error(`Error fetching latest release for ${owner}/${repo}: ${error.message}`);
@@ -30866,18 +30866,12 @@ function parseChaptersJson(chaptersJson) {
 async function fetchClosedIssues(octokit, repoOwner, repoName, latestRelease) {
     console.log(`Fetching closed issues since ${latestRelease.created_at}`);
 
-    const closedIssues = await octokit.rest.issues.listForRepo({
+    return await octokit.rest.issues.listForRepo({
         owner: repoOwner,
         repo: repoName,
         state: 'closed',
         since: new Date(latestRelease.created_at)
-    });
-    console.log(`Found ${closedIssues.data.length} closed issues since last release`);
-
-    const onlyIssues = closedIssues.data.filter(issue => !issue.pull_request).reverse();
-    console.log(`Found ${onlyIssues.length} closed issues (only Issues) since last release`);
-
-    return onlyIssues;
+    }).data.filter(issue => !issue.pull_request).reverse();
 }
 
 /**
@@ -30895,7 +30889,7 @@ async function fetchPullRequests(octokit, repoOwner, repoName, latestRelease) {
         state: 'closed',
         sort: 'updated',
         direction: 'desc',
-        since: new Date(latestRelease.data.created_at)
+        since: new Date(latestRelease.created_at)
     });
 }
 
@@ -30975,7 +30969,7 @@ async function run() {
         }
 
         // Generate Full Changelog URL
-        const changelogUrl = `https://github.com/${repoOwner}/${repoName}/commits/${latestRelease.data.tag_name}`;
+        const changelogUrl = `https://github.com/${repoOwner}/${repoName}/commits/${latestRelease.tag_name}`;
         console.log('Changelog URL:', changelogUrl);
 
         // Prepare Release Notes using chapterContents
