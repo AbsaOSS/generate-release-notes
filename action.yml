@@ -1,4 +1,4 @@
-name: 'Generate Release Notes'
+name: 'Label-Based Release Notes Generator'
 description: 'Automatically generates release notes for a given release tag, categorized into chapters based on labels.'
 inputs:
   chapters:
@@ -10,7 +10,7 @@ inputs:
     default: 'false'
 
 branding:
-  icon: 'notebook'
+  icon: 'book'
   color: 'yellow'
 
 runs:
