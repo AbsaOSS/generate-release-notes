@@ -28,6 +28,11 @@ Add the following step to your GitHub workflow:
       {"title": "Bugfixes 🛠", "label": "bugfix"}
     ]'
     warnings: true
+
+- name: Print generated Release notes
+  run: |
+    echo "Generated Release Notes:"
+    echo "${{ steps.generate_release_notes.outputs.releaseNotes }}"
 ```
 
 ### Configure the Action
