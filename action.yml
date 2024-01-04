@@ -1,4 +1,4 @@
-name: 'Label-Based Release Notes Generator'
+name: 'Release notes scrapper'
 description: 'Automatically generates release notes for a given release tag, categorized into chapters based on labels.'
 inputs:
   chapters:
