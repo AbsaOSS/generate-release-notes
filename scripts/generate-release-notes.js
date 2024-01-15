@@ -20,7 +20,7 @@ async function fetchLatestRelease(octokit, owner, repo) {
             console.warn(`No release found for ${owner}/${repo}.`);
             return `No release available for ${owner}/${repo}.`;
         } else {
-            console.error(`Error fetching latest release for ${owner}/${repo}: ${error.message}`);
+            console.error(`Error fetching latest release for ${owner}/${repo}: ${error.status} - ${error.message}`);
             throw new Error(`Error fetching latest release: ${error.message}`);
         }
     }
