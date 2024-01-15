@@ -16,9 +16,24 @@ async function fetchLatestRelease(octokit, owner, repo) {
         console.log(`Latest Release - Date: ${release.created_at}, Tag Name: ${release.tag_name}`);
         return release.data;
     } catch (error) {
-        console.error(`Error fetching latest release for ${owner}/${repo}: ${error.message}`);
-        throw new Error(`Error fetching latest release: ${error.message}`);
+        if (error.status === 404) {
+            console.warn(`No release found for ${owner}/${repo}.`);
+            return `No release available for ${owner}/${repo}.`;
+        } else {
+            console.error(`Error fetching latest release for ${owner}/${repo}: ${error.message}`);
+            throw new Error(`Error fetching latest release: ${error.message}`);
+        }
     }
+
+    // console.log(`Starting to fetch the latest release for ${owner}/${repo}`);
+    // try {
+    //     const release = await octokit.rest.repos.getLatestRelease({owner, repo});
+    //     console.log(`Latest Release - Date: ${release.created_at}, Tag Name: ${release.tag_name}`);
+    //     return release.data;
+    // } catch (error) {
+    //     console.error(`Error fetching latest release for ${owner}/${repo}: ${error.message}`);
+    //     throw new Error(`Error fetching latest release: ${error.message}`);
+    // }
 }
 
 /**
