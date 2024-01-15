@@ -214,11 +214,9 @@ function parseChaptersJson(chaptersJson) {
  * @returns {Promise<Array>} An array of closed issues since the latest release.
  */
 async function fetchClosedIssues(octokit, repoOwner, repoName, latestRelease) {
-    console.log(`Fetching closed issues since ${latestRelease.created_at}`);
-
     let sinceDate;
     if (latestRelease) {
-        console.log(`Since latest release date: ${latestRelease.created_at}`);
+        console.log(`Fetching closed issues since ${latestRelease.created_at}`);
         sinceDate = new Date(latestRelease.created_at);
     } else {
         console.log("No latest release found. Fetching all closed issues.");
