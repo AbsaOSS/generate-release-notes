@@ -30916,7 +30916,6 @@ async function fetchLatestRelease(octokit, owner, repo) {
     console.log(`Starting to fetch the latest release for ${owner}/${repo}`);
     try {
         const release = await octokit.rest.repos.getLatestRelease({owner, repo});
-        console.log(`Latest Release - Date: ${release.data.created_at}, Tag Name: ${release.data.tag_name}`);
         return release.data;
     } catch (error) {
         console.error(`Error fetching latest release for ${owner}/${repo}: ${error.status} - ${error.message}`);
