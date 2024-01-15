@@ -214,22 +214,24 @@ function parseChaptersJson(chaptersJson) {
  * @returns {Promise<Array>} An array of closed issues since the latest release.
  */
 async function fetchClosedIssues(octokit, repoOwner, repoName, latestRelease) {
-    let sinceDate;
+    let closedIssues;
     if (latestRelease) {
         console.log(`Fetching closed issues since ${latestRelease.created_at}`);
-        sinceDate = new Date(latestRelease.created_at);
+        closedIssues = await octokit.rest.issues.listForRepo({
+            owner: repoOwner,
+            repo: repoName,
+            state: 'closed',
+            since: new Date(latestRelease.created_at)
+        });
     } else {
         console.log("No latest release found. Fetching all closed issues.");
-        // You can optionally set a specific start date here, or leave it undefined to fetch all closed issues
-        // sinceDate = new Date('YYYY-MM-DD'); // Replace with a specific start date if needed
+        closedIssues = await octokit.rest.issues.listForRepo({
+            owner: repoOwner,
+            repo: repoName,
+            state: 'closed'
+        });
     }
 
-    const closedIssues = await octokit.rest.issues.listForRepo({
-        owner: repoOwner,
-        repo: repoName,
-        state: 'closed',
-        since: sinceDate
-    });
     return closedIssues.data.filter(issue => !issue.pull_request).reverse();
 }
 
