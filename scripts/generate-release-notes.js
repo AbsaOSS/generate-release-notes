@@ -21,7 +21,7 @@ async function fetchLatestRelease(octokit, owner, repo) {
             return `No release available for ${owner}/${repo}.`;
         } else {
             console.error(`Error fetching latest release for ${owner}/${repo}: ${error.status} - ${error.message}`);
-            throw new Error(`Error fetching latest release: ${error.message}`);
+            throw new Error(`Error fetching latest release: ${error.status} - ${error.message}`);
         }
     }
 
