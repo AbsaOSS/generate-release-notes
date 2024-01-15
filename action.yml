@@ -1,6 +1,9 @@
 name: 'Release notes scrapper'
 description: 'Automatically generates release notes for a given release tag, categorized into chapters based on labels.'
 inputs:
+  tag-name:
+    description: 'The tag name of the release to generate notes for.'
+    required: true
   chapters:
     description: 'JSON string defining chapters and corresponding labels for categorization.'
     required: true
