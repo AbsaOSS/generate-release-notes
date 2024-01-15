@@ -31147,24 +31147,27 @@ async function fetchClosedIssues(octokit, repoOwner, repoName, latestRelease) {
 async function fetchPullRequests(octokit, repoOwner, repoName, latestRelease) {
     console.log(`Fetching closed pull requests for ${repoOwner}/${repoName}`);
 
-    let sinceDate;
     if (latestRelease) {
         console.log(`Since latest release date: ${latestRelease.created_at}`);
-        sinceDate = new Date(latestRelease.created_at);
+        return await octokit.rest.pulls.list({
+            owner: repoOwner,
+            repo: repoName,
+            state: 'closed',
+            sort: 'updated',
+            direction: 'desc',
+            since: new Date(latestRelease.created_at)
+        });
+
     } else {
         console.log("No latest release found. Fetching all closed pull requests.");
-        // Optionally set a specific start date here, or leave it undefined to fetch all closed PRs
-        // sinceDate = new Date('YYYY-MM-DD'); // Replace with a specific start date if needed
+        return await octokit.rest.pulls.list({
+            owner: repoOwner,
+            repo: repoName,
+            state: 'closed',
+            sort: 'updated',
+            direction: 'desc'
+        });
     }
-
-    return await octokit.rest.pulls.list({
-        owner: repoOwner,
-        repo: repoName,
-        state: 'closed',
-        sort: 'updated',
-        direction: 'desc',
-        since: sinceDate
-    });
 }
 
 async function run() {
