@@ -31120,22 +31120,20 @@ async function fetchClosedIssues(octokit, repoOwner, repoName, latestRelease) {
     let since;
     if (latestRelease && latestRelease.created_at) {
         console.log(`Fetching closed issues since ${latestRelease.created_at}`);
-        since = new Date(latestRelease.created_at)
+        // since = new Date(latestRelease.created_at)
     } else {
-        const repoDetails = await octokit.rest.repos.get({
-            owner: repoOwner,
-            repo: repoName
-        });
+        // const repoDetails = await octokit.rest.repos.get({
+        //     owner: repoOwner,
+        //     repo: repoName
+        // });
 
         console.log(`Fetching closed issues since repository created ${repoDetails.data.created_at}`);
-        since = new Date(repoDetails.data.created_at);
+        // since = new Date(repoDetails.data.created_at);
     }
 
     const closedIssues = await octokit.rest.issues.listForRepo({
         owner: repoOwner,
-        repo: repoName,
-        state: 'closed',
-        since: since
+        repo: repoName
     });
 
     return closedIssues.data.filter(issue => !issue.pull_request).reverse();
