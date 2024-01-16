@@ -349,8 +349,9 @@ async function run() {
             // Fetch pull requests since the latest release
             const prsSinceLastRelease = await fetchPullRequests(octokit, repoOwner, repoName, latestRelease);
             console.log(`Found ${prsSinceLastRelease.data.length} closed PRs since last release`);
+            const sortedPRs = prsSinceLastRelease.data.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
-            for (const pr of prsSinceLastRelease.data) {
+            for (const pr of sortedPRs) {
                 if (!await isPrLinkedToIssue(octokit, pr.number, repoOwner, repoName)) {
                     prsWithoutLinkedIssue += `#${pr.number} _${pr.title}_\n`;
                 }
