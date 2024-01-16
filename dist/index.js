@@ -31127,7 +31127,8 @@ async function fetchClosedIssues(octokit, repoOwner, repoName, latestRelease) {
         //     repo: repoName
         // });
 
-        console.log(`Fetching closed issues since repository created ${repoDetails.data.created_at}`);
+        // console.log(`Fetching closed issues since repository created ${repoDetails.data.created_at}`);
+        console.log(`Fetching closed issues since repository created.`);
         // since = new Date(repoDetails.data.created_at);
     }
 
