@@ -124,3 +124,12 @@ If you need help with using or contributing to Generate Release Notes Action, or
 
 - **Issue Tracker**: For technical issues or feature requests, use the [GitHub Issues page](https://github.com/AbsaOSS/generate-release-notes/issues).
 - **Discussion Forum**: For general questions and discussions, join our [GitHub Discussions forum](https://github.com/AbsaOSS/generate-release-notes/discussions).
+
+### FAQs
+#### Why is in generated Release Notes content mentioned co-author without link to his GitHub account?
+Co-authors can be added into a commit message by using the `Co-authored-by` trailer in the commit message. This trailer is used by GitHub to link the commit to the co-author's GitHub account. The co-author's name is mentioned in the generated Release Notes without a link to his GitHub account.
+```
+Co-authored-by: NAME <NAME@EXAMPLE.COM>
+```
+The Release Notes generator is trying to get Github user by call GitHub API with the co-author's email address. If the user is found, the generator will use the user's name and link to his GitHub account. If the user is not found, the generator will use the co-author's name without a link to his GitHub account.
+This leads to the situation when the co-author's name is mentioned in the generated Release Notes without a link to his GitHub account.
