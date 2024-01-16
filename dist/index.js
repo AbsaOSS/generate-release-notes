@@ -31117,32 +31117,56 @@ function parseChaptersJson(chaptersJson) {
  * @returns {Promise<Array>} An array of closed issues since the latest release.
  */
 async function fetchClosedIssues(octokit, repoOwner, repoName, latestRelease) {
-    let closedIssues;
+    let since;
     if (latestRelease && latestRelease.created_at) {
         console.log(`Fetching closed issues since ${latestRelease.created_at}`);
-        closedIssues = await octokit.rest.issues.listForRepo({
-            owner: repoOwner,
-            repo: repoName,
-            state: 'closed',
-            since: new Date(latestRelease.created_at)
-        });
+        since = new Date(latestRelease.created_at)
     } else {
-        console.log("No latest release found. Fetching all closed issues from repository creation.");
-
         const repoDetails = await octokit.rest.repos.get({
             owner: repoOwner,
             repo: repoName
         });
 
         console.log(`Fetching closed issues since repository created ${repoDetails.data.created_at}`);
-        closedIssues = await octokit.rest.issues.listForRepo({
-            owner: repoOwner,
-            repo: repoName
-        });
+        since = new Date(repoDetails.data.created_at);
     }
+
+    const closedIssues = await octokit.rest.issues.listForRepo({
+        owner: repoOwner,
+        repo: repoName,
+        state: 'closed',
+        since: since
+    });
 
     return closedIssues.data.filter(issue => !issue.pull_request).reverse();
 }
+// async function fetchClosedIssues(octokit, repoOwner, repoName, latestRelease) {
+//     let closedIssues;
+//     if (latestRelease && latestRelease.created_at) {
+//         console.log(`Fetching closed issues since ${latestRelease.created_at}`);
+//         closedIssues = await octokit.rest.issues.listForRepo({
+//             owner: repoOwner,
+//             repo: repoName,
+//             state: 'closed',
+//             since: new Date(latestRelease.created_at)
+//         });
+//     } else {
+//         console.log("No latest release found. Fetching all closed issues from repository creation.");
+//
+//         const repoDetails = await octokit.rest.repos.get({
+//             owner: repoOwner,
+//             repo: repoName
+//         });
+//
+//         console.log(`Fetching closed issues since repository created ${repoDetails.data.created_at}`);
+//         closedIssues = await octokit.rest.issues.listForRepo({
+//             owner: repoOwner,
+//             repo: repoName
+//         });
+//     }
+//
+//     return closedIssues.data.filter(issue => !issue.pull_request).reverse();
+// }
 
 /**
  * Fetches a list of closed pull requests since the latest release.
