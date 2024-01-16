@@ -225,10 +225,17 @@ async function fetchClosedIssues(octokit, repoOwner, repoName, latestRelease) {
         });
     } else {
         console.log("No latest release found. Fetching all closed issues.");
+
+        const repoDetails = await octokit.rest.repos.get({
+            owner: repoOwner,
+            repo: repoName
+        });
+
         closedIssues = await octokit.rest.issues.listForRepo({
             owner: repoOwner,
             repo: repoName,
-            state: 'closed'
+            state: 'closed',
+            since: new Date(repoDetails.data.created_at)
         });
     }
 
