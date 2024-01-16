@@ -31119,53 +31119,36 @@ function parseChaptersJson(chaptersJson) {
 async function fetchClosedIssues(octokit, repoOwner, repoName, latestRelease) {
     let since;
     if (latestRelease && latestRelease.created_at) {
-        console.log(`Fetching closed issues since ${latestRelease.created_at}`);
-        // since = new Date(latestRelease.created_at)
+        since = new Date(latestRelease.created_at)
+        console.log(`Fetching closed issues since ${since.toISOString()}`);
     } else {
-        // const repoDetails = await octokit.rest.repos.get({
-        //     owner: repoOwner,
-        //     repo: repoName
-        // });
+        const firstClosedIssue = await octokit.rest.issues.listForRepo({
+            owner: repoOwner,
+            repo: repoName,
+            state: 'closed',
+            per_page: 1,
+            sort: 'created',
+            direction: 'asc'
+        });
 
-        // console.log(`Fetching closed issues since repository created ${repoDetails.data.created_at}`);
-        console.log(`Fetching closed issues since repository created.`);
-        // since = new Date(repoDetails.data.created_at);
+        if (firstClosedIssue.data.length > 0) {
+            since = new Date(firstClosedIssue.data[0].created_at);
+            console.log(`Fetching closed issues since the first closed issue on ${since.toISOString()}`);
+        } else {
+            console.log("No closed issues found.");
+            return [];
+        }
     }
 
     const closedIssues = await octokit.rest.issues.listForRepo({
         owner: repoOwner,
-        repo: repoName
+        repo: repoName,
+        state: 'closed',
+        since: since
     });
 
     return closedIssues.data.filter(issue => !issue.pull_request).reverse();
 }
-// async function fetchClosedIssues(octokit, repoOwner, repoName, latestRelease) {
-//     let closedIssues;
-//     if (latestRelease && latestRelease.created_at) {
-//         console.log(`Fetching closed issues since ${latestRelease.created_at}`);
-//         closedIssues = await octokit.rest.issues.listForRepo({
-//             owner: repoOwner,
-//             repo: repoName,
-//             state: 'closed',
-//             since: new Date(latestRelease.created_at)
-//         });
-//     } else {
-//         console.log("No latest release found. Fetching all closed issues from repository creation.");
-//
-//         const repoDetails = await octokit.rest.repos.get({
-//             owner: repoOwner,
-//             repo: repoName
-//         });
-//
-//         console.log(`Fetching closed issues since repository created ${repoDetails.data.created_at}`);
-//         closedIssues = await octokit.rest.issues.listForRepo({
-//             owner: repoOwner,
-//             repo: repoName
-//         });
-//     }
-//
-//     return closedIssues.data.filter(issue => !issue.pull_request).reverse();
-// }
 
 /**
  * Fetches a list of closed pull requests since the latest release.
