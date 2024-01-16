@@ -25,7 +25,7 @@ Add the following step to your GitHub workflow:
     chapters: '[
       {"title": "Breaking Changes 💥", "label": "breaking-change"},
       {"title": "New Features 🎉", "label": "enhancement"},
-      {"title": "Bugfixes 🛠", "label": "bugfix"}
+      {"title": "Bugfixes 🛠", "label": "bug"}
     ]'
     warnings: true
 
