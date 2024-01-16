@@ -31137,9 +31137,7 @@ async function fetchClosedIssues(octokit, repoOwner, repoName, latestRelease) {
         console.log(`Fetching closed issues since repository created ${repoDetails.data.created_at}`);
         closedIssues = await octokit.rest.issues.listForRepo({
             owner: repoOwner,
-            repo: repoName,
-            state: 'closed',
-            since: new Date(repoDetails.data.created_at)
+            repo: repoName
         });
     }
 
