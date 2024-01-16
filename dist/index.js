@@ -30916,11 +30916,10 @@ async function fetchLatestRelease(octokit, owner, repo) {
     console.log(`Starting to fetch the latest release for ${owner}/${repo}`);
     try {
         const release = await octokit.rest.repos.getLatestRelease({owner, repo});
-        console.log(`Latest Release - Date: ${release.created_at}, Tag Name: ${release.tag_name}`);
         return release.data;
     } catch (error) {
-        console.error(`Error fetching latest release for ${owner}/${repo}: ${error.message}`);
-        throw new Error(`Error fetching latest release: ${error.message}`);
+        console.error(`Error fetching latest release for ${owner}/${repo}: ${error.status} - ${error.message}`);
+        return null;
     }
 }
 
@@ -31118,16 +31117,37 @@ function parseChaptersJson(chaptersJson) {
  * @returns {Promise<Array>} An array of closed issues since the latest release.
  */
 async function fetchClosedIssues(octokit, repoOwner, repoName, latestRelease) {
-    console.log(`Fetching closed issues since ${latestRelease.created_at}`);
+    let since;
+    if (latestRelease && latestRelease.created_at) {
+        since = new Date(latestRelease.created_at)
+        console.log(`Fetching closed issues since ${since.toISOString()}`);
+    } else {
+        const firstClosedIssue = await octokit.rest.issues.listForRepo({
+            owner: repoOwner,
+            repo: repoName,
+            state: 'closed',
+            per_page: 1,
+            sort: 'created',
+            direction: 'asc'
+        });
+
+        if (firstClosedIssue.data.length > 0) {
+            since = new Date(firstClosedIssue.data[0].created_at);
+            console.log(`Fetching closed issues since the first closed issue on ${since.toISOString()}`);
+        } else {
+            console.log("No closed issues found.");
+            return [];
+        }
+    }
 
     const closedIssues = await octokit.rest.issues.listForRepo({
         owner: repoOwner,
         repo: repoName,
         state: 'closed',
-        since: new Date(latestRelease.created_at)
+        since: since
     });
-    const onlyIssues = closedIssues.data.filter(issue => !issue.pull_request).reverse();
-    return onlyIssues;
+
+    return closedIssues.data.filter(issue => !issue.pull_request).reverse();
 }
 
 /**
@@ -31139,19 +31159,35 @@ async function fetchClosedIssues(octokit, repoOwner, repoName, latestRelease) {
  * @returns {Promise<Array>} An array of closed pull requests since the latest release.
  */
 async function fetchPullRequests(octokit, repoOwner, repoName, latestRelease) {
-    return await octokit.rest.pulls.list({
-        owner: repoOwner,
-        repo: repoName,
-        state: 'closed',
-        sort: 'updated',
-        direction: 'desc',
-        since: new Date(latestRelease.created_at)
-    });
+    console.log(`Fetching closed pull requests for ${repoOwner}/${repoName}`);
+
+    if (latestRelease) {
+        console.log(`Since latest release date: ${latestRelease.created_at}`);
+        return await octokit.rest.pulls.list({
+            owner: repoOwner,
+            repo: repoName,
+            state: 'closed',
+            sort: 'updated',
+            direction: 'desc',
+            since: new Date(latestRelease.created_at)
+        });
+
+    } else {
+        console.log("No latest release found. Fetching all closed pull requests.");
+        return await octokit.rest.pulls.list({
+            owner: repoOwner,
+            repo: repoName,
+            state: 'closed',
+            sort: 'updated',
+            direction: 'desc'
+        });
+    }
 }
 
 async function run() {
     const repoOwner = github.context.repo.owner;
     const repoName = github.context.repo.repo;
+    const tagName = core.getInput('tag-name');
     const chaptersJson = core.getInput('chapters');
     const warnings = core.getInput('warnings').toLowerCase() === 'true';
     const githubToken = process.env.GITHUB_TOKEN;
@@ -31224,9 +31260,16 @@ async function run() {
             }
         }
 
-        // Generate Full Changelog URL
-        const changelogUrl = `https://github.com/${repoOwner}/${repoName}/commits/${latestRelease.tag_name}`;
-        console.log('Changelog URL:', changelogUrl);
+        let changelogUrl;
+        if (latestRelease) {
+            // If there is a latest release, create a URL pointing to commits since the latest release
+            changelogUrl = `https://github.com/${repoOwner}/${repoName}/compare/${latestRelease.tag_name}...${tagName}`;
+            console.log('Changelog URL (since latest release):', changelogUrl);
+        } else {
+            // If there is no latest release, create a URL pointing to all commits
+            changelogUrl = `https://github.com/${repoOwner}/${repoName}/commits/${tagName}`;
+            console.log('Changelog URL (all commits):', changelogUrl);
+        }
 
         // Prepare Release Notes using chapterContents
         let releaseNotes = '';
@@ -31254,7 +31297,7 @@ async function run() {
         } else if (error.status === 401) {
             console.error('Authentication failed. Please check your GitHub token.');
         } else {
-            console.error('Error fetching data:', error.message);
+            console.error(`Error fetching data: ${error.status} - ${error.message}`);
         }
         process.exit(1);
     }
