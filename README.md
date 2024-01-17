@@ -6,7 +6,7 @@ This GitHub Action automatically generates release notes for a given release tag
 
 Generate Release Notes action is dedicated to enhance the quality and organization of project documentation. Its primary purpose is to categorize release notes according to various labels, perfectly aligning with the unique organizational needs of each project. In addition, it offers robust support for acknowledging the efforts of contributors, thereby fostering a sense of recognition and appreciation within the team. Another noteworthy feature of this tool is its capability to detect potential gaps in documentation, ensuring that release notes are comprehensive and leave no stone unturned. Well maintained release notes are a vital component in maintaining high-quality, meticulously organized documentation, which is indispensable in the development process. This repository reflects our commitment to excellence in project documentation and team collaboration.
 
-## Setup and Usage
+## Usage
 
 ### Prerequisites
 
@@ -20,28 +20,28 @@ Add the following step to your GitHub workflow:
 - name: Generate Release Notes
   id: generate_release_notes
   uses: AbsaOSS/generate-release-notes@0.1.0
+  env:
+    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
   with:
-    github_token: ${{ secrets.GITHUB_TOKEN }}
+    tag-name: "v0.1.0"
     chapters: '[
       {"title": "Breaking Changes 💥", "label": "breaking-change"},
       {"title": "New Features 🎉", "label": "enhancement"},
+      {"title": "New Features 🎉", "label": "feature"},
       {"title": "Bugfixes 🛠", "label": "bug"}
     ]'
     warnings: true
-
-- name: Print generated Release notes
-  run: |
-    echo "Generated Release Notes:"
-    echo "${{ steps.generate_release_notes.outputs.releaseNotes }}"
 ```
 
 ### Configure the Action
 Configure the action by customizing the following parameters based on your needs:
 
-- **github_token** (required): Your GitHub token for authentication. Store it as a secret and reference it in the workflow file as secrets.GITHUB_TOKEN.
+- **GITHUB_TOKEN** (required): Your GitHub token for authentication. Store it as a secret and reference it in the workflow file as secrets.GITHUB_TOKEN.
+- **tag-name** (required): The name of the tag for which you want to generate release notes. This should be the same as the tag name used in the release workflow.
 - **chapters** (required): A JSON string defining chapters and corresponding labels for categorization. Each chapter, like "Breaking Changes", "New Features", and "Bugfixes", should have a title and a label matching your GitHub issues and PRs.
 - **warnings** (optional): Set to true to enable warnings in the release notes. These warnings identify issues without release notes, without user-defined labels, or without associated pull requests, and PRs without linked issues. Defaults to false if not specified.
 
+## Setup
 ### Build the Action:
 If you need to build the action locally:
 
@@ -52,6 +52,7 @@ npm run build
 
 Then, commit action.yml and dist/index.js to your repository.
 
+## Features
 ### Release Notes Extraction Process
 
 This action requires that your GitHub issues include comments with specific release notes. Here's how it works:
@@ -63,15 +64,20 @@ The action scans through comments on each closed issue since the last release. I
 
 #### Comment Format
 For an issue's contributions to be included in the release notes, it must contain a comment starting with "Release Notes" followed by the note content. This comment is typically added by the contributors.
+
+Here is an example of the content for a "Release Notes" comment:
 ```
 Release Notes
 - This update introduces a new caching mechanism that improves performance by 20%.
 ```
+Using `-` as a bullet point for each note is the best practice. The Markdown parser will automatically convert it to a list.
 
-#### Contributors Mention
+These comments are not required for action functionality. If an issue does not contain a "Release Notes" comment, it will be marked accordingly in the release notes. This helps maintainers quickly identify which issues need attention for documentation.
+
+### Contributors Mention
 Along with the release note content, the action also gathers a list of contributors for each issue. This includes issue assignees and authors of linked pull requests' commits, providing acknowledgment for their contributions in the release notes.
 
-#### Handling Multiple PRs
+### Handling Multiple PRs
 If an issue is linked to multiple PRs, the action fetches and aggregates contributions from all linked PRs.
 
 #### No Release Notes Found
@@ -133,3 +139,23 @@ Co-authored-by: NAME <NAME@EXAMPLE.COM>
 ```
 The Release Notes generator is trying to get Github user by call GitHub API with the co-author's email address. If the user is found, the generator will use the user's name and link to his GitHub account. If the user is not found, the generator will use the co-author's name without a link to his GitHub account.
 This leads to the situation when the co-author's name is mentioned in the generated Release Notes without a link to his GitHub account.
+
+#### Will the action provide duplicate line in chapters if the issue contains multiple labels?
+Let's imagine that we have an issue which has three labels: `enhancement`, `feature`, `bug`.
+We defined chapters for our GH actions this way:
+```
+    chapters: '[
+      {"title": "Breaking Changes 💥", "label": "breaking-change"},
+      {"title": "New Features 🎉", "label": "enhancement"},
+      {"title": "New Features 🎉", "label": "feature"},
+      {"title": "Bugfixes 🛠", "label": "bug"}
+    ]'
+```
+Then in chapters `New Features 🎉` and `Bugfixes 🛠` will be duplicated lines for this issue.
+In the `New Features 🎉` chapter will be mentioned this issue once only.
+
+#### Will the action provide duplicate line if the issue contains multiple "Release Notes" comments?
+In current implementation the action will provide only first detected "Release Notes" comment for each issue. See [Issue](https://github.com/AbsaOSS/generate-release-notes/issues/19) for update on this topic.
+
+#### What will happen when Merged PR is linked to open issues?
+For this situation there will be prepared new chapter `Merged PRs linked to Open Issue(s)`. See [Issue](https://github.com/AbsaOSS/generate-release-notes/issues/20) for update on this topic.
