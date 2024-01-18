@@ -31171,13 +31171,19 @@ function parseChaptersJson(chaptersJson) {
  * @param {string} repoOwner - The owner of the repository.
  * @param {string} repoName - The name of the repository.
  * @param {Object} latestRelease - The latest release object.
+ * @param {boolean} usePublishedAt - Flag to use created-at or published-at time point.
  * @returns {Promise<Array>} An array of closed issues since the latest release.
  */
-async function fetchClosedIssues(octokit, repoOwner, repoName, latestRelease) {
+async function fetchClosedIssues(octokit, repoOwner, repoName, latestRelease, usePublishedAt) {
     let since;
-    if (latestRelease && latestRelease.created_at) {
-        since = new Date(latestRelease.created_at)
-        console.log(`Fetching closed issues since ${since.toISOString()}`);
+    if (latestRelease) {
+        if (usePublishedAt) {
+            since = new Date(latestRelease.published_at)
+            console.log(`Fetching closed issues since ${since.toISOString()} - published-at.`);
+        } else {
+            since = new Date(latestRelease.created_at)
+            console.log(`Fetching closed issues since ${since.toISOString()} - created-at.`);
+        }
     } else {
         const firstClosedIssue = await octokit.rest.issues.listForRepo({
             owner: repoOwner,
@@ -31213,22 +31219,30 @@ async function fetchClosedIssues(octokit, repoOwner, repoName, latestRelease) {
  * @param {string} repoOwner - The owner of the repository.
  * @param {string} repoName - The name of the repository.
  * @param {Object} latestRelease - The latest release object.
+ * @param {boolean} usePublishedAt - Flag to use created-at or published-at time point.
  * @returns {Promise<Array>} An array of closed pull requests since the latest release.
  */
-async function fetchPullRequests(octokit, repoOwner, repoName, latestRelease) {
+async function fetchPullRequests(octokit, repoOwner, repoName, latestRelease, usePublishedAt) {
     console.log(`Fetching closed pull requests for ${repoOwner}/${repoName}`);
 
     if (latestRelease) {
-        console.log(`Since latest release date: ${latestRelease.created_at}`);
+        let since;
+        if (usePublishedAt) {
+            console.log(`Since latest release date: ${latestRelease.published_at} - published-at.`);
+            since = new Date(latestRelease.published_at);
+        } else {
+            console.log(`Since latest release date: ${latestRelease.created_at} - created-at.`);
+            since = new Date(latestRelease.created_at);
+        }
+
         return await octokit.rest.pulls.list({
             owner: repoOwner,
             repo: repoName,
             state: 'closed',
             sort: 'updated',
             direction: 'desc',
-            since: new Date(latestRelease.created_at)
+            since: since
         });
-
     } else {
         console.log("No latest release found. Fetching all closed pull requests.");
         return await octokit.rest.pulls.list({
@@ -31248,6 +31262,7 @@ async function run() {
     const chaptersJson = core.getInput('chapters');
     const warnings = core.getInput('warnings').toLowerCase() === 'true';
     const githubToken = process.env.GITHUB_TOKEN;
+    const usePublishedAt = core.getInput('published-at').toLowerCase() === 'true';
 
     // Validate environment variables and arguments
     if (!githubToken || !repoOwner || !repoName) {
@@ -31261,7 +31276,7 @@ async function run() {
         const latestRelease = await fetchLatestRelease(octokit, repoOwner, repoName);
 
         // Fetch closed issues since the latest release
-        const closedIssuesOnlyIssues = await fetchClosedIssues(octokit, repoOwner, repoName, latestRelease);
+        const closedIssuesOnlyIssues = await fetchClosedIssues(octokit, repoOwner, repoName, latestRelease, usePublishedAt);
         console.log(`Found ${closedIssuesOnlyIssues.length} closed issues (only Issues) since last release`);
 
         // Initialize variables for each chapter
@@ -31308,7 +31323,7 @@ async function run() {
         // Check PRs for linked issues
         if (warnings) {
             // Fetch pull requests since the latest release
-            const prsSinceLastRelease = await fetchPullRequests(octokit, repoOwner, repoName, latestRelease);
+            const prsSinceLastRelease = await fetchPullRequests(octokit, repoOwner, repoName, latestRelease, usePublishedAt);
             console.log(`Found ${prsSinceLastRelease.data.length} closed PRs since last release`);
             const sortedPRs = prsSinceLastRelease.data.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 

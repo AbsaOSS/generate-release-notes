@@ -31,6 +31,7 @@ Add the following step to your GitHub workflow:
       {"title": "Bugfixes 🛠", "label": "bug"}
     ]'
     warnings: true
+    published-at: true
 ```
 
 ### Configure the Action
@@ -40,6 +41,7 @@ Configure the action by customizing the following parameters based on your needs
 - **tag-name** (required): The name of the tag for which you want to generate release notes. This should be the same as the tag name used in the release workflow.
 - **chapters** (required): A JSON string defining chapters and corresponding labels for categorization. Each chapter, like "Breaking Changes", "New Features", and "Bugfixes", should have a title and a label matching your GitHub issues and PRs.
 - **warnings** (optional): Set to true to enable warnings in the release notes. These warnings identify issues without release notes, without user-defined labels, or without associated pull requests, and PRs without linked issues. Defaults to false if not specified.
+- **published-at** (optional): Set to true to enable the use of the `published-at` timestamp as the reference point for searching closed issues and PRs, instead of the `created-at` date of the latest release.
 
 ## Setup
 ### Build the Action:

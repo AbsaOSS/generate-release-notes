@@ -11,6 +11,10 @@ inputs:
     description: 'Print warning chapters if true.'
     required: false
     default: 'false'
+  published-at:
+    description: 'Use `published-at` timestamp instead of `created-at` as the reference point.'
+    required: false
+    default: 'false'
 
 branding:
   icon: 'book'
