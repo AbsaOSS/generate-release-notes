@@ -65,7 +65,7 @@ The action scans through comments on each closed issue since the last release. I
 #### Comment Format
 For an issue's contributions to be included in the release notes, it must contain a comment starting with "Release Notes" followed by the note content. This comment is typically added by the contributors.
 
-Here is an example of the content for a "Release Notes" comment:
+Here is an example of the content for a 'Release Notes' string, which is not case-sensitive:
 ```
 Release Notes
 - This update introduces a new caching mechanism that improves performance by 20%.
@@ -158,8 +158,8 @@ We defined chapters for our GH actions this way:
 Then in chapters `New Features 🎉` and `Bugfixes 🛠` will be duplicated lines for this issue.
 In the `New Features 🎉` chapter will be mentioned this issue once only.
 
-#### Will the action provide duplicate line if the issue contains multiple "Release Notes" comments?
-In current implementation the action will provide only first detected "Release Notes" comment for each issue. See [Issue](https://github.com/AbsaOSS/generate-release-notes/issues/19) for update on this topic.
+#### What will happen when the issue contains multiple "Release Notes" comments?
+All issue comments are checked for presence of `Release Notes` string. All detected release notes are collected printed under issue.
 
 #### What will happen when Merged PR is linked to open issues?
 The PR will be mentioned in warning chapter **Merged PRs Linked to Open Issue**.
