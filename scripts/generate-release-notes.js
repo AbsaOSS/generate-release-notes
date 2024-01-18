@@ -175,13 +175,67 @@ async function getReleaseNotesFromComments(octokit, issueNumber, issueTitle, iss
  * @returns {Promise<boolean>} True if the pull request is linked to an issue, false otherwise.
  */
 async function isPrLinkedToIssue(octokit, prNumber, repoOwner, repoName) {
+    // Get the pull request details
     const pr = await octokit.rest.pulls.get({
         owner: repoOwner,
         repo: repoName,
         pull_number: prNumber
     });
-    return /#\d+/.test(pr.data.body);
+
+    // Regex pattern to find references to issues
+    const regexPattern = /([Cc]los(e|es|ed)|[Ff]ix(es|ed)?|[Rr]esolv(e|es|ed))\s*#\s*([0-9]+)/g;
+
+    // Test if the PR body contains any issue references
+    return regexPattern.test(pr.data.body);
 }
+
+
+/**
+ * Checks if a pull request is linked to any open issues.
+ * @param {Octokit} octokit - The Octokit instance.
+ * @param {number} prNumber - The pull request number.
+ * @param {string} repoOwner - The owner of the repository.
+ * @param {string} repoName - The name of the repository.
+ * @returns {Promise<boolean>} True if the pull request is linked to any open issue, false otherwise.
+ */
+async function isPrLinkedToOpenIssue(octokit, prNumber, repoOwner, repoName) {
+    // Get the pull request details
+    const pr = await octokit.rest.pulls.get({
+        owner: repoOwner,
+        repo: repoName,
+        pull_number: prNumber
+    });
+
+    // Regex pattern to find references to issues
+    const regexPattern = /([Cc]los(e|es|ed)|[Ff]ix(es|ed)?|[Rr]esolv(e|es|ed))\s*#\s*([0-9]+)/g;
+
+    // Extract all issue numbers from the PR body
+    const issueMatches = pr.data.body.match(regexPattern);
+    if (!issueMatches) {
+        return false; // No issue references found in PR body
+    }
+
+    // Check each linked issue
+    for (const match of issueMatches) {
+        const issueNumber = match.match(/#([0-9]+)/)[1];
+
+        // Get the issue details
+        const issue = await octokit.rest.issues.get({
+            owner: repoOwner,
+            repo: repoName,
+            issue_number: issueNumber
+        });
+
+        // If any of the issues is open, return true
+        if (issue.data.state === 'open') {
+            return true;
+        }
+    }
+
+    // If none of the issues are open, return false
+    return false;
+}
+
 
 /**
  * Parses the JSON string of chapters into a map.
@@ -308,6 +362,7 @@ async function run() {
         const titlesToLabelsMap = parseChaptersJson(chaptersJson);
         const chapterContents = new Map(Array.from(titlesToLabelsMap.keys()).map(label => [label, '']));
         let issuesWithoutReleaseNotes = '', issuesWithoutUserLabels = '', issuesWithoutPR = '', prsWithoutLinkedIssue = '';
+        let prsLinkedToOpenIssue = '';
 
         // Categorize issues and PRs
         for (const issue of closedIssuesOnlyIssues) {
@@ -354,6 +409,10 @@ async function run() {
             for (const pr of sortedPRs) {
                 if (!await isPrLinkedToIssue(octokit, pr.number, repoOwner, repoName)) {
                     prsWithoutLinkedIssue += `#${pr.number} _${pr.title}_\n`;
+                } else {
+                    if (await isPrLinkedToOpenIssue(octokit, pr.number, repoOwner, repoName)) {
+                        prsWithLinkedOpenIssue += `#${pr.number} _${pr.title}_\n`;
+                    }
                 }
             }
         }
@@ -381,6 +440,7 @@ async function run() {
             releaseNotes += "### Issues without User Defined Labels ⚠️\n" + (issuesWithoutUserLabels || "All issues contain at least one of user defined labels.") + "\n\n";
             releaseNotes += "### Issues without Release Notes ⚠️\n" + (issuesWithoutReleaseNotes || "All issues have release notes.") + "\n\n";
             releaseNotes += "### PRs without Linked Issue ⚠️\n" + (prsWithoutLinkedIssue || "All PRs are linked to issues.") + "\n\n";
+            releaseNotes += "### PRs Linked to Open Issue ⚠️\n" + (prsLinkedToOpenIssue || "All PRs are linked to Closed issues.") + "\n\n";
         }
         releaseNotes += "#### Full Changelog\n" + changelogUrl;
 
