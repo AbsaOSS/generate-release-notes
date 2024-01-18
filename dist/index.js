@@ -31314,7 +31314,7 @@ async function run() {
                     prsWithoutLinkedIssue += `#${pr.number} _${pr.title}_\n`;
                 } else {
                     if (await isPrLinkedToOpenIssue(octokit, pr.number, repoOwner, repoName)) {
-                        prsWithLinkedOpenIssue += `#${pr.number} _${pr.title}_\n`;
+                        prsLinkedToOpenIssue += `#${pr.number} _${pr.title}_\n`;
                     }
                 }
             }
