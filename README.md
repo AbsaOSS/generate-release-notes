@@ -88,21 +88,25 @@ If the `warnings` option is enabled in the action's configuration, the release n
 
 The action includes four specific warning chapters to highlight potential areas of improvement in release documentation. Each chapter serves a distinct purpose:
 
-- **_Issues Without Pull Request_**
+- **_Closed Issues Without Pull Request_**
   - **Purpose**: This chapter lists issues that have been closed since the last release but are not linked to any pull requests.
   - **Importance**: Helps maintainers identify changes that might not have been properly reviewed or documented through PRs, ensuring the integrity of the release documentation.
 
-- **_Issues Without User-Defined Labels_**
+- **_Closed Issues Without User-Defined Labels_**
   - **Purpose**: Displays issues lacking the labels defined in the `chapters` configuration.
   - **Importance**: Ensures all issues are categorized correctly according to the project's classification system. It aids in organizing release notes into predefined chapters effectively.
 
-- **_Issues Without Release Notes_**
+- **_Closed Issues Without Release Notes_**
   - **Purpose**: Identifies issues that do not contain a "Release Notes" comment.
   - **Importance**: Ensures that all significant changes are properly documented in the release notes, enhancing the completeness and usefulness of the release information provided to end-users.
 
-- **_PRs Without Linked Issue_**
+- **_Merged PRs Without Linked Issue_**
   - **Purpose**: Lists pull requests that are not associated with any issues.
   - **Importance**: Encourages linking PRs to issues for better traceability and understanding of why changes were made. It also helps in maintaining a cohesive narrative in the project history and release notes.
+
+- **_Merged PRs Linked to Open Issue_**
+  - **Purpose**: This section identifies merged pull requests that are still linked to issues which are open.
+  - **Importance**: Highlighting these PRs indicates potential discrepancies or ongoing work related to the PR. It helps in ensuring that all issues addressed by PRs are properly closed and documented, maintaining the accuracy and relevance of the project's issue tracking.
 
 Each warning chapter acts as a quality check, ensuring that the release notes are comprehensive, well-organized, and meaningful. By addressing these warnings, project maintainers can significantly improve the clarity and effectiveness of their release documentation.
 
@@ -158,4 +162,4 @@ In the `New Features 🎉` chapter will be mentioned this issue once only.
 In current implementation the action will provide only first detected "Release Notes" comment for each issue. See [Issue](https://github.com/AbsaOSS/generate-release-notes/issues/19) for update on this topic.
 
 #### What will happen when Merged PR is linked to open issues?
-For this situation there will be prepared new chapter `Merged PRs linked to Open Issue(s)`. See [Issue](https://github.com/AbsaOSS/generate-release-notes/issues/20) for update on this topic.
+The PR will be mentioned in warning chapter **Merged PRs Linked to Open Issue**.
