@@ -141,28 +141,31 @@ async function getReleaseNotesFromComments(octokit, issueNumber, issueTitle, iss
     let commitAuthors = await getPRCommitAuthors(octokit, repoOwner, repoName, relatedPRs);
     let contributors = await getIssueContributors(issueAssignees, commitAuthors);
 
+    let releaseNotes = [];
     for (const comment of comments.data) {
         if (comment.body.toLowerCase().startsWith('release notes')) {
             const noteContent = comment.body.replace(/^release notes\s*/i, '').trim();
             console.log(`Found release notes in comments for issue #${issueNumber}`);
-            const contributorsList = Array.from(contributors).join(', ');
-
-            console.log(`Related PRs (string) for issue #${issueNumber}: ${relatedPRLinksString}`);
-            console.log(`Related PRs (Set) for issue #${issueNumber}: ${relatedPRs}`);
-            if (relatedPRs.length === 0) {
-                return `- #${issueNumber} _${issueTitle}_ implemented by ${contributorsList}\n${noteContent.replace(/^\s*[\r\n]/gm, '').replace(/^/gm, '  ')}\n`;
-            } else {
-                return `- #${issueNumber} _${issueTitle}_ implemented by ${contributorsList} in ${relatedPRLinksString}\n${noteContent.replace(/^\s*[\r\n]/gm, '').replace(/^/gm, '  ')}\n`;
-            }
+            releaseNotes.push(noteContent.replace(/^\s*[\r\n]/gm, '').replace(/^/gm, '  '));
         }
     }
 
-    console.log(`No specific release notes found in comments for issue #${issueNumber}`);
-    const contributorsList = Array.from(contributors).join(', ');
-    if (relatedPRs.length === 0) {
-        return `- x#${issueNumber} _${issueTitle}_ implemented by ${contributorsList}\n`;
+    if (releaseNotes.length === 0) {
+        console.log(`No specific release notes found in comments for issue #${issueNumber}`);
+        const contributorsList = Array.from(contributors).join(', ');
+        if (relatedPRs.length === 0) {
+            return `- x#${issueNumber} _${issueTitle}_ implemented by ${contributorsList}\n`;
+        } else {
+            return `- x#${issueNumber} _${issueTitle}_ implemented by ${contributorsList} in ${relatedPRLinksString}\n`;
+        }
     } else {
-        return `- x#${issueNumber} _${issueTitle}_ implemented by ${contributorsList} in ${relatedPRLinksString}\n`;
+        const contributorsList = Array.from(contributors).join(', ');
+        const notes = releaseNotes.join('\n');
+        if (relatedPRs.length === 0) {
+            return `- #${issueNumber} _${issueTitle}_ implemented by ${contributorsList}\n${notes}\n`;
+        } else {
+            return `- #${issueNumber} _${issueTitle}_ implemented by ${contributorsList} in ${relatedPRLinksString}\n${notes}\n`;
+        }
     }
 }
 
