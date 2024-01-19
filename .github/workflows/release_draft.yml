@@ -1,0 +1,113 @@
+name: Release - create draft release
+on:
+  workflow_dispatch:
+    inputs:
+      tagName:
+        description: 'Name of git tag to be created, and then draft release created. Syntax: "v[0-9]+.[0-9]+.[0-9]+".'
+        required: true
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate format of received tag
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const newTag = core.getInput('tag-name');
+            const regex = /^v[0-9]+\.[0-9]+\.[0-9]+$/;
+            
+            if (!regex.test(newTag)) {
+              core.setFailed('Tag does not match the required format "v[0-9]+.[0-9]+.[0-9]+"');
+              return;
+            }
+          tag-name: ${{ github.event.inputs.tagName }}
+
+      - name: Check tag's correct version increment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const newTag = core.getInput('tag-name');
+
+            // get latest tag
+            const { data: refs } = await github.rest.git.listMatchingRefs({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: 'tags/'
+            });
+
+            const latestTag = refs.sort((a, b) => new Date(b.object.date) - new Date(a.object.date))[0].ref.replace('refs/tags/', '');
+
+            const latestVersion = latestTag.replace('v', '').split('.').map(Number);
+            const newVersion = newTag.replace('v', '').split('.').map(Number);
+
+            // check tag's correct version increase
+            const isValid = (latestVersion[0] === newVersion[0] && latestVersion[1] === newVersion[1] && newVersion[2] === latestVersion[2] + 1) ||
+              (latestVersion[0] === newVersion[0] && newVersion[1] === latestVersion[1] + 1 && newVersion[2] === 0) ||
+              (newVersion[0] === latestVersion[0] + 1 && newVersion[1] === 0 && newVersion[2] === 0);
+
+            if (!isValid) {
+              core.setFailed('New tag is not one version higher than the latest tag');
+              return;
+            }
+
+          tag-name: ${{ github.event.inputs.tagName }}
+
+      - name: Create and push tag
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const tag = core.getInput('tag-name')
+            const ref = `refs/tags/${tag}`;
+            const sha = context.sha; // The SHA of the commit to tag
+        
+            await github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: ref,
+              sha: sha
+            });
+        
+            console.log(`Tag created: ${tag}`);
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          tag-name: ${{ github.event.inputs.tagName }}
+
+  release:
+    needs: tag
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: refs/tags/${{ github.event.inputs.tagName }}
+
+      - name: Generate release notes
+        id: generate_release_notes
+        uses: AbsaOSS/generate-release-notes@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag-name: ${{ github.event.inputs.tagName }}
+          chapters: |
+            [
+              {"title": "Breaking Changes 💥", "label": "breaking-change"},
+              {"title": "New Features 🎉", "label": "feature"},
+              {"title": "New Features 🎉", "label": "enhancement"},
+              {"title": "Bugfixes 🛠", "label": "bug"}
+            ]
+          warnings: true
+
+      - name: Create draft release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          name: ${{ github.event.inputs.tagName }}
+          body: ${{ steps.generate_release_notes.outputs.releaseNotes }}
+          tag_name: ${{ github.event.inputs.tagName }}
+          draft: true
+          prerelease: false
