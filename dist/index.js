@@ -31247,23 +31247,30 @@ async function fetchPullRequests(octokit, repoOwner, repoName, latestRelease, us
         response = await octokit.rest.pulls.list({
             owner: repoOwner,
             repo: repoName,
-            state: prState,
+            state: 'all',
             sort: 'updated',
             direction: 'desc',
             since: since
         });
     } else {
-        console.log("No latest release found. Fetching all closed pull requests.");
+        console.log("No latest release found. Fetching all ${prState} pull requests.");
         response = await octokit.rest.pulls.list({
             owner: repoOwner,
             repo: repoName,
-            state: prState,
+            state: 'all',
             sort: 'updated',
             direction: 'desc'
         });
     }
 
     pullRequests = response.data;
+
+    // Filter based on prState
+    if (prState === 'merged') {
+        pullRequests = pullRequests.filter(pr => pr.merged_at);
+    } else if (prState === 'closed') {
+        pullRequests = pullRequests.filter(pr => !pr.merged_at && pr.state === 'closed');
+    }
 
     // Filter out pull requests with the specified skipLabel
     if (skipLabel) {
