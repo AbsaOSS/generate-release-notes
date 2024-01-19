@@ -6,6 +6,7 @@ on:
     branches: [ master ]
   issue_comment:
     types: [created, deleted]
+    branches: [ master ]
 
 jobs:
   check-release-notes-comments:
