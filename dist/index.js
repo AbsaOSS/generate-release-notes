@@ -31277,10 +31277,8 @@ async function fetchPullRequests(octokit, repoOwner, repoName, latestRelease, us
     }
 
     // Filter out pull requests with the specified skipLabel
-    if (skipLabel) {
-        console.log(`Filtering out pull requests with label: ${skipLabel}`)
-        pullRequests = pullRequests.filter(pr => !pr.labels.some(label => label.name === skipLabel));
-    }
+    console.log(`Filtering out pull requests with label: ${skipLabel}`)
+    pullRequests = pullRequests.filter(pr => !pr.labels.some(label => label.name === skipLabel));
 
     return pullRequests;
 }

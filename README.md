@@ -32,7 +32,7 @@ Add the following step to your GitHub workflow (in example are used non-default 
     ]'
     warnings: false
     published-at: true
-    skip-release-notes: 'ignore-in-release'     # changing default value of label
+    skip-release-notes-label: 'ignore-in-release'     # changing default value of label
     print-empty-chapters: false
 ```
 

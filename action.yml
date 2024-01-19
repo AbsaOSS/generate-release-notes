@@ -15,7 +15,7 @@ inputs:
     description: 'Use `published-at` timestamp instead of `created-at` as the reference point.'
     required: false
     default: 'false'
-  skip-label:
+  skip-release-notes-label:
     description: 'Skip label used for detection of issues or pull requests to ignore in Release Notes generation process.'
     required: false
     default: 'skip-release-notes'
