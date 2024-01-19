@@ -4,12 +4,15 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, edited, labeled, unlabeled]
     branches: [ master ]
+  issue_comment:
+    types: [created, deleted]
 
 jobs:
   check-release-notes-comments:
     runs-on: ubuntu-latest
     steps:
       - name: Fetch all PR comments
+        if: ${{ github.event.issue.pull_request }}
         id: get-comments
         uses: actions/github-script@v7
         with:
@@ -28,6 +31,7 @@ jobs:
             return comments.data.map(comment => comment.body);
 
       - name: Check for 'Release Notes' in comments
+        if: ${{ github.event.issue.pull_request }}
         uses: actions/github-script@v7
         with:
           script: |
