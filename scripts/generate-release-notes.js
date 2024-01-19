@@ -459,8 +459,8 @@ async function run() {
             const mergedPRsSinceLastRelease = await fetchPullRequests(octokit, repoOwner, repoName, latestRelease, usePublishedAt, skipLabel);
             if (mergedPRsSinceLastRelease) {
                 console.log("Merged PRs since last release.")
-                console.log(`Found ${mergedPRsSinceLastRelease.data.length} merged PRs since last release`);
-                const sortedMergedPRs = mergedPRsSinceLastRelease.data.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+                console.log(`Found ${mergedPRsSinceLastRelease.length} merged PRs since last release`);
+                const sortedMergedPRs = mergedPRsSinceLastRelease.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
                 for (const pr of sortedMergedPRs) {
                     if (!await isPrLinkedToIssue(octokit, pr.number, repoOwner, repoName)) {
@@ -478,8 +478,8 @@ async function run() {
             // Fetch closed pull requests since the latest release
             const closedPRsSinceLastRelease = await fetchPullRequests(octokit, repoOwner, repoName, latestRelease, usePublishedAt, skipLabel, 'closed');
             if (closedPRsSinceLastRelease) {
-                console.log(`Found ${closedPRsSinceLastRelease.data.length} closed PRs since last release`);
-                const sortedClosedPRs = closedPRsSinceLastRelease.data.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+                console.log(`Found ${closedPRsSinceLastRelease.length} closed PRs since last release`);
+                const sortedClosedPRs = closedPRsSinceLastRelease.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
                 for (const pr of sortedClosedPRs) {
                     if (!await isPrLinkedToIssue(octokit, pr.number, repoOwner, repoName)) {
