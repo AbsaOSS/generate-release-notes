@@ -34,7 +34,11 @@ async function getRelatedPRsForIssue(octokit, issueNumber, repoOwner, repoName) 
 
     // Filter events to get only those that are linked pull requests
     const pullRequestEvents = relatedPRs.data.filter(event => event.event === 'cross-referenced' && event.source && event.source.issue.pull_request);
-    console.log(`Found ${pullRequestEvents.length} related PRs for issue #${issueNumber}`);
+    if (pullRequestEvents) {
+        console.log(`Found ${pullRequestEvents.length} related PRs for issue #${issueNumber}`);
+    } else {
+        console.log(`Found 0 related PRs for issue #${issueNumber}`);
+    }
     return pullRequestEvents;
 }
 
@@ -52,7 +56,7 @@ async function getIssueContributors(issueAssignees, commitAuthors) {
     const combined = [...assignees, ...commitAuthors];
 
     // Check if the combined array is empty
-    if (combined.length === 0) {
+    if (combined && combined.length === 0) {
         return new Set(["\"Missing Assignee or Contributor\""]);
     }
 
@@ -292,7 +296,7 @@ async function fetchClosedIssues(octokit, repoOwner, repoName, latestRelease, us
             direction: 'asc'
         });
 
-        if (firstClosedIssue.data.length > 0) {
+        if (firstClosedIssue && firstClosedIssue.data.length > 0) {
             since = new Date(firstClosedIssue.data[0].created_at);
             console.log(`Fetching closed issues since the first closed issue on ${since.toISOString()}`);
         } else {
@@ -350,7 +354,7 @@ async function fetchPullRequests(octokit, repoOwner, repoName, latestRelease, us
             since: since
         });
     } else {
-        console.log("No latest release found. Fetching all ${prState} pull requests.");
+        console.log('No latest release found. Fetching all pull requests of repository.');
         response = await octokit.rest.pulls.list({
             owner: repoOwner,
             repo: repoName,
@@ -401,7 +405,11 @@ async function run() {
 
         // Fetch closed issues since the latest release
         const closedIssuesOnlyIssues = await fetchClosedIssues(octokit, repoOwner, repoName, latestRelease, usePublishedAt, skipLabel);
-        console.log(`Found ${closedIssuesOnlyIssues.length} closed issues (only Issues) since last release`);
+        if (closedIssuesOnlyIssues) {
+            console.log(`Found ${closedIssuesOnlyIssues.length} closed issues (only Issues) since last release`);
+        } else {
+            console.log(`Found 0 closed issues (only Issues) since last release`);
+        }
 
         // Initialize variables for each chapter
         const titlesToLabelsMap = parseChaptersJson(chaptersJson);
@@ -448,28 +456,36 @@ async function run() {
         if (warnings) {
             // Fetch merged pull requests since the latest release
             const mergedPRsSinceLastRelease = await fetchPullRequests(octokit, repoOwner, repoName, latestRelease, usePublishedAt, skipLabel);
-            console.log(`Found ${mergedPRsSinceLastRelease.data.length} merged PRs since last release`);
-            const sortedMergedPRs = mergedPRsSinceLastRelease.data.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+            if (mergedPRsSinceLastRelease) {
+                console.log(`Found ${mergedPRsSinceLastRelease.data.length} merged PRs since last release`);
+                const sortedMergedPRs = mergedPRsSinceLastRelease.data.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
-            for (const pr of sortedMergedPRs) {
-                if (!await isPrLinkedToIssue(octokit, pr.number, repoOwner, repoName)) {
-                    mergedPRsWithoutLinkedIssue += `#${pr.number} _${pr.title}_\n`;
-                } else {
-                    if (await isPrLinkedToOpenIssue(octokit, pr.number, repoOwner, repoName)) {
-                        mergedPRsLinkedToOpenIssue += `#${pr.number} _${pr.title}_\n`;
+                for (const pr of sortedMergedPRs) {
+                    if (!await isPrLinkedToIssue(octokit, pr.number, repoOwner, repoName)) {
+                        mergedPRsWithoutLinkedIssue += `#${pr.number} _${pr.title}_\n`;
+                    } else {
+                        if (await isPrLinkedToOpenIssue(octokit, pr.number, repoOwner, repoName)) {
+                            mergedPRsLinkedToOpenIssue += `#${pr.number} _${pr.title}_\n`;
+                        }
                     }
                 }
+            } else {
+                console.log(`Found 0 merged PRs since last release`);
             }
 
             // Fetch closed pull requests since the latest release
             const closedPRsSinceLastRelease = await fetchPullRequests(octokit, repoOwner, repoName, latestRelease, usePublishedAt, skipLabel, 'closed');
-            console.log(`Found ${closedPRsSinceLastRelease.data.length} closed PRs since last release`);
-            const sortedClosedPRs = closedPRsSinceLastRelease.data.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+            if (closedPRsSinceLastRelease) {
+                console.log(`Found ${closedPRsSinceLastRelease.data.length} closed PRs since last release`);
+                const sortedClosedPRs = closedPRsSinceLastRelease.data.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
-            for (const pr of sortedClosedPRs) {
-                if (!await isPrLinkedToIssue(octokit, pr.number, repoOwner, repoName)) {
-                    closedPRsLinkedToIssue += `#${pr.number} _${pr.title}_\n`;
+                for (const pr of sortedClosedPRs) {
+                    if (!await isPrLinkedToIssue(octokit, pr.number, repoOwner, repoName)) {
+                        closedPRsLinkedToIssue += `#${pr.number} _${pr.title}_\n`;
+                    }
                 }
+            } else {
+                console.log(`Found 0 closed PRs since last release`);
             }
         }
 
