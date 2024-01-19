@@ -1,0 +1,43 @@
+name: Check Release Notes in PR comment
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited, labeled, unlabeled]
+    branches: [ master ]
+
+jobs:
+  check-release-notes-comments:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch all PR comments
+        id: get-comments
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const issueNumber = context.issue.number;
+            const repoName = context.repo.repo;
+            const repoOwner = context.repo.owner;
+            
+            const comments = await github.rest.issues.listComments({
+              owner: repoOwner,
+              repo: repoName,
+              issue_number: issueNumber,
+            });
+            
+            return comments.data.map(comment => comment.body);
+
+      - name: Check for 'Release Notes' in comments
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const comments = ${{ steps.get-comments.outputs.result }};
+            const releaseNotesRegex = /release notes/i;
+            const hasReleaseNotes = comments.some(comment => releaseNotesRegex.test(comment));
+            
+            if (!hasReleaseNotes) {
+              console.log('No "Release notes" found in PR comments');
+              core.setFailed('No "Release notes" found in PR comments')
+            } else {
+              console.log('"Release notes" found in comments');
+            }
