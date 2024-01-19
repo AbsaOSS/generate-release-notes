@@ -269,9 +269,10 @@ function parseChaptersJson(chaptersJson) {
  * @param {string} repoName - The name of the repository.
  * @param {Object} latestRelease - The latest release object.
  * @param {boolean} usePublishedAt - Flag to use created-at or published-at time point.
+ * @param {string} skipLabel - The label to skip issues.
  * @returns {Promise<Array>} An array of closed issues since the latest release.
  */
-async function fetchClosedIssues(octokit, repoOwner, repoName, latestRelease, usePublishedAt) {
+async function fetchClosedIssues(octokit, repoOwner, repoName, latestRelease, usePublishedAt, skipLabel) {
     let since;
     if (latestRelease) {
         if (usePublishedAt) {
@@ -307,7 +308,10 @@ async function fetchClosedIssues(octokit, repoOwner, repoName, latestRelease, us
         since: since
     });
 
-    return closedIssues.data.filter(issue => !issue.pull_request).reverse();
+    return closedIssues.data
+        .filter(issue => !issue.pull_request) // Filter out pull requests
+        .filter(issue => !issue.labels.some(label => label.name === skipLabel)) // Filter out issues with skip label
+        .reverse();
 }
 
 /**
@@ -317,13 +321,18 @@ async function fetchClosedIssues(octokit, repoOwner, repoName, latestRelease, us
  * @param {string} repoName - The name of the repository.
  * @param {Object} latestRelease - The latest release object.
  * @param {boolean} usePublishedAt - Flag to use created-at or published-at time point.
+ * @param {string} skipLabel - The label to skip issues.
+ * @param {string} prState - The state of the pull request.
  * @returns {Promise<Array>} An array of closed pull requests since the latest release.
  */
-async function fetchPullRequests(octokit, repoOwner, repoName, latestRelease, usePublishedAt) {
-    console.log(`Fetching closed pull requests for ${repoOwner}/${repoName}`);
+async function fetchPullRequests(octokit, repoOwner, repoName, latestRelease, usePublishedAt, skipLabel,  prState = 'merged') {
+    console.log(`Fetching ${prState} pull requests for ${repoOwner}/${repoName}`);
+
+    let pullRequests;
+    let since;
+    let response;
 
     if (latestRelease) {
-        let since;
         if (usePublishedAt) {
             console.log(`Since latest release date: ${latestRelease.published_at} - published-at.`);
             since = new Date(latestRelease.published_at);
@@ -332,24 +341,33 @@ async function fetchPullRequests(octokit, repoOwner, repoName, latestRelease, us
             since = new Date(latestRelease.created_at);
         }
 
-        return await octokit.rest.pulls.list({
+        response = await octokit.rest.pulls.list({
             owner: repoOwner,
             repo: repoName,
-            state: 'closed',
+            state: prState,
             sort: 'updated',
             direction: 'desc',
             since: since
         });
     } else {
         console.log("No latest release found. Fetching all closed pull requests.");
-        return await octokit.rest.pulls.list({
+        response = await octokit.rest.pulls.list({
             owner: repoOwner,
             repo: repoName,
-            state: 'closed',
+            state: prState,
             sort: 'updated',
             direction: 'desc'
         });
     }
+
+    pullRequests = response.data;
+
+    // Filter out pull requests with the specified skipLabel
+    if (skipLabel) {
+        pullRequests = pullRequests.filter(pr => !pr.labels.some(label => label.name === skipLabel));
+    }
+
+    return pullRequests;
 }
 
 async function run() {
@@ -360,6 +378,8 @@ async function run() {
     const warnings = core.getInput('warnings').toLowerCase() === 'true';
     const githubToken = process.env.GITHUB_TOKEN;
     const usePublishedAt = core.getInput('published-at').toLowerCase() === 'true';
+    const skipLabel = core.getInput('skip-label') || 'skip-release-notes';
+    const printEmptyChapters = core.getInput('print-empty-chapters').toLowerCase() === 'true';
 
     // Validate environment variables and arguments
     if (!githubToken || !repoOwner || !repoName) {
@@ -373,14 +393,14 @@ async function run() {
         const latestRelease = await fetchLatestRelease(octokit, repoOwner, repoName);
 
         // Fetch closed issues since the latest release
-        const closedIssuesOnlyIssues = await fetchClosedIssues(octokit, repoOwner, repoName, latestRelease, usePublishedAt);
+        const closedIssuesOnlyIssues = await fetchClosedIssues(octokit, repoOwner, repoName, latestRelease, usePublishedAt, skipLabel);
         console.log(`Found ${closedIssuesOnlyIssues.length} closed issues (only Issues) since last release`);
 
         // Initialize variables for each chapter
         const titlesToLabelsMap = parseChaptersJson(chaptersJson);
         const chapterContents = new Map(Array.from(titlesToLabelsMap.keys()).map(label => [label, '']));
-        let issuesWithoutReleaseNotes = '', issuesWithoutUserLabels = '', issuesWithoutPR = '', prsWithoutLinkedIssue = '';
-        let prsLinkedToOpenIssue = '';
+        let closedIssuesWithoutReleaseNotes = '', closedIssuesWithoutUserLabels = '', closedIssuesWithoutPR = '', mergedPRsWithoutLinkedIssue = '';
+        let mergedPRsLinkedToOpenIssue = '', closedPRsLinkedToIssue = '';
 
         // Categorize issues and PRs
         for (const issue of closedIssuesOnlyIssues) {
@@ -395,7 +415,7 @@ async function run() {
 
             // Check for issues without release notes
             if (warnings && releaseNotesRaw.startsWith('- x#')) {
-                issuesWithoutReleaseNotes += releaseNotes;
+                closedIssuesWithoutReleaseNotes += releaseNotes;
             }
 
             let foundUserLabels = false;
@@ -408,29 +428,40 @@ async function run() {
 
             // Check for issues without user defined labels
             if (!foundUserLabels && warnings) {
-                issuesWithoutUserLabels += releaseNotes;
+                closedIssuesWithoutUserLabels += releaseNotes;
             }
 
             // Check for issues without PR
             if (!relatedPRs.length && warnings) {
-                issuesWithoutPR += releaseNotes;
+                closedIssuesWithoutPR += releaseNotes;
             }
         }
 
         // Check PRs for linked issues
         if (warnings) {
-            // Fetch pull requests since the latest release
-            const prsSinceLastRelease = await fetchPullRequests(octokit, repoOwner, repoName, latestRelease, usePublishedAt);
-            console.log(`Found ${prsSinceLastRelease.data.length} closed PRs since last release`);
-            const sortedPRs = prsSinceLastRelease.data.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+            // Fetch merged pull requests since the latest release
+            const mergedPRsSinceLastRelease = await fetchPullRequests(octokit, repoOwner, repoName, latestRelease, usePublishedAt, skipLabel);
+            console.log(`Found ${mergedPRsSinceLastRelease.data.length} merged PRs since last release`);
+            const sortedMergedPRs = mergedPRsSinceLastRelease.data.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
-            for (const pr of sortedPRs) {
+            for (const pr of sortedMergedPRs) {
                 if (!await isPrLinkedToIssue(octokit, pr.number, repoOwner, repoName)) {
-                    prsWithoutLinkedIssue += `#${pr.number} _${pr.title}_\n`;
+                    mergedPRsWithoutLinkedIssue += `#${pr.number} _${pr.title}_\n`;
                 } else {
                     if (await isPrLinkedToOpenIssue(octokit, pr.number, repoOwner, repoName)) {
-                        prsLinkedToOpenIssue += `#${pr.number} _${pr.title}_\n`;
+                        mergedPRsLinkedToOpenIssue += `#${pr.number} _${pr.title}_\n`;
                     }
+                }
+            }
+
+            // Fetch closed pull requests since the latest release
+            const closedPRsSinceLastRelease = await fetchPullRequests(octokit, repoOwner, repoName, latestRelease, usePublishedAt, skipLabel, 'closed');
+            console.log(`Found ${closedPRsSinceLastRelease.data.length} closed PRs since last release`);
+            const sortedClosedPRs = closedPRsSinceLastRelease.data.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+            for (const pr of sortedClosedPRs) {
+                if (!await isPrLinkedToIssue(octokit, pr.number, repoOwner, repoName)) {
+                    closedPRsLinkedToIssue += `#${pr.number} _${pr.title}_\n`;
                 }
             }
         }
@@ -454,11 +485,21 @@ async function run() {
         });
 
         if (warnings) {
-            releaseNotes += "### Closed Issues without Pull Request ⚠️\n" + (issuesWithoutPR || "All closed issues linked to a Pull Request.") + "\n\n";
-            releaseNotes += "### Closed Issues without User Defined Labels ⚠️\n" + (issuesWithoutUserLabels || "All closed issues contain at least one of user defined labels.") + "\n\n";
-            releaseNotes += "### Closed Issues without Release Notes ⚠️\n" + (issuesWithoutReleaseNotes || "All closed issues have release notes.") + "\n\n";
-            releaseNotes += "### Merged PRs without Linked Issue ⚠️\n" + (prsWithoutLinkedIssue || "All merged PRs are linked to issues.") + "\n\n";
-            releaseNotes += "### Merged PRs Linked to Open Issue ⚠️\n" + (prsLinkedToOpenIssue || "All merged PRs are linked to Closed issues.") + "\n\n";
+            if (printEmptyChapters) {
+                releaseNotes += "### Closed Issues without Pull Request ⚠️\n" + (closedIssuesWithoutPR || "All closed issues linked to a Pull Request.") + "\n\n";
+                releaseNotes += "### Closed Issues without User Defined Labels ⚠️\n" + (closedIssuesWithoutUserLabels || "All closed issues contain at least one of user defined labels.") + "\n\n";
+                releaseNotes += "### Closed Issues without Release Notes ⚠️\n" + (closedIssuesWithoutReleaseNotes || "All closed issues have release notes.") + "\n\n";
+                releaseNotes += "### Merged PRs without Linked Issue ⚠️\n" + (mergedPRsWithoutLinkedIssue || "All merged PRs are linked to issues.") + "\n\n";
+                releaseNotes += "### Merged PRs Linked to Open Issue ⚠️\n" + (mergedPRsLinkedToOpenIssue || "All merged PRs are linked to Closed issues.") + "\n\n";
+                releaseNotes += "### Closed PRs without Linked Issue ⚠️\n" + (closedPRsLinkedToIssue || "All closed PRs are linked to issues.") + "\n\n";
+            } else {
+                releaseNotes += closedIssuesWithoutPR ? "### Closed Issues without Pull Request ⚠️\n" + closedIssuesWithoutPR + "\n\n" : "";
+                releaseNotes += closedIssuesWithoutUserLabels ? "### Closed Issues without User Defined Labels ⚠️\n" + closedIssuesWithoutUserLabels + "\n\n" : "";
+                releaseNotes += closedIssuesWithoutReleaseNotes ? "### Closed Issues without Release Notes ⚠️\n" + closedIssuesWithoutReleaseNotes + "\n\n" : "";
+                releaseNotes += mergedPRsWithoutLinkedIssue ? "### Merged PRs without Linked Issue ⚠️\n" + mergedPRsWithoutLinkedIssue + "\n\n" : "";
+                releaseNotes += mergedPRsLinkedToOpenIssue ? "### Merged PRs Linked to Open Issue ⚠️\n" + mergedPRsLinkedToOpenIssue + "\n\n" : "";
+                releaseNotes += closedPRsLinkedToIssue ? "### Closed PRs without Linked Issue ⚠️\n" + closedPRsLinkedToIssue + "\n\n" : "";
+            }
         }
         releaseNotes += "#### Full Changelog\n" + changelogUrl;
 
