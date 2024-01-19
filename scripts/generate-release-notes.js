@@ -458,7 +458,6 @@ async function run() {
             // Fetch merged pull requests since the latest release
             const mergedPRsSinceLastRelease = await fetchPullRequests(octokit, repoOwner, repoName, latestRelease, usePublishedAt, skipLabel);
             if (mergedPRsSinceLastRelease) {
-                console.log("Merged PRs since last release.")
                 console.log(`Found ${mergedPRsSinceLastRelease.length} merged PRs since last release`);
                 const sortedMergedPRs = mergedPRsSinceLastRelease.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
@@ -506,7 +505,9 @@ async function run() {
         let releaseNotes = '';
         titlesToLabelsMap.forEach((_, title) => {
             const content = chapterContents.get(title);
-            releaseNotes += `### ${title}\n` + (content && content.trim() !== '' ? content : "No entries detected.") + "\n\n";
+            if (printEmptyChapters || (content && content.trim() !== '')) {
+                releaseNotes += `### ${title}\n` + (content && content.trim() !== '' ? content : "No entries detected.") + "\n\n";
+            }
         });
 
         if (warnings) {
