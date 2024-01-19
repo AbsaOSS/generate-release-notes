@@ -14,7 +14,7 @@ Before we begin, ensure you have a GitHub Token with permission to fetch reposit
 
 ### Adding the Action to Your Workflow
 
-Add the following step to your GitHub workflow:
+Add the following step to your GitHub workflow (in example are used non-default values):
 
 ```yaml
 - name: Generate Release Notes
@@ -30,8 +30,10 @@ Add the following step to your GitHub workflow:
       {"title": "New Features 🎉", "label": "feature"},
       {"title": "Bugfixes 🛠", "label": "bug"}
     ]'
-    warnings: true
+    warnings: false
     published-at: true
+    skip-release-notes-label: 'ignore-in-release'     # changing default value of label
+    print-empty-chapters: false
 ```
 
 ### Configure the Action
@@ -42,6 +44,8 @@ Configure the action by customizing the following parameters based on your needs
 - **chapters** (required): A JSON string defining chapters and corresponding labels for categorization. Each chapter, like "Breaking Changes", "New Features", and "Bugfixes", should have a title and a label matching your GitHub issues and PRs.
 - **warnings** (optional): Set to true to enable warnings in the release notes. These warnings identify issues without release notes, without user-defined labels, or without associated pull requests, and PRs without linked issues. Defaults to false if not specified.
 - **published-at** (optional): Set to true to enable the use of the `published-at` timestamp as the reference point for searching closed issues and PRs, instead of the `created-at` date of the latest release.
+- **skip-release-notes** (optional): Set to a label name to skip issues and PRs with this label from release notes process generation. Defaults to `skip-release-notes` if not specified.
+- **print-empty-chapters** (optional): Set to true to print chapters with no issues or PRs. Defaults to false if not specified.
 
 ## Setup
 ### Build the Action:
@@ -109,6 +113,11 @@ The action includes four specific warning chapters to highlight potential areas 
 - **_Merged PRs Linked to Open Issue_**
   - **Purpose**: This section identifies merged pull requests that are still linked to issues which are open.
   - **Importance**: Highlighting these PRs indicates potential discrepancies or ongoing work related to the PR. It helps in ensuring that all issues addressed by PRs are properly closed and documented, maintaining the accuracy and relevance of the project's issue tracking.
+
+- **_Closed PRs Without Linked Issue_**
+  - **Purpose**: Lists pull requests that are closed (not merged) but not associated with any issues.
+  - **Importance**: Highlighting closed PRs without linked issues ensures transparency in the project's history. It helps track important decisions and clarifies the reasoning behind changes, even if they aren't merged. This practice enhances the project's documentation quality and aids in understanding its evolution.
+
 
 Each warning chapter acts as a quality check, ensuring that the release notes are comprehensive, well-organized, and meaningful. By addressing these warnings, project maintainers can significantly improve the clarity and effectiveness of their release documentation.
 
