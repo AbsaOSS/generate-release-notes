@@ -3,7 +3,7 @@ name: Copy Release Notes to Related Issues
 on:
   pull_request:
     types: [closed]
-    branches: [ main ]
+    branches: [ master ]
 
 jobs:
   copy_release_notes:
