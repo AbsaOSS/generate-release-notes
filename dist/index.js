@@ -31278,6 +31278,7 @@ async function fetchPullRequests(octokit, repoOwner, repoName, latestRelease, us
 
     // Filter out pull requests with the specified skipLabel
     if (skipLabel) {
+        console.log(`Filtering out pull requests with label: ${skipLabel}`)
         pullRequests = pullRequests.filter(pr => !pr.labels.some(label => label.name === skipLabel));
     }
 
@@ -31360,6 +31361,7 @@ async function run() {
             // Fetch merged pull requests since the latest release
             const mergedPRsSinceLastRelease = await fetchPullRequests(octokit, repoOwner, repoName, latestRelease, usePublishedAt, skipLabel);
             if (mergedPRsSinceLastRelease) {
+                console.log("Merged PRs since last release.")
                 console.log(`Found ${mergedPRsSinceLastRelease.data.length} merged PRs since last release`);
                 const sortedMergedPRs = mergedPRsSinceLastRelease.data.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
