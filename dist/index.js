@@ -31291,7 +31291,7 @@ async function run() {
     const warnings = core.getInput('warnings').toLowerCase() === 'true';
     const githubToken = process.env.GITHUB_TOKEN;
     const usePublishedAt = core.getInput('published-at').toLowerCase() === 'true';
-    const skipLabel = core.getInput('skip-label') || 'skip-release-notes';
+    const skipLabel = core.getInput('skip-release-notes-label') || 'skip-release-notes';
     const printEmptyChapters = core.getInput('print-empty-chapters').toLowerCase() === 'true';
 
     // Validate environment variables and arguments
