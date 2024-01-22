@@ -31287,25 +31287,19 @@ async function run() {
     const repoOwner = github.context.repo.owner;
     const repoName = github.context.repo.repo;
     const githubToken = process.env.GITHUB_TOKEN;
+    const tagName = core.getInput('tag-name');
 
     // Validate environment variables and arguments
-    if (!githubToken || !repoOwner || !repoName) {
+    if (!githubToken || !repoOwner || !repoName || !tagName) {
         core.setFailed("Missing required inputs or environment variables.");
         return;
     }
 
-    const tagName = core.getInput('tag-name');
-    const chaptersJson = core.getInput('chapters');
-    if (core.getInput('warnings')) {
-        const warnings = core.getInput('warnings').toLowerCase() === 'true';
-    }
+    const chaptersJson = core.getInput('chapters') || "[]";
+    const warnings = core.getInput('warnings') ? core.getInput('warnings').toLowerCase() === 'true' : true;
     const skipLabel = core.getInput('skip-release-notes-label') || 'skip-release-notes';
-    if (core.getInput('print-empty-chapters')) {
-        const printEmptyChapters = core.getInput('print-empty-chapters').toLowerCase() === 'true';
-    }
-    if (core.getInput('published-at')) {
-        const usePublishedAt = core.getInput('published-at').toLowerCase() === 'true';
-    }
+    const usePublishedAt = core.getInput('published-at') ? core.getInput('published-at').toLowerCase() === 'true' : false;
+    const printEmptyChapters = core.getInput('print-empty-chapters') ? core.getInput('print-empty-chapters').toLowerCase() === 'true' : true;
 
     const octokit = new Octokit({ auth: githubToken });
 
