@@ -381,6 +381,7 @@ async function fetchPullRequests(octokit, repoOwner, repoName, latestRelease, us
 }
 
 async function run() {
+    console.log('Starting GitHub Action');
     const repoOwner = github.context.repo.owner;
     const repoName = github.context.repo.repo;
     const githubToken = process.env.GITHUB_TOKEN;
@@ -547,4 +548,8 @@ async function run() {
     }
 }
 
-run();
+module.exports.run = run;
+
+if (require.main === module) {
+    run();
+}
