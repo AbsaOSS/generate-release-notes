@@ -383,18 +383,26 @@ async function fetchPullRequests(octokit, repoOwner, repoName, latestRelease, us
 async function run() {
     const repoOwner = github.context.repo.owner;
     const repoName = github.context.repo.repo;
-    const tagName = core.getInput('tag-name');
-    const chaptersJson = core.getInput('chapters');
-    const warnings = core.getInput('warnings').toLowerCase() === 'true';
     const githubToken = process.env.GITHUB_TOKEN;
-    const usePublishedAt = core.getInput('published-at').toLowerCase() === 'true';
-    const skipLabel = core.getInput('skip-release-notes-label') || 'skip-release-notes';
-    const printEmptyChapters = core.getInput('print-empty-chapters').toLowerCase() === 'true';
 
     // Validate environment variables and arguments
     if (!githubToken || !repoOwner || !repoName) {
-        console.error("Missing required inputs or environment variables.");
-        process.exit(1);
+        throw new Error("Missing required inputs or environment variables.");
+        // console.error("Missing required inputs or environment variables.");
+        // process.exit(1);
+    }
+
+    const tagName = core.getInput('tag-name');
+    const chaptersJson = core.getInput('chapters');
+    if (core.getInput('warnings')) {
+        const warnings = core.getInput('warnings').toLowerCase() === 'true';
+    }
+    const skipLabel = core.getInput('skip-release-notes-label') || 'skip-release-notes';
+    if (core.getInput('print-empty-chapters')) {
+        const printEmptyChapters = core.getInput('print-empty-chapters').toLowerCase() === 'true';
+    }
+    if (core.getInput('published-at')) {
+        const usePublishedAt = core.getInput('published-at').toLowerCase() === 'true';
     }
 
     const octokit = new Octokit({ auth: githubToken });
@@ -534,14 +542,17 @@ async function run() {
         console.log('GitHub Action completed successfully');
     } catch (error) {
         if (error.status === 404) {
-            console.error('Repository not found. Please check the owner and repository name.');
+            // console.error('Repository not found. Please check the owner and repository name.');
+            throw new Error("Repository not found. Please check the owner and repository name.");
         } else if (error.status === 401) {
-            console.error('Authentication failed. Please check your GitHub token.');
+            // console.error('Authentication failed. Please check your GitHub token.');
+            throw new Error("Authentication failed. Please check your GitHub token.");
         } else {
-            console.error(`Error fetching data: ${error.status} - ${error.message}`);
+            // console.error(`Error fetching data: ${error.status} - ${error.message}`);
+            throw new Error(`Error fetching data: ${error.status} - ${error.message}`);
         }
-        process.exit(1);
+        // process.exit(1);
     }
 }
 
-run();
+module.exports = { run };
