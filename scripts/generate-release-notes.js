@@ -262,7 +262,7 @@ function parseChaptersJson(chaptersJson) {
         });
         return titlesToLabelsMap;
     } catch (error) {
-        throw new Error(`Error parsing chapters JSON: ${error.message}`);
+        core.setFailed(`Error parsing chapters JSON: ${error.message}`)
     }
 }
 
@@ -387,9 +387,8 @@ async function run() {
 
     // Validate environment variables and arguments
     if (!githubToken || !repoOwner || !repoName) {
-        throw new Error("Missing required inputs or environment variables.");
-        // console.error("Missing required inputs or environment variables.");
-        // process.exit(1);
+        core.setFailed("Missing required inputs or environment variables.");
+        return;
     }
 
     const tagName = core.getInput('tag-name');
@@ -542,17 +541,16 @@ async function run() {
         console.log('GitHub Action completed successfully');
     } catch (error) {
         if (error.status === 404) {
-            // console.error('Repository not found. Please check the owner and repository name.');
-            throw new Error("Repository not found. Please check the owner and repository name.");
+            console.error('Repository not found. Please check the owner and repository name.');
+            core.setFailed(error.message)
         } else if (error.status === 401) {
-            // console.error('Authentication failed. Please check your GitHub token.');
-            throw new Error("Authentication failed. Please check your GitHub token.");
+            console.error('Authentication failed. Please check your GitHub token.');
+            core.setFailed(error.message)
         } else {
-            // console.error(`Error fetching data: ${error.status} - ${error.message}`);
-            throw new Error(`Error fetching data: ${error.status} - ${error.message}`);
+            console.error(`Error fetching data: ${error.status} - ${error.message}`);
+            core.setFailed(`Error fetching data: ${error.status} - ${error.message}`);
         }
-        // process.exit(1);
     }
 }
 
-module.exports = { run };
+run();
