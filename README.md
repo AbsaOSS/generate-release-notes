@@ -64,7 +64,6 @@ First install [jest](https://jestjs.io/) testing framework.
 npm install --save-dev jest
 npm install @actions/core
 npm install @actions/github
-
 ```
 Launch unit tests.
 ```
