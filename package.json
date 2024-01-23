@@ -1,7 +1,6 @@
 {
   "name": "generate-release-notes_initial",
   "version": "1.0.0",
-  "type": "module",
   "dependencies": {
     "@actions/github": "^6.0.0",
     "@octokit/core": "^5.0.2",
