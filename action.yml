@@ -10,7 +10,7 @@ inputs:
   warnings:
     description: 'Print warning chapters if true.'
     required: false
-    default: 'false'
+    default: 'true'
   published-at:
     description: 'Use `published-at` timestamp instead of `created-at` as the reference point.'
     required: false

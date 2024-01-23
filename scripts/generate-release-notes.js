@@ -502,6 +502,8 @@ async function run() {
             if (closedPRsSinceLastRelease) {
                 console.log(`Found ${closedPRsSinceLastRelease.length} closed PRs since last release`);
                 const sortedClosedPRs = closedPRsSinceLastRelease.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+                // console.log("DEBUG hi before")
+                // console.log("DEBUG hi after")
 
                 for (const pr of sortedClosedPRs) {
                     if (!await isPrLinkedToIssue(octokit, pr.number, repoOwner, repoName)) {
