@@ -58,6 +58,19 @@ npm run build
 
 Then, commit action.yml and dist/index.js to your repository.
 
+### Run unit test
+First install [jest](https://jestjs.io/) testing framework.
+```
+npm install --save-dev jest
+npm install @actions/core
+npm install @actions/github
+
+```
+Launch unit tests.
+```
+npm test
+```
+
 ## Features
 ### Release Notes Extraction Process
 

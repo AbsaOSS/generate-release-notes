@@ -11,6 +11,9 @@ const github = require('@actions/github');
  */
 async function fetchLatestRelease(octokit, owner, repo) {
     console.log(`Starting to fetch the latest release for ${owner}/${repo}`);
+    console.log(`Octokit object: ${octokit}`);
+    console.log(`Octokit json: ${JSON.stringify(octokit, null, 2)}`);
+
     try {
         const release = await octokit.rest.repos.getLatestRelease({owner, repo});
         return release.data;
@@ -382,17 +385,37 @@ async function fetchPullRequests(octokit, repoOwner, repoName, latestRelease, us
 
 async function run() {
     console.log('Starting GitHub Action');
-    const repoOwner = github.context.repo.owner;
-    const repoName = github.context.repo.repo;
     const githubToken = process.env.GITHUB_TOKEN;
     const tagName = core.getInput('tag-name');
+    const githubRepository = process.env.GITHUB_REPOSITORY;
 
-    // Validate environment variables and arguments
-    if (!githubToken || !repoOwner || !repoName || !tagName) {
-        core.setFailed("Missing required inputs or environment variables.");
+    // Validate GitHub token
+    if (!githubToken) {
+        core.setFailed("GitHub token is missing.");
         return;
     }
 
+    // Validate GitHub repository environment variable
+    if (!githubRepository) {
+        core.setFailed("GITHUB_REPOSITORY environment variable is missing.");
+        return;
+    }
+
+    // Extract owner and repo from GITHUB_REPOSITORY
+    const [owner, repo] = githubRepository.split('/');
+    if (!owner || !repo) {
+        core.setFailed("GITHUB_REPOSITORY environment variable is not in the correct format 'owner/repo'.");
+        return;
+    }
+
+    // Validate tag name
+    if (!tagName) {
+        core.setFailed("Tag name is missing.");
+        return;
+    }
+
+    const repoOwner = github.context.repo.owner;
+    const repoName = github.context.repo.repo;
     const chaptersJson = core.getInput('chapters') || "[]";
     const warnings = core.getInput('warnings') ? core.getInput('warnings').toLowerCase() === 'true' : true;
     const skipLabel = core.getInput('skip-release-notes-label') || 'skip-release-notes';

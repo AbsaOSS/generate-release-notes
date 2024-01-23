@@ -6,7 +6,7 @@ inputs:
     required: true
   chapters:
     description: 'JSON string defining chapters and corresponding labels for categorization.'
-    required: true
+    required: false
   warnings:
     description: 'Print warning chapters if true.'
     required: false
