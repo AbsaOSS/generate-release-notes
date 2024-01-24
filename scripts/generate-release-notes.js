@@ -18,7 +18,7 @@ async function fetchLatestRelease(octokit, owner, repo) {
         const release = await octokit.rest.repos.getLatestRelease({owner, repo});
         return release.data;
     } catch (error) {
-        console.error(`Error fetching latest release for ${owner}/${repo}: ${error.status} - ${error.message}`);
+        console.warn(`Fetching latest release for ${owner}/${repo}: ${error.status} - ${error.message}`);
         return null;
     }
 }
