@@ -4,8 +4,8 @@ const github = require('@actions/github');
 const { run } = require('./../scripts/generate-release-notes');
 const fs = require('fs');
 const path = require('path');
-const { mockEmptyData, mockFullPerfectData } = require('./mocks/octokit.mocks');
-const { fullDefaultInputs } = require('./mocks/core.mocks');
+const octokitMocks = require('./mocks/octokit.mocks');
+const coreMocks = require('./mocks/core.mocks');
 
 jest.mock('@octokit/rest');
 jest.mock('@actions/core');
@@ -117,9 +117,9 @@ describe('run', () => {
         console.log('Test started: should run successfully with valid inputs - all defined');
 
         core.getInput.mockImplementation((name) => {
-            return fullDefaultInputs(name);
+            return coreMocks.fullDefaultInputs(name);
         });
-        Octokit.mockImplementation(mockFullPerfectData);
+        Octokit.mockImplementation(octokitMocks.mockFullPerfectData);
 
         await run();
 
@@ -186,9 +186,9 @@ describe('run', () => {
 
         // Define empty data
         core.getInput.mockImplementation((name) => {
-            return fullDefaultInputs(name);
+            return coreMocks.fullDefaultInputs(name);
         });
-        Octokit.mockImplementation(mockEmptyData);
+        Octokit.mockImplementation(octokitMocks.mockEmptyData);
 
         await run();
 
@@ -204,16 +204,50 @@ describe('run', () => {
         expect(firstCallArgs[1]).toBe(expectedOutput);
     });
 
-    xit('should run successfully with valid inputs - no data available - hide empty chapters', async () => {
+    it('should run successfully with valid inputs - no data available - hide empty chapters', async () => {
         console.log('Test started: should run successfully with valid inputs - no data available - hide empty chapters');
 
-        // TODO next
+        // Define empty data
+        core.getInput.mockImplementation((name) => {
+            return coreMocks.fullAndHideEmptyChaptersInputs(name);
+        });
+        Octokit.mockImplementation(octokitMocks.mockEmptyData);
+
+        await run();
+
+        expect(core.setFailed).not.toHaveBeenCalled();
+
+        // Get the arguments of the first call to setOutput
+        const firstCallArgs = core.setOutput.mock.calls[0];
+        expect(firstCallArgs[0]).toBe('releaseNotes');
+
+        const filePath = path.join(__dirname, 'data', 'rls_notes_empty_with_hidden_empty_chapters.txt');
+        let expectedOutput = fs.readFileSync(filePath, 'utf8');
+
+        expect(firstCallArgs[1]).toBe(expectedOutput);
     });
 
-    xit('should run successfully with valid inputs - no data available - hide warning chapters', async () => {
+    it('should run successfully with valid inputs - no data available - hide warning chapters', async () => {
         console.log('Test started: should run successfully with valid inputs - no data available - hide warning chapters');
 
-        // TODO next
+        // Define empty data
+        core.getInput.mockImplementation((name) => {
+            return coreMocks.fullAndHideWarningChaptersInputs(name);
+        });
+        Octokit.mockImplementation(octokitMocks.mockEmptyData);
+
+        await run();
+
+        expect(core.setFailed).not.toHaveBeenCalled();
+
+        // Get the arguments of the first call to setOutput
+        const firstCallArgs = core.setOutput.mock.calls[0];
+        expect(firstCallArgs[0]).toBe('releaseNotes');
+
+        const filePath = path.join(__dirname, 'data', 'rls_notes_empty_with_hidden_warning_chapters.txt');
+        let expectedOutput = fs.readFileSync(filePath, 'utf8');
+
+        expect(firstCallArgs[1]).toBe(expectedOutput);
     });
 
     xit('should run successfully with valid inputs - co author with public mail', async () => {
