@@ -8,4 +8,4 @@ No entries detected.
 No entries detected.
 
 #### Full Changelog
-https://github.com/owner/repo/commits/v0.1.0
+https://github.com/owner/repo/commits/v0.1.1

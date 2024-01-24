@@ -11,8 +11,6 @@ const github = require('@actions/github');
  */
 async function fetchLatestRelease(octokit, owner, repo) {
     console.log(`Starting to fetch the latest release for ${owner}/${repo}`);
-    console.log(`Octokit object: ${octokit}`);
-    console.log(`Octokit json: ${JSON.stringify(octokit, null, 2)}`);
 
     try {
         const release = await octokit.rest.repos.getLatestRelease({owner, repo});
@@ -102,6 +100,8 @@ async function getPRCommitAuthors(octokit, repoOwner, repoName, relatedPRs) {
                         const searchResult = await octokit.rest.search.users({
                             q: `${email} in:email`
                         });
+                        console.log(searchResult)
+                        console.log(searchResult.data.items)
                         const user = searchResult.data.items[0];
                         if (user && user.login) {
                             commitAuthors.add('@' + user.login);
@@ -151,7 +151,8 @@ async function getReleaseNotesFromComments(octokit, issueNumber, issueTitle, iss
     let releaseNotes = [];
     for (const comment of comments.data) {
         if (comment.body.toLowerCase().startsWith('release notes')) {
-            const noteContent = comment.body.replace(/^release notes\s*/i, '').trim();
+            // const noteContent = comment.body.replace(/^release notes\s*/i, '').trim();
+            const noteContent = comment.body.replace(/^release notes:?.*(\r\n|\n|\r)?/i, '').trim();
             console.log(`Found release notes in comments for issue #${issueNumber}`);
             releaseNotes.push(noteContent.replace(/^\s*[\r\n]/gm, '').replace(/^/gm, '  '));
         }
@@ -227,7 +228,7 @@ async function isPrLinkedToOpenIssue(octokit, prNumber, repoOwner, repoName) {
 
     // Check each linked issue
     for (const match of issueMatches) {
-        const issueNumber = match.match(/#([0-9]+)/)[1];
+        const issueNumber = +match.match(/#([0-9]+)/)[1];
 
         // Get the issue details
         const issue = await octokit.rest.issues.get({
@@ -444,6 +445,7 @@ async function run() {
         // Categorize issues and PRs
         for (const issue of closedIssuesOnlyIssues) {
             let relatedPRs = await getRelatedPRsForIssue(octokit, issue.number, repoOwner, repoName);
+            console.log(`Related PRs for issue #${issue.number}: ${relatedPRs.map(event => event.id).join(', ')}`);
             let prLinks = relatedPRs
                 .map(event => `[#${event.source.issue.number}](${event.source.issue.html_url})`)
                 .join(', ');
@@ -502,8 +504,6 @@ async function run() {
             if (closedPRsSinceLastRelease) {
                 console.log(`Found ${closedPRsSinceLastRelease.length} closed PRs since last release`);
                 const sortedClosedPRs = closedPRsSinceLastRelease.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-                // console.log("DEBUG hi before")
-                // console.log("DEBUG hi after")
 
                 for (const pr of sortedClosedPRs) {
                     if (!await isPrLinkedToIssue(octokit, pr.number, repoOwner, repoName)) {

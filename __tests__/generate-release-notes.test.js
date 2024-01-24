@@ -88,18 +88,19 @@ describe('run', () => {
     /*
     Happy path tests - default values.
     */
-    xit('should run successfully with valid inputs - required defaults only', async () => {
+    it('should run successfully with valid inputs - required defaults only', async () => {
         console.log('Test started: should run successfully with valid inputs - required defaults only');
 
         // Mock core.getInput to return null for all except 'tag-name'
         core.getInput.mockImplementation((name) => {
             switch (name) {
                 case 'tag-name':
-                    return 'v0.1.0';
+                    return 'v0.1.1';
                 default:
                     return null;
             }
         });
+        Octokit.mockImplementation(octokitMocks.mockEmptyData);
 
         await run();
 
@@ -109,8 +110,9 @@ describe('run', () => {
         const firstCallArgs = core.setOutput.mock.calls[0];
         expect(firstCallArgs[0]).toBe('releaseNotes');
 
-        // TODO - finish when full data set will be designed
-        // expect(firstCallArgs[1]).toBe('expected_output_value');
+        const filePath = path.join(__dirname, 'data', 'rls_notes_empty_with_no_custom_chapters.md');
+        let expectedOutput = fs.readFileSync(filePath, 'utf8');
+        expect(firstCallArgs[1]).toBe(expectedOutput);
     });
 
     it('should run successfully with valid inputs - all defined', async () => {
@@ -129,8 +131,9 @@ describe('run', () => {
         const firstCallArgs = core.setOutput.mock.calls[0];
         expect(firstCallArgs[0]).toBe('releaseNotes');
 
-        // TODO - finish when full data set will be designed
-        // expect(firstCallArgs[1]).toBe('expected_output_value');
+        const filePath = path.join(__dirname, 'data', 'rls_notes_fully_populated_in_default.md');
+        let expectedOutput = fs.readFileSync(filePath, 'utf8');
+        expect(firstCallArgs[1]).toBe(expectedOutput);
     });
 
     /*
@@ -184,7 +187,6 @@ describe('run', () => {
     it('should run successfully with valid inputs - no data available', async () => {
         console.log('Test started: should run successfully with valid inputs - no data available');
 
-        // Define empty data
         core.getInput.mockImplementation((name) => {
             return coreMocks.fullDefaultInputs(name);
         });
@@ -198,7 +200,7 @@ describe('run', () => {
         const firstCallArgs = core.setOutput.mock.calls[0];
         expect(firstCallArgs[0]).toBe('releaseNotes');
 
-        const filePath = path.join(__dirname, 'data', 'rls_notes_empty_with_all_chapters.txt');
+        const filePath = path.join(__dirname, 'data', 'rls_notes_empty_with_all_chapters.md');
         let expectedOutput = fs.readFileSync(filePath, 'utf8');
 
         expect(firstCallArgs[1]).toBe(expectedOutput);
@@ -221,7 +223,7 @@ describe('run', () => {
         const firstCallArgs = core.setOutput.mock.calls[0];
         expect(firstCallArgs[0]).toBe('releaseNotes');
 
-        const filePath = path.join(__dirname, 'data', 'rls_notes_empty_with_hidden_empty_chapters.txt');
+        const filePath = path.join(__dirname, 'data', 'rls_notes_empty_with_hidden_empty_chapters.md');
         let expectedOutput = fs.readFileSync(filePath, 'utf8');
 
         expect(firstCallArgs[1]).toBe(expectedOutput);
@@ -230,7 +232,6 @@ describe('run', () => {
     it('should run successfully with valid inputs - no data available - hide warning chapters', async () => {
         console.log('Test started: should run successfully with valid inputs - no data available - hide warning chapters');
 
-        // Define empty data
         core.getInput.mockImplementation((name) => {
             return coreMocks.fullAndHideWarningChaptersInputs(name);
         });
@@ -244,7 +245,7 @@ describe('run', () => {
         const firstCallArgs = core.setOutput.mock.calls[0];
         expect(firstCallArgs[0]).toBe('releaseNotes');
 
-        const filePath = path.join(__dirname, 'data', 'rls_notes_empty_with_hidden_warning_chapters.txt');
+        const filePath = path.join(__dirname, 'data', 'rls_notes_empty_with_hidden_warning_chapters.md');
         let expectedOutput = fs.readFileSync(filePath, 'utf8');
 
         expect(firstCallArgs[1]).toBe(expectedOutput);

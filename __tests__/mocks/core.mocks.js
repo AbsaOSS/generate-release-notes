@@ -1,7 +1,7 @@
 const fullDefaultInputs = (name) => {
     switch (name) {
         case 'tag-name':
-            return 'v0.1.0';
+            return 'v0.1.1';
         case 'chapters':
             return JSON.stringify([
                 {"title": "Breaking Changes 💥", "label": "breaking-change"},
@@ -25,7 +25,7 @@ const fullDefaultInputs = (name) => {
 const fullAndHideEmptyChaptersInputs = (name) => {
     switch (name) {
         case 'tag-name':
-            return 'v0.1.0';
+            return 'v0.1.1';
         case 'chapters':
             return JSON.stringify([
                 {"title": "Breaking Changes 💥", "label": "breaking-change"},
@@ -49,7 +49,7 @@ const fullAndHideEmptyChaptersInputs = (name) => {
 const fullAndHideWarningChaptersInputs = (name) => {
     switch (name) {
         case 'tag-name':
-            return 'v0.1.0';
+            return 'v0.1.1';
         case 'chapters':
             return JSON.stringify([
                 {"title": "Breaking Changes 💥", "label": "breaking-change"},

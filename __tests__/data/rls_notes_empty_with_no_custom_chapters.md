@@ -1,12 +1,3 @@
-### Breaking Changes 💥
-No entries detected.
-
-### New Features 🎉
-No entries detected.
-
-### Bugfixes 🛠
-No entries detected.
-
 ### Closed Issues without Pull Request ⚠️
 All closed issues linked to a Pull Request.
 
@@ -26,4 +17,4 @@ All merged PRs are linked to Closed issues.
 All closed PRs are linked to issues.
 
 #### Full Changelog
-https://github.com/owner/repo/commits/v0.1.0
+https://github.com/owner/repo/commits/v0.1.1
