@@ -70,8 +70,27 @@ const fullAndHideWarningChaptersInputs = (name) => {
     }
 };
 
+const fullDefaultInputsNoCustomChapters = (name) => {
+    switch (name) {
+        case 'tag-name':
+            return 'v0.1.1';
+        case 'warnings':
+            return 'true';
+        case 'published-at':
+            return 'false';
+        case 'skip-release-notes-label':
+            return null;
+        case 'print-empty-chapters':
+            return 'true';
+        default:
+            return null;
+    }
+};
+
+
 module.exports = {
     fullDefaultInputs,
     fullAndHideEmptyChaptersInputs,
     fullAndHideWarningChaptersInputs,
+    fullDefaultInputsNoCustomChapters,
 };
