@@ -96,12 +96,13 @@ async function getPRCommitAuthors(octokit, repoOwner, repoName, relatedPRs) {
                     if (emailMatch && nameMatch) {
                         const email = emailMatch[1];
                         const name = nameMatch[1].trim();
+
                         console.log(`Searching for GitHub user with email: ${email}`);
+
                         const searchResult = await octokit.rest.search.users({
                             q: `${email} in:email`
                         });
-                        console.log(searchResult)
-                        console.log(searchResult.data.items)
+
                         const user = searchResult.data.items[0];
                         if (user && user.login) {
                             commitAuthors.add('@' + user.login);
@@ -151,7 +152,6 @@ async function getReleaseNotesFromComments(octokit, issueNumber, issueTitle, iss
     let releaseNotes = [];
     for (const comment of comments.data) {
         if (comment.body.toLowerCase().startsWith('release notes')) {
-            // const noteContent = comment.body.replace(/^release notes\s*/i, '').trim();
             const noteContent = comment.body.replace(/^release notes:?.*(\r\n|\n|\r)?/i, '').trim();
             console.log(`Found release notes in comments for issue #${issueNumber}`);
             releaseNotes.push(noteContent.replace(/^\s*[\r\n]/gm, '').replace(/^/gm, '  '));
