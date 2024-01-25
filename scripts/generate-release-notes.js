@@ -14,6 +14,7 @@ async function fetchLatestRelease(octokit, owner, repo) {
 
     try {
         const release = await octokit.rest.repos.getLatestRelease({owner, repo});
+        console.log(`Found latest release for ${owner}/${repo}: ${release.data.tag_name}, created at: ${release.data.created_at}, published at: ${release.data.published_at}`);
         return release.data;
     } catch (error) {
         console.warn(`Fetching latest release for ${owner}/${repo}: ${error.status} - ${error.message}`);
@@ -342,33 +343,33 @@ async function fetchPullRequests(octokit, repoOwner, repoName, latestRelease, us
 
     if (latestRelease) {
         if (usePublishedAt) {
-            console.log(`Since latest release date: ${latestRelease.published_at} - published-at.`);
             since = new Date(latestRelease.published_at);
+            console.log(`Since latest release date: ${since.toISOString()} - published-at.`);
         } else {
-            console.log(`Since latest release date: ${latestRelease.created_at} - created-at.`);
             since = new Date(latestRelease.created_at);
+            console.log(`Since latest release date: ${since.toISOString()} - created-at.`);
         }
+    }
 
-        response = await octokit.rest.pulls.list({
-            owner: repoOwner,
-            repo: repoName,
-            state: 'all',
-            sort: 'updated',
-            direction: 'desc',
-            since: since
+    response = await octokit.rest.pulls.list({
+        owner: repoOwner,
+        repo: repoName,
+        state: 'all',
+        sort: 'updated',
+        direction: 'desc'
+    });
+
+    pullRequests = response.data;
+
+    if (latestRelease) {
+        pullRequests = pullRequests.filter(pr => {
+            const prCreatedAt = new Date(pr.created_at);
+            return prCreatedAt > since;
         });
     } else {
         console.log('No latest release found. Fetching all pull requests of repository.');
-        response = await octokit.rest.pulls.list({
-            owner: repoOwner,
-            repo: repoName,
-            state: 'all',
-            sort: 'updated',
-            direction: 'desc'
-        });
     }
 
-    pullRequests = response.data;
     console.log(`Found ${pullRequests.length} pull requests for ${repoOwner}/${repoName}`)
 
     // Filter based on prState
