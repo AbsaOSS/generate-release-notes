@@ -46,8 +46,8 @@ const mockFullPerfectData = () => ({
                     return Promise.resolve({
                         data: {
                             tag_name: 'v0.1.0',
-                            published_at: '2023-12-12T09:58:30.000Z',
-                            created_at: '2023-12-12T09:56:30.000Z',
+                            published_at: '2022-12-12T09:58:30.000Z',
+                            created_at: '2022-12-12T06:56:30.000Z',
                         }
                     });
                 }
@@ -66,6 +66,9 @@ const mockFullPerfectData = () => ({
                                 login: "janeDoe",
                             },
                         ],
+                        "closed_at": "2023-12-12T11:58:30.000Z",
+                        "created_at": "2023-12-12T09:58:30.000Z",
+                        "updated_at": "2023-12-12T10:58:30.000Z",
                     },
                     {
                         number: 2,
@@ -77,6 +80,9 @@ const mockFullPerfectData = () => ({
                                 login: "johnDoe",
                             },
                         ],
+                        "closed_at": null,
+                        "created_at": "2023-12-12T11:58:30.000Z",
+                        "updated_at": "2023-12-12T12:58:30.000Z",
                     },
                     {
                         number: 3,
@@ -88,6 +94,9 @@ const mockFullPerfectData = () => ({
                                 login: "janeDoe",
                             },
                         ],
+                        "closed_at": "2023-12-12T15:58:30.000Z",
+                        "created_at": "2023-12-12T13:58:30.000Z",
+                        "updated_at": "2023-12-12T14:58:30.000Z",
                     },
                     {
                         number: 4,
@@ -99,13 +108,19 @@ const mockFullPerfectData = () => ({
                                 login: "johnDoe",
                             },
                         ],
+                        "closed_at": "2023-12-12T16:58:30.000Z",
+                        "created_at": "2023-12-12T14:58:30.000Z",
+                        "updated_at": "2023-12-12T15:58:30.000Z",
                     },
                     {
                         number: 5,
                         title: 'Issue title 5 - not assigned|three PRs',
                         state: 'closed',
-                        labels: [{ name: 'feature' }],
+                        labels: [{ name: 'feature' }, { name: 'user-custom-label' }],
                         assignees: [],
+                        "closed_at": "2023-12-12T18:58:30.000Z",
+                        "created_at": "2023-12-12T16:58:30.000Z",
+                        "updated_at": "2023-12-12T17:58:30.000Z",
                     },
                     {
                         number: 6,
@@ -113,6 +128,9 @@ const mockFullPerfectData = () => ({
                         state: 'closed',
                         labels: [{ name: 'feature' }],
                         assignees: [],
+                        "closed_at": "2023-12-12T20:58:30.000Z",
+                        "created_at": "2023-12-12T18:58:30.000Z",
+                        "updated_at": "2023-12-12T19:58:30.000Z",
                     },
                     {
                         number: 7,
@@ -124,6 +142,9 @@ const mockFullPerfectData = () => ({
                                 login: "janeDoe",
                             },
                         ],
+                        "closed_at": "2023-12-12T22:58:30.000Z",
+                        "created_at": "2023-12-12T20:58:30.000Z",
+                        "updated_at": "2023-12-12T21:58:30.000Z",
                     },
                     {
                         number: 8,
@@ -135,6 +156,9 @@ const mockFullPerfectData = () => ({
                                 login: "johnDoe",
                             },
                         ],
+                        "closed_at": "2023-12-13T07:58:30.000Z",
+                        "created_at": "2023-12-13T05:58:30.000Z",
+                        "updated_at": "2023-12-13T06:58:30.000Z",
                     },
                     {
                         number: 9,
@@ -146,6 +170,9 @@ const mockFullPerfectData = () => ({
                                 login: "janeDoe",
                             },
                         ],
+                        "closed_at": "2023-12-13T09:58:30.000Z",
+                        "created_at": "2023-12-13T07:58:30.000Z",
+                        "updated_at": "2023-12-13T08:58:30.000Z",
                     },
                     {
                         number: 10,
@@ -157,7 +184,10 @@ const mockFullPerfectData = () => ({
                                 login: "janeDoe",
                             },
                         ],
-                    }
+                        "closed_at": "2023-12-13T11:58:30.000Z",
+                        "created_at": "2023-12-13T09:58:30.000Z",
+                        "updated_at": "2023-12-13T10:58:30.000Z",
+                    },
                 ],
             }),
             listEventsForTimeline: jest.fn(({owner, repo, issue_number}) => {
@@ -549,7 +579,7 @@ const mockFullPerfectData = () => ({
                             number: 1001,
                             title: 'Pull Request 1',
                             state: 'merged',
-                            labels: [],
+                            labels: [{ name: 'user-custom-label' }],
                             created_at: '2023-12-12T15:56:30.000Z',
                             merged_at: '2023-12-12T15:58:30.000Z',
                         },

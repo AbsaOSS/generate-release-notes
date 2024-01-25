@@ -17,7 +17,7 @@
   },
   "scripts": {
     "build": "ncc build scripts/generate-release-notes.js -o dist",
-    "test": "jest --watch"
+    "test": "jest"
   },
   "jest": {
     "testPathIgnorePatterns": [
