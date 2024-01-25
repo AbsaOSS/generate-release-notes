@@ -17,6 +17,7 @@
 ### Bugfixes 🛠
 - #1 _Issue title 1_ implemented by @janeDoe in [#1](link-to-pr-1)
   - note about change in Issue 1
+  - note about change in Issue 1 (no bullet point at start of line)
 
 
 ### Closed Issues without Pull Request ⚠️
