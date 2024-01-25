@@ -29391,6 +29391,7 @@ async function fetchPullRequests(octokit, repoOwner, repoName, latestRelease, us
     }
 
     pullRequests = response.data;
+    console.log(`Found ${pullRequests.length} pull requests for ${repoOwner}/${repoName}`)
 
     // Filter based on prState
     if (prState === 'merged') {
