@@ -421,6 +421,13 @@ const mockFullPerfectData = () => ({
                                 created_at: '2023-01-02T11:00:00Z',
                                 updated_at: '2023-01-02T11:00:00Z'
                             },
+                            {
+                                id: 103,
+                                user: {login: 'user2'},
+                                body: 'Release notes:\nnote about change in Issue 1 (no bullet point at start of line)',
+                                created_at: '2023-01-02T12:00:00Z',
+                                updated_at: '2023-01-02T12:01:00Z'
+                            },
                         ]
                     });
                 } else if (issue_number === 2) {

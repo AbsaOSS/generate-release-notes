@@ -155,7 +155,20 @@ async function getReleaseNotesFromComments(octokit, issueNumber, issueTitle, iss
         if (comment.body.toLowerCase().startsWith('release notes')) {
             const noteContent = comment.body.replace(/^release notes:?.*(\r\n|\n|\r)?/i, '').trim();
             console.log(`Found release notes in comments for issue #${issueNumber}`);
-            releaseNotes.push(noteContent.replace(/^\s*[\r\n]/gm, '').replace(/^/gm, '  '));
+
+            // Process each line of the noteContent
+            const processedContent = noteContent.split(/\r?\n/).map(line => {
+                // Check if the line starts with "  -"
+                if (!line.startsWith("-")) {
+                    // Remove leading whitespace and prepend "  - "
+                    return "  - " + line.trim();
+                } else {
+                    // Remove leading whitespace
+                    return line.replace(/^\s*[\r\n]/gm, '').replace(/^/gm, '  ');
+                }
+            }).join('\n');
+
+            releaseNotes.push(processedContent);
         }
     }
 
