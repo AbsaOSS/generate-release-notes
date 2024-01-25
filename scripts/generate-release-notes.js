@@ -11,11 +11,13 @@ const github = require('@actions/github');
  */
 async function fetchLatestRelease(octokit, owner, repo) {
     console.log(`Starting to fetch the latest release for ${owner}/${repo}`);
+
     try {
         const release = await octokit.rest.repos.getLatestRelease({owner, repo});
+        console.log(`Found latest release for ${owner}/${repo}: ${release.data.tag_name}, created at: ${release.data.created_at}, published at: ${release.data.published_at}`);
         return release.data;
     } catch (error) {
-        console.error(`Error fetching latest release for ${owner}/${repo}: ${error.status} - ${error.message}`);
+        console.warn(`Fetching latest release for ${owner}/${repo}: ${error.status} - ${error.message}`);
         return null;
     }
 }
@@ -95,10 +97,13 @@ async function getPRCommitAuthors(octokit, repoOwner, repoName, relatedPRs) {
                     if (emailMatch && nameMatch) {
                         const email = emailMatch[1];
                         const name = nameMatch[1].trim();
+
                         console.log(`Searching for GitHub user with email: ${email}`);
+
                         const searchResult = await octokit.rest.search.users({
                             q: `${email} in:email`
                         });
+
                         const user = searchResult.data.items[0];
                         if (user && user.login) {
                             commitAuthors.add('@' + user.login);
@@ -148,7 +153,7 @@ async function getReleaseNotesFromComments(octokit, issueNumber, issueTitle, iss
     let releaseNotes = [];
     for (const comment of comments.data) {
         if (comment.body.toLowerCase().startsWith('release notes')) {
-            const noteContent = comment.body.replace(/^release notes\s*/i, '').trim();
+            const noteContent = comment.body.replace(/^release notes:?.*(\r\n|\n|\r)?/i, '').trim();
             console.log(`Found release notes in comments for issue #${issueNumber}`);
             releaseNotes.push(noteContent.replace(/^\s*[\r\n]/gm, '').replace(/^/gm, '  '));
         }
@@ -224,7 +229,7 @@ async function isPrLinkedToOpenIssue(octokit, prNumber, repoOwner, repoName) {
 
     // Check each linked issue
     for (const match of issueMatches) {
-        const issueNumber = match.match(/#([0-9]+)/)[1];
+        const issueNumber = +match.match(/#([0-9]+)/)[1];
 
         // Get the issue details
         const issue = await octokit.rest.issues.get({
@@ -262,7 +267,7 @@ function parseChaptersJson(chaptersJson) {
         });
         return titlesToLabelsMap;
     } catch (error) {
-        throw new Error(`Error parsing chapters JSON: ${error.message}`);
+        core.setFailed(`Error parsing chapters JSON: ${error.message}`)
     }
 }
 
@@ -338,33 +343,33 @@ async function fetchPullRequests(octokit, repoOwner, repoName, latestRelease, us
 
     if (latestRelease) {
         if (usePublishedAt) {
-            console.log(`Since latest release date: ${latestRelease.published_at} - published-at.`);
             since = new Date(latestRelease.published_at);
+            console.log(`Since latest release date: ${since.toISOString()} - published-at.`);
         } else {
-            console.log(`Since latest release date: ${latestRelease.created_at} - created-at.`);
             since = new Date(latestRelease.created_at);
+            console.log(`Since latest release date: ${since.toISOString()} - created-at.`);
         }
+    }
 
-        response = await octokit.rest.pulls.list({
-            owner: repoOwner,
-            repo: repoName,
-            state: 'all',
-            sort: 'updated',
-            direction: 'desc',
-            since: since
+    response = await octokit.rest.pulls.list({
+        owner: repoOwner,
+        repo: repoName,
+        state: 'all',
+        sort: 'updated',
+        direction: 'desc'
+    });
+
+    pullRequests = response.data;
+
+    if (latestRelease) {
+        pullRequests = pullRequests.filter(pr => {
+            const prCreatedAt = new Date(pr.created_at);
+            return prCreatedAt > since;
         });
     } else {
         console.log('No latest release found. Fetching all pull requests of repository.');
-        response = await octokit.rest.pulls.list({
-            owner: repoOwner,
-            repo: repoName,
-            state: 'all',
-            sort: 'updated',
-            direction: 'desc'
-        });
     }
 
-    pullRequests = response.data;
     console.log(`Found ${pullRequests.length} pull requests for ${repoOwner}/${repoName}`)
 
     // Filter based on prState
@@ -382,21 +387,43 @@ async function fetchPullRequests(octokit, repoOwner, repoName, latestRelease, us
 }
 
 async function run() {
+    console.log('Starting GitHub Action');
+    const githubToken = process.env.GITHUB_TOKEN;
+    const tagName = core.getInput('tag-name');
+    const githubRepository = process.env.GITHUB_REPOSITORY;
+
+    // Validate GitHub token
+    if (!githubToken) {
+        core.setFailed("GitHub token is missing.");
+        return;
+    }
+
+    // Validate GitHub repository environment variable
+    if (!githubRepository) {
+        core.setFailed("GITHUB_REPOSITORY environment variable is missing.");
+        return;
+    }
+
+    // Extract owner and repo from GITHUB_REPOSITORY
+    const [owner, repo] = githubRepository.split('/');
+    if (!owner || !repo) {
+        core.setFailed("GITHUB_REPOSITORY environment variable is not in the correct format 'owner/repo'.");
+        return;
+    }
+
+    // Validate tag name
+    if (!tagName) {
+        core.setFailed("Tag name is missing.");
+        return;
+    }
+
     const repoOwner = github.context.repo.owner;
     const repoName = github.context.repo.repo;
-    const tagName = core.getInput('tag-name');
-    const chaptersJson = core.getInput('chapters');
-    const warnings = core.getInput('warnings').toLowerCase() === 'true';
-    const githubToken = process.env.GITHUB_TOKEN;
-    const usePublishedAt = core.getInput('published-at').toLowerCase() === 'true';
+    const chaptersJson = core.getInput('chapters') || "[]";
+    const warnings = core.getInput('warnings') ? core.getInput('warnings').toLowerCase() === 'true' : true;
     const skipLabel = core.getInput('skip-release-notes-label') || 'skip-release-notes';
-    const printEmptyChapters = core.getInput('print-empty-chapters').toLowerCase() === 'true';
-
-    // Validate environment variables and arguments
-    if (!githubToken || !repoOwner || !repoName) {
-        console.error("Missing required inputs or environment variables.");
-        process.exit(1);
-    }
+    const usePublishedAt = core.getInput('published-at') ? core.getInput('published-at').toLowerCase() === 'true' : false;
+    const printEmptyChapters = core.getInput('print-empty-chapters') ? core.getInput('print-empty-chapters').toLowerCase() === 'true' : true;
 
     const octokit = new Octokit({ auth: githubToken });
 
@@ -420,6 +447,7 @@ async function run() {
         // Categorize issues and PRs
         for (const issue of closedIssuesOnlyIssues) {
             let relatedPRs = await getRelatedPRsForIssue(octokit, issue.number, repoOwner, repoName);
+            console.log(`Related PRs for issue #${issue.number}: ${relatedPRs.map(event => event.id).join(', ')}`);
             let prLinks = relatedPRs
                 .map(event => `[#${event.source.issue.number}](${event.source.issue.html_url})`)
                 .join(', ');
@@ -536,13 +564,19 @@ async function run() {
     } catch (error) {
         if (error.status === 404) {
             console.error('Repository not found. Please check the owner and repository name.');
+            core.setFailed(error.message)
         } else if (error.status === 401) {
             console.error('Authentication failed. Please check your GitHub token.');
+            core.setFailed(error.message)
         } else {
             console.error(`Error fetching data: ${error.status} - ${error.message}`);
+            core.setFailed(`Error fetching data: ${error.status} - ${error.message}`);
         }
-        process.exit(1);
     }
 }
 
-run();
+module.exports.run = run;
+
+if (require.main === module) {
+    run();
+}

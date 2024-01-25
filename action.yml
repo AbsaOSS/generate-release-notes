@@ -6,11 +6,11 @@ inputs:
     required: true
   chapters:
     description: 'JSON string defining chapters and corresponding labels for categorization.'
-    required: true
+    required: false
   warnings:
     description: 'Print warning chapters if true.'
     required: false
-    default: 'false'
+    default: 'true'
   published-at:
     description: 'Use `published-at` timestamp instead of `created-at` as the reference point.'
     required: false
