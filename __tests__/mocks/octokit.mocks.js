@@ -42,6 +42,14 @@ const mockFullPerfectData = () => ({
                         status: 404,
                         message: "Not Found"
                     };
+                } else if (repo === "repo-2nd-rls") {
+                    return Promise.resolve({
+                        data: {
+                            tag_name: 'v0.1.0',
+                            published_at: '2023-12-15T09:58:30.000Z',
+                            created_at: '2023-12-15T06:56:30.000Z',
+                        }
+                    });
                 } else {
                     return Promise.resolve({
                         data: {
@@ -716,8 +724,203 @@ const mockFullPerfectData = () => ({
         },
     }
 });
+const mockPerfectDataWithoutIssues = () => ({
+    rest: {
+        repos: {
+            getLatestRelease: jest.fn(({owner, repo}) => {
+                if (repo === "repo-no-rls") {
+                    throw {
+                        status: 404,
+                        message: "Not Found"
+                    };
+                } else if (repo === "repo-2nd-rls") {
+                    return Promise.resolve({
+                        data: {
+                            tag_name: 'v0.1.0',
+                            published_at: '2023-12-15T09:58:30.000Z',
+                            created_at: '2023-12-15T06:56:30.000Z',
+                        }
+                    });
+                } else {
+                    return Promise.resolve({
+                        data: {
+                            tag_name: 'v0.1.0',
+                            published_at: '2022-12-12T09:58:30.000Z',
+                            created_at: '2022-12-12T06:56:30.000Z',
+                        }
+                    });
+                }
+            }),
+        },
+        issues: {
+            listForRepo: jest.fn().mockResolvedValue({
+                data: []
+            }),
+            listEventsForTimeline: jest.fn(({owner, repo, issue_number}) => {
+                return Promise.resolve({
+                    data: [],
+                });
+            }),
+            listComments: jest.fn(({owner, repo, issue_number}) => {
+                return Promise.resolve({
+                    data: [],
+                });
+            }),
+            get: jest.fn(({owner, repo, issue_number}) => {
+                return Promise.resolve({
+                    data: {},
+                });
+            }),
+        },
+        pulls: {
+            // ready only for process with existing previous release
+            list: jest.fn(({owner, repo, state, sort, direction, since}) => {
+                return Promise.resolve({
+                    data: [
+                        {
+                            number: 1001,
+                            title: 'Pull Request 1',
+                            state: 'merged',
+                            labels: [{ name: 'user-custom-label' }],
+                            created_at: '2023-12-12T15:56:30.000Z',
+                            merged_at: '2023-12-12T15:58:30.000Z',
+                        },
+                        {
+                            number: 1002,
+                            title: 'Pull Request 2 - no linked issue - closed',
+                            state: 'closed',
+                            labels: [],
+                            created_at: '2023-12-12T15:57:30.000Z',
+                            closed_at: '2023-12-12T15:58:30.000Z',
+                        },
+                        {
+                            number: 1003,
+                            title: 'Pull Request 3 - linked to open issue',
+                            state: 'merged',
+                            labels: [],
+                            created_at: '2023-12-12T15:58:30.000Z',
+                            merged_at: '2023-12-12T15:59:30.000Z',
+                        },
+                        {
+                            number: 1004,
+                            title: 'Pull Request 4 - no linked issue - merged',
+                            state: 'merged',
+                            labels: [],
+                            created_at: '2023-12-12T15:59:30.000Z',
+                            merged_at: '2023-12-12T16:59:30.000Z',
+                        },
+                        {
+                            number: 1005,
+                            title: 'Pull Request 5',
+                            state: 'open',
+                            labels: [],
+                            created_at: '2023-12-12T15:59:35.000Z',
+                        },
+                        {
+                            number: 1006,
+                            title: 'Pull Request 6 - skip label',
+                            state: 'merged',
+                            labels: [{ name: 'skip-release-notes' }],
+                            created_at: '2023-12-12T15:59:37.000Z',
+                            merged_at: '2023-12-12T17:59:37.000Z',
+                        },
+                    ],
+                });
+            }),
+            listCommits: jest.fn(({owner, repo, pull_number}) => {
+                if (pull_number === 7) {
+                    return Promise.resolve({
+                        data: [
+                            {
+                                commit: {
+                                    author: {
+                                        name: 'Jane Doe',
+                                        email: 'jane.doe@example.com',
+                                    },
+                                    message: 'Initial commit\n\nCo-authored-by: John Doe <john.doe@example.com>'
+                                },
+                                author: {
+                                    login: 'janeDoe',
+                                },
+                                url: 'https://api.github.com/repos/owner/repo/commits/abc123'
+                            },
+                        ]
+                    });
+                } else if (pull_number === 8) {
+                    return Promise.resolve({
+                        data: [
+                            {
+                                commit: {
+                                    author: {
+                                        name: 'John Doe',
+                                        email: 'john.doe@example.com',
+                                    },
+                                    message: 'Initial commit\n\nCo-authored-by: Jane Doe <jane.doe@example.com>'
+                                },
+                                author: {
+                                    login: 'johnDoe',
+                                },
+                                url: 'https://api.github.com/repos/owner/repo/commits/abc124'
+                            },
+                        ]
+                    });
+                } else {
+                    return Promise.resolve({
+                        data: [],
+                    });
+                }
+            }),
+            get: jest.fn(({owner, repo, pull_number}) => {
+                if (pull_number === 1003) {
+                    return Promise.resolve({
+                        data: {
+                            body: 'This is a detailed description of the pull request.\n\nCloses #2',
+                        },
+                    });
+                } else {
+                    return Promise.resolve({
+                        data: [],
+                    });
+                }
+            }),
+        },
+        search: {
+            users: jest.fn(({q}) => {
+                if (q === "john.doe@example.com in:email") {
+                    return Promise.resolve({
+                        data: {
+                            total_count: 1,
+                            items: [
+                                {
+                                    id: 1,
+                                    login: "johnDoe"
+                                }
+                            ]
+                        }
+                    });
+                } else if (q === "jane.doe@example.com in:email") {
+                    return Promise.resolve({
+                        data: {
+                            total_count: 1,
+                            items: [
+                                {
+                                    id: 2
+                                }
+                            ]
+                        },
+                    })
+                } else {
+                    return Promise.resolve({
+                        data: [],
+                    })
+                }
+            }),
+        },
+    }
+});
 
 module.exports = {
     mockEmptyData,
     mockFullPerfectData,
+    mockPerfectDataWithoutIssues,
 };

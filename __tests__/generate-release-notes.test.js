@@ -225,6 +225,28 @@ describe('run', () => {
         expect(firstCallArgs[1]).toBe(expectedOutput);
     });
 
+    it('should run successfully with valid inputs - second release', async () => {
+        console.log('Test started: should run successfully with valid inputs - second release no changes');
+
+        github.context.repo = { owner: 'owner', repo: 'repo-2nd-rls' };
+        core.getInput.mockImplementation((name) => {
+            return coreMocks.fullDefaultInputs(name);
+        });
+        Octokit.mockImplementation(octokitMocks.mockPerfectDataWithoutIssues);
+
+        await run();
+
+        expect(core.setFailed).not.toHaveBeenCalled();
+
+        // Get the arguments of the first call to setOutput
+        const firstCallArgs = core.setOutput.mock.calls[0];
+        expect(firstCallArgs[0]).toBe('releaseNotes');
+
+        const filePath = path.join(__dirname, 'data', 'rls_notes_fully_populated_second_release.md');
+        let expectedOutput = fs.readFileSync(filePath, 'utf8');
+        expect(firstCallArgs[1]).toBe(expectedOutput);
+    });
+
     /*
     Happy path tests - no option related
     */
