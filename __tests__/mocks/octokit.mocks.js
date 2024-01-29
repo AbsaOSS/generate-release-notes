@@ -71,7 +71,7 @@ const mockFullPerfectData = () => ({
                         number: 1,
                         title: 'Issue title 1',
                         state: 'closed',
-                        labels: [{ name: 'bug' }],
+                        labels: [{ name: 'bug' }, { name: 'feature'}],
                         assignees: [
                             {
                                 login: "janeDoe",
@@ -597,7 +597,17 @@ const mockFullPerfectData = () => ({
                             number: 1001,
                             title: 'Pull Request 1',
                             state: 'merged',
-                            labels: [{ name: 'user-custom-label' }],
+                            labels: [
+                                {
+                                    name: 'user-custom-label'
+                                },
+                                {
+                                    name: 'bug'
+                                },
+                                {
+                                    name: 'feature'
+                                },
+                            ],
                             created_at: '2023-12-12T15:56:30.000Z',
                             merged_at: '2023-12-12T15:58:30.000Z',
                             assignees: [

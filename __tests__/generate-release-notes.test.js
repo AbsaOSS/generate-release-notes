@@ -247,6 +247,27 @@ describe('run', () => {
         expect(firstCallArgs[1]).toBe(expectedOutput);
     });
 
+    it('should run successfully with valid inputs - no PRs in chapter', async () => {
+        console.log('Test started: should run successfully with valid inputs - no PRs in chapter');
+
+        core.getInput.mockImplementation((name) => {
+            return coreMocks.fullAndNoChaptersForPRsInputs(name);
+        });
+        Octokit.mockImplementation(octokitMocks.mockFullPerfectData);
+
+        await run();
+
+        expect(core.setFailed).not.toHaveBeenCalled();
+
+        // Get the arguments of the first call to setOutput
+        const firstCallArgs = core.setOutput.mock.calls[0];
+        expect(firstCallArgs[0]).toBe('releaseNotes');
+
+        const filePath = path.join(__dirname, 'data', 'rls_notes_fully_populated_no_PRs_in_chapters.md');
+        let expectedOutput = fs.readFileSync(filePath, 'utf8');
+        expect(firstCallArgs[1]).toBe(expectedOutput);
+    });
+
     /*
     Happy path tests - no option related
     */

@@ -29563,7 +29563,7 @@ async function run() {
         let closedIssuesWithoutReleaseNotes = '', closedIssuesWithoutUserLabels = '', closedIssuesWithoutPR = '', mergedPRsWithoutLinkToIssue = '';
         let mergedPRsLinkedToOpenIssue = '', closedPRsWithoutLinkToIssue = '';
 
-        // Categorize issues and PRs
+        // Categorize issues into chapters
         for (const issue of closedIssuesOnlyIssues) {
             let relatedPRs = await getRelatedPRsForIssue(octokit, issue.number, repoOwner, repoName);
             console.log(`Related PRs for issue #${issue.number}: ${relatedPRs.map(event => event.id).join(', ')}`);
@@ -29609,7 +29609,21 @@ async function run() {
 
                 for (const pr of sortedMergedPRs) {
                     if (!await isPrLinkedToIssue(octokit, pr.number, repoOwner, repoName)) {
-                        mergedPRsWithoutLinkToIssue += await getReleaseNotesFromPRComments(octokit, pr.number, pr.title, pr.assignees, repoOwner, repoName);
+                        let releaseNotes = await getReleaseNotesFromPRComments(octokit, pr.number, pr.title, pr.assignees, repoOwner, repoName);
+                        let foundUserLabels = false;
+                        if (chaptersToPRWithoutIssue) {
+                            titlesToLabelsMap.forEach((labels, title) => {
+                                if (labels.some(label => pr.labels.map(l => l.name).includes(label))) {
+                                    chapterContents.set(title, chapterContents.get(title) + releaseNotes);
+                                    foundUserLabels = true;
+                                }
+                            });
+                        }
+
+                        if (!foundUserLabels) {
+                            mergedPRsWithoutLinkToIssue += releaseNotes;
+                        }
+
                         console.log(`DEBUG: value if mergedPRsWithoutLinkToIssue: ${mergedPRsWithoutLinkToIssue}`);
                     } else {
                         if (await isPrLinkedToOpenIssue(octokit, pr.number, repoOwner, repoName)) {
@@ -29629,7 +29643,20 @@ async function run() {
 
                 for (const pr of sortedClosedPRs) {
                     if (!await isPrLinkedToIssue(octokit, pr.number, repoOwner, repoName)) {
-                        closedPRsWithoutLinkToIssue += await getReleaseNotesFromPRComments(octokit, pr.number, pr.title, pr.assignees, repoOwner, repoName);
+                        let releaseNotes = await getReleaseNotesFromPRComments(octokit, pr.number, pr.title, pr.assignees, repoOwner, repoName);
+                        let foundUserLabels = false;
+                        if (chaptersToPRWithoutIssue) {
+                            titlesToLabelsMap.forEach((labels, title) => {
+                                if (labels.some(label => pr.labels.map(l => l.name).includes(label))) {
+                                    chapterContents.set(title, chapterContents.get(title) + releaseNotes);
+                                    foundUserLabels = true;
+                                }
+                            });
+                        }
+                        
+                        if (!foundUserLabels) {
+                            closedPRsWithoutLinkToIssue += releaseNotes;
+                        }
                     }
                 }
             } else {
@@ -29662,16 +29689,16 @@ async function run() {
                 releaseNotes += "### Closed Issues without Pull Request ⚠️\n" + (closedIssuesWithoutPR || "All closed issues linked to a Pull Request.") + "\n\n";
                 releaseNotes += "### Closed Issues without User Defined Labels ⚠️\n" + (closedIssuesWithoutUserLabels || "All closed issues contain at least one of user defined labels.") + "\n\n";
                 releaseNotes += "### Closed Issues without Release Notes ⚠️\n" + (closedIssuesWithoutReleaseNotes || "All closed issues have release notes.") + "\n\n";
-                releaseNotes += "### Merged PRs without Linked Issue ⚠️\n" + (mergedPRsWithoutLinkToIssue || "All merged PRs are linked to issues.") + "\n\n";
+                releaseNotes += "### Merged PRs without Linked Issue and Custom Labels ⚠️\n" + (mergedPRsWithoutLinkToIssue || "All merged PRs are linked to issues.") + "\n\n";
                 releaseNotes += "### Merged PRs Linked to Open Issue ⚠️\n" + (mergedPRsLinkedToOpenIssue || "All merged PRs are linked to Closed issues.") + "\n\n";
-                releaseNotes += "### Closed PRs without Linked Issue ⚠️\n" + (closedPRsWithoutLinkToIssue || "All closed PRs are linked to issues.") + "\n\n";
+                releaseNotes += "### Closed PRs without Linked Issue and Custom Labels ⚠️\n" + (closedPRsWithoutLinkToIssue || "All closed PRs are linked to issues.") + "\n\n";
             } else {
                 releaseNotes += closedIssuesWithoutPR ? "### Closed Issues without Pull Request ⚠️\n" + closedIssuesWithoutPR + "\n\n" : "";
                 releaseNotes += closedIssuesWithoutUserLabels ? "### Closed Issues without User Defined Labels ⚠️\n" + closedIssuesWithoutUserLabels + "\n\n" : "";
                 releaseNotes += closedIssuesWithoutReleaseNotes ? "### Closed Issues without Release Notes ⚠️\n" + closedIssuesWithoutReleaseNotes + "\n\n" : "";
-                releaseNotes += mergedPRsWithoutLinkToIssue ? "### Merged PRs without Link to Issue ⚠️\n" + mergedPRsWithoutLinkToIssue + "\n\n" : "";
+                releaseNotes += mergedPRsWithoutLinkToIssue ? "### Merged PRs without Link to Issue and Custom Labels ⚠️\n" + mergedPRsWithoutLinkToIssue + "\n\n" : "";
                 releaseNotes += mergedPRsLinkedToOpenIssue ? "### Merged PRs Linked to Open Issue ⚠️\n" + mergedPRsLinkedToOpenIssue + "\n\n" : "";
-                releaseNotes += closedPRsWithoutLinkToIssue ? "### Closed PRs without Link to Issue ⚠️\n" + closedPRsWithoutLinkToIssue + "\n\n" : "";
+                releaseNotes += closedPRsWithoutLinkToIssue ? "### Closed PRs without Link to Issue and Custom Labels ⚠️\n" + closedPRsWithoutLinkToIssue + "\n\n" : "";
             }
         }
         releaseNotes += "#### Full Changelog\n" + changelogUrl;

@@ -14,6 +14,9 @@
   - note about change in Issue 4
 - #2 _Issue title 2_ implemented by @johnDoe in [#2](link-to-pr-2)
   - note about change in Issue 2
+- #1 _Issue title 1_ implemented by @janeDoe in [#1](link-to-pr-1)
+  - note about change in Issue 1
+  - note about change in Issue 1 (no bullet point at start of line)
 
 
 ### Bugfixes 🛠

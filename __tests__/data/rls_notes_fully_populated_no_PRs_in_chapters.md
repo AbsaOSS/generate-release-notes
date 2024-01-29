@@ -17,18 +17,12 @@
 - #1 _Issue title 1_ implemented by @janeDoe in [#1](link-to-pr-1)
   - note about change in Issue 1
   - note about change in Issue 1 (no bullet point at start of line)
-- #1001 _Pull Request 1_ implemented by @janeDoe
-  - This is second PR comment ad RLS note
-  - This is third PR comment ad RLS note
 
 
 ### Bugfixes 🛠
 - #1 _Issue title 1_ implemented by @janeDoe in [#1](link-to-pr-1)
   - note about change in Issue 1
   - note about change in Issue 1 (no bullet point at start of line)
-- #1001 _Pull Request 1_ implemented by @janeDoe
-  - This is second PR comment ad RLS note
-  - This is third PR comment ad RLS note
 
 
 ### Closed Issues without Pull Request ⚠️
@@ -47,6 +41,9 @@
 
 
 ### Merged PRs without Linked Issue and Custom Labels ⚠️
+- #1001 _Pull Request 1_ implemented by @janeDoe
+  - This is second PR comment ad RLS note
+  - This is third PR comment ad RLS note
 - #1004 _Pull Request 4 - no linked issue - merged_ implemented by @janeDoe
 
 
@@ -59,4 +56,4 @@
 
 
 #### Full Changelog
-https://github.com/owner/repo-no-rls/commits/v0.1.1
+https://github.com/owner/repo/compare/v0.1.0...v0.1.1

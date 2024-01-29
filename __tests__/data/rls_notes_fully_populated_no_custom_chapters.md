@@ -28,7 +28,7 @@
 - #3 _Issue title 3 - no release note comment|typo label_ implemented by @janeDoe in [#3](link-to-pr-3)
 
 
-### Merged PRs without Linked Issue ⚠️
+### Merged PRs without Linked Issue and Custom Labels ⚠️
 - #1001 _Pull Request 1_ implemented by @janeDoe
   - This is second PR comment ad RLS note
   - This is third PR comment ad RLS note
@@ -39,7 +39,7 @@
 - #1003 _Pull Request 3 - linked to open issue_
 
 
-### Closed PRs without Linked Issue ⚠️
+### Closed PRs without Linked Issue and Custom Labels ⚠️
 - #1002 _Pull Request 2 - no linked issue - closed_ implemented by @janeDoe
 
 
