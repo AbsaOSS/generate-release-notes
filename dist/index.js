@@ -29227,30 +29227,9 @@ async function getReleaseNotesFromComments(octokit, issueNumber, issueTitle, iss
     const comments = await getIssueComments(octokit, issueNumber, repoOwner, repoName);
     let commitAuthors = await getPRCommitAuthors(octokit, repoOwner, repoName, relatedPRs);
     let contributors = await getIssueContributors(issueAssignees, commitAuthors);
-
-    let releaseNotes = [];
-    for (const comment of comments.data) {
-        if (comment.body.toLowerCase().startsWith('release notes')) {
-            const noteContent = comment.body.replace(/^release notes:?.*(\r\n|\n|\r)?/i, '').trim();
-            console.log(`Found release notes in comments for issue #${issueNumber}`);
-
-            // Process each line of the noteContent
-            const processedContent = noteContent.split(/\r?\n/).map(line => {
-                // Check if the line starts with "  -"
-                if (!line.startsWith("-")) {
-                    // Remove leading whitespace and prepend "  - "
-                    return "  - " + line.trim();
-                } else {
-                    // Remove leading whitespace
-                    return line.replace(/^\s*[\r\n]/gm, '').replace(/^/gm, '  ');
-                }
-            }).join('\n');
-
-            releaseNotes.push(processedContent);
-        }
-    }
-
+    let releaseNotes = await extractReleaseNotesFromComments(comments.data);
     const contributorsList = Array.from(contributors).join(', ');
+
     if (releaseNotes.length === 0) {
         console.log(`No specific release notes found in comments for issue #${issueNumber}`);
         if (relatedPRs.length === 0) {
@@ -29259,6 +29238,7 @@ async function getReleaseNotesFromComments(octokit, issueNumber, issueTitle, iss
             return `- x#${issueNumber} _${issueTitle}_ implemented by ${contributorsList} in ${relatedPRLinksString}\n`;
         }
     } else {
+        console.log(`Found release notes in comments for issue #${issueNumber}`);
         const notes = releaseNotes.join('\n');
         if (relatedPRs.length === 0) {
             return `- #${issueNumber} _${issueTitle}_ implemented by ${contributorsList}\n${notes}\n`;
@@ -29283,13 +29263,30 @@ async function getReleaseNotesFromPRComments(octokit, prNumber, prTitle, prAssig
     const comments = await getPRComments(octokit, prNumber, repoOwner, repoName);
     let commitAuthors = await getPRCommitAuthorsByPRNumber(octokit, repoOwner, repoName, prNumber);
     let contributors = await getPRContributors(prAssignees, commitAuthors);
+    let releaseNotes = await extractReleaseNotesFromComments(comments.data);
+    const contributorsList = Array.from(contributors).join(', ');
 
-    // TODO candidate for refactoring - duplicite
+    if (releaseNotes.length === 0) {
+        console.log(`No specific release notes found in comments for pull request #${prNumber}`);
+        return `- #${prNumber} _${prTitle}_ implemented by ${contributorsList}\n`;
+    } else {
+        console.log(`Found release notes in comments for pull request #${prNumber}`);
+        const notes = releaseNotes.join('\n');
+        return `- #${prNumber} _${prTitle}_ implemented by ${contributorsList}\n${notes}\n`;
+    }
+}
+
+/**
+ * Extract release notes from comments.
+ * @param comments - The comments to extract release notes from.
+ * @returns {Promise<*[]>} An array of release notes.
+ */
+async function extractReleaseNotesFromComments(comments) {
     let releaseNotes = [];
-    for (const comment of comments.data) {
+
+    for (const comment of comments) {
         if (comment.body.toLowerCase().startsWith('release notes')) {
             const noteContent = comment.body.replace(/^release notes:?.*(\r\n|\n|\r)?/i, '').trim();
-            console.log(`Found release notes in comments for pull request #${prNumber}`);
 
             // Process each line of the noteContent
             const processedContent = noteContent.split(/\r?\n/).map(line => {
@@ -29307,15 +29304,7 @@ async function getReleaseNotesFromPRComments(octokit, prNumber, prTitle, prAssig
         }
     }
 
-    const contributorsList = Array.from(contributors).join(', ');
-    if (releaseNotes.length === 0) {
-        console.log(`No specific release notes found in comments for pull request #${prNumber}`);
-        return `- #${prNumber} _${prTitle}_ implemented by ${contributorsList}\n`;
-    } else {
-        console.log(`Release notes: ${releaseNotes}`);
-        const notes = releaseNotes.join('\n');
-        return `- #${prNumber} _${prTitle}_ implemented by ${contributorsList}\n${notes}\n`;
-    }
+    return releaseNotes;
 }
 
 /**
