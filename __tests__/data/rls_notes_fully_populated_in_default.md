@@ -14,12 +14,21 @@
   - note about change in Issue 4
 - #2 _Issue title 2_ implemented by @johnDoe in [#2](link-to-pr-2)
   - note about change in Issue 2
-
-
-### Bugfixes 🛠
 - #1 _Issue title 1_ implemented by @janeDoe in [#1](link-to-pr-1)
   - note about change in Issue 1
   - note about change in Issue 1 (no bullet point at start of line)
+- #1001 _Pull Request 1_ implemented by @janeDoe
+  - This is second PR comment ad RLS note
+  - This is third PR comment ad RLS note
+
+
+### Bugfixes 🛠
+- **<span style="color: red;">[Duplicate]<span>** #1 _Issue title 1_ implemented by @janeDoe in [#1](link-to-pr-1)
+  - note about change in Issue 1
+  - note about change in Issue 1 (no bullet point at start of line)
+- **<span style="color: red;">[Duplicate]<span>** #1001 _Pull Request 1_ implemented by @janeDoe
+  - This is second PR comment ad RLS note
+  - This is third PR comment ad RLS note
 
 
 ### Closed Issues without Pull Request ⚠️
@@ -37,17 +46,16 @@
 - #3 _Issue title 3 - no release note comment|typo label_ implemented by @janeDoe in [#3](link-to-pr-3)
 
 
-### Merged PRs without Linked Issue ⚠️
-#1001 _Pull Request 1_
-#1004 _Pull Request 4 - no linked issue - merged_
+### Merged PRs without Linked Issue and Custom Labels ⚠️
+- #1004 _Pull Request 4 - no linked issue - merged_ implemented by @janeDoe
 
 
 ### Merged PRs Linked to Open Issue ⚠️
-#1003 _Pull Request 3 - linked to open issue_
+- #1003 _Pull Request 3 - linked to open issue_
 
 
-### Closed PRs without Linked Issue ⚠️
-#1002 _Pull Request 2 - no linked issue - closed_
+### Closed PRs without Linked Issue and Custom Labels ⚠️
+- #1002 _Pull Request 2 - no linked issue - closed_ implemented by @janeDoe
 
 
 #### Full Changelog

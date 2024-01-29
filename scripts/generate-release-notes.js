@@ -45,17 +45,17 @@ async function getRelatedPRsForIssue(octokit, issueNumber, repoOwner, repoName) 
 }
 
 /**
- * Fetches contributors for an issue.
- * @param {Array} issueAssignees - List of assignees for the issue.
+ * Fetches contributors for an issue or pull request.
+ * @param {Array} assignees - List of assignees for the issue or pull request.
  * @param {Array} commitAuthors - List of authors of commits.
  * @returns {Set<string>} A set of contributors' usernames.
  */
-async function getIssueContributors(issueAssignees, commitAuthors) {
-    // Map the issueAssignees to the required format
-    const assignees = issueAssignees.map(assignee => '@' + assignee.login);
+async function getContributors(assignees, commitAuthors) {
+    // Map the assignees to the required format
+    const loginAssignees = assignees.map(assignee => '@' + assignee.login);
 
-    // Combine the assignees and commit authors
-    const combined = [...assignees, ...commitAuthors];
+    // Combine the loginAssignees and commit authors
+    const combined = [...loginAssignees, ...commitAuthors];
 
     // Check if the combined array is empty
     if (combined && combined.length === 0) {
@@ -67,7 +67,7 @@ async function getIssueContributors(issueAssignees, commitAuthors) {
 }
 
 /**
- * Retrieves authors of commits from pull requests related to an issue.
+ * Retrieves authors of commits from pull requests.
  * @param {Octokit} octokit - The Octokit instance.
  * @param {string} repoOwner - The owner of the repository.
  * @param {string} repoName - The name of the repository.
@@ -77,40 +77,58 @@ async function getIssueContributors(issueAssignees, commitAuthors) {
 async function getPRCommitAuthors(octokit, repoOwner, repoName, relatedPRs) {
     let commitAuthors = new Set();
     for (const event of relatedPRs) {
-        const prNumber = event.source.issue.number;
-        const commits = await octokit.rest.pulls.listCommits({
-            owner: repoOwner,
-            repo: repoName,
-            pull_number: prNumber
-        });
+        const authors = await getPRCommitAuthorsByPRNumber(octokit, repoOwner, repoName, event.source.issue.number);
+        for (const author of authors) {
+            commitAuthors.add(author);
+        }
+    }
 
-        for (const commit of commits.data) {
-            commitAuthors.add('@' + commit.author.login);
+    return commitAuthors;
+}
 
-            const coAuthorMatches = commit.commit.message.match(/Co-authored-by: (.+ <.+>)/gm);
-            if (coAuthorMatches) {
-                for (const coAuthorLine of coAuthorMatches) {
-                    const emailRegex = /<([^>]+)>/;
-                    const nameRegex = /Co-authored-by: (.+) </;
-                    const emailMatch = emailRegex.exec(coAuthorLine);
-                    const nameMatch = nameRegex.exec(coAuthorLine);
-                    if (emailMatch && nameMatch) {
-                        const email = emailMatch[1];
-                        const name = nameMatch[1].trim();
+/**
+ * Retrieves authors of commits from pull request.
+ * @param {Octokit} octokit - The Octokit instance.
+ * @param {string} repoOwner - The owner of the repository.
+ * @param {string} repoName - The name of the repository.
+ * @param {number} prNumber - The pull request number.
+ * @returns {Set<string>} A set of commit authors' usernames.
+ */
+async function getPRCommitAuthorsByPRNumber(octokit, repoOwner, repoName, prNumber) {
+    let commitAuthors = new Set();
 
-                        console.log(`Searching for GitHub user with email: ${email}`);
+    const commits = await octokit.rest.pulls.listCommits({
+        owner: repoOwner,
+        repo: repoName,
+        pull_number: prNumber
+    });
 
-                        const searchResult = await octokit.rest.search.users({
-                            q: `${email} in:email`
-                        });
+    for (const commit of commits.data) {
+        commitAuthors.add('@' + commit.author.login);
 
-                        const user = searchResult.data.items[0];
-                        if (user && user.login) {
-                            commitAuthors.add('@' + user.login);
-                        } else {
-                            console.log(`No public GitHub account found for email: ${email}`);
-                            commitAuthors.add(name);
-                        }
+        const coAuthorMatches = commit.commit.message.match(/Co-authored-by: (.+ <.+>)/gm);
+        if (coAuthorMatches) {
+            for (const coAuthorLine of coAuthorMatches) {
+                const emailRegex = /<([^>]+)>/;
+                const nameRegex = /Co-authored-by: (.+) </;
+                const emailMatch = emailRegex.exec(coAuthorLine);
+                const nameMatch = nameRegex.exec(coAuthorLine);
+                if (emailMatch && nameMatch) {
+                    const email = emailMatch[1];
+                    const name = nameMatch[1].trim();
+
+                    console.log(`Searching for GitHub user with email: ${email}`);
+
+                    const searchResult = await octokit.rest.search.users({
+                        q: `${email} in:email`
+                    });
+
+                    const user = searchResult.data.items[0];
+                    if (user && user.login) {
+                        commitAuthors.add('@' + user.login);
+                    } else {
+                        console.log(`No public GitHub account found for email: ${email}`);
+                        commitAuthors.add(name);
                     }
                 }
             }
@@ -133,6 +151,22 @@ async function getIssueComments(octokit, issueNumber, repoOwner, repoName) {
 }
 
 /**
+ * Fetches comments for a specific pull request.
+ * @param {Octokit} octokit - The Octokit instance.
+ * @param {number} prNumber - The pull request number.
+ * @param {string} repoOwner - The owner of the repository.
+ * @param {string} repoName - The name of the repository.
+ * @returns {Promise<Array>} An array of pull request comments.
+ */
+async function getPRComments(octokit, prNumber, repoOwner, repoName) {
+    return await octokit.rest.pulls.listReviewComments({
+        owner: repoOwner,
+        repo: repoName,
+        pull_number: prNumber
+    });
+}
+
+/**
  * Generates release notes from issue comments.
  * @param {Octokit} octokit - The Octokit instance.
  * @param {number} issueNumber - The issue number.
@@ -148,13 +182,67 @@ async function getReleaseNotesFromComments(octokit, issueNumber, issueTitle, iss
     console.log(`Fetching release notes from comments for issue #${issueNumber}`);
     const comments = await getIssueComments(octokit, issueNumber, repoOwner, repoName);
     let commitAuthors = await getPRCommitAuthors(octokit, repoOwner, repoName, relatedPRs);
-    let contributors = await getIssueContributors(issueAssignees, commitAuthors);
+    let contributors = await getContributors(issueAssignees, commitAuthors);
+    let releaseNotes = await extractReleaseNotesFromComments(comments.data);
+    const contributorsList = Array.from(contributors).join(', ');
 
+    if (releaseNotes.length === 0) {
+        console.log(`No specific release notes found in comments for issue #${issueNumber}`);
+        if (relatedPRs.length === 0) {
+            return `- x#${issueNumber} _${issueTitle}_ implemented by ${contributorsList}\n`;
+        } else {
+            return `- x#${issueNumber} _${issueTitle}_ implemented by ${contributorsList} in ${relatedPRLinksString}\n`;
+        }
+    } else {
+        console.log(`Found release notes in comments for issue #${issueNumber}`);
+        const notes = releaseNotes.join('\n');
+        if (relatedPRs.length === 0) {
+            return `- #${issueNumber} _${issueTitle}_ implemented by ${contributorsList}\n${notes}\n`;
+        } else {
+            return `- #${issueNumber} _${issueTitle}_ implemented by ${contributorsList} in ${relatedPRLinksString}\n${notes}\n`;
+        }
+    }
+}
+
+/**
+ * Generates release notes from pull request comments.
+ * @param {Octokit} octokit - The Octokit instance.
+ * @param {number} prNumber - The issue number.
+ * @param {string} prTitle - The title of the issue.
+ * @param {Array} prAssignees - List of assignees for the issue.
+ * @param {string} repoOwner - The owner of the repository.
+ * @param {string} repoName - The name of the repository.
+ * @returns {Promise<string>} The formatted release note for the issue.
+ */
+async function getReleaseNotesFromPRComments(octokit, prNumber, prTitle, prAssignees, repoOwner, repoName) {
+    console.log(`Fetching release notes from comments for pull request #${prNumber}`);
+    const comments = await getPRComments(octokit, prNumber, repoOwner, repoName);
+    let commitAuthors = await getPRCommitAuthorsByPRNumber(octokit, repoOwner, repoName, prNumber);
+    let contributors = await getContributors(prAssignees, commitAuthors);
+    let releaseNotes = await extractReleaseNotesFromComments(comments.data);
+    const contributorsList = Array.from(contributors).join(', ');
+
+    if (releaseNotes.length === 0) {
+        console.log(`No specific release notes found in comments for pull request #${prNumber}`);
+        return `- #${prNumber} _${prTitle}_ implemented by ${contributorsList}\n`;
+    } else {
+        console.log(`Found release notes in comments for pull request #${prNumber}`);
+        const notes = releaseNotes.join('\n');
+        return `- #${prNumber} _${prTitle}_ implemented by ${contributorsList}\n${notes}\n`;
+    }
+}
+
+/**
+ * Extract release notes from comments.
+ * @param comments - The comments to extract release notes from.
+ * @returns {Promise<*[]>} An array of release notes.
+ */
+async function extractReleaseNotesFromComments(comments) {
     let releaseNotes = [];
-    for (const comment of comments.data) {
+
+    for (const comment of comments) {
         if (comment.body.toLowerCase().startsWith('release notes')) {
             const noteContent = comment.body.replace(/^release notes:?.*(\r\n|\n|\r)?/i, '').trim();
-            console.log(`Found release notes in comments for issue #${issueNumber}`);
 
             // Process each line of the noteContent
             const processedContent = noteContent.split(/\r?\n/).map(line => {
@@ -172,23 +260,7 @@ async function getReleaseNotesFromComments(octokit, issueNumber, issueTitle, iss
         }
     }
 
-    if (releaseNotes.length === 0) {
-        console.log(`No specific release notes found in comments for issue #${issueNumber}`);
-        const contributorsList = Array.from(contributors).join(', ');
-        if (relatedPRs.length === 0) {
-            return `- x#${issueNumber} _${issueTitle}_ implemented by ${contributorsList}\n`;
-        } else {
-            return `- x#${issueNumber} _${issueTitle}_ implemented by ${contributorsList} in ${relatedPRLinksString}\n`;
-        }
-    } else {
-        const contributorsList = Array.from(contributors).join(', ');
-        const notes = releaseNotes.join('\n');
-        if (relatedPRs.length === 0) {
-            return `- #${issueNumber} _${issueTitle}_ implemented by ${contributorsList}\n${notes}\n`;
-        } else {
-            return `- #${issueNumber} _${issueTitle}_ implemented by ${contributorsList} in ${relatedPRLinksString}\n${notes}\n`;
-        }
-    }
+    return releaseNotes;
 }
 
 /**
@@ -268,10 +340,20 @@ async function isPrLinkedToOpenIssue(octokit, prNumber, repoOwner, repoName) {
  * @returns {Map<string, string[]>} A map where each key is a chapter title and the value is an array of corresponding labels.
  */
 function parseChaptersJson(chaptersJson) {
+    const titlesToLabelsMap = new Map();
+
     try {
         const chaptersArray = JSON.parse(chaptersJson);
+        if (!Array.isArray(chaptersArray)) {
+            throw new Error("Parsed data is not an array.");
+        }
+
         const titlesToLabelsMap = new Map();
         chaptersArray.forEach(chapter => {
+            if (typeof chapter.title !== 'string' || typeof chapter.label !== 'string') {
+                throw new Error("Invalid chapter format. Each chapter must have a string title and a string label.");
+            }
+
             if (titlesToLabelsMap.has(chapter.title)) {
                 titlesToLabelsMap.get(chapter.title).push(chapter.label);
             } else {
@@ -281,6 +363,7 @@ function parseChaptersJson(chaptersJson) {
         return titlesToLabelsMap;
     } catch (error) {
         core.setFailed(`Error parsing chapters JSON: ${error.message}`)
+        return new Map();
     }
 }
 
@@ -404,6 +487,7 @@ async function run() {
     const githubToken = process.env.GITHUB_TOKEN;
     const tagName = core.getInput('tag-name');
     const githubRepository = process.env.GITHUB_REPOSITORY;
+    const duplicate = "- _**[Duplicate]**_ #";
 
     // Validate GitHub token
     if (!githubToken) {
@@ -437,6 +521,7 @@ async function run() {
     const skipLabel = core.getInput('skip-release-notes-label') || 'skip-release-notes';
     const usePublishedAt = core.getInput('published-at') ? core.getInput('published-at').toLowerCase() === 'true' : false;
     const printEmptyChapters = core.getInput('print-empty-chapters') ? core.getInput('print-empty-chapters').toLowerCase() === 'true' : true;
+    const chaptersToPRWithoutIssue = core.getInput('chapters-to-pr-without-issue') ? core.getInput('chapters-to-pr-without-issue').toLowerCase() === 'true' : true;
 
     const octokit = new Octokit({ auth: githubToken });
 
@@ -454,10 +539,10 @@ async function run() {
         // Initialize variables for each chapter
         const titlesToLabelsMap = parseChaptersJson(chaptersJson);
         const chapterContents = new Map(Array.from(titlesToLabelsMap.keys()).map(label => [label, '']));
-        let closedIssuesWithoutReleaseNotes = '', closedIssuesWithoutUserLabels = '', closedIssuesWithoutPR = '', mergedPRsWithoutLinkedIssue = '';
-        let mergedPRsLinkedToOpenIssue = '', closedPRsLinkedToIssue = '';
+        let closedIssuesWithoutReleaseNotes = '', closedIssuesWithoutUserLabels = '', closedIssuesWithoutPR = '', mergedPRsWithoutLinkToIssue = '';
+        let mergedPRsLinkedToOpenIssue = '', closedPRsWithoutLinkToIssue = '';
 
-        // Categorize issues and PRs
+        // Categorize issues into chapters
         for (const issue of closedIssuesOnlyIssues) {
             let relatedPRs = await getRelatedPRsForIssue(octokit, issue.number, repoOwner, repoName);
             console.log(`Related PRs for issue #${issue.number}: ${relatedPRs.map(event => event.id).join(', ')}`);
@@ -477,8 +562,12 @@ async function run() {
             let foundUserLabels = false;
             titlesToLabelsMap.forEach((labels, title) => {
                 if (labels.some(label => issue.labels.map(l => l.name).includes(label))) {
-                    chapterContents.set(title, chapterContents.get(title) + releaseNotes);
-                    foundUserLabels = true;
+                    if (foundUserLabels) {
+                        chapterContents.set(title, chapterContents.get(title) + releaseNotes.replace(/^- #/, duplicate));
+                    } else {
+                        chapterContents.set(title, chapterContents.get(title) + releaseNotes);
+                        foundUserLabels = true;
+                    }
                 }
             });
 
@@ -503,10 +592,29 @@ async function run() {
 
                 for (const pr of sortedMergedPRs) {
                     if (!await isPrLinkedToIssue(octokit, pr.number, repoOwner, repoName)) {
-                        mergedPRsWithoutLinkedIssue += `#${pr.number} _${pr.title}_\n`;
+                        let releaseNotes = await getReleaseNotesFromPRComments(octokit, pr.number, pr.title, pr.assignees, repoOwner, repoName);
+                        let foundUserLabels = false;
+                        if (chaptersToPRWithoutIssue) {
+                            titlesToLabelsMap.forEach((labels, title) => {
+                                if (labels.some(label => pr.labels.map(l => l.name).includes(label))) {
+                                    if (foundUserLabels) {
+                                        chapterContents.set(title, chapterContents.get(title) + releaseNotes.replace(/^- #/, duplicate));
+                                    } else {
+                                        chapterContents.set(title, chapterContents.get(title) + releaseNotes);
+                                        foundUserLabels = true;
+                                    }
+                                }
+                            });
+                        }
+
+                        if (!foundUserLabels) {
+                            mergedPRsWithoutLinkToIssue += releaseNotes;
+                        }
+
+                        console.log(`DEBUG: value if mergedPRsWithoutLinkToIssue: ${mergedPRsWithoutLinkToIssue}`);
                     } else {
                         if (await isPrLinkedToOpenIssue(octokit, pr.number, repoOwner, repoName)) {
-                            mergedPRsLinkedToOpenIssue += `#${pr.number} _${pr.title}_\n`;
+                            mergedPRsLinkedToOpenIssue += `- #${pr.number} _${pr.title}_\n`;
                         }
                     }
                 }
@@ -522,7 +630,24 @@ async function run() {
 
                 for (const pr of sortedClosedPRs) {
                     if (!await isPrLinkedToIssue(octokit, pr.number, repoOwner, repoName)) {
-                        closedPRsLinkedToIssue += `#${pr.number} _${pr.title}_\n`;
+                        let releaseNotes = await getReleaseNotesFromPRComments(octokit, pr.number, pr.title, pr.assignees, repoOwner, repoName);
+                        let foundUserLabels = false;
+                        if (chaptersToPRWithoutIssue) {
+                            titlesToLabelsMap.forEach((labels, title) => {
+                                if (labels.some(label => pr.labels.map(l => l.name).includes(label))) {
+                                    if (foundUserLabels) {
+                                        chapterContents.set(title, chapterContents.get(title) + releaseNotes.replace(/^- #/, duplicate));
+                                    } else {
+                                        chapterContents.set(title, chapterContents.get(title) + releaseNotes);
+                                        foundUserLabels = true;
+                                    }
+                                }
+                            });
+                        }
+
+                        if (!foundUserLabels) {
+                            closedPRsWithoutLinkToIssue += releaseNotes;
+                        }
                     }
                 }
             } else {
@@ -555,16 +680,16 @@ async function run() {
                 releaseNotes += "### Closed Issues without Pull Request ⚠️\n" + (closedIssuesWithoutPR || "All closed issues linked to a Pull Request.") + "\n\n";
                 releaseNotes += "### Closed Issues without User Defined Labels ⚠️\n" + (closedIssuesWithoutUserLabels || "All closed issues contain at least one of user defined labels.") + "\n\n";
                 releaseNotes += "### Closed Issues without Release Notes ⚠️\n" + (closedIssuesWithoutReleaseNotes || "All closed issues have release notes.") + "\n\n";
-                releaseNotes += "### Merged PRs without Linked Issue ⚠️\n" + (mergedPRsWithoutLinkedIssue || "All merged PRs are linked to issues.") + "\n\n";
+                releaseNotes += "### Merged PRs without Linked Issue and Custom Labels ⚠️\n" + (mergedPRsWithoutLinkToIssue || "All merged PRs are linked to issues.") + "\n\n";
                 releaseNotes += "### Merged PRs Linked to Open Issue ⚠️\n" + (mergedPRsLinkedToOpenIssue || "All merged PRs are linked to Closed issues.") + "\n\n";
-                releaseNotes += "### Closed PRs without Linked Issue ⚠️\n" + (closedPRsLinkedToIssue || "All closed PRs are linked to issues.") + "\n\n";
+                releaseNotes += "### Closed PRs without Linked Issue and Custom Labels ⚠️\n" + (closedPRsWithoutLinkToIssue || "All closed PRs are linked to issues.") + "\n\n";
             } else {
                 releaseNotes += closedIssuesWithoutPR ? "### Closed Issues without Pull Request ⚠️\n" + closedIssuesWithoutPR + "\n\n" : "";
                 releaseNotes += closedIssuesWithoutUserLabels ? "### Closed Issues without User Defined Labels ⚠️\n" + closedIssuesWithoutUserLabels + "\n\n" : "";
                 releaseNotes += closedIssuesWithoutReleaseNotes ? "### Closed Issues without Release Notes ⚠️\n" + closedIssuesWithoutReleaseNotes + "\n\n" : "";
-                releaseNotes += mergedPRsWithoutLinkedIssue ? "### Merged PRs without Linked Issue ⚠️\n" + mergedPRsWithoutLinkedIssue + "\n\n" : "";
+                releaseNotes += mergedPRsWithoutLinkToIssue ? "### Merged PRs without Link to Issue and Custom Labels ⚠️\n" + mergedPRsWithoutLinkToIssue + "\n\n" : "";
                 releaseNotes += mergedPRsLinkedToOpenIssue ? "### Merged PRs Linked to Open Issue ⚠️\n" + mergedPRsLinkedToOpenIssue + "\n\n" : "";
-                releaseNotes += closedPRsLinkedToIssue ? "### Closed PRs without Linked Issue ⚠️\n" + closedPRsLinkedToIssue + "\n\n" : "";
+                releaseNotes += closedPRsWithoutLinkToIssue ? "### Closed PRs without Link to Issue and Custom Labels ⚠️\n" + closedPRsWithoutLinkToIssue + "\n\n" : "";
             }
         }
         releaseNotes += "#### Full Changelog\n" + changelogUrl;

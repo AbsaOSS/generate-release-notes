@@ -16,13 +16,13 @@ All closed issues contain at least one of user defined labels.
 ### Closed Issues without Release Notes ⚠️
 All closed issues have release notes.
 
-### Merged PRs without Linked Issue ⚠️
+### Merged PRs without Linked Issue and Custom Labels ⚠️
 All merged PRs are linked to issues.
 
 ### Merged PRs Linked to Open Issue ⚠️
 All merged PRs are linked to Closed issues.
 
-### Closed PRs without Linked Issue ⚠️
+### Closed PRs without Linked Issue and Custom Labels ⚠️
 All closed PRs are linked to issues.
 
 #### Full Changelog

@@ -34,6 +34,7 @@ Add the following step to your GitHub workflow (in example are used non-default 
     published-at: true
     skip-release-notes-label: 'ignore-in-release'     # changing default value of label
     print-empty-chapters: false
+    chapters-to-pr-without-issue: true
 ```
 
 ### Configure the Action
@@ -46,6 +47,7 @@ Configure the action by customizing the following parameters based on your needs
 - **published-at** (optional): Set to true to enable the use of the `published-at` timestamp as the reference point for searching closed issues and PRs, instead of the `created-at` date of the latest release.
 - **skip-release-notes** (optional): Set to a label name to skip issues and PRs with this label from release notes process generation. Defaults to `skip-release-notes` if not specified.
 - **print-empty-chapters** (optional): Set to true to print chapters with no issues or PRs. Defaults to false if not specified.
+- **chapters-to-pr-without-issue** (optional): Set false to avoid application of custom chapters for PRs without linked issues. Defaults to true if not specified.
 
 ## Setup
 ### Build the Action:

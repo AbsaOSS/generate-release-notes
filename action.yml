@@ -23,6 +23,10 @@ inputs:
     description: 'Print chapters even if they are empty.'
     required: false
     default: 'true'
+  chapters-to-pr-without-issue:
+    description: 'Apply custom chapters for PRs without linked issues.'
+    required: false
+    default: 'true'
 
 branding:
   icon: 'book'
