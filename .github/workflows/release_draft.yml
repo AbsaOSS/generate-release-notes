@@ -39,6 +39,7 @@ jobs:
               repo: context.repo.repo,
               ref: 'tags/'
             });
+            console.log(`Existing tags: ${refs.map(ref => ref.ref.replace('refs/tags/', '')).join(', ')}`);
 
             const latestTag = refs.sort((a, b) => new Date(b.object.date) - new Date(a.object.date))[0].ref.replace('refs/tags/', '');
             console.log(`Latest tag: ${latestTag}`);
