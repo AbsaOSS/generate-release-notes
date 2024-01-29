@@ -38,16 +38,18 @@
 
 
 ### Merged PRs without Linked Issue ⚠️
-#1001 _Pull Request 1_
-#1004 _Pull Request 4 - no linked issue - merged_
+- #1001 _Pull Request 1_ implemented by @janeDoe
+  - This is second PR comment ad RLS note
+  - This is third PR comment ad RLS note
+- #1004 _Pull Request 4 - no linked issue - merged_ implemented by @janeDoe
 
 
 ### Merged PRs Linked to Open Issue ⚠️
-#1003 _Pull Request 3 - linked to open issue_
+- #1003 _Pull Request 3 - linked to open issue_
 
 
 ### Closed PRs without Linked Issue ⚠️
-#1002 _Pull Request 2 - no linked issue - closed_
+- #1002 _Pull Request 2 - no linked issue - closed_ implemented by @janeDoe
 
 
 #### Full Changelog

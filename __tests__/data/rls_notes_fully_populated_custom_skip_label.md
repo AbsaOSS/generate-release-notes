@@ -39,16 +39,16 @@
 
 
 ### Merged PRs without Linked Issue ⚠️
-#1004 _Pull Request 4 - no linked issue - merged_
-#1006 _Pull Request 6 - skip label_
+- #1004 _Pull Request 4 - no linked issue - merged_ implemented by @janeDoe
+- #1006 _Pull Request 6 - skip label_ implemented by @janeDoe
 
 
 ### Merged PRs Linked to Open Issue ⚠️
-#1003 _Pull Request 3 - linked to open issue_
+- #1003 _Pull Request 3 - linked to open issue_
 
 
 ### Closed PRs without Linked Issue ⚠️
-#1002 _Pull Request 2 - no linked issue - closed_
+- #1002 _Pull Request 2 - no linked issue - closed_ implemented by @janeDoe
 
 
 #### Full Changelog

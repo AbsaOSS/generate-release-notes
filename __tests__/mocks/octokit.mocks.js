@@ -26,6 +26,9 @@ const mockEmptyData = () => ({
             listCommits: jest.fn().mockResolvedValue({
                 data: [],
             }),
+            listReviewComments: jest.fn().mockResolvedValue({
+                data: [],
+            }),
             get: jest.fn().mockResolvedValue({
                 data: [],
             }),
@@ -597,6 +600,11 @@ const mockFullPerfectData = () => ({
                             labels: [{ name: 'user-custom-label' }],
                             created_at: '2023-12-12T15:56:30.000Z',
                             merged_at: '2023-12-12T15:58:30.000Z',
+                            assignees: [
+                                {
+                                    login: "janeDoe",
+                                },
+                            ],
                         },
                         {
                             number: 1002,
@@ -605,6 +613,11 @@ const mockFullPerfectData = () => ({
                             labels: [],
                             created_at: '2023-12-12T15:57:30.000Z',
                             closed_at: '2023-12-12T15:58:30.000Z',
+                            assignees: [
+                                {
+                                    login: "janeDoe",
+                                },
+                            ],
                         },
                         {
                             number: 1003,
@@ -613,6 +626,11 @@ const mockFullPerfectData = () => ({
                             labels: [],
                             created_at: '2023-12-12T15:58:30.000Z',
                             merged_at: '2023-12-12T15:59:30.000Z',
+                            assignees: [
+                                {
+                                    login: "janeDoe",
+                                },
+                            ],
                         },
                         {
                             number: 1004,
@@ -621,6 +639,11 @@ const mockFullPerfectData = () => ({
                             labels: [],
                             created_at: '2023-12-12T15:59:30.000Z',
                             merged_at: '2023-12-12T16:59:30.000Z',
+                            assignees: [
+                                {
+                                    login: "janeDoe",
+                                },
+                            ],
                         },
                         {
                             number: 1005,
@@ -628,6 +651,11 @@ const mockFullPerfectData = () => ({
                             state: 'open',
                             labels: [],
                             created_at: '2023-12-12T15:59:35.000Z',
+                            assignees: [
+                                {
+                                    login: "janeDoe",
+                                },
+                            ],
                         },
                         {
                             number: 1006,
@@ -636,6 +664,11 @@ const mockFullPerfectData = () => ({
                             labels: [{ name: 'skip-release-notes' }],
                             created_at: '2023-12-12T15:59:37.000Z',
                             merged_at: '2023-12-12T17:59:37.000Z',
+                            assignees: [
+                                {
+                                    login: "janeDoe",
+                                },
+                            ],
                         },
                     ],
                 });
@@ -676,6 +709,27 @@ const mockFullPerfectData = () => ({
                                 url: 'https://api.github.com/repos/owner/repo/commits/abc124'
                             },
                         ]
+                    });
+                } else {
+                    return Promise.resolve({
+                        data: [],
+                    });
+                }
+            }),
+            listReviewComments: jest.fn(({owner, repo, pull_number}) => {
+                if (pull_number === 1001) {
+                    return Promise.resolve({
+                        data: [
+                            {
+                                body: 'This is first PR comment.',
+                            },
+                            {
+                                body: 'Release notes\nThis is second PR comment ad RLS note',
+                            },
+                            {
+                                body: 'Release notes\nThis is third PR comment ad RLS note',
+                            },
+                        ],
                     });
                 } else {
                     return Promise.resolve({
@@ -876,6 +930,11 @@ const mockPerfectDataWithoutIssues = () => ({
                         data: [],
                     });
                 }
+            }),
+            listReviewComments: jest.fn(({owner, repo, pull_number}) => {
+                return Promise.resolve({
+                    data: [],
+                });
             }),
             get: jest.fn(({owner, repo, pull_number}) => {
                 if (pull_number === 1003) {
