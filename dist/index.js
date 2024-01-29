@@ -29509,7 +29509,7 @@ async function run() {
     const githubToken = process.env.GITHUB_TOKEN;
     const tagName = core.getInput('tag-name');
     const githubRepository = process.env.GITHUB_REPOSITORY;
-    const duplicate = "- _**<span style=\"color: red;\">[Duplicate]<span>**_ #";
+    const duplicate = "- _**[Duplicate]**_ #";
 
     // Validate GitHub token
     if (!githubToken) {
