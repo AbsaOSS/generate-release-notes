@@ -45,39 +45,17 @@ async function getRelatedPRsForIssue(octokit, issueNumber, repoOwner, repoName) 
 }
 
 /**
- * Fetches contributors for an issue.
- * @param {Array} issueAssignees - List of assignees for the issue.
+ * Fetches contributors for an issue or pull request.
+ * @param {Array} assignees - List of assignees for the issue or pull request.
  * @param {Array} commitAuthors - List of authors of commits.
  * @returns {Set<string>} A set of contributors' usernames.
  */
-async function getIssueContributors(issueAssignees, commitAuthors) {
-    // Map the issueAssignees to the required format
-    const assignees = issueAssignees.map(assignee => '@' + assignee.login);
+async function getContributors(assignees, commitAuthors) {
+    // Map the assignees to the required format
+    const loginAssignees = assignees.map(assignee => '@' + assignee.login);
 
-    // Combine the assignees and commit authors
-    const combined = [...assignees, ...commitAuthors];
-
-    // Check if the combined array is empty
-    if (combined && combined.length === 0) {
-        return new Set(["\"Missing Assignee or Contributor\""]);
-    }
-
-    // If not empty, return the Set of combined values
-    return new Set(combined);
-}
-
-/**
- * Fetches contributors for a pull request.
- * @param {Array} prAssignees - List of assignees for the pull requests.
- * @param {Array} commitAuthors - List of authors of commits.
- * @returns {Set<string>} A set of contributors' usernames.
- */
-async function getPRContributors(prAssignees, commitAuthors) {
-    // Map the prAssignees to the required format
-    const assignees = prAssignees.map(assignee => '@' + assignee.login);
-
-    // Combine the assignees and commit authors
-    const combined = [...assignees, ...commitAuthors];
+    // Combine the loginAssignees and commit authors
+    const combined = [...loginAssignees, ...commitAuthors];
 
     // Check if the combined array is empty
     if (combined && combined.length === 0) {
@@ -204,7 +182,7 @@ async function getReleaseNotesFromComments(octokit, issueNumber, issueTitle, iss
     console.log(`Fetching release notes from comments for issue #${issueNumber}`);
     const comments = await getIssueComments(octokit, issueNumber, repoOwner, repoName);
     let commitAuthors = await getPRCommitAuthors(octokit, repoOwner, repoName, relatedPRs);
-    let contributors = await getIssueContributors(issueAssignees, commitAuthors);
+    let contributors = await getContributors(issueAssignees, commitAuthors);
     let releaseNotes = await extractReleaseNotesFromComments(comments.data);
     const contributorsList = Array.from(contributors).join(', ');
 
@@ -240,7 +218,7 @@ async function getReleaseNotesFromPRComments(octokit, prNumber, prTitle, prAssig
     console.log(`Fetching release notes from comments for pull request #${prNumber}`);
     const comments = await getPRComments(octokit, prNumber, repoOwner, repoName);
     let commitAuthors = await getPRCommitAuthorsByPRNumber(octokit, repoOwner, repoName, prNumber);
-    let contributors = await getPRContributors(prAssignees, commitAuthors);
+    let contributors = await getContributors(prAssignees, commitAuthors);
     let releaseNotes = await extractReleaseNotesFromComments(comments.data);
     const contributorsList = Array.from(contributors).join(', ');
 
@@ -362,10 +340,20 @@ async function isPrLinkedToOpenIssue(octokit, prNumber, repoOwner, repoName) {
  * @returns {Map<string, string[]>} A map where each key is a chapter title and the value is an array of corresponding labels.
  */
 function parseChaptersJson(chaptersJson) {
+    const titlesToLabelsMap = new Map();
+
     try {
         const chaptersArray = JSON.parse(chaptersJson);
+        if (!Array.isArray(chaptersArray)) {
+            throw new Error("Parsed data is not an array.");
+        }
+
         const titlesToLabelsMap = new Map();
         chaptersArray.forEach(chapter => {
+            if (typeof chapter.title !== 'string' || typeof chapter.label !== 'string') {
+                throw new Error("Invalid chapter format. Each chapter must have a string title and a string label.");
+            }
+
             if (titlesToLabelsMap.has(chapter.title)) {
                 titlesToLabelsMap.get(chapter.title).push(chapter.label);
             } else {
@@ -375,6 +363,7 @@ function parseChaptersJson(chaptersJson) {
         return titlesToLabelsMap;
     } catch (error) {
         core.setFailed(`Error parsing chapters JSON: ${error.message}`)
+        return new Map();
     }
 }
 
