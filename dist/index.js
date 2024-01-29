@@ -29509,6 +29509,7 @@ async function run() {
     const githubToken = process.env.GITHUB_TOKEN;
     const tagName = core.getInput('tag-name');
     const githubRepository = process.env.GITHUB_REPOSITORY;
+    const duplicate = "- **<span style=\"color: red;\">[Duplicate]<span>** #";
 
     // Validate GitHub token
     if (!githubToken) {
@@ -29583,8 +29584,12 @@ async function run() {
             let foundUserLabels = false;
             titlesToLabelsMap.forEach((labels, title) => {
                 if (labels.some(label => issue.labels.map(l => l.name).includes(label))) {
-                    chapterContents.set(title, chapterContents.get(title) + releaseNotes);
-                    foundUserLabels = true;
+                    if (foundUserLabels) {
+                        chapterContents.set(title, chapterContents.get(title) + releaseNotes.replace(/^- #/, duplicate));
+                    } else {
+                        chapterContents.set(title, chapterContents.get(title) + releaseNotes);
+                        foundUserLabels = true;
+                    }
                 }
             });
 
@@ -29614,8 +29619,12 @@ async function run() {
                         if (chaptersToPRWithoutIssue) {
                             titlesToLabelsMap.forEach((labels, title) => {
                                 if (labels.some(label => pr.labels.map(l => l.name).includes(label))) {
-                                    chapterContents.set(title, chapterContents.get(title) + releaseNotes);
-                                    foundUserLabels = true;
+                                    if (foundUserLabels) {
+                                        chapterContents.set(title, chapterContents.get(title) + releaseNotes.replace(/^- #/, duplicate));
+                                    } else {
+                                        chapterContents.set(title, chapterContents.get(title) + releaseNotes);
+                                        foundUserLabels = true;
+                                    }
                                 }
                             });
                         }
@@ -29648,12 +29657,16 @@ async function run() {
                         if (chaptersToPRWithoutIssue) {
                             titlesToLabelsMap.forEach((labels, title) => {
                                 if (labels.some(label => pr.labels.map(l => l.name).includes(label))) {
-                                    chapterContents.set(title, chapterContents.get(title) + releaseNotes);
-                                    foundUserLabels = true;
+                                    if (foundUserLabels) {
+                                        chapterContents.set(title, chapterContents.get(title) + releaseNotes.replace(/^- #/, duplicate));
+                                    } else {
+                                        chapterContents.set(title, chapterContents.get(title) + releaseNotes);
+                                        foundUserLabels = true;
+                                    }
                                 }
                             });
                         }
-                        
+
                         if (!foundUserLabels) {
                             closedPRsWithoutLinkToIssue += releaseNotes;
                         }
