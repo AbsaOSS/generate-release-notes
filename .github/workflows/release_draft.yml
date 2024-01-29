@@ -41,6 +41,7 @@ jobs:
             });
 
             const latestTag = refs.sort((a, b) => new Date(b.object.date) - new Date(a.object.date))[0].ref.replace('refs/tags/', '');
+            console.log(`Latest tag: ${latestTag}`);
 
             const latestVersion = latestTag.replace('v', '').split('.').map(Number);
             const newVersion = newTag.replace('v', '').split('.').map(Number);
