@@ -34,7 +34,7 @@ Add the following step to your GitHub workflow (in example are used non-default 
     published-at: true
     skip-release-notes-label: 'ignore-in-release'     # changing default value of label
     print-empty-chapters: false
-    chapters-to-pr-without-issue: true
+    chapters-to-pr-without-issue: false
 ```
 
 ### Configure the Action
