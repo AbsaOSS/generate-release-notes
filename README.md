@@ -180,7 +180,7 @@ We defined chapters for our GH actions this way:
       {"title": "Bugfixes 🛠", "label": "bug"}
     ]'
 ```
-Then in chapters `New Features 🎉` and `Bugfixes 🛠` will be duplicated lines for this issue.
+Then in chapters `New Features 🎉` and `Bugfixes 🛠` will be duplicated lines for this issue. When mentioned second+ times then **[Duplicate]** prefix will be visible.
 In the `New Features 🎉` chapter will be mentioned this issue once only.
 
 #### What will happen when the issue contains multiple "Release Notes" comments?
