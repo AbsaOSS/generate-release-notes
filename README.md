@@ -1,5 +1,23 @@
 # Generate Release Notes Action
 
+- [Motivation](#motivation)
+- [Usage](#usage)
+  - [Prerequisites](#prerequisites)
+  - [Adding the Action to Your Workflow](#adding-the-action-to-your-workflow)
+  - [Inputs](#inputs)
+- [Run locally](#run-locally)
+- [Run unit test](#run-unit-test)
+- [Features](#features)
+  - [Release Notes Extraction Process](#release-notes-extraction-process)
+  - [Contributors Mention](#contributors-mention)
+  - [Handling Multiple PRs](#handling-multiple-prs)
+  - [Warnings](#warnings)
+- [Contribution Guidelines](#contribution-guidelines)
+  - [How to Contribute](#how-to-contribute)
+- [License Information](#license-information)
+- [Contact or Support Information](#contact-or-support-information)
+- [FAQs](#faqs)
+
 This GitHub Action automatically generates release notes for a given release tag by categorizing contributions into user-defined chapters based on labels. It streamlines the process of documenting new features, bug fixes, and breaking changes in your project releases.
 
 ## Motivation
@@ -35,32 +53,62 @@ Add the following step to your GitHub workflow (in example are used non-default 
     skip-release-notes-label: 'ignore-in-release'     # changing default value of label
     print-empty-chapters: false
     chapters-to-pr-without-issue: false
+    verbose: false
 ```
 
-### Configure the Action
-Configure the action by customizing the following parameters based on your needs:
+### Inputs
+#### `GITHUB_TOKEN`
+- **Description**: Your GitHub token for authentication. Store it as a secret and reference it in the workflow file as secrets.GITHUB_TOKEN.
+- **Required**: Yes
 
-- **GITHUB_TOKEN** (required): Your GitHub token for authentication. Store it as a secret and reference it in the workflow file as secrets.GITHUB_TOKEN.
-- **tag-name** (required): The name of the tag for which you want to generate release notes. This should be the same as the tag name used in the release workflow.
-- **chapters** (required): A JSON string defining chapters and corresponding labels for categorization. Each chapter, like "Breaking Changes", "New Features", and "Bugfixes", should have a title and a label matching your GitHub issues and PRs.
-- **warnings** (optional): Set to true to enable warnings in the release notes. These warnings identify issues without release notes, without user-defined labels, or without associated pull requests, and PRs without linked issues. Defaults to false if not specified.
-- **published-at** (optional): Set to true to enable the use of the `published-at` timestamp as the reference point for searching closed issues and PRs, instead of the `created-at` date of the latest release.
-- **skip-release-notes** (optional): Set to a label name to skip issues and PRs with this label from release notes process generation. Defaults to `skip-release-notes` if not specified.
-- **print-empty-chapters** (optional): Set to true to print chapters with no issues or PRs. Defaults to false if not specified.
-- **chapters-to-pr-without-issue** (optional): Set false to avoid application of custom chapters for PRs without linked issues. Defaults to true if not specified.
+#### `tag-name`
+- **Description**: The name of the tag for which you want to generate release notes. This should be the same as the tag name used in the release workflow.
+- **Required**: Yes
 
-## Setup
-### Build the Action:
-If you need to build the action locally:
+#### `chapters`
+- **Description**: A JSON string defining chapters and corresponding labels for categorization. Each chapter should have a title and a label matching your GitHub issues and PRs.
+- **Required**: Yes
 
-```bash
-npm install
-npm run build
-```
+#### `warnings`
+- **Description**: Set to true to enable warnings in the release notes. These warnings identify issues without release notes, without user-defined labels, or without associated pull requests, and PRs without linked issues.
+- **Required**: No
+- **Default**: false
 
-Then, commit action.yml and dist/index.js to your repository.
+#### `published-at`
+- **Description**: Set to true to enable the use of the `published-at` timestamp as the reference point for searching closed issues and PRs, instead of the `created-at` date of the latest release.
+- **Required**: No
+- **Default**: false
 
-### Run unit test
+#### `skip-release-notes-label`
+- **Description**: Set to a label name to skip issues and PRs with this label from the release notes process generation.
+- **Required**: No
+- **Default**: `skip-release-notes`
+
+#### `print-empty-chapters`
+- **Description**: Set to true to print chapters with no issues or PRs.
+- **Required**: No
+- **Default**: false
+
+#### `chapters-to-pr-without-issue`
+- **Description**: Set to false to avoid application of custom chapters for PRs without linked issues.
+- **Required**: No
+- **Default**: true
+
+#### `verbose`
+- **Description**: Set to true to enable verbose logging for detailed output during the action's execution.
+- **Required**: No
+- **Default**: false
+
+
+### Outputs
+The output of the action is a markdown string containing the release notes for the specified tag. This string can be used in subsequent steps to publish the release notes to a file, create a GitHub release, or send notifications.
+TODO - review
+
+
+## Run locally
+TODO
+
+## Run unit test
 First install [jest](https://jestjs.io/) testing framework.
 ```
 npm install --save-dev jest

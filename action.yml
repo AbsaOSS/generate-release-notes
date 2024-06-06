@@ -27,11 +27,29 @@ inputs:
     description: 'Apply custom chapters for PRs without linked issues.'
     required: false
     default: 'true'
+  verbose:
+    description: 'Print verbose logs.'
+    required: false
+    default: 'false'
 
 branding:
   icon: 'book'
   color: 'yellow'
 
 runs:
-  using: 'node20'
-  main: 'dist/index.js'
+  using: 'composite'
+  steps:
+    - name: Generate release notes
+      id: generate-release-notes
+      env:
+        TAG_NAME: ${{ inputs.tag-name }}
+        CHAPTERS: ${{ inputs.chapters }}
+        WARNINGS: ${{ inputs.warnings }}
+        PUBLISHED_AT: ${{ inputs.published-at }}
+        SKIP_RELEASE_NOTES_LABEL: ${{ inputs.skip-release-notes-label }}
+        PRINT_EMPTY_CHAPTERS: ${{ inputs.print-empty-chapters }}
+        CHAPTERS_TO_PR_WITHOUT_ISSUE: ${{ inputs.chapters-to-pr-without-issue }}
+
+      run: |
+        python3 ${{ github.action_path }}/src/release_notes_generator.py
+      shell: bash
