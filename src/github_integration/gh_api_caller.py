@@ -8,8 +8,8 @@ from github.GitRelease import GitRelease
 from github.RateLimit import RateLimit
 from github.Repository import Repository
 
-from src.github_integration.model.issue import Issue
-from src.github_integration.model.pull_request import PullRequest
+from ..github_integration.model.issue import Issue
+from ..github_integration.model.pull_request import PullRequest
 
 
 def get_gh_repository(g: Github, repository_id: str) -> Optional[Repository]:
