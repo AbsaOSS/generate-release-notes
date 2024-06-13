@@ -18,13 +18,63 @@
 - [Contact or Support Information](#contact-or-support-information)
 - [FAQs](#faqs)
 
+## Description
+
 This GitHub Action automatically generates release notes for a given release tag by categorizing contributions into user-defined chapters based on labels. It streamlines the process of documenting new features, bug fixes, and breaking changes in your project releases.
 
 ## Motivation
 
 Generate Release Notes action is dedicated to enhance the quality and organization of project documentation. Its primary purpose is to categorize release notes according to various labels, perfectly aligning with the unique organizational needs of each project. In addition, it offers robust support for acknowledging the efforts of contributors, thereby fostering a sense of recognition and appreciation within the team. Another noteworthy feature of this tool is its capability to detect potential gaps in documentation, ensuring that release notes are comprehensive and leave no stone unturned. Well maintained release notes are a vital component in maintaining high-quality, meticulously organized documentation, which is indispensable in the development process. This repository reflects our commitment to excellence in project documentation and team collaboration.
 
-## Usage
+## Inputs
+### `GITHUB_TOKEN`
+- **Description**: Your GitHub token for authentication. Store it as a secret and reference it in the workflow file as secrets.GITHUB_TOKEN.
+- **Required**: Yes
+
+### `tag-name`
+- **Description**: The name of the tag for which you want to generate release notes. This should be the same as the tag name used in the release workflow.
+- **Required**: Yes
+
+### `chapters`
+- **Description**: A JSON string defining chapters and corresponding labels for categorization. Each chapter should have a title and a label matching your GitHub issues and PRs.
+- **Required**: Yes
+
+### `warnings`
+- **Description**: Set to true to enable warnings in the release notes. These warnings identify issues without release notes, without user-defined labels, or without associated pull requests, and PRs without linked issues.
+- **Required**: No
+- **Default**: false
+
+### `published-at`
+- **Description**: Set to true to enable the use of the `published-at` timestamp as the reference point for searching closed issues and PRs, instead of the `created-at` date of the latest release.
+- **Required**: No
+- **Default**: false
+
+### `skip-release-notes-label`
+- **Description**: Set to a label name to skip issues and PRs with this label from the release notes process generation.
+- **Required**: No
+- **Default**: `skip-release-notes`
+
+### `print-empty-chapters`
+- **Description**: Set to true to print chapters with no issues or PRs.
+- **Required**: No
+- **Default**: false
+
+### `chapters-to-pr-without-issue`
+- **Description**: Set to false to avoid application of custom chapters for PRs without linked issues.
+- **Required**: No
+- **Default**: true
+
+### `verbose`
+- **Description**: Set to true to enable verbose logging for detailed output during the action's execution.
+- **Required**: No
+- **Default**: false
+
+
+## Outputs
+The output of the action is a markdown string containing the release notes for the specified tag. This string can be used in subsequent steps to publish the release notes to a file, create a GitHub release, or send notifications.
+TODO - review
+
+## Usage Example
 
 ### Prerequisites
 
@@ -34,10 +84,28 @@ Before we begin, ensure you have a GitHub Token with permission to fetch reposit
 
 Add the following step to your GitHub workflow (in example are used non-default values):
 
+#### Default
 ```yaml
 - name: Generate Release Notes
   id: generate_release_notes
-  uses: AbsaOSS/generate-release-notes@0.1.0
+  uses: AbsaOSS/generate-release-notes@v0.2.0
+  env:
+    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
+  with:
+    tag-name: "v0.1.0"
+    chapters: '[
+      {"title": "Breaking Changes 💥", "label": "breaking-change"},
+      {"title": "New Features 🎉", "label": "enhancement"},
+      {"title": "New Features 🎉", "label": "feature"},
+      {"title": "Bugfixes 🛠", "label": "bug"}
+    ]'
+```
+
+#### Full example
+```yaml
+- name: Generate Release Notes
+  id: generate_release_notes
+  uses: AbsaOSS/generate-release-notes@v0.2.0
   env:
     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
   with:
@@ -54,70 +122,6 @@ Add the following step to your GitHub workflow (in example are used non-default 
     print-empty-chapters: false
     chapters-to-pr-without-issue: false
     verbose: false
-```
-
-### Inputs
-#### `GITHUB_TOKEN`
-- **Description**: Your GitHub token for authentication. Store it as a secret and reference it in the workflow file as secrets.GITHUB_TOKEN.
-- **Required**: Yes
-
-#### `tag-name`
-- **Description**: The name of the tag for which you want to generate release notes. This should be the same as the tag name used in the release workflow.
-- **Required**: Yes
-
-#### `chapters`
-- **Description**: A JSON string defining chapters and corresponding labels for categorization. Each chapter should have a title and a label matching your GitHub issues and PRs.
-- **Required**: Yes
-
-#### `warnings`
-- **Description**: Set to true to enable warnings in the release notes. These warnings identify issues without release notes, without user-defined labels, or without associated pull requests, and PRs without linked issues.
-- **Required**: No
-- **Default**: false
-
-#### `published-at`
-- **Description**: Set to true to enable the use of the `published-at` timestamp as the reference point for searching closed issues and PRs, instead of the `created-at` date of the latest release.
-- **Required**: No
-- **Default**: false
-
-#### `skip-release-notes-label`
-- **Description**: Set to a label name to skip issues and PRs with this label from the release notes process generation.
-- **Required**: No
-- **Default**: `skip-release-notes`
-
-#### `print-empty-chapters`
-- **Description**: Set to true to print chapters with no issues or PRs.
-- **Required**: No
-- **Default**: false
-
-#### `chapters-to-pr-without-issue`
-- **Description**: Set to false to avoid application of custom chapters for PRs without linked issues.
-- **Required**: No
-- **Default**: true
-
-#### `verbose`
-- **Description**: Set to true to enable verbose logging for detailed output during the action's execution.
-- **Required**: No
-- **Default**: false
-
-
-### Outputs
-The output of the action is a markdown string containing the release notes for the specified tag. This string can be used in subsequent steps to publish the release notes to a file, create a GitHub release, or send notifications.
-TODO - review
-
-
-## Run locally
-TODO
-
-## Run unit test
-First install [jest](https://jestjs.io/) testing framework.
-```
-npm install --save-dev jest
-npm install @actions/core
-npm install @actions/github
-```
-Launch unit tests.
-```
-npm test
 ```
 
 ## Features
@@ -183,6 +187,74 @@ The action includes four specific warning chapters to highlight potential areas 
 
 Each warning chapter acts as a quality check, ensuring that the release notes are comprehensive, well-organized, and meaningful. By addressing these warnings, project maintainers can significantly improve the clarity and effectiveness of their release documentation.
 
+
+How To Build
+
+Clone the repository and navigate to the project directory:
+
+```
+git clone https://github.com/AbsaOSS/generate-release-notes.git
+cd generate-release-notes
+```
+
+Install the dependencies:
+
+```
+pip install -r requirements.txt
+```
+
+## Running unit test
+
+Unit tests are written using pytest. To run the tests, use the following command:
+
+```
+pytest
+```
+
+This will execute all tests located in the tests directory and generate a code coverage report.
+
+## Code Coverage
+
+Code coverage is collected using pytest-cov coverage tool. To run the tests and collect coverage information, use the following command:
+
+```
+pytest --cov=src --cov-report html tests/
+```
+
+See the coverage report on the path:
+
+```
+htmlcov/index.html
+```
+
+## Run Action Locally
+Create *.sh file and place it in the project root.
+
+```bash
+#!/bin/bash
+
+# Set environment variables based on the action inputs
+export INPUT_TAG_NAME="v0.2.0"
+export INPUT_CHAPTERS='[
+  {"title": "Breaking Changes 💥", "label": "breaking-change"},
+  {"title": "New Features 🎉", "label": "enhancement"},
+  {"title": "New Features 🎉", "label": "feature"},
+  {"title": "Bugfixes 🛠", "label": "bug"}
+]'
+export INPUT_WARNINGS="true"
+export INPUT_PUBLISHED_AT="true"
+export INPUT_SKIP_RELEASE_NOTES_LABEL="ignore-in-release"
+export INPUT_PRINT_EMPTY_CHAPTERS="true"
+export INPUT_CHAPTERS_TO_PR_WITHOUT_ISSUE="true"
+export INPUT_VERBOSE="true"
+
+# CI in-build variables
+export GITHUB_REPOSITORY="< owner >/< repo-name >"
+export INPUT_GITHUB_TOKEN="< your token >}"
+
+# Run the Python script
+python3 ./src/generate-release-notes.py
+```
 
 ### Contribution Guidelines
 

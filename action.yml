@@ -42,13 +42,17 @@ runs:
     - name: Generate release notes
       id: generate-release-notes
       env:
-        TAG_NAME: ${{ inputs.tag-name }}
-        CHAPTERS: ${{ inputs.chapters }}
-        WARNINGS: ${{ inputs.warnings }}
-        PUBLISHED_AT: ${{ inputs.published-at }}
-        SKIP_RELEASE_NOTES_LABEL: ${{ inputs.skip-release-notes-label }}
-        PRINT_EMPTY_CHAPTERS: ${{ inputs.print-empty-chapters }}
-        CHAPTERS_TO_PR_WITHOUT_ISSUE: ${{ inputs.chapters-to-pr-without-issue }}
+        INPUT_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        INPUT_TAG_NAME: ${{ inputs.tag-name }}
+        INPUT_CHAPTERS: ${{ inputs.chapters }}
+        INPUT_WARNINGS: ${{ inputs.warnings }}
+        INPUT_PUBLISHED_AT: ${{ inputs.published-at }}
+        INPUT_SKIP_RELEASE_NOTES_LABEL: ${{ inputs.skip-release-notes-label }}
+        INPUT_PRINT_EMPTY_CHAPTERS: ${{ inputs.print-empty-chapters }}
+        INPUT_CHAPTERS_TO_PR_WITHOUT_ISSUE: ${{ inputs.chapters-to-pr-without-issue }}
+
+        # build-in variables - not expected to be filled by the user
+        INPUT_GITHUB_REPOSITORY: ${{ github.repository }}
 
       run: |
         python3 ${{ github.action_path }}/src/release_notes_generator.py
