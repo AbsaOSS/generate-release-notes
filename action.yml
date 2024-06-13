@@ -39,6 +39,12 @@ branding:
 runs:
   using: 'composite'
   steps:
+    - name: Install Python dependencies
+      run: |
+        python3 -m pip install --upgrade pip
+        python3 -m pip install -r ${{ github.action_path }}/requirements.txt
+      shell: bash
+
     - name: Call Release Notes Generator
       id: release-notes-generator
       env:
