@@ -54,7 +54,7 @@ runs:
       shell: bash
 
     - name: List all dirs in project - recursively
-      run: cd ${{ github.action_path }} | ls -R
+      run: ls ${{ github.action_path }} -R
       shell: bash
 
     - name: Call Release Notes Generator
