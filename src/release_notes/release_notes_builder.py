@@ -1,7 +1,7 @@
 import json
 
-from ..github_integration.model.issue import Issue
-from ..github_integration.model.pull_request import PullRequest
+from github_integration.model.issue import Issue
+from github_integration.model.pull_request import PullRequest
 
 
 class ReleaseNotesBuilder:
