@@ -5,10 +5,10 @@ import traceback
 from typing import Optional
 from github import Github, Auth
 
-from src.github_integration.gh_action import get_input, set_output, set_failed
-from src.github_integration.gh_api_caller import get_gh_repository, fetch_latest_release, fetch_closed_issues, \
-    fetch_finished_pull_requests, generate_change_url, show_rate_limit
-from src.release_notes.release_notes_builder import ReleaseNotesBuilder
+from github_integration.gh_action import get_input, set_output, set_failed
+from github_integration.gh_api_caller import (get_gh_repository, fetch_latest_release, fetch_closed_issues,
+                                              fetch_finished_pull_requests, generate_change_url, show_rate_limit)
+from release_notes.release_notes_builder import ReleaseNotesBuilder
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
