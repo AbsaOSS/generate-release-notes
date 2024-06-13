@@ -49,8 +49,8 @@ runs:
       run: python3 --version
       shell: bash
 
-    - name: scan current directory
-      run: ls -la
+    - name: print PYTHONPATH env variable
+      run: echo $PYTHONPATH
       shell: bash
 
     - name: Call Release Notes Generator
