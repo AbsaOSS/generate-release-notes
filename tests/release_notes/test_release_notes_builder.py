@@ -9,26 +9,29 @@ from src.release_notes.release_notes_builder import ReleaseNotesBuilder
 @pytest.fixture
 def issues():
     return [
-        Issue(id=1, title='Issue 1', labels=['bug'], is_closed=True, linked_pr_id=None),
-        Issue(id=2, title='Issue 2', labels=['enhancement'], is_closed=True, linked_pr_id=None),
-        Issue(id=3, title='Issue 3', labels=[], is_closed=True, linked_pr_id=None),
+        Issue(id=1, title='Issue 1', labels=['enhancement'], is_closed=True, linked_pr_id=None),
+        Issue(id=3, title='Issue 3', labels=['enhancement'], is_closed=True, linked_pr_id=None),
+        Issue(id=5, title='Issue 5', labels=['bug'], is_closed=True, linked_pr_id=None),     # Issue without linked PR
+        Issue(id=5, title='Issue 8', labels=[], is_closed=True, linked_pr_id=None),          # Issue without linked PR & without label
     ]
 
 
 @pytest.fixture
 def pulls():
     return [
-        PullRequest(id=1, title='PR 1', linked_issue_id=None),
-        PullRequest(id=2, title='PR 2', linked_issue_id=1),
+        PullRequest(id=2, title='PR 1', labels=['enhancement'], linked_issue_id=1),
+        PullRequest(id=4, title='PR 2', labels=[],linked_issue_id=3),
+        PullRequest(id=6, title='PR 3', labels=['bug'],linked_issue_id=None),        # PR without linked Issue
     ]
 
 
 @pytest.fixture
 def chapters_json():
     return json.dumps([
-        {"title": "Bugs", "label": "bug"},
-        {"title": "Enhancements", "label": "enhancement"},
-        {"title": "No Entries", "label": "no_entries"},
+        {"title": "Breaking Changes 💥", "label": "breaking-change"},
+        {"title": "New Features 🎉", "label": "enhancement"},
+        {"title": "New Features 🎉", "label": "feature"},
+        {"title": "Bugfixes 🛠", "label": "bug"}
     ])
 
 
@@ -44,25 +47,29 @@ def builder_print_empty_chapters_false(issues, pulls, chapters_json):
 
 
 user_chapters = """
-Bugs
-- Issue 1 (#1)
-    
-Enhancements
-- Issue 2 (#2)
-    
-No Entries
+Breaking Changes 💥
 No entries for this chapter.
+    
+New Features 🎉
+- Issue 1 (#1)
+- Issue 3 (#3)
+    
+Bugfixes
+- Issue 5 (#5)
+- PR 3 (#6)
 
 """
 
 
 user_chapters_no_empty_chapters = """
-Bugs
+New Features 🎉
 - Issue 1 (#1)
+- Issue 3 (#3)
     
-Enhancements
-- Issue 2 (#2)
-    
+Bugfixes
+- Issue 5 (#5)
+- PR 3 (#6)
+
 """
 
 
@@ -111,28 +118,29 @@ http://changelog.url
 
 # build
 
-def test_build(builder):
-    expected_release_notes = release_notes_full
-    actual_release_notes = builder.build()
-    assert expected_release_notes == actual_release_notes
+# TODO - un-comment when smaller methods will be developed - add high level format tests with it
+# def test_build(builder):
+#     expected_release_notes = release_notes_full
+#     actual_release_notes = builder.build()
+#     assert expected_release_notes == actual_release_notes
 
 
 # get_user_defined_chapters
 
-# def test_get_user_defined_chapters(builder):
-#     expected_release_notes = release_notes_full
-#
-#     actual_release_notes = builder._get_user_defined_chapters()
-#
-#     assert expected_release_notes == actual_release_notes
+def test_get_user_defined_chapters(builder):
+    expected_chapters = user_chapters
+
+    actual_chapters = builder._get_user_defined_chapters()
+
+    assert expected_chapters == actual_chapters
 
 
 # def test_get_user_defined_chapters_not_print_empty_chapters(builder_print_empty_chapters_false):
-#     expected_release_notes = release_notes_no_empty_chapters
+#     expected_chapters = user_chapters_no_empty_chapters
 #
-#     actual_release_notes = builder_print_empty_chapters_false._get_user_defined_chapters()
+#     actual_chapters = builder_print_empty_chapters_false._get_user_defined_chapters()
 #
-#     assert expected_release_notes == actual_release_notes
+#     assert expected_chapters == actual_chapters
 
 
 

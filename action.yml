@@ -42,7 +42,7 @@ runs:
     - name: Generate release notes
       id: generate-release-notes
       env:
-        INPUT_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        INPUT_GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
         INPUT_TAG_NAME: ${{ inputs.tag-name }}
         INPUT_CHAPTERS: ${{ inputs.chapters }}
         INPUT_WARNINGS: ${{ inputs.warnings }}

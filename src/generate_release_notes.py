@@ -86,7 +86,11 @@ def run():
     logging.info("Starting 'Release Notes Generator' GitHub Action")
 
     try:
+        local_repository_id = get_input('GITHUB_REPOSITORY')
+        owner, repo_name = local_repository_id.split('/')
+
         github_token: str = get_input('github-token')
+
         tag_name = get_input('tag-name')
         chapters_json = get_input('chapters')
         warnings = get_input('warnings') == 'true'
@@ -98,12 +102,6 @@ def run():
         verbose = get_input('verbose').lower() == 'true'
         if verbose:
             logging.getLogger().setLevel(logging.DEBUG)
-
-        # build-in variables
-        local_repository_id = os.getenv('GITHUB_REPOSITORY')
-        if local_repository_id is None:
-            raise ValueError("GITHUB_REPOSITORY environment variable is not set.")
-        owner, repo_name = local_repository_id.split('/')
 
         # Init GitHub instance
         auth = Auth.Token(token=github_token)

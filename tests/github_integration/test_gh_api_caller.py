@@ -170,11 +170,13 @@ def test_fetch_finished_pull_requests_multiple_pulls(capfd):
     mock_pull1 = Mock(spec=GithubPullRequest)
     mock_pull1.id = 1
     mock_pull1.title = "PR 1"
+    mock_pull1.labels = [Mock(name="bug")]
     mock_pull1.issue_url = "https://api.github.com/repos/owner/repo/issues/123"
 
     mock_pull2 = Mock(spec=GithubPullRequest)
     mock_pull2.id = 2
     mock_pull2.title = "PR 2"
+    mock_pull2.labels = [Mock(name="enhancement")]
     mock_pull2.issue_url = "https://api.github.com/repos/owner/repo/issues/456"
 
     mock_repo = Mock(spec=Repository)
@@ -199,6 +201,7 @@ def test_fetch_finished_pull_requests_no_issue_url(capfd):
     mock_pull = Mock(spec=GithubPullRequest)
     mock_pull.id = 1
     mock_pull.title = "PR 1"
+    mock_pull.labels = [Mock(name="bug")]
     mock_pull.issue_url = None
 
     mock_repo = Mock(spec=Repository)

@@ -74,6 +74,7 @@ def fetch_finished_pull_requests(repo: Repository) -> list[PullRequest]:
         pr = PullRequest(
             id=pull.id,
             title=pull.title,
+            labels=[label.name for label in pull.labels],
             linked_issue_id=pull.issue_url.split('/')[-1] if pull.issue_url else None
         )
         pull_requests.append(pr)
