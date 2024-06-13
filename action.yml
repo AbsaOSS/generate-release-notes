@@ -53,6 +53,10 @@ runs:
       run: echo $PYTHONPATH
       shell: bash
 
+    - name: List all dirs in project - recursively
+      run: ls -R
+      shell: bash
+
     - name: Call Release Notes Generator
       id: release-notes-generator
       env:
