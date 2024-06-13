@@ -39,8 +39,8 @@ branding:
 runs:
   using: 'composite'
   steps:
-    - name: Generate release notes
-      id: generate-release-notes
+    - name: Call Release Notes Generator
+      id: release-notes-generator
       env:
         INPUT_GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
         INPUT_TAG_NAME: ${{ inputs.tag-name }}
@@ -51,7 +51,6 @@ runs:
         INPUT_PRINT_EMPTY_CHAPTERS: ${{ inputs.print-empty-chapters }}
         INPUT_CHAPTERS_TO_PR_WITHOUT_ISSUE: ${{ inputs.chapters-to-pr-without-issue }}
 
-        # build-in variables - not expected to be filled by the user
         INPUT_GITHUB_REPOSITORY: ${{ github.repository }}
 
       run: |

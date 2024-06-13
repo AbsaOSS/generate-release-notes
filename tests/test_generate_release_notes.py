@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from src.generate_release_notes import validate_inputs, generate_release_notes, run
+from src.release_notes_generator import validate_inputs, generate_release_notes, run
 
 
 # validate_inputs
