@@ -45,6 +45,10 @@ runs:
         python3 -m pip install -r ${{ github.action_path }}/requirements.txt
       shell: bash
 
+    - name: Call command python3
+      run: python3 --version
+      shell: bash
+
     - name: Call Release Notes Generator
       id: release-notes-generator
       env:
@@ -61,8 +65,4 @@ runs:
 
       run: |
         python3 ${{ github.action_path }}/src/release_notes_generator.py
-      shell: bash
-
-    - name: Call command python3
-      run: python3 --version
       shell: bash
