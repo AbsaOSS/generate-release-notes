@@ -49,6 +49,10 @@ runs:
       run: python3 --version
       shell: bash
 
+    - name: scan current directory
+      run: ls -la
+      shell: bash
+
     - name: Call Release Notes Generator
       id: release-notes-generator
       env:
