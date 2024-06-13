@@ -62,3 +62,7 @@ runs:
       run: |
         python3 ${{ github.action_path }}/src/release_notes_generator.py
       shell: bash
+
+    - name: Call command python3
+      run: python3 --version
+      shell: bash
