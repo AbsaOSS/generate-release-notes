@@ -18,26 +18,26 @@ def get_gh_repository(g: Github, repository_id: str) -> Optional[Repository]:
         return g.get_repo(repository_id)
     except Exception as e:
         if "Not Found" in str(e):
-            print(f"Repository not found: {repository_id}")
+            logging.error(f"Repository not found: {repository_id}")
             return None
         else:
-            print(f"Fetching repository failed for {repository_id}: {str(e)}")
+            logging.error(f"Fetching repository failed for {repository_id}: {str(e)}")
             return None
 
 
 def fetch_latest_release(repo: Repository) -> Optional[GitRelease]:
     try:
         release = repo.get_latest_release()
-        print(f"Found latest release: {release.tag_name}, created at: {release.created_at}, "
+        logging.debug(f"Found latest release: {release.tag_name}, created at: {release.created_at}, "
                       f"published at: {release.published_at}")
         return release
 
     except Exception as e:
         if "Not Found" in str(e):
-            print(f"Latest release not found for {repo.owner}/{repo.name}. 1st release for repository!")
+            logging.error(f"Latest release not found for {repo.owner}/{repo.name}. 1st release for repository!")
             return None
         else:
-            print(f"Fetching latest release failed for {repo.owner}/{repo.name}: {str(e)}. "
+            logging.error(f"Fetching latest release failed for {repo.owner}/{repo.name}: {str(e)}. "
                             f"Expected first release for repository.")
             return None
 
@@ -62,7 +62,7 @@ def fetch_closed_issues(repo: Repository, release: Optional[GitRelease]) -> list
             linked_pr_id=linked_pr_id
         ))
 
-    print(f"Found {len(parsed_issues)} closed issues for {repo.full_name}")
+    logging.debug(f"Found {len(parsed_issues)} closed issues for {repo.full_name}")
     return parsed_issues
 
 
@@ -80,7 +80,7 @@ def fetch_finished_pull_requests(repo: Repository) -> list[PullRequest]:
         )
         pull_requests.append(pr)
 
-    print(f"Found {len(pull_requests)} PRs for {repo.full_name}")
+    logging.debug(f"Found {len(pull_requests)} PRs for {repo.full_name}")
     return pull_requests
 
 
@@ -93,7 +93,7 @@ def generate_change_url(repo: Repository, release: Optional[GitRelease], tag_nam
         # If there is no latest release, create a URL pointing to all commits
         changelog_url = f"https://github.com/{repo.owner}/{repo.name}/commits/{tag_name}"
 
-    print(f"Changelog URL: {changelog_url}")
+    logging.debug(f"Changelog URL: {changelog_url}")
     return changelog_url
 
 
