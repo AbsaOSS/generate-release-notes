@@ -142,5 +142,5 @@ class ReleaseNotesBuilder:
         release_notes += "#### Full Changelog\n" + self.changelog_url
         logging.debug(f"Release notes: \n{release_notes}")
 
-        # return release_notes
-        return """Empty test value"""
+        return release_notes
+        # return """Empty test value"""

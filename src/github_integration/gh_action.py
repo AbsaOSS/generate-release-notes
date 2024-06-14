@@ -10,7 +10,10 @@ def set_output(name: str, value: str, default_output_path: str = "default_output
     output_file = os.getenv('GITHUB_OUTPUT', default_output_path)
     with open(output_file, 'a') as f:
         # f.write(f'{name}={value}\n')
-        f.write(f'{name}={value}\n')
+        f.write(f"{name}={value}\n")
+        # f.write(f"{name}<<EOF\n")
+        # f.write(f"{value}")
+        # f.write(f"EOF\n")
 
 
 def set_failed(message: str):
