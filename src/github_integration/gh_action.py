@@ -3,7 +3,7 @@ import sys
 
 
 def get_input(name: str) -> str:
-    return os.getenv(f'INPUT_{name.replace("-", "_").upper()}', '')
+    return os.getenv(f'{name.replace("-", "_").upper()}', '')
 
 
 def set_output(name: str, value: str, default_output_path: str = "default_output.txt"):
