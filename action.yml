@@ -53,10 +53,6 @@ runs:
       run: echo $PYTHONPATH
       shell: bash
 
-    - name: List all dirs in project - recursively
-      run: ls ${{ github.action_path }} -R
-      shell: bash
-
     - name: Call Release Notes Generator
       id: release-notes-generator
       env:
@@ -68,6 +64,7 @@ runs:
         INPUT_SKIP_RELEASE_NOTES_LABEL: ${{ inputs.skip-release-notes-label }}
         INPUT_PRINT_EMPTY_CHAPTERS: ${{ inputs.print-empty-chapters }}
         INPUT_CHAPTERS_TO_PR_WITHOUT_ISSUE: ${{ inputs.chapters-to-pr-without-issue }}
+        INPUT_VERBOSE: ${{ inputs.verbose }}
 
         INPUT_GITHUB_REPOSITORY: ${{ github.repository }}
 
