@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 def validate_inputs(owner: str, repo_name: str, tag_name: str, chapters_json: str, warnings: bool,
                     published_at: bool, skip_release_notes_label: str, print_empty_chapters: bool,
-                    chapters_to_pr_without_issue: bool):
+                    chapters_to_pr_without_issue: bool, verbose: bool):
     if not isinstance(owner, str) or not owner.strip():
         raise ValueError("Owner must be a non-empty string.")
 
@@ -54,6 +54,7 @@ def validate_inputs(owner: str, repo_name: str, tag_name: str, chapters_json: st
     logging.debug(f'Skip release notes label: {skip_release_notes_label}')
     logging.debug(f'Print empty chapters: {print_empty_chapters}')
     logging.debug(f'Chapters to PR without issue: {chapters_to_pr_without_issue}')
+    logging.info(f'Verbosing logging: {verbose}')
 
 
 def release_notes_generator(g: Github, repository_id: str, tag_name: str, chapters_json: str, warnings: bool,
@@ -108,7 +109,7 @@ def run():
         show_rate_limit(g)
 
         validate_inputs(owner, repo_name, tag_name, chapters_json, warnings, published_at,
-                        skip_release_notes_label, print_empty_chapters, chapters_to_pr_without_issue)
+                        skip_release_notes_label, print_empty_chapters, chapters_to_pr_without_issue, verbose)
 
         rls_notes = release_notes_generator(g, local_repository_id, tag_name, chapters_json, warnings, published_at,
                                            skip_release_notes_label, print_empty_chapters, chapters_to_pr_without_issue)
