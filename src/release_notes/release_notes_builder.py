@@ -143,4 +143,4 @@ class ReleaseNotesBuilder:
         logging.debug(f"Release notes: \n{release_notes}")
 
         # return release_notes
-        return "Empty test value"
+        return """Empty test value"""
