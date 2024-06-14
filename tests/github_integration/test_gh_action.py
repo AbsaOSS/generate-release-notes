@@ -1,7 +1,7 @@
 import pytest
 
 from unittest.mock import patch, mock_open
-from src.github_integration.gh_action import get_input, set_output, set_failed
+from github_integration.gh_action import get_input, set_output, set_failed
 
 
 @patch('os.getenv')

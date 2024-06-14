@@ -6,8 +6,8 @@ from github import (Github, Issue as GithubIssue, PullRequest as GithubPullReque
                     Repository)
 from github.GitRelease import GitRelease
 from github.Repository import Repository
-from src.github_integration.gh_api_caller import (get_gh_repository, fetch_latest_release, fetch_closed_issues,
-                                                  fetch_finished_pull_requests, generate_change_url, show_rate_limit)
+from github_integration.gh_api_caller import (get_gh_repository, fetch_latest_release, fetch_closed_issues,
+                                              fetch_finished_pull_requests, generate_change_url, show_rate_limit)
 
 
 class MockIssue:

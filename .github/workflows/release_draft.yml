@@ -88,7 +88,7 @@ jobs:
           ref: refs/tags/${{ github.event.inputs.tagName }}
 
       - name: Generate release notes
-        id: generate_release_notes
+        id: release_notes_generator
         uses: AbsaOSS/generate-release-notes@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -109,7 +109,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           name: ${{ github.event.inputs.tagName }}
-          body: ${{ steps.generate_release_notes.outputs.releaseNotes }}
+          body: ${{ steps.release_notes_generator.outputs.releaseNotes }}
           tag_name: ${{ github.event.inputs.tagName }}
           draft: true
           prerelease: false

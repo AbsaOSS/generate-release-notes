@@ -16,6 +16,8 @@ class ReleaseNotesBuilder:
 
     def _get_user_defined_chapters(self) -> str:
         release_notes = ""
+        return "Testing chapters output"
+
         chapter_entries = {chapter['title']: [] for chapter in self.chapters}
 
         for issue in self.issues:

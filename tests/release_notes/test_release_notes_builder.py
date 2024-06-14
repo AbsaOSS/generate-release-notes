@@ -1,9 +1,9 @@
 import pytest
 import json
 
-from src.github_integration.model.issue import Issue
-from src.github_integration.model.pull_request import PullRequest
-from src.release_notes.release_notes_builder import ReleaseNotesBuilder
+from github_integration.model.issue import Issue
+from github_integration.model.pull_request import PullRequest
+from release_notes.release_notes_builder import ReleaseNotesBuilder
 
 
 @pytest.fixture

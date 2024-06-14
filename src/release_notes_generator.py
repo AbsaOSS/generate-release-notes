@@ -56,7 +56,7 @@ def validate_inputs(owner: str, repo_name: str, tag_name: str, chapters_json: st
     logging.debug(f'Chapters to PR without issue: {chapters_to_pr_without_issue}')
 
 
-def generate_release_notes(g: Github, repository_id: str, tag_name: str, chapters_json: str, warnings: bool,
+def release_notes_generator(g: Github, repository_id: str, tag_name: str, chapters_json: str, warnings: bool,
                            published_at: bool, skip_release_notes_label: str, print_empty_chapters: bool,
                            chapters_to_pr_without_issue: bool) -> Optional[str]:
     # get GitHub repository object (1 API call)
@@ -110,7 +110,7 @@ def run():
         validate_inputs(owner, repo_name, tag_name, chapters_json, warnings, published_at,
                         skip_release_notes_label, print_empty_chapters, chapters_to_pr_without_issue)
 
-        rls_notes = generate_release_notes(g, local_repository_id, tag_name, chapters_json, warnings, published_at,
+        rls_notes = release_notes_generator(g, local_repository_id, tag_name, chapters_json, warnings, published_at,
                                            skip_release_notes_label, print_empty_chapters, chapters_to_pr_without_issue)
         logging.debug(f"Release notes: \n{rls_notes}")
 

@@ -87,7 +87,7 @@ Add the following step to your GitHub workflow (in example are used non-default 
 #### Default
 ```yaml
 - name: Generate Release Notes
-  id: generate_release_notes
+  id: release_notes_generator
   uses: AbsaOSS/generate-release-notes@v0.2.0
   env:
     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
@@ -104,7 +104,7 @@ Add the following step to your GitHub workflow (in example are used non-default 
 #### Full example
 ```yaml
 - name: Generate Release Notes
-  id: generate_release_notes
+  id: release_notes_generator
   uses: AbsaOSS/generate-release-notes@v0.2.0
   env:
     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
