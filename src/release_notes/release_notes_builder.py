@@ -87,37 +87,43 @@ class ReleaseNotesBuilder:
             if len(sorted_issues_without_pr) == 0 and self.print_empty_chapters:
                 sorted_issues_without_pr_str = "All closed issues linked to a Pull Request.\n\n"
             else:
-                sorted_issues_without_pr_str = self._format_issues(sorted_issues_without_pr)
+                # sorted_issues_without_pr_str = self._format_issues(sorted_issues_without_pr)
+                sorted_issues_without_pr_str = "To be done"
 
             closed_issues_without_user_labels = self._get_closed_issues_without_user_labels()
             if len(closed_issues_without_user_labels) == 0 and self.print_empty_chapters:
                 closed_issues_without_user_labels_str = "All closed issues contain at least one of user defined labels.\n\n"
             else:
-                closed_issues_without_user_labels_str = self._format_issues(closed_issues_without_user_labels)
+                # closed_issues_without_user_labels_str = self._format_issues(closed_issues_without_user_labels)
+                closed_issues_without_user_labels_str = "To be done"
 
             closed_issues_without_release_notes_labels = self._get_closed_issues_without_release_notes_labels()
             if len(closed_issues_without_release_notes_labels) == 0 and self.print_empty_chapters:
                 closed_issues_without_release_notes_labels_str = "All closed issues have release notes.\n\n"
             else:
-                closed_issues_without_release_notes_labels_str = self._format_issues(closed_issues_without_release_notes_labels)
+                # closed_issues_without_release_notes_labels_str = self._format_issues(closed_issues_without_release_notes_labels)
+                closed_issues_without_release_notes_labels_str = "To be done"
 
             merged_pulls_without_link_to_issue = self._get_merged_pulls_without_link_to_issue()
             if len(merged_pulls_without_link_to_issue) == 0 and self.print_empty_chapters:
                 merged_pulls_without_link_to_issue_str = "All merged PRs are linked to issues.\n\n"
             else:
-                merged_pulls_without_link_to_issue_str = self._format_pulls(merged_pulls_without_link_to_issue)
+                # merged_pulls_without_link_to_issue_str = self._format_pulls(merged_pulls_without_link_to_issue)
+                merged_pulls_without_link_to_issue_str = "To be done"
 
             merged_pulls_linked_to_open_issue = self._get_merged_pulls_linked_to_open_issue()
             if len(merged_pulls_linked_to_open_issue) == 0 and self.print_empty_chapters:
                 merged_pulls_linked_to_open_issue_str = "All merged PRs are linked to Closed issues.\n\n"
             else:
-                merged_pulls_linked_to_open_issue_str = self._format_pulls(merged_pulls_linked_to_open_issue)
+                # merged_pulls_linked_to_open_issue_str = self._format_pulls(merged_pulls_linked_to_open_issue)
+                merged_pulls_linked_to_open_issue_str = "To be done"
 
             closed_pulls_without_link_to_issue = self._get_closed_pulls_without_link_to_issue()
             if len(closed_pulls_without_link_to_issue) == 0 and self.print_empty_chapters:
                 closed_pulls_without_link_to_issue_str = "All closed PRs are linked to issues.\n\n"
             else:
-                closed_pulls_without_link_to_issue_str = self._format_pulls(closed_pulls_without_link_to_issue)
+                # closed_pulls_without_link_to_issue_str = self._format_pulls(closed_pulls_without_link_to_issue)
+                closed_pulls_without_link_to_issue_str = "To be done"
 
             release_notes += f"### Closed Issues without Pull Request ⚠️\n{sorted_issues_without_pr_str}\n\n\n"
             release_notes += f"### Closed Issues without User Defined Labels ⚠️\n{closed_issues_without_user_labels_str}\n\n\n"
