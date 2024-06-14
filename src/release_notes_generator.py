@@ -46,14 +46,14 @@ def validate_inputs(owner: str, repo_name: str, tag_name: str, chapters_json: st
     if not isinstance(chapters_to_pr_without_issue, bool):
         raise ValueError("Chapters to PR without issue must be a boolean.")
 
-    logging.debug(f'Repository: {owner}/{repo_name}')
-    logging.debug(f'Tag name: {tag_name}')
-    logging.debug(f'Chapters JSON: {chapters_json}')
-    logging.debug(f'Warnings: {warnings}')
-    logging.debug(f'Published at: {published_at}')
-    logging.debug(f'Skip release notes label: {skip_release_notes_label}')
-    logging.debug(f'Print empty chapters: {print_empty_chapters}')
-    logging.debug(f'Chapters to PR without issue: {chapters_to_pr_without_issue}')
+    logging.info(f'Repository: {owner}/{repo_name}')
+    logging.info(f'Tag name: {tag_name}')
+    logging.info(f'Chapters JSON: {chapters_json}')
+    logging.info(f'Warnings: {warnings}')
+    logging.info(f'Published at: {published_at}')
+    logging.info(f'Skip release notes label: {skip_release_notes_label}')
+    logging.info(f'Print empty chapters: {print_empty_chapters}')
+    logging.info(f'Chapters to PR without issue: {chapters_to_pr_without_issue}')
     logging.info(f'Verbosing logging: {verbose}')
 
 
