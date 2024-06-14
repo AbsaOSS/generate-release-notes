@@ -3,8 +3,6 @@ import sys
 
 
 def get_input(name: str) -> str:
-    # print all environment variables - keys only
-    print(os.environ.keys())
     return os.getenv(f'{name.replace("-", "_").upper()}', '')
 
 

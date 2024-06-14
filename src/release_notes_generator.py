@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 import traceback
 
 from typing import Optional
@@ -107,6 +108,9 @@ def run():
         auth = Auth.Token(token=github_token)
         g = Github(auth=auth, per_page=100)
         show_rate_limit(g)
+
+        # print all environment variables - keys only
+        print(os.environ.keys())
 
         validate_inputs(owner, repo_name, tag_name, chapters_json, warnings, published_at,
                         skip_release_notes_label, print_empty_chapters, chapters_to_pr_without_issue, verbose)
