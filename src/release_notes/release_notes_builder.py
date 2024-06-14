@@ -79,7 +79,7 @@ class ReleaseNotesBuilder:
 
         # TODO - add new features and bugs
 
-        release_notes = self._get_user_defined_chapters()
+        defined_chapters = self._get_user_defined_chapters()
 
         if self.warnings:
             logging.debug("Generating warnings...")
@@ -125,12 +125,21 @@ class ReleaseNotesBuilder:
                 # closed_pulls_without_link_to_issue_str = self._format_pulls(closed_pulls_without_link_to_issue)
                 closed_pulls_without_link_to_issue_str = "To be done"
 
-            release_notes += f"### Closed Issues without Pull Request\n{sorted_issues_without_pr_str}\n"
-            release_notes += f"### Closed Issues without User Defined Labels️\n{closed_issues_without_user_labels_str}\n"
-            release_notes += f"### Closed Issues without Release Notes️\n{closed_issues_without_release_notes_labels_str}\n"
-            release_notes += f"### Merged PRs without Linked Issue and Custom Labels️\n{merged_pulls_without_link_to_issue_str}\n"
-            release_notes += f"### Merged PRs Linked to Open Issue️\n{merged_pulls_linked_to_open_issue_str}\n"
-            release_notes += f"### Closed PRs without Linked Issue and Custom Labels️\n{closed_pulls_without_link_to_issue_str}\n"
+            release_notes = f"""{defined_chapters}
+### Closed Issues without Pull Request ⚠️\n{sorted_issues_without_pr_str}\n
+### Closed Issues without User Defined Labels ⚠️\n{closed_issues_without_user_labels_str}\n
+### Closed Issues without Release Notes ⚠️\n{closed_issues_without_release_notes_labels_str}\n
+### Merged PRs without Linked Issue and Custom Labels ⚠️\n{merged_pulls_without_link_to_issue_str}\n
+### Merged PRs Linked to Open Issue ⚠️\n{merged_pulls_linked_to_open_issue_str}\n
+### Closed PRs without Linked Issue and Custom Labels ⚠️\n{closed_pulls_without_link_to_issue_str}\n
+#### Full Changelog
+{self.changelog_url}
+"""
+        else:
+            release_notes = f"""{defined_chapters}
+#### Full Changelog
+{self.changelog_url}
+"""
 
             # release_notes += f"### Closed Issues without Pull Request ⚠️\n{sorted_issues_without_pr_str}\n\n\n"
             # release_notes += f"### Closed Issues without User Defined Labels ⚠️\n{closed_issues_without_user_labels_str}\n\n\n"
@@ -139,7 +148,7 @@ class ReleaseNotesBuilder:
             # release_notes += f"### Merged PRs Linked to Open Issue ⚠️\n{merged_pulls_linked_to_open_issue_str}\n\n\n"
             # release_notes += f"### Closed PRs without Linked Issue and Custom Labels ⚠️\n{closed_pulls_without_link_to_issue_str}\n\n\n"
 
-        release_notes += "#### Full Changelog\n" + self.changelog_url
+        # release_notes += "#### Full Changelog\n" + self.changelog_url
         logging.debug(f"Release notes: \n{release_notes}")
 
         return release_notes
