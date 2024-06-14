@@ -1,6 +1,5 @@
 import json
 import logging
-import os
 import traceback
 
 from typing import Optional
@@ -102,7 +101,10 @@ def run():
         chapters_to_pr_without_issue = get_input('chapters-to-pr-without-issue') == 'true'
         verbose = get_input('verbose').lower() == 'true'
         if verbose:
+            logging.info("Verbose logging enabled")
             logging.getLogger().setLevel(logging.DEBUG)
+        else:
+            logging.info("Verbose logging disabled")
 
         # Init GitHub instance
         auth = Auth.Token(token=github_token)
