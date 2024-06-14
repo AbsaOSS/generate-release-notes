@@ -1,4 +1,5 @@
 import json
+import logging
 
 from github_integration.model.issue import Issue
 from github_integration.model.pull_request import PullRequest
@@ -81,6 +82,7 @@ class ReleaseNotesBuilder:
         release_notes = self._get_user_defined_chapters()
 
         if self.warnings:
+            logging.debug("Generating warnings...")
             sorted_issues_without_pr = self._get_sorted_issues_without_pr()
             if len(sorted_issues_without_pr) == 0 and self.print_empty_chapters:
                 sorted_issues_without_pr_str = "All closed issues linked to a Pull Request.\n\n"
@@ -125,4 +127,5 @@ class ReleaseNotesBuilder:
             release_notes += f"### Closed PRs without Linked Issue and Custom Labels ⚠️\n{closed_pulls_without_link_to_issue_str}\n\n\n"
 
         release_notes += "#### Full Changelog\n" + self.changelog_url
+        logging.debug(f"Release notes: \n{release_notes}")
         return release_notes
