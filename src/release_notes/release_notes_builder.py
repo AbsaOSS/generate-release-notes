@@ -141,15 +141,5 @@ class ReleaseNotesBuilder:
 {self.changelog_url}
 """
 
-            # release_notes += f"### Closed Issues without Pull Request ⚠️\n{sorted_issues_without_pr_str}\n\n\n"
-            # release_notes += f"### Closed Issues without User Defined Labels ⚠️\n{closed_issues_without_user_labels_str}\n\n\n"
-            # release_notes += f"### Closed Issues without Release Notes ⚠️\n{closed_issues_without_release_notes_labels_str}\n\n\n"
-            # release_notes += f"### Merged PRs without Linked Issue and Custom Labels ⚠️\n{merged_pulls_without_link_to_issue_str}\n\n\n"
-            # release_notes += f"### Merged PRs Linked to Open Issue ⚠️\n{merged_pulls_linked_to_open_issue_str}\n\n\n"
-            # release_notes += f"### Closed PRs without Linked Issue and Custom Labels ⚠️\n{closed_pulls_without_link_to_issue_str}\n\n\n"
-
-        # release_notes += "#### Full Changelog\n" + self.changelog_url
         logging.debug(f"Release notes: \n{release_notes}")
-
         return release_notes
-        # return """Empty test value"""

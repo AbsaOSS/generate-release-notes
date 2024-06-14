@@ -9,8 +9,7 @@ def get_input(name: str) -> str:
 def set_output(name: str, value: str, default_output_path: str = "default_output.txt"):
     output_file = os.getenv('GITHUB_OUTPUT', default_output_path)
     with open(output_file, 'a') as f:
-        # f.write(f'{name}={value}\n')
-        # f.write(f"{name}={value}\n")
+        # Write the multiline output to the file
         f.write(f"{name}<<EOF\n")
         f.write(f"{value}")
         f.write(f"EOF\n")
