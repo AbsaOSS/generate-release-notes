@@ -125,12 +125,12 @@ class ReleaseNotesBuilder:
                 # closed_pulls_without_link_to_issue_str = self._format_pulls(closed_pulls_without_link_to_issue)
                 closed_pulls_without_link_to_issue_str = "To be done"
 
-            release_notes += f"### Closed Issues without Pull Request\n{sorted_issues_without_pr_str}\n\n\n"
-            release_notes += f"### Closed Issues without User Defined Labels️\n{closed_issues_without_user_labels_str}\n\n\n"
-            release_notes += f"### Closed Issues without Release Notes️\n{closed_issues_without_release_notes_labels_str}\n\n\n"
-            release_notes += f"### Merged PRs without Linked Issue and Custom Labels️\n{merged_pulls_without_link_to_issue_str}\n\n\n"
-            release_notes += f"### Merged PRs Linked to Open Issue️\n{merged_pulls_linked_to_open_issue_str}\n\n\n"
-            release_notes += f"### Closed PRs without Linked Issue and Custom Labels️\n{closed_pulls_without_link_to_issue_str}\n\n\n"
+            release_notes += f"### Closed Issues without Pull Request\n{sorted_issues_without_pr_str}\n"
+            release_notes += f"### Closed Issues without User Defined Labels️\n{closed_issues_without_user_labels_str}\n"
+            release_notes += f"### Closed Issues without Release Notes️\n{closed_issues_without_release_notes_labels_str}\n"
+            release_notes += f"### Merged PRs without Linked Issue and Custom Labels️\n{merged_pulls_without_link_to_issue_str}\n"
+            release_notes += f"### Merged PRs Linked to Open Issue️\n{merged_pulls_linked_to_open_issue_str}\n"
+            release_notes += f"### Closed PRs without Linked Issue and Custom Labels️\n{closed_pulls_without_link_to_issue_str}\n"
 
             # release_notes += f"### Closed Issues without Pull Request ⚠️\n{sorted_issues_without_pr_str}\n\n\n"
             # release_notes += f"### Closed Issues without User Defined Labels ⚠️\n{closed_issues_without_user_labels_str}\n\n\n"
