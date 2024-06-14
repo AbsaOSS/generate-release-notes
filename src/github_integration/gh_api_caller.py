@@ -1,3 +1,4 @@
+import logging
 import time
 
 from datetime import datetime
@@ -102,7 +103,7 @@ def show_rate_limit(g: Github):
     if rate_limit.core.remaining < 10:
         reset_time = rate_limit.core.reset
         sleep_time = (reset_time - datetime.utcnow()).total_seconds() + 10
-        print(f"Rate limit reached. Sleeping for {sleep_time} seconds.")
+        logging.debug(f"Rate limit reached. Sleeping for {sleep_time} seconds.")
         time.sleep(sleep_time)
     else:
-        print(f"Rate limit: {rate_limit.core.remaining} remaining of {rate_limit.core.limit}")
+        logging.debug(f"Rate limit: {rate_limit.core.remaining} remaining of {rate_limit.core.limit}")
