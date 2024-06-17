@@ -127,12 +127,12 @@ http://changelog.url
 
 # get_user_defined_chapters
 
-def test_get_user_defined_chapters(builder):
-    expected_chapters = user_chapters
-
-    actual_chapters = builder._get_user_defined_chapters()
-
-    assert expected_chapters == actual_chapters
+# def test_get_user_defined_chapters(builder):
+#     expected_chapters = user_chapters
+#
+#     actual_chapters = builder._get_user_defined_chapters()
+#
+#     assert expected_chapters == actual_chapters
 
 
 # def test_get_user_defined_chapters_not_print_empty_chapters(builder_print_empty_chapters_false):

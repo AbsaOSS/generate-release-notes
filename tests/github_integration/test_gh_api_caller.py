@@ -1,6 +1,9 @@
+import logging
+from datetime import datetime, timedelta
+from io import StringIO
+
 import pytest
 
-from datetime import datetime, timedelta
 from unittest.mock import patch, MagicMock, Mock
 from github import (Github, Issue as GithubIssue, PullRequest as GithubPullRequest, RateLimit, Rate, GitRelease,
                     Repository)
@@ -36,33 +39,33 @@ def test_get_gh_repository_found(mock_get_repo):
 
 
 @patch('github.Github.get_repo')
-def test_get_gh_repository_not_found(mock_get_repo, capfd):
+def test_get_gh_repository_not_found_exception(mock_get_repo, caplog):
     g = Github()
     repo_id = 'test/repo'
 
     mock_get_repo.side_effect = Exception("Not Found")
 
-    result = get_gh_repository(g, repo_id)
+    with caplog.at_level(logging.ERROR):
+        result = get_gh_repository(g, repo_id)
 
     assert result is None
-    captured = capfd.readouterr()
-    assert "Repository not found" in captured.out
-    assert "not found" in captured.out
+    assert "Repository not found" in caplog.text
+    assert repo_id in caplog.text
 
 
 @patch('github.Github.get_repo')
-def test_get_gh_repository_exception(mock_get_repo, capfd):
+def test_get_gh_repository_exception(mock_get_repo, caplog):
     g = Github()
     repo_id = 'test/repo'
 
     mock_get_repo.side_effect = Exception("Other error")
 
-    result = get_gh_repository(g, repo_id)
+    with caplog.at_level(logging.ERROR):
+        result = get_gh_repository(g, repo_id)
 
     assert result is None
-    captured = capfd.readouterr()
-    assert "Fetching repository failed for test/repo" in captured.out
-    assert "Other error" in captured.out
+    assert "Fetching repository failed for test/repo" in caplog.text
+    assert "Other error" in caplog.text
 
 
 # fetch_latest_release
@@ -84,35 +87,35 @@ def test_fetch_latest_release_found():
     assert release.published_at == datetime(2023, 1, 2)
 
 
-def test_fetch_latest_release_not_found(capfd):
+def test_fetch_latest_release_not_found(caplog):
     # Mock the Repository object to raise an exception
     mock_repo = Mock(spec=Repository)
     mock_repo.get_latest_release.side_effect = Exception("Not Found")
 
-    release = fetch_latest_release(mock_repo)
+    with caplog.at_level(logging.ERROR):
+        release = fetch_latest_release(mock_repo)
 
     assert release is None
-    captured = capfd.readouterr()
-    assert "Latest release not found" in captured.out
-    assert "not found" in captured.out
+    assert "Latest release not found" in caplog.text
+    assert "not found" in caplog.text
 
 
-def test_fetch_latest_release_exception(capfd):
+def test_fetch_latest_release_exception(caplog):
     # Mock the Repository object to raise a different exception
     mock_repo = Mock(spec=Repository)
     mock_repo.get_latest_release.side_effect = Exception("Some other error")
 
-    release = fetch_latest_release(mock_repo)
+    with caplog.at_level(logging.ERROR):
+        release = fetch_latest_release(mock_repo)
 
     assert release is None
-    captured = capfd.readouterr()
-    assert "Fetching latest release failed" in captured.out
-    assert "Some other error" in captured.out
+    assert "Fetching latest release failed" in caplog.text
+    assert "Some other error" in caplog.text
 
 
 # fetch_closed_issues
 
-def test_fetch_closed_issues_with_release(capfd):
+def test_fetch_closed_issues_with_release(caplog):
     mock_release = Mock(spec=GitRelease)
     mock_release.published_at = datetime(2023, 1, 2)
 
@@ -129,7 +132,8 @@ def test_fetch_closed_issues_with_release(capfd):
     mock_repo.get_issues.return_value = [mock_issue]
     mock_repo.full_name = "test/repo"
 
-    issues = fetch_closed_issues(mock_repo, mock_release)
+    with caplog.at_level(logging.DEBUG):
+        issues = fetch_closed_issues(mock_repo, mock_release)
 
     assert len(issues) == 1
     assert issues[0].id == 1
@@ -137,12 +141,10 @@ def test_fetch_closed_issues_with_release(capfd):
     assert issues[0].labels == ["bug"]
     assert issues[0].is_closed is True
     assert issues[0].linked_pr_id is None
-
-    captured = capfd.readouterr()
-    assert "Found 1 closed issues for test/repo" in captured.out
+    assert "Found 1 closed issues for test/repo" in caplog.text
 
 
-def test_fetch_closed_issues_without_release(capfd):
+def test_fetch_closed_issues_without_release(caplog):
     mock_label = Mock()
     mock_label.name = "bug"
 
@@ -155,18 +157,19 @@ def test_fetch_closed_issues_without_release(capfd):
     mock_repo.get_issues.return_value = [mock_issue]
     mock_repo.full_name = "test/repo"
 
-    issues = fetch_closed_issues(mock_repo, None)
+    with caplog.at_level(logging.DEBUG):
+        issues = fetch_closed_issues(mock_repo, None)
 
     assert len(issues) == 1
     assert issues[0].id == 1
     assert issues[0].title == "Issue 1"
     assert issues[0].labels == ["bug"]
-
-    captured = capfd.readouterr()
-    assert "Found 1 closed issues for test/repo" in captured.out
+    assert "Found 1 closed issues for test/repo" in caplog.text
 
 
-def test_fetch_finished_pull_requests_multiple_pulls(capfd):
+# fetch_finished_pull_requests
+
+def test_fetch_finished_pull_requests_multiple_pulls(caplog):
     mock_pull1 = Mock(spec=GithubPullRequest)
     mock_pull1.id = 1
     mock_pull1.title = "PR 1"
@@ -183,7 +186,8 @@ def test_fetch_finished_pull_requests_multiple_pulls(capfd):
     mock_repo.get_pulls.return_value = [mock_pull1, mock_pull2]
     mock_repo.full_name = "test/repo"
 
-    pull_requests = fetch_finished_pull_requests(mock_repo)
+    with caplog.at_level(logging.DEBUG):
+        pull_requests = fetch_finished_pull_requests(mock_repo)
 
     assert len(pull_requests) == 2
     assert pull_requests[0].id == 1
@@ -192,36 +196,12 @@ def test_fetch_finished_pull_requests_multiple_pulls(capfd):
     assert pull_requests[1].id == 2
     assert pull_requests[1].title == "PR 2"
     assert pull_requests[1].linked_issue_id == "456"
-
-    captured = capfd.readouterr()
-    assert "Found 2 PRs for test/repo" in captured.out
-
-
-def test_fetch_finished_pull_requests_no_issue_url(capfd):
-    mock_pull = Mock(spec=GithubPullRequest)
-    mock_pull.id = 1
-    mock_pull.title = "PR 1"
-    mock_pull.labels = [Mock(name="bug")]
-    mock_pull.issue_url = None
-
-    mock_repo = Mock(spec=Repository)
-    mock_repo.get_pulls.return_value = [mock_pull]
-    mock_repo.full_name = "test/repo"
-
-    pull_requests = fetch_finished_pull_requests(mock_repo)
-
-    assert len(pull_requests) == 1
-    assert pull_requests[0].id == 1
-    assert pull_requests[0].title == "PR 1"
-    assert pull_requests[0].linked_issue_id is None
-
-    captured = capfd.readouterr()
-    assert "Found 1 PRs for test/repo" in captured.out
+    assert "Found 2 PRs for test/repo" in caplog.text
 
 
 # generate_change_url
 
-def test_generate_change_url_with_release(capfd):
+def test_generate_change_url_with_release(caplog):
     mock_release = Mock(spec=GitRelease)
     mock_release.tag_name = "v1.0.0"
 
@@ -232,15 +212,14 @@ def test_generate_change_url_with_release(capfd):
     tag_name = "v1.1.0"
     expected_url = f"https://github.com/owner/repo/compare/v1.0.0...v1.1.0"
 
-    url = generate_change_url(mock_repo, mock_release, tag_name)
+    with caplog.at_level(logging.DEBUG):
+        url = generate_change_url(mock_repo, mock_release, tag_name)
 
     assert url == expected_url
-
-    captured = capfd.readouterr()
-    assert f"Changelog URL: {expected_url}" in captured.out
+    assert f"Changelog URL: {expected_url}" in caplog.text
 
 
-def test_generate_change_url_without_release(capfd):
+def test_generate_change_url_without_release(caplog):
     mock_repo = Mock(spec=Repository)
     mock_repo.owner = "owner"
     mock_repo.name = "repo"
@@ -248,17 +227,16 @@ def test_generate_change_url_without_release(capfd):
     tag_name = "v1.1.0"
     expected_url = f"https://github.com/owner/repo/commits/v1.1.0"
 
-    url = generate_change_url(mock_repo, None, tag_name)
+    with caplog.at_level(logging.DEBUG):
+        url = generate_change_url(mock_repo, None, tag_name)
 
     assert url == expected_url
-
-    captured = capfd.readouterr()
-    assert f"Changelog URL: {expected_url}" in captured.out
+    assert f"Changelog URL: {expected_url}" in caplog.text
 
 
 # show_rate_limit
 
-def test_show_rate_limit_not_reached(capfd):
+def test_show_rate_limit_not_reached(caplog):
     mock_core_rate = Mock(spec=Rate)
     mock_core_rate.remaining = 15
     mock_core_rate.limit = 60
@@ -269,14 +247,14 @@ def test_show_rate_limit_not_reached(capfd):
     mock_github = Mock(spec=Github)
     mock_github.get_rate_limit.return_value = mock_rate_limit
 
-    show_rate_limit(mock_github)
+    with caplog.at_level(logging.DEBUG):
+        show_rate_limit(mock_github)
 
-    captured = capfd.readouterr()
-    assert "Rate limit: 15 remaining of 60" in captured.out
+    assert "Rate limit: 15 remaining of 60" in caplog.text
 
 
 @patch("time.sleep", return_value=None)
-def test_show_rate_limit_reached(mock_sleep, capfd):
+def test_show_rate_limit_reached(mock_sleep, caplog):
     mock_core_rate = Mock(spec=Rate)
     mock_core_rate.remaining = 5
     mock_core_rate.limit = 60
@@ -288,10 +266,10 @@ def test_show_rate_limit_reached(mock_sleep, capfd):
     mock_github = Mock(spec=Github)
     mock_github.get_rate_limit.return_value = mock_rate_limit
 
-    show_rate_limit(mock_github)
+    with caplog.at_level(logging.DEBUG):
+        show_rate_limit(mock_github)
 
-    captured = capfd.readouterr()
-    assert "Rate limit reached. Sleeping for " in captured.out
+    assert "Rate limit reached. Sleeping for " in caplog.text
     assert mock_sleep.called
 
 

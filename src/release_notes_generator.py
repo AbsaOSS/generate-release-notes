@@ -46,6 +46,9 @@ def validate_inputs(owner: str, repo_name: str, tag_name: str, chapters_json: st
     if not isinstance(chapters_to_pr_without_issue, bool):
         raise ValueError("Chapters to PR without issue must be a boolean.")
 
+    if not isinstance(verbose, bool):
+        raise ValueError("Verbose logging must be a boolean.")
+
     logging.debug(f'Repository: {owner}/{repo_name}')
     logging.debug(f'Tag name: {tag_name}')
     logging.debug(f'Chapters JSON: {chapters_json}')

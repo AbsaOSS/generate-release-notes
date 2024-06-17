@@ -43,7 +43,6 @@ def fetch_latest_release(repo: Repository) -> Optional[GitRelease]:
 
 
 def fetch_closed_issues(repo: Repository, release: Optional[GitRelease]) -> list[Issue]:
-    # TODO add input controls - slow implementation
     if release is None:
         issues = repo.get_issues(state='closed')
     else:

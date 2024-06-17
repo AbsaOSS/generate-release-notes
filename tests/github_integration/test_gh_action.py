@@ -4,6 +4,8 @@ from unittest.mock import patch, mock_open
 from github_integration.gh_action import get_input, set_output, set_failed
 
 
+# get_input
+
 @patch('os.getenv')
 def test_get_input_with_hyphen(mock_getenv):
     mock_getenv.return_value = 'test_value'
@@ -20,22 +22,30 @@ def test_get_input_without_hyphen(mock_getenv):
     assert result == 'another_test_value'
 
 
+# set_output
+
 @patch('os.getenv')
 @patch('builtins.open', new_callable=mock_open)
 def test_set_output_default(mock_open, mock_getenv):
     mock_getenv.return_value = 'default_output.txt'
     set_output('test-output', 'test_value')
     mock_open.assert_called_with('default_output.txt', 'a')
-    mock_open().write.assert_called_with('test-output=test_value\n')
+    handle = mock_open()
+    handle.write.assert_any_call('test-output<<EOF\n')
+    handle.write.assert_any_call('test_value')
+    handle.write.assert_any_call('EOF\n')
 
 
 @patch('os.getenv')
 @patch('builtins.open', new_callable=mock_open)
-def test_set_output_env_variable(mock_open, mock_getenv):
-    mock_getenv.return_value = 'github_output.txt'
-    set_output('test-output', 'test_value')
-    mock_open.assert_called_with('github_output.txt', 'a')
-    mock_open().write.assert_called_with('test-output=test_value\n')
+def test_set_output_custom_path(mock_open, mock_getenv):
+    mock_getenv.return_value = 'custom_output.txt'
+    set_output('custom-output', 'custom_value', 'default_output.txt')
+    mock_open.assert_called_with('custom_output.txt', 'a')
+    handle = mock_open()
+    handle.write.assert_any_call('custom-output<<EOF\n')
+    handle.write.assert_any_call('custom_value')
+    handle.write.assert_any_call('EOF\n')
 
 
 @patch('builtins.print')
