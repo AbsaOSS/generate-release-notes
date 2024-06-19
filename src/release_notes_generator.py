@@ -8,7 +8,11 @@ from github import Github, Auth
 from github_integration.gh_action import get_input, set_output, set_failed
 from github_integration.gh_api_caller import (get_gh_repository, fetch_latest_release, fetch_closed_issues,
                                               fetch_finished_pull_requests, generate_change_url, show_rate_limit)
+from release_notes.formatter.record_formatter import RecordFormatter
+from release_notes.model.custom_chapters import CustomChapters
+from release_notes.model.record import Record
 from release_notes.release_notes_builder import ReleaseNotesBuilder
+from release_notes.factory.record_factory import RecordFactory
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -60,9 +64,9 @@ def validate_inputs(owner: str, repo_name: str, tag_name: str, chapters_json: st
     logging.debug(f'Verbose logging: {verbose}')
 
 
-def release_notes_generator(g: Github, repository_id: str, tag_name: str, chapters_json: str, warnings: bool,
-                           published_at: bool, skip_release_notes_label: str, print_empty_chapters: bool,
-                           chapters_to_pr_without_issue: bool) -> Optional[str]:
+def release_notes_generator(g: Github, repository_id: str, tag_name: str, custom_chapters: CustomChapters, warnings: bool,
+                            published_at: bool, skip_release_notes_label: str, print_empty_chapters: bool,
+                            chapters_to_pr_without_issue: bool) -> Optional[str]:
     # get GitHub repository object (1 API call)
     if (repository := get_gh_repository(g, repository_id)) is None: return None
 
@@ -81,8 +85,23 @@ def release_notes_generator(g: Github, repository_id: str, tag_name: str, chapte
     # generate change url
     changelog_url = generate_change_url(repository, release, tag_name)
 
+    # merge data to Release Notes records form
+    rls_notes_records: dict[int, Record] = RecordFactory.generate(
+        issues=issues,
+        pulls=pulls,
+    )
+
+    formatter = RecordFormatter()
+
     # build rls notes
-    return ReleaseNotesBuilder(issues, pulls, changelog_url, chapters_json, warnings, print_empty_chapters).build()
+    return ReleaseNotesBuilder(
+        records=rls_notes_records,
+        custom_chapters=custom_chapters,
+        formatter=formatter,
+        warnings=warnings,
+        print_empty_chapters=print_empty_chapters,
+        changelog_url=changelog_url
+    ).build()
 
 
 def run():
@@ -117,7 +136,10 @@ def run():
         validate_inputs(owner, repo_name, tag_name, chapters_json, warnings, published_at,
                         skip_release_notes_label, print_empty_chapters, chapters_to_pr_without_issue, verbose)
 
-        rls_notes = release_notes_generator(g, local_repository_id, tag_name, chapters_json, warnings, published_at,
+        custom_chapters = CustomChapters()
+        custom_chapters.from_json(chapters_json)
+
+        rls_notes = release_notes_generator(g, local_repository_id, tag_name, custom_chapters, warnings, published_at,
                                            skip_release_notes_label, print_empty_chapters, chapters_to_pr_without_issue)
         logging.debug(f"Release notes: \n{rls_notes}")
 

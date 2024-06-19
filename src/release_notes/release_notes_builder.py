@@ -1,59 +1,35 @@
-import json
 import logging
 
 from github_integration.model.issue import Issue
 from github_integration.model.pull_request import PullRequest
+from release_notes.formatter.record_formatter import RecordFormatter
+from release_notes.model.custom_chapters import CustomChapters
+from release_notes.model.record import Record
 
 
 class ReleaseNotesBuilder:
-    def __init__(self, issues: list[Issue], pulls: list[PullRequest], changelog_url: str, chapters_json: str,
-                 warnings: bool, print_empty_chapters: bool):
-        self.issues = issues
-        self.pulls = pulls
+    def __init__(self, records: dict[int, Record], changelog_url: str,
+                 formatter: RecordFormatter, custom_chapters: CustomChapters,
+                 warnings: bool = True, print_empty_chapters: bool = True):
+        self.records = records
         self.changelog_url = changelog_url
-        self.chapters = json.loads(chapters_json)
+        self.formatter = formatter
+        self.custom_chapters = custom_chapters
         self.warnings = warnings
         self.print_empty_chapters = print_empty_chapters
 
-    def _get_user_defined_chapters(self) -> str:
-        release_notes = ""
-        return "Testing chapters output"
-
-        chapter_entries = {chapter['title']: [] for chapter in self.chapters}
-
-        for issue in self.issues:
-            if issue.is_closed:
-                for chapter in self.chapters:
-                    if chapter['label'] in issue.labels:
-                        chapter_entries[chapter['title']].append((issue.id, f"- {issue.title} (#{issue.id})"))
-
-        for pr in self.pulls:
-            for chapter in self.chapters:
-                chapter_entries[chapter['title']].append((pr.id, f"- {pr.title} (#{pr.id})"))
-
-        for chapter in self.chapters:
-            chapter_title = chapter['title']
-            entries = chapter_entries[chapter_title]
-            entries.sort()  # Sort by issue/PR number
-
-            if entries or self.print_empty_chapters:
-                release_notes += f"\n\n{chapter_title}\n"
-                if entries:
-                    release_notes += "\n".join([entry[1] for entry in entries]) + "\n\n\n"
-                elif self.print_empty_chapters:
-                    release_notes += "No entries for this chapter.\n\n\n"
-
-        return release_notes
-
     def _get_sorted_issues_without_pr(self) -> list[Issue]:
-        return [issue for issue in self.issues if issue.is_closed]
+        return []
+        # return [issue for issue in self.issues if issue.is_closed]
 
     def _get_closed_issues_without_user_labels(self) -> list[Issue]:
-        return [issue for issue in self.issues if issue.is_closed and not issue.labels]
+        return []
+        # return [issue for issue in self.issues if issue.is_closed and not issue.labels]
 
     def _get_closed_issues_without_release_notes_labels(self) -> list[Issue]:
         release_notes_labels = {"release-note", "changelog"}
-        return [issue for issue in self.issues if issue.is_closed and not any(label in issue.labels for label in release_notes_labels)]
+        return []
+        # return [issue for issue in self.issues if issue.is_closed and not any(label in issue.labels for label in release_notes_labels)]
 
     def _get_merged_pulls_without_link_to_issue(self) -> list[PullRequest]:
         return []
@@ -74,12 +50,7 @@ class ReleaseNotesBuilder:
         return "\n".join([f"- {pr.title} (#{pr.id})" for pr in pulls])
 
     def build(self) -> str:
-        # TODO - add logic to create/control title issue/pr format
-        # TODO - create new list of TODOs - missing inputs + differeces from previous version
-
-        # TODO - add new features and bugs
-
-        defined_chapters = self._get_user_defined_chapters()
+        user_defined_chapters = self.custom_chapters.to_string()
 
         if self.warnings:
             logging.debug("Generating warnings...")
@@ -125,7 +96,7 @@ class ReleaseNotesBuilder:
                 # closed_pulls_without_link_to_issue_str = self._format_pulls(closed_pulls_without_link_to_issue)
                 closed_pulls_without_link_to_issue_str = "To be done"
 
-            release_notes = f"""{defined_chapters}
+            release_notes = f"""{user_defined_chapters}
 ### Closed Issues without Pull Request ⚠️\n{sorted_issues_without_pr_str}\n
 ### Closed Issues without User Defined Labels ⚠️\n{closed_issues_without_user_labels_str}\n
 ### Closed Issues without Release Notes ⚠️\n{closed_issues_without_release_notes_labels_str}\n
@@ -136,7 +107,7 @@ class ReleaseNotesBuilder:
 {self.changelog_url}
 """
         else:
-            release_notes = f"""{defined_chapters}
+            release_notes = f"""{user_defined_chapters}
 #### Full Changelog
 {self.changelog_url}
 """

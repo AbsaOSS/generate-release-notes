@@ -1,77 +1,45 @@
+from unittest.mock import Mock
+
 import pytest
 import json
 
 from github_integration.model.issue import Issue
 from github_integration.model.pull_request import PullRequest
+from release_notes.formatter.record_formatter import RecordFormatter
+from release_notes.model.custom_chapters import CustomChapters
+from release_notes.model.record import Record
 from release_notes.release_notes_builder import ReleaseNotesBuilder
 
 
-@pytest.fixture
-def issues():
-    return [
-        Issue(id=1, title='Issue 1', labels=['enhancement'], is_closed=True, linked_pr_id=None),
-        Issue(id=3, title='Issue 3', labels=['enhancement'], is_closed=True, linked_pr_id=None),
-        Issue(id=5, title='Issue 5', labels=['bug'], is_closed=True, linked_pr_id=None),     # Issue without linked PR
-        Issue(id=5, title='Issue 8', labels=[], is_closed=True, linked_pr_id=None),          # Issue without linked PR & without label
-    ]
+issues = [
+    Mock(spec=Issue, id=1, number=1, title="Issue 1", is_closed=True, labels=["bug"]),
+    Mock(spec=Issue, id=2, number=2, title="Issue 2", is_closed=True, labels=[]),
+    Mock(spec=Issue, id=3, number=3, title="Issue 3", is_closed=True, labels=["enhancement"])
+]
+pulls = [
+    Mock(spec=PullRequest, id=101, number=101, title="PR 1", is_merged=True, linked_issue_id=None, url="http://example.com/pr1"),
+    Mock(spec=PullRequest, id=102, number=102, title="PR 2", is_merged=True, linked_issue_id=1, url="http://example.com/pr2"),
+    Mock(spec=PullRequest, id=103, number=103, title="PR 3", is_merged=False, linked_issue_id=None, url="http://example.com/pr3")
+]
 
+records = {}
+# records[1] = Record(issues[0])
+# records[2] = Record(issues[1])
+# records[3] = Record(issues[2])
+# records[1].register_pull_request(pulls[0])
+# records[2].register_pull_request(pulls[1])
+# records[3].register_pull_request(pulls[2])
 
-@pytest.fixture
-def pulls():
-    return [
-        PullRequest(id=2, title='PR 1', labels=['enhancement'], linked_issue_id=1),
-        PullRequest(id=4, title='PR 2', labels=[],linked_issue_id=3),
-        PullRequest(id=6, title='PR 3', labels=['bug'],linked_issue_id=None),        # PR without linked Issue
-    ]
-
-
-@pytest.fixture
-def chapters_json():
-    return json.dumps([
-        {"title": "Breaking Changes 💥", "label": "breaking-change"},
-        {"title": "New Features 🎉", "label": "enhancement"},
-        {"title": "New Features 🎉", "label": "feature"},
-        {"title": "Bugfixes 🛠", "label": "bug"}
-    ])
-
-
-@pytest.fixture
-def builder(issues, pulls, chapters_json):
-    return ReleaseNotesBuilder(issues, pulls, "http://changelog.url", chapters_json, warnings=True,
-                               print_empty_chapters=True)
-
-
-def builder_print_empty_chapters_false(issues, pulls, chapters_json):
-    return ReleaseNotesBuilder(issues, pulls, "http://changelog.url", chapters_json, warnings=True,
-                               print_empty_chapters=False)
-
-
-user_chapters = """
-Breaking Changes 💥
-No entries for this chapter.
-    
-New Features 🎉
-- Issue 1 (#1)
-- Issue 3 (#3)
-    
-Bugfixes
-- Issue 5 (#5)
-- PR 3 (#6)
-
-"""
-
-
-user_chapters_no_empty_chapters = """
-New Features 🎉
-- Issue 1 (#1)
-- Issue 3 (#3)
-    
-Bugfixes
-- Issue 5 (#5)
-- PR 3 (#6)
-
-"""
-
+formatter = RecordFormatter()
+changelog_url = "http://example.com/changelog"
+custom_chapters = CustomChapters()
+chapters_json = json.dumps([
+    {"title": "Breaking Changes 💥", "label": "breaking-change"},
+    {"title": "New Features 🎉", "label": "feature"},
+    {"title": "New Features 🎉", "label": "enhancement"},
+    {"title": "Bugfixes 🛠", "label": "bug"}
+])
+custom_chapters.from_json(chapters_json)
 
 release_notes_full = """### Bugs
 - Issue 1 (#1)
@@ -118,33 +86,18 @@ http://changelog.url
 
 # build
 
-# TODO - un-comment when smaller methods will be developed - add high level format tests with it
-# def test_build(builder):
-#     expected_release_notes = release_notes_full
-#     actual_release_notes = builder.build()
+def test_build_no_issues_or_pulls():
+    builder = ReleaseNotesBuilder(records=records, changelog_url=changelog_url, formatter=formatter,
+                                  custom_chapters=custom_chapters)
+    expected_release_notes = release_notes_full
+    actual_release_notes = builder.build()
+    assert expected_release_notes == actual_release_notes
+
+
+# def test_build_no_warnings(builder_print_no_warnings_empty_chapters_false):
+#     expected_release_notes = release_notes_no_warnings
+#     actual_release_notes = builder_print_no_warnings_empty_chapters_false().build()
 #     assert expected_release_notes == actual_release_notes
-
-
-# get_user_defined_chapters
-
-# def test_get_user_defined_chapters(builder):
-#     expected_chapters = user_chapters
-#
-#     actual_chapters = builder._get_user_defined_chapters()
-#
-#     assert expected_chapters == actual_chapters
-
-
-# def test_get_user_defined_chapters_not_print_empty_chapters(builder_print_empty_chapters_false):
-#     expected_chapters = user_chapters_no_empty_chapters
-#
-#     actual_chapters = builder_print_empty_chapters_false._get_user_defined_chapters()
-#
-#     assert expected_chapters == actual_chapters
-
-
-
-
 
 
 if __name__ == '__main__':
