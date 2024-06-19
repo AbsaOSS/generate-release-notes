@@ -14,6 +14,8 @@ class Chapter:
         if len(sorted_items) == 0:
             if not print_empty_chapters:
                 return ""
-            return f"### {self.title}\n{self.empty_message}\n\n"
+            return f"### {self.title}\n{self.empty_message}"
 
-        return f"### {self.title}\n" + "".join([f"{value}\n" for key, value in sorted_items]) + "\n"
+        result = f"### {self.title}\n" + "".join([f"- {value}\n" for key, value in sorted_items])
+        # Note: do not return with '\n' on start end end position of string - keep formating on superior level
+        return result.strip()

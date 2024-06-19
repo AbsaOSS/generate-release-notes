@@ -1,8 +1,10 @@
 from release_notes.model.base_chapters import BaseChapters
 from release_notes.model.chapter import Chapter
+from release_notes.model.record import Record
 
 
 class ServiceChapters(BaseChapters):
+
     CLOSED_ISSUES_WITHOUT_PULL_REQUESTS: int = 1
     CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS: int = 2
     CLOSED_ISSUES_WITHOUT_RELEASE_NOTES: int = 3
@@ -46,3 +48,6 @@ class ServiceChapters(BaseChapters):
         self.show_chapter_merged_prs_without_linked_issue_and_custom_labels = True
         self.show_chapter_merged_prs_linked_to_open_issues = True
         self.show_chapter_closed_prs_without_linked_issue_and_custom_labels = True
+
+    def populate(self, records: dict[int, Record]):
+        pass

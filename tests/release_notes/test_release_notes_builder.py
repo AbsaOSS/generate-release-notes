@@ -1,3 +1,4 @@
+from datetime import datetime
 from unittest.mock import Mock
 
 import pytest
@@ -12,23 +13,56 @@ from release_notes.release_notes_builder import ReleaseNotesBuilder
 
 
 issues = [
-    Mock(spec=Issue, id=1, number=1, title="Issue 1", is_closed=True, labels=["bug"]),
-    Mock(spec=Issue, id=2, number=2, title="Issue 2", is_closed=True, labels=[]),
-    Mock(spec=Issue, id=3, number=3, title="Issue 3", is_closed=True, labels=["enhancement"])
+    # labeled issue with one PR
+    Mock(spec=Issue, number=1, title="Issue 1", is_closed=True, labels=["bug"]),
 ]
+
 pulls = [
-    Mock(spec=PullRequest, id=101, number=101, title="PR 1", is_merged=True, linked_issue_id=None, url="http://example.com/pr1"),
-    Mock(spec=PullRequest, id=102, number=102, title="PR 2", is_merged=True, linked_issue_id=1, url="http://example.com/pr2"),
-    Mock(spec=PullRequest, id=103, number=103, title="PR 3", is_merged=False, linked_issue_id=None, url="http://example.com/pr3")
+    # PR 1 to Issue 1
+    PullRequest(
+        id=1,
+        number=101,
+        title="PR 1",
+        labels=[],
+        body="Dummy body\n\nRelease notes:\n- First release note\n- Second release note\n",
+        state="open",
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
+        closed_at=None,
+        merged_at=None,
+        milestone=None,
+        url="http://example.com/pr1",
+        issue_url=None,
+        html_url=None,
+        patch_url=None,
+        diff_url=None
+    ),
+    # PR without Issue and without Release notes in description
+    PullRequest(
+        id=2,
+        number=102,
+        title="PR 2",
+        labels=[],
+        body="Dummy body",
+        state="open",
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
+        closed_at=None,
+        merged_at=None,
+        milestone=None,
+        url="http://example.com/pr2",
+        issue_url=None,
+        html_url=None,
+        patch_url=None,
+        diff_url=None
+    )
 ]
 
 records = {}
-# records[1] = Record(issues[0])
-# records[2] = Record(issues[1])
-# records[3] = Record(issues[2])
-# records[1].register_pull_request(pulls[0])
-# records[2].register_pull_request(pulls[1])
-# records[3].register_pull_request(pulls[2])
+records[1] = Record(issues[0])
+records[2] = Record()
+records[1].register_pull_request(pulls[0])
+records[2].register_pull_request(pulls[1])
 
 formatter = RecordFormatter()
 changelog_url = "http://example.com/changelog"
@@ -48,9 +82,11 @@ No entries detected.
 No entries detected.
 
 ### Bugfixes 🛠
-No entries detected.
+- #1 _Issue 1_ implemented by TODO
+  - First release note
+  - Second release note
 
-### Closed Issues without Pull Request ⚠️
+x### Closed Issues without Pull Request ⚠️
 All closed issues linked to a Pull Request.
 
 ### Closed Issues without User Defined Labels ⚠️
@@ -66,13 +102,20 @@ All merged PRs are linked to issues.
 All merged PRs are linked to Closed issues.
 
 ### Closed PRs without Linked Issue and Custom Labels ⚠️
-All closed PRs are linked to issues.
+All closed PRs are linked to issues.x
 
 #### Full Changelog
 http://example.com/changelog
 """
 
-release_notes_full_no_empty_chapters = """#### Full Changelog
+release_notes_full_no_empty_chapters = """### Bugfixes 🛠
+- #1 _Issue 1_ implemented by TODO
+  - First release note
+  - Second release note
+
+xx
+
+#### Full Changelog
 http://example.com/changelog
 """
 
@@ -83,7 +126,9 @@ No entries detected.
 No entries detected.
 
 ### Bugfixes 🛠
-No entries detected.
+- #1 _Issue 1_ implemented by TODO
+  - First release note
+  - Second release note
 
 #### Full Changelog
 http://example.com/changelog

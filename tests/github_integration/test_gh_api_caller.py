@@ -172,15 +172,39 @@ def test_fetch_closed_issues_without_release(caplog):
 def test_fetch_finished_pull_requests_multiple_pulls(caplog):
     mock_pull1 = Mock(spec=GithubPullRequest)
     mock_pull1.id = 1
+    mock_pull1.number = 1
     mock_pull1.title = "PR 1"
+    mock_pull1.body = "Dummy body\n\nRelease notes:\n- First release note\n- Second release note"
+    mock_pull1.state = "closed"
+    mock_pull1.created_at = datetime(2023, 1, 1)
+    mock_pull1.updated_at = datetime(2023, 1, 2)
+    mock_pull1.closed_at = datetime(2023, 1, 3)
+    mock_pull1.merged_at = datetime(2023, 1, 4)
+    mock_pull1.milestone = Mock(title="v1.0.0")
     mock_pull1.labels = [Mock(name="bug")]
+    mock_pull1.url = ""
     mock_pull1.issue_url = "https://api.github.com/repos/owner/repo/issues/123"
+    mock_pull1.html_url = ""
+    mock_pull1.patch_url = ""
+    mock_pull1.diff_url = ""
 
     mock_pull2 = Mock(spec=GithubPullRequest)
     mock_pull2.id = 2
+    mock_pull2.number = 2
     mock_pull2.title = "PR 2"
+    mock_pull2.body = "Dummy body"
+    mock_pull2.state = "closed"
+    mock_pull2.created_at = datetime(2023, 1, 5)
+    mock_pull2.updated_at = datetime(2023, 1, 6)
+    mock_pull2.closed_at = datetime(2023, 1, 7)
+    mock_pull2.merged_at = datetime(2023, 1, 8)
+    mock_pull2.milestone = None
     mock_pull2.labels = [Mock(name="enhancement")]
+    mock_pull2.url = ""
     mock_pull2.issue_url = "https://api.github.com/repos/owner/repo/issues/456"
+    mock_pull2.html_url = ""
+    mock_pull2.patch_url = ""
+    mock_pull2.diff_url = ""
 
     mock_repo = Mock(spec=Repository)
     mock_repo.get_pulls.return_value = [mock_pull1, mock_pull2]
@@ -192,10 +216,8 @@ def test_fetch_finished_pull_requests_multiple_pulls(caplog):
     assert len(pull_requests) == 2
     assert pull_requests[0].id == 1
     assert pull_requests[0].title == "PR 1"
-    assert pull_requests[0].linked_issue_id == "123"
     assert pull_requests[1].id == 2
     assert pull_requests[1].title == "PR 2"
-    assert pull_requests[1].linked_issue_id == "456"
     assert "Found 2 PRs for test/repo" in caplog.text
 
 

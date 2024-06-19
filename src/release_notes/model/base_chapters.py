@@ -1,5 +1,6 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 from release_notes.model.chapter import Chapter
+from release_notes.model.record import Record
 
 
 class BaseChapters(ABC):
@@ -14,10 +15,17 @@ class BaseChapters(ABC):
         self.chapters[chapter_key].add_row(number, row)
 
     def to_string(self) -> str:
-        return "".join([chapter.to_string(
+        result = "".join([chapter.to_string(
             sort_ascending=self.sort_ascending,
-            print_empty_chapters=self.print_empty_chapters) for chapter in self.chapters.values()])
+            print_empty_chapters=self.print_empty_chapters) + "\n\n" for chapter in self.chapters.values()])
+
+        # Note: strip is required to remove leading newline chars when empty chapters are not printed option
+        return result.strip()
 
     @property
     def titles(self) -> list[str]:
         return [chapter.title for chapter in self.chapters.values()]
+
+    @abstractmethod
+    def populate(self, records: dict[int, Record]):
+        pass

@@ -52,19 +52,13 @@ class ReleaseNotesBuilder:
 
     def build(self) -> str:
         user_defined_chapters = self.custom_chapters
-
-        # TODO - generate custom chapter's rows
-
+        user_defined_chapters.populate(self.records)
         user_defined_chapters_str = user_defined_chapters.to_string()
 
         if self.warnings:
             logging.debug("Generating warnings...")
             service_chapters = ServiceChapters(print_empty_chapters=self.print_empty_chapters)
-
-
-
-            # TODO - generate service chapter's rows
-
+            service_chapters.populate(self.records)
 
             # sorted_issues_without_pr = self._get_sorted_issues_without_pr()
             # if len(sorted_issues_without_pr) == 0 and self.print_empty_chapters:
@@ -109,9 +103,10 @@ class ReleaseNotesBuilder:
             #     closed_pulls_without_link_to_issue_str = "To be done"
 
             service_chapters_str = service_chapters.to_string()
-            release_notes = f"""{user_defined_chapters_str}{service_chapters_str}#### Full Changelog\n{self.changelog_url}\n"""
+            # TODO remoce xx after implementation
+            release_notes = f"""{user_defined_chapters_str}\n\nx{service_chapters_str}x\n\n#### Full Changelog\n{self.changelog_url}\n"""
         else:
-            release_notes = f"""{user_defined_chapters_str}#### Full Changelog\n{self.changelog_url}\n"""
+            release_notes = f"""{user_defined_chapters_str}\n\n#### Full Changelog\n{self.changelog_url}\n"""
 
         logging.debug(f"Release notes: \n{release_notes}")
         return release_notes

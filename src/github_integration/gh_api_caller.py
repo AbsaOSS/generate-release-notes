@@ -73,9 +73,21 @@ def fetch_finished_pull_requests(repo: Repository) -> list[PullRequest]:
     for pull in list(pulls):
         pr = PullRequest(
             id=pull.id,
+            number=pull.number,
             title=pull.title,
             labels=[label.name for label in pull.labels],
-            linked_issue_id=pull.issue_url.split('/')[-1] if pull.issue_url else None
+            body=pull.body if pull.body else "",
+            state=pull.state,
+            created_at=pull.created_at,
+            updated_at=pull.updated_at,
+            closed_at=pull.closed_at if pull.closed_at else None,
+            merged_at=pull.merged_at if pull.merged_at else None,
+            milestone=pull.milestone.title if pull.milestone else None,
+            url=pull.url,
+            issue_url=pull.issue_url if pull.issue_url else None,
+            html_url=pull.html_url if pull.html_url else None,
+            patch_url=pull.patch_url if pull.patch_url else None,
+            diff_url=pull.diff_url if pull.diff_url else None
         )
         pull_requests.append(pr)
 
