@@ -15,7 +15,7 @@ def test_chapter_init():
 def test_add_row():
     chapter = Chapter("Test Title", ["label1", "label2"])
     chapter.add_row(1, "Test Row")
-    assert chapter.rows == {1: "Test Row"}
+    assert {1: "Test Row"} == chapter.rows
 
 
 # to_string
@@ -24,13 +24,13 @@ def test_to_string_ascending():
     chapter = Chapter("Test Title", ["label1", "label2"])
     chapter.add_row(1, "Test Row 1")
     chapter.add_row(2, "Test Row 2")
-    expected_output = "### Test Title\nTest Row 1\nTest Row 2\n"
-    assert chapter.to_string(True) == expected_output
+    expected_output = "### Test Title\nTest Row 1\nTest Row 2\n\n"
+    assert expected_output == chapter.to_string(sort_ascending=True)
 
 
 def test_to_string_descending():
     chapter = Chapter("Test Title", ["label1", "label2"])
     chapter.add_row(1, "Test Row 1")
     chapter.add_row(2, "Test Row 2")
-    expected_output = "### Test Title\nTest Row 2\nTest Row 1\n"
-    assert chapter.to_string(False) == expected_output
+    expected_output = "### Test Title\nTest Row 2\nTest Row 1\n\n"
+    assert expected_output == chapter.to_string(sort_ascending=False)

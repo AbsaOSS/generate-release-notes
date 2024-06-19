@@ -41,63 +41,85 @@ chapters_json = json.dumps([
 ])
 custom_chapters.from_json(chapters_json)
 
-release_notes_full = """### Bugs
-- Issue 1 (#1)
+release_notes_full = """### Breaking Changes 💥
+No entries detected.
 
+### New Features 🎉
+No entries detected.
 
-### Enhancements
-- Issue 2 (#2)
-
-
-### No Entries
-No entries for this chapter.
-
+### Bugfixes 🛠
+No entries detected.
 
 ### Closed Issues without Pull Request ⚠️
-- Issue 1 (#1)
-- Issue 2 (#2)
-- Issue 3 (#3)
-
+All closed issues linked to a Pull Request.
 
 ### Closed Issues without User Defined Labels ⚠️
-- Issue 3 (#3)
-
+All closed issues contain at least one of user defined labels.
 
 ### Closed Issues without Release Notes ⚠️
-- Issue 1 (#1)
-
+All closed issues have release notes.
 
 ### Merged PRs without Linked Issue and Custom Labels ⚠️
 All merged PRs are linked to issues.
 
-
 ### Merged PRs Linked to Open Issue ⚠️
 All merged PRs are linked to Closed issues.
-
 
 ### Closed PRs without Linked Issue and Custom Labels ⚠️
 All closed PRs are linked to issues.
 
-
 #### Full Changelog
-http://changelog.url
+http://example.com/changelog
 """
 
+release_notes_full_no_empty_chapters = """#### Full Changelog
+http://example.com/changelog
+"""
+
+release_notes_full_no_warnings = """### Breaking Changes 💥
+No entries detected.
+
+### New Features 🎉
+No entries detected.
+
+### Bugfixes 🛠
+No entries detected.
+
+#### Full Changelog
+http://example.com/changelog
+"""
 
 # build
 
-def test_build_no_issues_or_pulls():
+def test_build_full_with_empty_chapters():
     builder = ReleaseNotesBuilder(records=records, changelog_url=changelog_url, formatter=formatter,
                                   custom_chapters=custom_chapters)
     expected_release_notes = release_notes_full
     actual_release_notes = builder.build()
+    print("Actual:\n" + actual_release_notes)
     assert expected_release_notes == actual_release_notes
 
 
-# def test_build_no_warnings(builder_print_no_warnings_empty_chapters_false):
-#     expected_release_notes = release_notes_no_warnings
-#     actual_release_notes = builder_print_no_warnings_empty_chapters_false().build()
-#     assert expected_release_notes == actual_release_notes
+def test_build_no_warnings():
+    builder = ReleaseNotesBuilder(records=records, changelog_url=changelog_url, formatter=formatter,
+                                  custom_chapters=custom_chapters, warnings=False)
+    expected_release_notes = release_notes_full_no_warnings
+    actual_release_notes = builder.build()
+    print("Actual:\n" + actual_release_notes)
+    assert expected_release_notes == actual_release_notes
+
+
+def test_build_full_no_empty_chapters():
+    custom_chapters_no_empty_chapters = custom_chapters
+    custom_chapters_no_empty_chapters.print_empty_chapters = False
+    expected_release_notes = release_notes_full_no_empty_chapters
+
+    builder = ReleaseNotesBuilder(records=records, changelog_url=changelog_url, formatter=formatter,
+                                  custom_chapters=custom_chapters, print_empty_chapters=False)
+
+    actual_release_notes = builder.build()
+    print("Actual:\n" + actual_release_notes)
+    assert expected_release_notes == actual_release_notes
 
 
 if __name__ == '__main__':

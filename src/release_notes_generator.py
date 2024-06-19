@@ -136,7 +136,7 @@ def run():
         validate_inputs(owner, repo_name, tag_name, chapters_json, warnings, published_at,
                         skip_release_notes_label, print_empty_chapters, chapters_to_pr_without_issue, verbose)
 
-        custom_chapters = CustomChapters()
+        custom_chapters = CustomChapters(print_empty_chapters=print_empty_chapters)
         custom_chapters.from_json(chapters_json)
 
         rls_notes = release_notes_generator(g, local_repository_id, tag_name, custom_chapters, warnings, published_at,

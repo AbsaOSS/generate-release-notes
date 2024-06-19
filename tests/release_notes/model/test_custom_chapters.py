@@ -18,7 +18,7 @@ def test_chapters_add_row():
     chapters.add_row("Test Chapter", 1, "Test Row")
 
     assert "Test Chapter" in chapters.chapters
-    assert chapters.chapters["Test Chapter"].rows == {1: "Test Row"}
+    assert {1: "Test Row"} == chapters.chapters["Test Chapter"].rows
 
 
 # to_string
@@ -26,9 +26,9 @@ def test_chapters_add_row():
 def test_chapters_to_string():
     chapters = CustomChapters()
     chapters.add_row("Test Chapter", 1, "Test Row")
-    expected_output = "### Test Chapter\nTest Row\n"
+    expected_output = "### Test Chapter\nTest Row\n\n"
 
-    assert chapters.to_string() == expected_output
+    assert expected_output == chapters.to_string()
 
 
 # from_json
@@ -51,6 +51,6 @@ def test_custom_chapters_from_json():
     assert isinstance(custom_chapters.chapters["Breaking Changes 💥"], Chapter)
     assert isinstance(custom_chapters.chapters["New Features 🎉"], Chapter)
     assert isinstance(custom_chapters.chapters["Bugfixes 🛠"], Chapter)
-    assert custom_chapters.chapters["Breaking Changes 💥"].labels == ["breaking-change"]
-    assert custom_chapters.chapters["New Features 🎉"].labels == ["enhancement", "feature"]
-    assert custom_chapters.chapters["Bugfixes 🛠"].labels == ["bug"]
+    assert ["breaking-change"] == custom_chapters.chapters["Breaking Changes 💥"].labels
+    assert ["enhancement", "feature"] == custom_chapters.chapters["New Features 🎉"].labels
+    assert ["bug"] == custom_chapters.chapters["Bugfixes 🛠"].labels
