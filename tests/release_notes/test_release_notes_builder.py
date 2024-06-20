@@ -15,10 +15,11 @@ from release_notes.release_notes_builder import ReleaseNotesBuilder
 issues = [
     # labeled issue with one PR
     Mock(spec=Issue, number=1, title="Issue 1", is_closed=True, labels=["bug"]),
+    Mock(spec=Issue, number=4, title="Issue 4", is_closed=True, labels=["enhancement"]),
 ]
 
 pulls = [
-    # PR 1 to Issue 1
+    # [0] - PR 1 to Issue 1
     PullRequest(
         id=1,
         number=101,
@@ -37,7 +38,7 @@ pulls = [
         patch_url=None,
         diff_url=None
     ),
-    # PR without Issue and without Release notes in description - with labels
+    # [1] - PR without Issue and without Release notes in description - with labels
     PullRequest(
         id=2,
         number=102,
@@ -56,7 +57,7 @@ pulls = [
         patch_url=None,
         diff_url=None
     ),
-    # PR without Issue and without Release notes in description - without labels
+    # [2] - PR without Issue and without Release notes in description - without labels
     PullRequest(
         id=3,
         number=103,
@@ -74,6 +75,43 @@ pulls = [
         html_url=None,
         patch_url=None,
         diff_url=None
+    ),
+    # [3, 4] - 2 PRs with Issue '2' - no labels, both with Release notes
+    PullRequest(
+        id=5,
+        number=105,
+        title="PR 5",
+        labels=[],
+        body="Dummy body\n\nRelease notes:\n- PR 5 release note\n",
+        state="open",
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
+        closed_at=None,
+        merged_at=None,
+        milestone=None,
+        url="http://example.com/pr5",
+        issue_url=None,
+        html_url=None,
+        patch_url=None,
+        diff_url=None
+    ),
+    PullRequest(
+        id=6,
+        number=106,
+        title="PR 6",
+        labels=['bug'],     # wrong label - should be ignored by logic
+        body="Dummy body\n\nRelease notes:\n- PR 6 release note\n",
+        state="open",
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
+        closed_at=None,
+        merged_at=None,
+        milestone=None,
+        url="http://example.com/pr6",
+        issue_url=None,
+        html_url=None,
+        patch_url=None,
+        diff_url=None
     )
 ]
 
@@ -81,9 +119,12 @@ records = {}
 records[1] = Record(issues[0])
 records[2] = Record()
 records[3] = Record()
+records[4] = Record(issues[1])
 records[1].register_pull_request(pulls[0])
 records[2].register_pull_request(pulls[1])
 records[3].register_pull_request(pulls[2])
+records[4].register_pull_request(pulls[3])
+records[4].register_pull_request(pulls[4])
 
 formatter = RecordFormatter()
 changelog_url = "http://example.com/changelog"
@@ -100,7 +141,9 @@ release_notes_full = """### Breaking Changes 💥
 No entries detected.
 
 ### New Features 🎉
-No entries detected.
+- #4 _Issue 4_ implemented by TODO
+  - PR 5 release note
+  - PR 6 release note
 
 ### Bugfixes 🛠
 - #1 _Issue 1_ implemented by TODO
@@ -130,7 +173,12 @@ All closed PRs are linked to issues.x
 http://example.com/changelog
 """
 
-release_notes_full_no_empty_chapters = """### Bugfixes 🛠
+release_notes_full_no_empty_chapters = """### New Features 🎉
+- #4 _Issue 4_ implemented by TODO
+  - PR 5 release note
+  - PR 6 release note
+
+### Bugfixes 🛠
 - #1 _Issue 1_ implemented by TODO
   - First release note
   - Second release note
@@ -146,7 +194,9 @@ release_notes_full_no_warnings = """### Breaking Changes 💥
 No entries detected.
 
 ### New Features 🎉
-No entries detected.
+- #4 _Issue 4_ implemented by TODO
+  - PR 5 release note
+  - PR 6 release note
 
 ### Bugfixes 🛠
 - #1 _Issue 1_ implemented by TODO
