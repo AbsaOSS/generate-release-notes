@@ -22,15 +22,15 @@ class RecordFormatter:
     def format(self, record: Record) -> str:
         # create a dict of supported keys and values - from record
         params = {
-            "title": record.gh_issue.title if record.gh_issue is not None else record.pulls[0].title,
-            "number": record.gh_issue.number if record.gh_issue is not None else record.pulls[0].number,
+            "title": record.__gh_issue.title if record.__gh_issue is not None else record.__pulls[0].title,
+            "number": record.__gh_issue.number if record.__gh_issue is not None else record.__pulls[0].number,
             "labels": record.labels,
             "is_closed": record.is_closed,
             "is_pr": record.is_pr,
             "is_issue": record.is_issue,
             "developers": self._format_developers(record),
             "release_note_rows": self._format_release_note_rows(record),
-            "pull_requests": self._format_pulls(record.pulls)
+            "pull_requests": self._format_pulls(record.__pulls)
         }
 
         # print("DEBUG - Formatter params: ", params)

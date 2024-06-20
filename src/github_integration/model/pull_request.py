@@ -28,3 +28,19 @@ class PullRequest:
         self.html_url = html_url
         self.patch_url = patch_url
         self.diff_url = diff_url
+
+    @property
+    def is_merged(self):
+        return self.merged_at is not None
+
+    @property
+    def is_closed(self):
+        return self.closed_at is not None
+
+    @property
+    def is_linked_to_issue(self):
+        return self.issue_url is not None
+
+    def extract_issue_numbers_from_body(self) -> list[int]:
+
+        return []

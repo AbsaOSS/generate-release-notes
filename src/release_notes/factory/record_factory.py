@@ -1,3 +1,5 @@
+import logging
+
 from github_integration.model.issue import Issue
 from github_integration.model.pull_request import PullRequest
 from release_notes.model.record import Record
@@ -22,9 +24,12 @@ class RecordFactory:
             records[issue.number] = Record(issue)
 
         for pull in pulls:
-            # TODO - check pr description for release notes mentions
-            parent_issue = 0
-            if False:
-                records[parent_issue].register_pull_request(pull)
+            for parent_issues_number in pull.extract_issue_numbers_from_body():
+                if parent_issues_number not in records.keys():
+                    logging.warning(f"Detected PR {pull.number} linked to issue {parent_issues_number} "
+                                    f"which is not in the list of issues.")
+                    # TODO - How to handle this case? - new extra service chapter?
+
+                records[parent_issues_number].register_pull_request(pull)
 
         return records

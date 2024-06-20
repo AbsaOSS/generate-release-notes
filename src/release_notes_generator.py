@@ -5,7 +5,7 @@ import traceback
 from typing import Optional
 from github import Github, Auth
 
-from github_integration.gh_action import get_input, set_output, set_failed
+from github_integration.gh_action import get_action_input, set_action_output, set_action_failed
 from github_integration.gh_api_caller import (get_gh_repository, fetch_latest_release, fetch_closed_issues,
                                               fetch_finished_pull_requests, generate_change_url, show_rate_limit)
 from release_notes.formatter.record_formatter import RecordFormatter
@@ -108,20 +108,20 @@ def run():
     logging.info("Starting 'Release Notes Generator' GitHub Action")
 
     try:
-        local_repository_id = get_input('GITHUB_REPOSITORY')
+        local_repository_id = get_action_input('GITHUB_REPOSITORY')
         owner, repo_name = local_repository_id.split('/')
 
-        github_token: str = get_input('github-token')
+        github_token: str = get_action_input('github-token')
 
-        tag_name = get_input('tag-name')
-        chapters_json = get_input('chapters')
-        warnings = get_input('warnings') == 'true'
-        published_at = get_input('published-at') == 'true'
-        skip_release_notes_label_raw = get_input('skip-release-notes-label')
+        tag_name = get_action_input('tag-name')
+        chapters_json = get_action_input('chapters')
+        warnings = get_action_input('warnings') == 'true'
+        published_at = get_action_input('published-at') == 'true'
+        skip_release_notes_label_raw = get_action_input('skip-release-notes-label')
         skip_release_notes_label = skip_release_notes_label_raw if skip_release_notes_label_raw else 'skip-release-notes'
-        print_empty_chapters = get_input('print-empty-chapters') == 'true'
-        chapters_to_pr_without_issue = get_input('chapters-to-pr-without-issue') == 'true'
-        verbose = get_input('verbose').lower() == 'true'
+        print_empty_chapters = get_action_input('print-empty-chapters') == 'true'
+        chapters_to_pr_without_issue = get_action_input('chapters-to-pr-without-issue') == 'true'
+        verbose = get_action_input('verbose').lower() == 'true'
         if verbose:
             logging.info("Verbose logging enabled")
             logging.getLogger().setLevel(logging.DEBUG)
@@ -143,13 +143,13 @@ def run():
                                            skip_release_notes_label, print_empty_chapters, chapters_to_pr_without_issue)
         logging.debug(f"Release notes: \n{rls_notes}")
 
-        set_output('release-notes', rls_notes)
+        set_action_output('release-notes', rls_notes)
         logging.info("GitHub Action 'Release Notes Generator' completed successfully")
         show_rate_limit(g)
 
     except Exception as error:
         stack_trace = traceback.format_exc()
-        set_failed(f'Action failed with error: {error}\nStack trace: {stack_trace}')
+        set_action_failed(f'Action failed with error: {error}\nStack trace: {stack_trace}')
 
 
 if __name__ == '__main__':
