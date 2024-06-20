@@ -5,12 +5,12 @@ from release_notes.model.record import Record
 
 class ServiceChapters(BaseChapters):
 
-    CLOSED_ISSUES_WITHOUT_PULL_REQUESTS: int = 1
-    CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS: int = 2
-    CLOSED_ISSUES_WITHOUT_RELEASE_NOTES: int = 3
-    MERGED_PRS_WITHOUT_LINKED_ISSUE_AND_CUSTOM_LABELS: int = 4
-    MERGED_PRS_LINKED_TO_OPEN_ISSUES: int = 5
-    CLOSED_PRS_WITHOUT_LINKED_ISSUE_AND_CUSTOM_LABELS: int = 6
+    CLOSED_ISSUES_WITHOUT_PULL_REQUESTS: str = "Closed Issues without Pull Request ⚠️"
+    CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS: str = "Closed Issues without User Defined Labels ⚠️"
+    CLOSED_ISSUES_WITHOUT_RELEASE_NOTES: str = "Closed Issues without Release Notes ⚠️"
+    MERGED_PRS_WITHOUT_LINKED_ISSUE_AND_CUSTOM_LABELS: str = "Merged PRs without Linked Issue and Custom Labels ⚠️"
+    MERGED_PRS_LINKED_TO_OPEN_ISSUES: str = "Merged PRs Linked to Open Issue ⚠️"
+    CLOSED_PRS_WITHOUT_LINKED_ISSUE_AND_CUSTOM_LABELS: str = "Closed PRs without Linked Issue and Custom Labels ⚠️"
 
     def __init__(self, sort_ascending: bool = True, print_empty_chapters: bool = True):
         super().__init__(sort_ascending, print_empty_chapters)
@@ -18,27 +18,27 @@ class ServiceChapters(BaseChapters):
         self.sort_ascending = sort_ascending
         self.chapters = {
             self.CLOSED_ISSUES_WITHOUT_PULL_REQUESTS: Chapter(
-                title="Closed Issues without Pull Request ⚠️",
+                title=self.CLOSED_ISSUES_WITHOUT_PULL_REQUESTS,
                 empty_message="All closed issues linked to a Pull Request."
             ),
             self.CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS: Chapter(
-                title="Closed Issues without User Defined Labels ⚠️",
+                title=self.CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS,
                 empty_message="All closed issues contain at least one of user defined labels."
             ),
             self.CLOSED_ISSUES_WITHOUT_RELEASE_NOTES: Chapter(
-                title="Closed Issues without Release Notes ⚠️",
+                title=self.CLOSED_ISSUES_WITHOUT_RELEASE_NOTES,
                 empty_message="All closed issues have release notes."
             ),
             self.MERGED_PRS_WITHOUT_LINKED_ISSUE_AND_CUSTOM_LABELS: Chapter(
-                title="Merged PRs without Linked Issue and Custom Labels ⚠️",
+                title=self.MERGED_PRS_WITHOUT_LINKED_ISSUE_AND_CUSTOM_LABELS,
                 empty_message="All merged PRs are linked to issues."
             ),
             self.MERGED_PRS_LINKED_TO_OPEN_ISSUES: Chapter(
-                title="Merged PRs Linked to Open Issue ⚠️",
+                title=self.MERGED_PRS_LINKED_TO_OPEN_ISSUES,
                 empty_message="All merged PRs are linked to Closed issues."
             ),
             self.CLOSED_PRS_WITHOUT_LINKED_ISSUE_AND_CUSTOM_LABELS: Chapter(
-                title="Closed PRs without Linked Issue and Custom Labels ⚠️",
+                title=self.CLOSED_PRS_WITHOUT_LINKED_ISSUE_AND_CUSTOM_LABELS,
                 empty_message="All closed PRs are linked to issues."
             )
         }

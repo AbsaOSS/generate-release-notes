@@ -37,12 +37,31 @@ pulls = [
         patch_url=None,
         diff_url=None
     ),
-    # PR without Issue and without Release notes in description
+    # PR without Issue and without Release notes in description - with labels
     PullRequest(
         id=2,
         number=102,
         title="PR 2",
         labels=[],
+        body="Dummy body",
+        state="open",
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
+        closed_at=None,
+        merged_at=None,
+        milestone=None,
+        url="http://example.com/pr2",
+        issue_url=None,
+        html_url=None,
+        patch_url=None,
+        diff_url=None
+    ),
+    # PR without Issue and without Release notes in description - without labels
+    PullRequest(
+        id=3,
+        number=103,
+        title="PR 3",
+        labels=['bug'],
         body="Dummy body",
         state="open",
         created_at=datetime.now(),
@@ -61,8 +80,10 @@ pulls = [
 records = {}
 records[1] = Record(issues[0])
 records[2] = Record()
+records[3] = Record()
 records[1].register_pull_request(pulls[0])
 records[2].register_pull_request(pulls[1])
+records[3].register_pull_request(pulls[2])
 
 formatter = RecordFormatter()
 changelog_url = "http://example.com/changelog"
@@ -85,6 +106,7 @@ No entries detected.
 - #1 _Issue 1_ implemented by TODO
   - First release note
   - Second release note
+- PR 3
 
 x### Closed Issues without Pull Request ⚠️
 All closed issues linked to a Pull Request.
@@ -112,6 +134,7 @@ release_notes_full_no_empty_chapters = """### Bugfixes 🛠
 - #1 _Issue 1_ implemented by TODO
   - First release note
   - Second release note
+- PR 3
 
 xx
 
@@ -129,6 +152,7 @@ No entries detected.
 - #1 _Issue 1_ implemented by TODO
   - First release note
   - Second release note
+- PR 3
 
 #### Full Changelog
 http://example.com/changelog

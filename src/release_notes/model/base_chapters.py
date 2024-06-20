@@ -7,9 +7,9 @@ class BaseChapters(ABC):
     def __init__(self, sort_ascending: bool = True, print_empty_chapters: bool = True):
         self.sort_ascending = sort_ascending
         self.print_empty_chapters = print_empty_chapters
-        self.chapters = {}
+        self.chapters: dict[str, Chapter] = {}
 
-    def add_row(self, chapter_key, number: int, row: str):
+    def add_row(self, chapter_key: str, number: int, row: str):
         if chapter_key not in self.chapters:
             self.chapters[chapter_key] = Chapter(title=chapter_key)
         self.chapters[chapter_key].add_row(number, row)

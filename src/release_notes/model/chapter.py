@@ -1,7 +1,10 @@
 class Chapter:
-    def __init__(self, title: str = "", labels: list[str] = list, empty_message: str="No entries detected."):
+    def __init__(self, title: str = "", labels: list[str] = None, empty_message: str="No entries detected."):
         self.title: str = title
-        self.labels: list[str] = labels
+        if labels is None:
+            self.labels = []
+        else:
+            self.labels: list[str] = labels
         self.rows: dict[int, str] = {}
         self.empty_message = empty_message
 
