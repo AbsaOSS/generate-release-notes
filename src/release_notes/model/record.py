@@ -25,7 +25,7 @@ class Record:
     def is_closed(self):
         if self.__gh_issue is None:
             # no issue ==> stand-alone PR
-            return self.__pulls[0].is_merged
+            return self.__pulls[0].is_closed
             # TODO - check if this is the final state of the PR - cancel
         else:
             return self.__gh_issue.is_closed
@@ -38,12 +38,6 @@ class Record:
     def is_merged_pr(self):
         if self.__gh_issue is None:
             return self.__pulls[0].is_merged
-        return False
-
-    @property
-    def is_closed_pr(self):
-        if self.__gh_issue is None:
-            return self.__pulls[0].is_closed
         return False
 
     @property
@@ -93,9 +87,12 @@ class Record:
         return len(self.__pulls)
 
     @property
-    def is_pr_linked_to_issue(self):
+    def does_pr_mention_issue(self):
+        # TODO - cela ta metoda je divna - mozna zmena kontextu
+
         if self.__gh_issue is None:
-            return self.__pulls[0].is_linked_to_issue
+            # TODO - reimplement this to detect issues from body, the link not usable
+            return "#" in self.__pulls[0].body      # this is only testing code
         return False
 
     def pull_request(self, index: int = 0):

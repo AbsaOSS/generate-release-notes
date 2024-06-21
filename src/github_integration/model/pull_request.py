@@ -1,8 +1,12 @@
+import re
 from datetime import datetime
 from typing import Optional
 
 
 class PullRequest:
+    PR_STATE_CLOSED = "closed"
+    PR_STATE_MERGED = "merged"
+
     def __init__(self, id: int, number: int, title: str, labels: list[str], body: str, state: str,
                  created_at: datetime, updated_at: datetime, closed_at: Optional[datetime],
                  merged_at: Optional[datetime], milestone: Optional[str],
@@ -23,24 +27,39 @@ class PullRequest:
 
         self.milestone = milestone
 
+        # TODO - these values have to be composed from known paths and PR values
         self.url = url
         self.issue_url = issue_url
         self.html_url = html_url
         self.patch_url = patch_url
         self.diff_url = diff_url
 
+        self.__body_contains_issue_mention = False
+        self.__mentioned_issues: list[int] = self.extract_issue_numbers_from_body()
+
     @property
     def is_merged(self):
-        return self.merged_at is not None
+        return self.merged_at is not None and self.state == self.PR_STATE_MERGED
 
     @property
     def is_closed(self):
-        return self.closed_at is not None
+        return self.closed_at is not None and self.state == self.PR_STATE_CLOSED
 
     @property
-    def is_linked_to_issue(self):
-        return self.issue_url is not None
+    def body_contains_issue_mention(self):
+        return self.__body_contains_issue_mention
 
     def extract_issue_numbers_from_body(self) -> list[int]:
+        # Regex pattern to match issue numbers following keywords like "Close", "Fix", "Resolve"
+        regex_pattern = re.compile(r'([Cc]los(e|es|ed)|[Ff]ix(es|ed)?|[Rr]esolv(e|es|ed))\s*#\s*([0-9]+)')
 
-        return []
+        # Extract all issue numbers from the PR body
+        issue_matches = regex_pattern.findall(self.body)
+
+        # Extract the issue numbers from the matches
+        issue_numbers = [int(match[-1]) for match in issue_matches]
+
+        if not self.__body_contains_issue_mention and len(issue_numbers) > 0:
+            self.__body_contains_issue_mention = True
+
+        return issue_numbers

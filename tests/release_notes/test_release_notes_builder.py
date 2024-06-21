@@ -14,10 +14,11 @@ from release_notes.release_notes_builder import ReleaseNotesBuilder
 
 issues = [
     # labeled issue with one PR
-    Mock(spec=Issue, number=1, title="Issue 1", is_closed=True, labels=["bug"]),            # with one PR
-    Mock(spec=Issue, number=4, title="Issue 4", is_closed=True, labels=["enhancement"]),    # with two PRs
-    Mock(spec=Issue, number=7, title="Issue 7", is_closed=True, labels=["enhancement"]),    # with no PRs ==> no rls notes
-    Mock(spec=Issue, number=8, title="Issue 8", is_closed=True, labels=["spike"]),          # with no PRs, no user defined label ==> no rls notes
+    Mock(spec=Issue, number=1, title="I1+1PR+l-bug", is_closed=True, labels=["bug"]),                   # with one PR
+    Mock(spec=Issue, number=4, title="I4+2PR+l-enhancement", is_closed=True, labels=["enhancement"]),   # with two PRs
+    Mock(spec=Issue, number=7, title="I7+0PR+l-enhancement", is_closed=True, labels=["enhancement"]),   # with no PRs ==> no rls notes
+    Mock(spec=Issue, number=8, title="I8+0PR+l-spike", is_closed=True, labels=["spike"]),               # with no PRs, no user defined label ==> no rls notes
+    Mock(spec=Issue, number=9, title="I9+0PR+l-any", is_closed=True, labels=[]),                        # with no PRs, no label ==> no rls notes
 ]
 
 pulls = [
@@ -25,13 +26,13 @@ pulls = [
     PullRequest(
         id=1,
         number=101,
-        title="PR 1",
+        title="PR1+2xRLS+1I+l-no",
         labels=[],
-        body="Dummy body\n\nRelease notes:\n- First release note\n- Second release note\n",
-        state="open",
+        body="Dummy body\nCloses #1\n\nRelease notes:\n- PR 1 First release note\n- PR 1 Second release note\n",
+        state="merged",
         created_at=datetime.now(),
         updated_at=datetime.now(),
-        closed_at=datetime.now(),
+        closed_at=None,
         merged_at=datetime.now(),
         milestone=None,
         url="http://example.com/pr1",
@@ -40,17 +41,17 @@ pulls = [
         patch_url=None,
         diff_url=None
     ),
-    # [1] - PR without Issue and without Release notes in description - with no labels
+    # [1] - PR without Issue and with Release notes in description - with bug label
     PullRequest(
         id=2,
         number=102,
-        title="PR 2",
+        title="PR2+2xRLS+0I+l-no",
         labels=[],
-        body="Dummy body",
-        state="open",
+        body="Dummy body\n\nRelease notes:\n- PR 2 First release note\n- PR 2 Second release note\n",
+        state="merged",
         created_at=datetime.now(),
         updated_at=datetime.now(),
-        closed_at=datetime.now(),
+        closed_at=None,
         merged_at=datetime.now(),
         milestone=None,
         url="http://example.com/pr2",
@@ -59,20 +60,20 @@ pulls = [
         patch_url=None,
         diff_url=None
     ),
-    # [2] - PR without Issue and without Release notes in description - without labels
+    # [2] - PR without Issue and without Release notes in description - with no labels - closed state
     PullRequest(
         id=3,
         number=103,
-        title="PR 3",
+        title="PR3+0xRLS+0I+l-bug",
         labels=['bug'],
         body="Dummy body",
-        state="open",
+        state="closed",
         created_at=datetime.now(),
         updated_at=datetime.now(),
         closed_at=datetime.now(),
-        merged_at=datetime.now(),
+        merged_at=None,
         milestone=None,
-        url="http://example.com/pr2",
+        url="http://example.com/pr3",
         issue_url=None,
         html_url=None,
         patch_url=None,
@@ -82,13 +83,13 @@ pulls = [
     PullRequest(
         id=5,
         number=105,
-        title="PR 5",
+        title="PR5+2xRLS+1I+l-no",
         labels=[],
-        body="Dummy body\n\nRelease notes:\n- PR 5 release note\n",
-        state="open",
+        body="Dummy body\ncloses #2\n\nRelease notes:\n- PR 5 release note\n",
+        state="merged",
         created_at=datetime.now(),
         updated_at=datetime.now(),
-        closed_at=datetime.now(),
+        closed_at=None,
         merged_at=datetime.now(),
         milestone=None,
         url="http://example.com/pr5",
@@ -100,13 +101,13 @@ pulls = [
     PullRequest(
         id=6,
         number=106,
-        title="PR 6",
+        title="PR6+1xRLS+1I+l-no",
         labels=['bug'],     # wrong label - should be ignored by logic
-        body="Dummy body\n\nRelease notes:\n- PR 6 release note\n",
-        state="open",
+        body="Dummy body\nFixes #1\n\nRelease notes:\n- PR 6 release note\n",
+        state="merged",
         created_at=datetime.now(),
         updated_at=datetime.now(),
-        closed_at=datetime.now(),
+        closed_at=None,
         merged_at=datetime.now(),
         milestone=None,
         url="http://example.com/pr6",
@@ -117,17 +118,20 @@ pulls = [
     )
 ]
 
+# TODO check state vs date when reopen - issue & PR
 records_empty = {}
 records = {}
-records[1] = Record(issues[0])
+records[1] = Record(issues[0])                      # with one PR
 records[2] = Record()
 records[3] = Record()
-records[4] = Record(issues[1])
-records[5] = Record(issues[2])
-records[6] = Record(issues[3])
+records[4] = Record(issues[1])                      # with two PRs
+records[5] = Record(issues[2])                      # with no PRs ==> no rls notes
+records[6] = Record(issues[3])                      # with no PRs, no user defined label ==> no rls notes
+records[7] = Record(issues[4])                      # with no PRs, no label ==> no rls notes
+
 records[1].register_pull_request(pulls[0])
-records[2].register_pull_request(pulls[1])
-records[3].register_pull_request(pulls[2])
+records[2].register_pull_request(pulls[1])          # PR only, without Release notes in description - with no labels - merged state
+records[3].register_pull_request(pulls[2])          # PR only, without Release notes in description - with no labels - closed state
 records[4].register_pull_request(pulls[3])
 records[4].register_pull_request(pulls[4])
 
@@ -184,37 +188,36 @@ release_notes_full = """### Breaking Changes 💥
 No entries detected.
 
 ### New Features 🎉
-- #4 _Issue 4_ implemented by TODO
+- #4 _I4+2PR+l-enhancement_ implemented by TODO
   - PR 5 release note
   - PR 6 release note
-- #7 _Issue 7_ implemented by TODO
-
+  
 ### Bugfixes 🛠
-- #1 _Issue 1_ implemented by TODO
-  - First release note
-  - Second release note
-- PR 3
+- #1 _I1+1PR+l-bug_ implemented by TODO
+  - PR 1 First release note
+  - PR 1 Second release note
+- PR3+0xRLS+0I+l-bug
 
-### Closed Issues without Pull Request ⚠️
-- #7 _Issue 7_ implemented by TODO
+### Closed Issues without Pull Request (Release Notes) ⚠️
+- #7 _I7+0PR+l-enhancement_ implemented by TODO
+- #8 _I8+0PR+l-spike_ implemented by TODO
+- #9 _I9+0PR+l-any_ implemented by TODO
 
 ### Closed Issues without User Defined Labels ⚠️
-All closed issues contain at least one of user defined labels.
+- #8 _I8+0PR+l-spike_ implemented by TODO
+- #9 _I9+0PR+l-any_ implemented by TODO
 
-### Closed Issues without Release Notes ⚠️
-- #7 _Issue 7_ implemented by TODO
+### Merged PRs without Issue⚠️
+- PR2+2xRLS+0I+l-no
 
-### Merged PRs without Linked Issue⚠️
-All merged PRs are linked to issues.
+### Closed PRs without Issue ⚠️
+- PR3+0xRLS+0I+l-bug
 
 ### Merged PRs without Labels ⚠️
 All merged PRs have label.
 
 ### Merged PRs Linked to Open Issue ⚠️
 All merged PRs are linked to Closed issues.   BUG
-
-### Closed PRs without Linked Issue ⚠️    BUG
-All closed PRs are linked to issues.
 
 ### Closed PRs without Labels ⚠️    BUG
 All closed PRs are linked to issues.
