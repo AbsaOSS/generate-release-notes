@@ -36,32 +36,36 @@ def fetch_latest_release(repo: Repository) -> Optional[GitRelease]:
 
     except Exception as e:
         if "Not Found" in str(e):
-            logging.error(f"Latest release not found for {repo.owner.name}/{repo.name}. 1st release for repository!")
+            logging.error(f"Latest release not found for {repo.full_name}. 1st release for repository!")
             return None
         else:
-            logging.error(f"Fetching latest release failed for {repo.owner.name}/{repo.name}: {str(e)}. "
+            logging.error(f"Fetching latest release failed for {repo.full_name}: {str(e)}. "
                             f"Expected first release for repository.")
             return None
 
 
-def fetch_closed_issues(repo: Repository, release: Optional[GitRelease]) -> list[Issue]:
+def fetch_all_issues(repo: Repository, release: Optional[GitRelease]) -> list[Issue]:
     if release is None:
-        logging.info(f"Fetching all closed issues for {repo.full_name}")
-        issues = repo.get_issues(state='closed')
+        logging.info(f"Fetching all issues for {repo.full_name}")
+        issues = repo.get_issues()
     else:
-        logging.info(f"Fetching closed issues since {release.published_at} for {repo.full_name}")
-        issues = repo.get_issues(state='closed', since=release.published_at)
+        logging.info(f"Fetching all issues since {release.published_at} for {repo.full_name}")
+        issues = repo.get_issues(since=release.published_at)
 
     parsed_issues = []
     for issue in list(issues):
         logging.debug(f"Processing issue {issue.number}, title: {issue.title}")
+        # Hint: be careful here what you are passing to the Issue constructor
+        #   when selected value not received in first API then second wave
+        #   will be called !!!!
+        # TODO - how about to do not parse the issue and keep the origin with ready to use link to GH API?
         parsed_issues.append(Issue(
             id=issue.id,
-            number=1,
+            number=issue.number,
             title=issue.title,
             labels=[label.name for label in issue.labels],
-            body="",
-            state="closed",
+            body=issue.body,
+            state=issue.state,
             created_at=datetime.now()
         ))
 

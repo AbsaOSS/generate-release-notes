@@ -9,7 +9,7 @@ from github import (Github, Issue as GithubIssue, PullRequest as GithubPullReque
                     Repository)
 from github.GitRelease import GitRelease
 from github.Repository import Repository
-from github_integration.gh_api_caller import (get_gh_repository, fetch_latest_release, fetch_closed_issues,
+from github_integration.gh_api_caller import (get_gh_repository, fetch_latest_release, fetch_all_issues,
                                               fetch_finished_pull_requests, generate_change_url, show_rate_limit)
 
 
@@ -35,7 +35,7 @@ def test_get_gh_repository_found(mock_get_repo):
     result = get_gh_repository(g, repo_id)
 
     mock_get_repo.assert_called_with(repo_id)
-    assert result == mock_repo
+    assert mock_repo == result
 
 
 @patch('github.Github.get_repo')
@@ -81,10 +81,10 @@ def test_fetch_latest_release_found():
 
     release = fetch_latest_release(mock_repo)
 
-    assert release == mock_release
-    assert release.tag_name == "v1.0.0"
-    assert release.created_at == datetime(2023, 1, 1)
-    assert release.published_at == datetime(2023, 1, 2)
+    assert mock_release == release
+    assert "v1.0.0" == release.tag_name
+    assert datetime(2023, 1, 1) == release.created_at
+    assert datetime(2023, 1, 2) == release.published_at
 
 
 def test_fetch_latest_release_not_found(caplog):
@@ -126,6 +126,7 @@ def test_fetch_closed_issues_with_release(caplog):
     mock_issue.id = 1
     mock_issue.title = "Issue 1"
     mock_issue.labels = [mock_label]
+    mock_issue.number = 1
     mock_issue.pull_request = None
 
     mock_repo = Mock(spec=Repository)
@@ -133,12 +134,13 @@ def test_fetch_closed_issues_with_release(caplog):
     mock_repo.full_name = "test/repo"
 
     with caplog.at_level(logging.DEBUG):
-        issues = fetch_closed_issues(mock_repo, mock_release)
+        issues = fetch_all_issues(mock_repo, mock_release)
 
-    assert len(issues) == 1
-    assert issues[0].id == 1
-    assert issues[0].title == "Issue 1"
-    assert issues[0].labels == ["bug"]
+    assert 1 == len(issues)
+    assert 1 == issues[0].id
+    assert 1 == issues[0].number
+    assert "Issue 1" == issues[0].title
+    assert ["bug"] == issues[0].labels
     assert issues[0].is_closed is True
     assert "Found 1 closed issues for test/repo" in caplog.text
 
@@ -150,6 +152,7 @@ def test_fetch_closed_issues_without_release(caplog):
     mock_issue = Mock(spec=GithubIssue)
     mock_issue.id = 1
     mock_issue.title = "Issue 1"
+    mock_issue.number = 1
     mock_issue.labels = [mock_label]
 
     mock_repo = Mock(spec=Repository)
@@ -157,12 +160,12 @@ def test_fetch_closed_issues_without_release(caplog):
     mock_repo.full_name = "test/repo"
 
     with caplog.at_level(logging.DEBUG):
-        issues = fetch_closed_issues(mock_repo, None)
+        issues = fetch_all_issues(mock_repo, None)
 
-    assert len(issues) == 1
-    assert issues[0].id == 1
-    assert issues[0].title == "Issue 1"
-    assert issues[0].labels == ["bug"]
+    assert 1 == len(issues)
+    assert 1 == issues[0].id
+    assert "Issue 1" == issues[0].title
+    assert ["bug"] == issues[0].labels
     assert "Found 1 closed issues for test/repo" in caplog.text
 
 
@@ -212,11 +215,11 @@ def test_fetch_finished_pull_requests_multiple_pulls(caplog):
     with caplog.at_level(logging.DEBUG):
         pull_requests = fetch_finished_pull_requests(mock_repo)
 
-    assert len(pull_requests) == 2
-    assert pull_requests[0].id == 1
-    assert pull_requests[0].title == "PR 1"
-    assert pull_requests[1].id == 2
-    assert pull_requests[1].title == "PR 2"
+    assert 2 == len(pull_requests)
+    assert 1 == pull_requests[0].id
+    assert "PR 1" == pull_requests[0].title
+    assert 2 == pull_requests[1].id
+    assert "PR 2" == pull_requests[1].title
     assert "Found 2 PRs for test/repo" in caplog.text
 
 
@@ -236,7 +239,7 @@ def test_generate_change_url_with_release(caplog):
     with caplog.at_level(logging.DEBUG):
         url = generate_change_url(mock_repo, mock_release, tag_name)
 
-    assert url == expected_url
+    assert expected_url == url
     assert f"Changelog URL: {expected_url}" in caplog.text
 
 
@@ -251,7 +254,7 @@ def test_generate_change_url_without_release(caplog):
     with caplog.at_level(logging.DEBUG):
         url = generate_change_url(mock_repo, None, tag_name)
 
-    assert url == expected_url
+    assert expected_url == url
     assert f"Changelog URL: {expected_url}" in caplog.text
 
 

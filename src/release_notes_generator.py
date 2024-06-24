@@ -6,7 +6,7 @@ from typing import Optional
 from github import Github, Auth
 
 from github_integration.gh_action import get_action_input, set_action_output, set_action_failed
-from github_integration.gh_api_caller import (get_gh_repository, fetch_latest_release, fetch_closed_issues,
+from github_integration.gh_api_caller import (get_gh_repository, fetch_latest_release, fetch_all_issues,
                                               fetch_finished_pull_requests, generate_change_url, show_rate_limit)
 from release_notes.formatter.record_formatter import RecordFormatter
 from release_notes.model.custom_chapters import CustomChapters
@@ -75,7 +75,7 @@ def release_notes_generator(g: Github, repository_id: str, tag_name: str, custom
     show_rate_limit(g)
 
     # get closed issues since last release (N API calls - pagination)
-    issues = fetch_closed_issues(repository, release)
+    issues = fetch_all_issues(repository, release)
     show_rate_limit(g)
 
     # get finished PRs since last release

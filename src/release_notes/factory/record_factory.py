@@ -20,10 +20,11 @@ class RecordFactory:
         """
         records = {}
 
+        pull_numbers = [pull.number for pull in pulls]
+
         for issue in issues:
-            # TODO remove log line
-            logging.debug(f"Processing issue {issue.number}")
-            records[issue.number] = Record(issue)
+            if issue.number not in pull_numbers:
+                records[issue.number] = Record(issue)
 
         for pull in pulls:
             for parent_issues_number in pull.extract_issue_numbers_from_body():
