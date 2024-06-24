@@ -63,3 +63,8 @@ class PullRequest:
             self.__body_contains_issue_mention = True
 
         return issue_numbers
+
+    def contains_labels(self, labels: list[str]) -> bool:
+        for label in labels:
+            if label in self.labels:
+                return True

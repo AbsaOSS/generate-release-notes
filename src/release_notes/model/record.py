@@ -12,6 +12,11 @@ class Record:
         self.__gh_issue: Issue = issue
         self.__pulls: list[PullRequest] = []
         self.__is_release_note_detected: bool = False
+        self.__present_in_chapters = 0
+
+    @property
+    def is_present_in_chapters(self):
+        return self.__present_in_chapters > 0
 
     @property
     def is_pr(self):
@@ -102,12 +107,15 @@ class Record:
         self.__pulls.append(pull)
 
     # TODO add user defined row format feature
-    def to_chapter_row(self, row_format=""):
+    def to_chapter_row(self, row_format="", increment_in_chapters=True):
         # Example of default format
         # - #37 _Example Issue without PR_ implemented by "Missing Assignee or Contributor"
         #   - Example Issue to show usage of feature label and closed Issue without linked PR.
         #   - Test release note without leading bullet
         # - #38 _Example Issue without Release notes comment_ implemented by "Missing Assignee or Contributor"
+
+        if increment_in_chapters:
+            self.increment_present_in_chapters()
 
         if self.__gh_issue is None:
             return f"{self.__pulls[0].title}"
@@ -116,3 +124,16 @@ class Record:
                 return f"#{self.__gh_issue.number} _{self.__gh_issue.title}_ implemented by TODO\n{self.get_rls_notes}"
             else:
                 return f"#{self.__gh_issue.number} _{self.__gh_issue.title}_ implemented by TODO"
+
+    def contains_labels(self, labels: list[str]) -> bool:
+        if self.is_issue:
+            return self.__gh_issue.contains_labels(labels)
+        else:
+            # print(f"Check labels - PR: {self.__pulls[0].labels} for {labels}")
+            return self.__pulls[0].contains_labels(labels)
+
+    def increment_present_in_chapters(self):
+        self.__present_in_chapters += 1
+
+    def present_in_chapters(self):
+        return self.__present_in_chapters

@@ -140,7 +140,6 @@ def test_fetch_closed_issues_with_release(caplog):
     assert issues[0].title == "Issue 1"
     assert issues[0].labels == ["bug"]
     assert issues[0].is_closed is True
-    assert issues[0].linked_pr_id is None
     assert "Found 1 closed issues for test/repo" in caplog.text
 
 

@@ -9,17 +9,17 @@ class ServiceChapters(BaseChapters):
     CLOSED_ISSUES_WITHOUT_PULL_REQUESTS: str = "Closed Issues without Pull Request (Release Notes) ⚠️"
     CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS: str = "Closed Issues without User Defined Labels ⚠️"
 
-    MERGED_PRS_WITHOUT_ISSUE: str = "Merged PRs without Issue⚠️"
-    CLOSED_PRS_WITHOUT_ISSUE: str = "Closed PRs without Issue ⚠️"
+    MERGED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS: str = "Merged PRs without Issue and User Defined Labels ⚠️"
+    CLOSED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS: str = "Closed PRs without Issue and User Defined Labels ⚠️"
 
-    MERGED_PRS_WITHOUT_LABELS: str = "Merged PRs without Labels ⚠️"
-    MERGED_PRS_LINKED_TO_OPEN_ISSUES: str = "Merged PRs Linked to Open Issue ⚠️"
-    CLOSED_PRS_WITHOUT_LABELS: str = "Closed PRs without Labels ⚠️"
+    MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES: str = "Merged PRs Linked to 'Not Closed' Issue ⚠️"
 
-    def __init__(self, sort_ascending: bool = True, print_empty_chapters: bool = True, user_defined_labels: list[str] = []):
+    OTHERS_NO_TOPIC: str = "Others - No Topic ⚠️"
+
+    def __init__(self, sort_ascending: bool = True, print_empty_chapters: bool = True, user_defined_labels: list[str] = None):
         super().__init__(sort_ascending, print_empty_chapters)
 
-        self.user_defined_labels = user_defined_labels
+        self.user_defined_labels = user_defined_labels if user_defined_labels is not None else []
         self.sort_ascending = sort_ascending
         self.chapters = {
             self.CLOSED_ISSUES_WITHOUT_PULL_REQUESTS: Chapter(
@@ -30,92 +30,70 @@ class ServiceChapters(BaseChapters):
                 title=self.CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS,
                 empty_message="All closed issues contain at least one of user defined labels."
             ),
-            self.MERGED_PRS_WITHOUT_ISSUE: Chapter(
-                title=self.MERGED_PRS_WITHOUT_ISSUE,
+            self.MERGED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS: Chapter(
+                title=self.MERGED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS,
                 empty_message="All merged PRs are linked to issues."
             ),
-            self.CLOSED_PRS_WITHOUT_ISSUE: Chapter(
-                title=self.CLOSED_PRS_WITHOUT_ISSUE,
+            self.CLOSED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS: Chapter(
+                title=self.CLOSED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS,
                 empty_message="All closed PRs are linked to issues."
             ),
-            self.MERGED_PRS_WITHOUT_LABELS: Chapter(
-                title=self.MERGED_PRS_WITHOUT_LABELS,
-                empty_message="All merged PRs have label."
-            ),
-            self.MERGED_PRS_LINKED_TO_OPEN_ISSUES: Chapter(
-                title=self.MERGED_PRS_LINKED_TO_OPEN_ISSUES,
+            self.MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES: Chapter(
+                title=self.MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES,
                 empty_message="All merged PRs are linked to Closed issues."
             ),
-            self.CLOSED_PRS_WITHOUT_LABELS: Chapter(
-                title=self.CLOSED_PRS_WITHOUT_LABELS,
-                empty_message="All closed PRs have label."
+            self.OTHERS_NO_TOPIC: Chapter(
+                title=self.OTHERS_NO_TOPIC,
+                empty_message="Previous filters caught all Issues or Pull Requests."
             )
         }
         self.show_chapter_closed_issues_without_pull_requests = True
         self.show_chapter_closed_issues_without_user_defined_labels = True
-        self.show_chapter_merged_pr_without_issue = True
-        self.show_chapter_closed_pr_without_issue = True
+        self.show_chapter_merged_pr_without_issue_and_labels = True
+        self.show_chapter_closed_pr_without_issue_and_labels = True
 
-        self.show_chapter_merged_prs_without_labels = True
         self.show_chapter_merged_prs_linked_to_open_issues = True
-        self.show_chapter_closed_prs_without_labels = True
 
     def populate(self, records: dict[int, Record]):
         for nr in records.keys():                               # iterate all records
-            # check record properties if it fits to a chapter: CLOSED_ISSUES_WITHOUT_PULL_REQUESTS
-            if self.__is_closed_issues_without_pr(records[nr]):
-                self.chapters[self.CLOSED_ISSUES_WITHOUT_PULL_REQUESTS].add_row(nr, records[nr].to_chapter_row())
+            if records[nr].is_closed_issue:
+                self.__populate_closed_issues(records[nr], nr)
 
-            # check record properties if it fits to a chapter: CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS
-            if self.__is_closed_issues_without_user_labels(records[nr]):
-                self.chapters[self.CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS].add_row(nr, records[nr].to_chapter_row())
+            elif records[nr].is_pr:
+                self.__populate_pr(records[nr], nr)
 
+            else:
+                if not records[nr].is_present_in_chapters:
+                    self.chapters[self.OTHERS_NO_TOPIC].add_row(nr, records[nr].to_chapter_row())
+
+    def __populate_closed_issues(self, record: Record, nr: int):
+        # check record properties if it fits to a chapter: CLOSED_ISSUES_WITHOUT_PULL_REQUESTS
+        if record.pulls_count == 0:
+            self.chapters[self.CLOSED_ISSUES_WITHOUT_PULL_REQUESTS].add_row(nr, record.to_chapter_row())
+
+        # check record properties if it fits to a chapter: CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS
+        if not record.contains_labels(self.user_defined_labels):
+            self.chapters[self.CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS].add_row(nr, record.to_chapter_row())
+
+        if not record.is_present_in_chapters:
+            self.chapters[self.OTHERS_NO_TOPIC].add_row(nr, record.to_chapter_row())
+
+    def __populate_pr(self, record: Record, nr: int):
+        if record.is_merged_pr:
             # check record properties if it fits to a chapter: MERGED_PRS_WITHOUT_ISSUE
-            if self.__is_pull_request_without_issue_by_state(records[nr], PullRequest.PR_STATE_MERGED):
-                self.chapters[self.MERGED_PRS_WITHOUT_ISSUE].add_row(nr, records[nr].to_chapter_row())
+            if not record.does_pr_mention_issue and not record.contains_labels(self.user_defined_labels):
+                self.chapters[self.MERGED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS].add_row(nr, record.to_chapter_row())
 
-            # check record properties if it fits to a chapter: CLOSED_PRS_WITHOUT_ISSUE
-            if self.__is_pull_request_without_issue_by_state(records[nr], PullRequest.PR_STATE_CLOSED):
-                self.chapters[self.CLOSED_PRS_WITHOUT_ISSUE].add_row(nr, records[nr].to_chapter_row())
+            # check record properties if it fits to a chapter: MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES
+            if record.does_pr_mention_issue:
+                self.chapters[self.MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES].add_row(nr, record.to_chapter_row())
 
-            # check record properties if it fits to a chapter: MERGED_PRS_WITHOUT_LABELS
-            # if self.__is_merged_pull_request_without_link_to_issue(records[nr]):
-            #     self.chapters[self.MERGED_PRS_WITHOUT_LABELS].add_row(nr, records[nr].to_chapter_row())
+            if not record.is_present_in_chapters:
+                self.chapters[self.OTHERS_NO_TOPIC].add_row(nr, record.to_chapter_row())
 
-            # check record properties if it fits to a chapter: MERGED_PRS_LINKED_TO_OPEN_ISSUES
-            if True:
-                self.chapters[self.MERGED_PRS_LINKED_TO_OPEN_ISSUES].add_row(nr, records[nr].to_chapter_row())
+        # check record properties if it fits to a chapter: CLOSED_PRS_WITHOUT_ISSUE
+        elif record.is_closed and not record.does_pr_mention_issue and not record.contains_labels(self.user_defined_labels):
+            self.chapters[self.CLOSED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS].add_row(nr, record.to_chapter_row())
 
-            # check record properties if it fits to a chapter: CLOSED_PRS_WITHOUT_LABELS
-            if True:
-                self.chapters[self.CLOSED_PRS_WITHOUT_LABELS].add_row(nr, records[nr].to_chapter_row())
-
-    def __is_closed_issues_without_pr(self, record: Record) -> bool:
-        return record.is_closed_issue and record.pulls_count == 0
-
-    def __is_closed_issues_without_user_labels(self, record: Record) -> bool:
-        contains_user_defined_labels = False
-        for label in record.labels:
-            if label in self.user_defined_labels:
-                contains_user_defined_labels = True
-
-        return record.is_closed_issue and not contains_user_defined_labels
-
-    def __is_pull_request_without_issue_by_state(self, record: Record, pr_state: str) -> bool:
-        if pr_state == PullRequest.PR_STATE_CLOSED:
-            return record.is_pr and record.is_closed and not record.does_pr_mention_issue
-        elif pr_state == PullRequest.PR_STATE_MERGED:
-            return record.is_merged_pr and not record.does_pr_mention_issue
-        else:
-            print(f"XXX else")
-            return False
-
-
-
-
-
-    def __is_merged_pull_request_without_label(self, record: Record) -> bool:
-        return record.is_merged_pr and len(record.labels) == 0
-
-    def __is_closed_pull_request_without_label(self, record: Record) -> bool:
-        return record.is_pr and record.is_closed and len(record.labels) == 0
+        if not record.is_present_in_chapters:
+            self.chapters[self.OTHERS_NO_TOPIC].add_row(nr, record.to_chapter_row())

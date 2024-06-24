@@ -55,10 +55,12 @@ def fetch_closed_issues(repo: Repository, release: Optional[GitRelease]) -> list
         #     linked_pr_id = int(issue.pull_request.url.split('/')[-1])
         parsed_issues.append(Issue(
             id=issue.id,
+            number=1,
             title=issue.title,
             labels=[label.name for label in issue.labels],
-            is_closed=True,
-            linked_pr_id=linked_pr_id
+            body="",
+            state="closed",
+            created_at=datetime.now()
         ))
 
     logging.debug(f"Found {len(parsed_issues)} closed issues for {repo.full_name}")

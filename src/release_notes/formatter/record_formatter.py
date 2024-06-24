@@ -33,8 +33,6 @@ class RecordFormatter:
             "pull_requests": self._format_pulls(record.__pulls)
         }
 
-        # print("DEBUG - Formatter params: ", params)
-
         # apply to pattern
         return self.issue_pattern.format(**params)
 
