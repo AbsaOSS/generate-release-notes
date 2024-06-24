@@ -15,6 +15,7 @@ from .model.pull_request import PullRequest
 
 def get_gh_repository(g: Github, repository_id: str) -> Optional[Repository]:
     try:
+        logging.info(f"Fetching repository: {repository_id}")
         return g.get_repo(repository_id)
     except Exception as e:
         if "Not Found" in str(e):
@@ -27,6 +28,7 @@ def get_gh_repository(g: Github, repository_id: str) -> Optional[Repository]:
 
 def fetch_latest_release(repo: Repository) -> Optional[GitRelease]:
     try:
+        logging.info(f"Fetching latest release for {repo.full_name}")
         release = repo.get_latest_release()
         logging.debug(f"Found latest release: {release.tag_name}, created at: {release.created_at}, "
                       f"published at: {release.published_at}")
@@ -34,25 +36,25 @@ def fetch_latest_release(repo: Repository) -> Optional[GitRelease]:
 
     except Exception as e:
         if "Not Found" in str(e):
-            logging.error(f"Latest release not found for {repo.owner}/{repo.name}. 1st release for repository!")
+            logging.error(f"Latest release not found for {repo.owner.name}/{repo.name}. 1st release for repository!")
             return None
         else:
-            logging.error(f"Fetching latest release failed for {repo.owner}/{repo.name}: {str(e)}. "
+            logging.error(f"Fetching latest release failed for {repo.owner.name}/{repo.name}: {str(e)}. "
                             f"Expected first release for repository.")
             return None
 
 
 def fetch_closed_issues(repo: Repository, release: Optional[GitRelease]) -> list[Issue]:
     if release is None:
+        logging.info(f"Fetching all closed issues for {repo.full_name}")
         issues = repo.get_issues(state='closed')
     else:
+        logging.info(f"Fetching closed issues since {release.published_at} for {repo.full_name}")
         issues = repo.get_issues(state='closed', since=release.published_at)
 
     parsed_issues = []
     for issue in list(issues):
-        linked_pr_id = None
-        # if issue.pull_request:
-        #     linked_pr_id = int(issue.pull_request.url.split('/')[-1])
+        logging.debug(f"Processing issue {issue.number}, title: {issue.title}")
         parsed_issues.append(Issue(
             id=issue.id,
             number=1,
@@ -69,10 +71,12 @@ def fetch_closed_issues(repo: Repository, release: Optional[GitRelease]) -> list
 
 def fetch_finished_pull_requests(repo: Repository) -> list[PullRequest]:
     # TODO - decide: pulls = repo.get_pulls(state='closed', sort='created', direction='desc')
+    logging.info(f"Fetching all closed PRs for {repo.full_name}")
     pulls = repo.get_pulls(state='closed')
 
     pull_requests = []
     for pull in list(pulls):
+        logging.debug(f"Processing PR {pull.number}, title: {pull.title}")
         pr = PullRequest(
             id=pull.id,
             number=pull.number,

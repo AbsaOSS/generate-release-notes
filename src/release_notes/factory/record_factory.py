@@ -21,6 +21,8 @@ class RecordFactory:
         records = {}
 
         for issue in issues:
+            # TODO remove log line
+            logging.debug(f"Processing issue {issue.number}")
             records[issue.number] = Record(issue)
 
         for pull in pulls:
