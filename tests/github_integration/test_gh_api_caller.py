@@ -128,6 +128,8 @@ def test_fetch_closed_issues_with_release(caplog):
     mock_issue.labels = [mock_label]
     mock_issue.number = 1
     mock_issue.pull_request = None
+    mock_issue.body = "Dummy body"
+    mock_issue.state = "closed"
 
     mock_repo = Mock(spec=Repository)
     mock_repo.get_issues.return_value = [mock_issue]
@@ -142,7 +144,7 @@ def test_fetch_closed_issues_with_release(caplog):
     assert "Issue 1" == issues[0].title
     assert ["bug"] == issues[0].labels
     assert issues[0].is_closed is True
-    assert "Found 1 closed issues for test/repo" in caplog.text
+    assert "Found 1 issues for test/repo" in caplog.text
 
 
 def test_fetch_closed_issues_without_release(caplog):
@@ -154,6 +156,8 @@ def test_fetch_closed_issues_without_release(caplog):
     mock_issue.title = "Issue 1"
     mock_issue.number = 1
     mock_issue.labels = [mock_label]
+    mock_issue.body = "Dummy body"
+    mock_issue.state = "closed"
 
     mock_repo = Mock(spec=Repository)
     mock_repo.get_issues.return_value = [mock_issue]
@@ -166,7 +170,7 @@ def test_fetch_closed_issues_without_release(caplog):
     assert 1 == issues[0].id
     assert "Issue 1" == issues[0].title
     assert ["bug"] == issues[0].labels
-    assert "Found 1 closed issues for test/repo" in caplog.text
+    assert "Found 1 issues for test/repo" in caplog.text
 
 
 # fetch_finished_pull_requests
@@ -230,8 +234,7 @@ def test_generate_change_url_with_release(caplog):
     mock_release.tag_name = "v1.0.0"
 
     mock_repo = Mock(spec=Repository)
-    mock_repo.owner = "owner"
-    mock_repo.name = "repo"
+    mock_repo.full_name = "owner/repo"
 
     tag_name = "v1.1.0"
     expected_url = f"https://github.com/owner/repo/compare/v1.0.0...v1.1.0"
@@ -245,8 +248,7 @@ def test_generate_change_url_with_release(caplog):
 
 def test_generate_change_url_without_release(caplog):
     mock_repo = Mock(spec=Repository)
-    mock_repo.owner = "owner"
-    mock_repo.name = "repo"
+    mock_repo.full_name = "owner/repo"
 
     tag_name = "v1.1.0"
     expected_url = f"https://github.com/owner/repo/commits/v1.1.0"

@@ -102,18 +102,17 @@ def fetch_finished_pull_requests(repo: Repository) -> list[PullRequest]:
         )
         pull_requests.append(pr)
 
-    logging.debug(f"Found {len(pull_requests)} PRs for {repo.full_name}")
     return pull_requests
 
 
 def generate_change_url(repo: Repository, release: Optional[GitRelease], tag_name: str) -> str:
     if release:
         # If there is a latest release, create a URL pointing to commits since the latest release
-        changelog_url = f"https://github.com/{repo.owner}/{repo.name}/compare/{release.tag_name}...{tag_name}"
+        changelog_url = f"https://github.com/{repo.full_name}/compare/{release.tag_name}...{tag_name}"
 
     else:
         # If there is no latest release, create a URL pointing to all commits
-        changelog_url = f"https://github.com/{repo.owner}/{repo.name}/commits/{tag_name}"
+        changelog_url = f"https://github.com/{repo.full_name}/commits/{tag_name}"
 
     logging.debug(f"Changelog URL: {changelog_url}")
     return changelog_url

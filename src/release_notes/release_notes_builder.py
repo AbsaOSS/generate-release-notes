@@ -27,7 +27,6 @@ class ReleaseNotesBuilder:
         user_defined_labels = list(chain.from_iterable(user_defined_labels_nested))
 
         if self.warnings:
-            logging.debug("Generating warnings...")
             service_chapters = ServiceChapters(print_empty_chapters=self.print_empty_chapters, user_defined_labels=user_defined_labels)
             service_chapters.populate(self.records)
 
@@ -36,5 +35,4 @@ class ReleaseNotesBuilder:
         else:
             release_notes = f"""{user_defined_chapters_str}\n\n#### Full Changelog\n{self.changelog_url}\n"""
 
-        logging.debug(f"Release notes: \n{release_notes}")
         return release_notes

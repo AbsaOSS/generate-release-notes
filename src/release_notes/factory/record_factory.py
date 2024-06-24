@@ -19,7 +19,6 @@ class RecordFactory:
         @return: The dictionary of ReleaseNotesRecord instances.
         """
         records = {}
-
         pull_numbers = [pull.number for pull in pulls]
 
         for issue in issues:
@@ -32,8 +31,7 @@ class RecordFactory:
 
             for parent_issues_number in parent_issues_numbers:
                 if parent_issues_number not in records.keys():
-                    logging.error(f"Detected PR {pull.number} linked to issue {parent_issues_number} "
-                                    f"which is not in the list of issues.")
+                    logging.error(f"Detected PR {pull.number} linked to issue {parent_issues_number} which is not in the list of issues.")
 
                 records[parent_issues_number].register_pull_request(pull)
                 logging.debug(f"Registering PR {pull.number}: {pull.title} to Issue {parent_issues_number}: ")
