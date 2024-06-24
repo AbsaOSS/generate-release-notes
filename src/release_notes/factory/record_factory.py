@@ -25,6 +25,7 @@ class RecordFactory:
         for issue in issues:
             if issue.number not in pull_numbers:
                 records[issue.number] = Record(issue)
+                logging.debug(f"Created record for issue {issue.number}: {issue.title}")
 
         for pull in pulls:
             for parent_issues_number in pull.extract_issue_numbers_from_body():
@@ -34,5 +35,7 @@ class RecordFactory:
                     # TODO - How to handle this case? - new extra service chapter?
 
                 records[parent_issues_number].register_pull_request(pull)
+                logging.debug(f"Created record for PR {pull.number}: {pull.title}")
 
+        logging.info(f"Generated {len(records)} records from {len(issues)} issues and {len(pulls)} PRs.")
         return records

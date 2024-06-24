@@ -53,8 +53,9 @@ def fetch_all_issues(repo: Repository, release: Optional[GitRelease]) -> list[Is
         issues = repo.get_issues(since=release.published_at)
 
     parsed_issues = []
+    logging.info(f"Found {len(list(issues))} issues for {repo.full_name}")
     for issue in list(issues):
-        logging.debug(f"Processing issue {issue.number}, title: {issue.title}")
+        # logging.debug(f"Processing issue {issue.number}, title: {issue.title}")
         # Hint: be careful here what you are passing to the Issue constructor
         #   when selected value not received in first API then second wave
         #   will be called !!!!
@@ -69,7 +70,6 @@ def fetch_all_issues(repo: Repository, release: Optional[GitRelease]) -> list[Is
             created_at=datetime.now()
         ))
 
-    logging.debug(f"Found {len(parsed_issues)} closed issues for {repo.full_name}")
     return parsed_issues
 
 
@@ -79,8 +79,9 @@ def fetch_finished_pull_requests(repo: Repository) -> list[PullRequest]:
     pulls = repo.get_pulls(state='closed')
 
     pull_requests = []
+    logging.info(f"Found {len(list(pulls))} PRs for {repo.full_name}")
     for pull in list(pulls):
-        logging.debug(f"Processing PR {pull.number}, title: {pull.title}")
+        # logging.debug(f"Processing PR {pull.number}, title: {pull.title}")
         pr = PullRequest(
             id=pull.id,
             number=pull.number,
