@@ -118,7 +118,11 @@ class Record:
             self.increment_present_in_chapters()
 
         if self.__gh_issue is None:
-            return f"{self.__pulls[0].title}"
+            p = self.__pulls[0]
+            if self.contains_release_notes:
+                return f"PR: #{p.number} _{p.title}_ implemented by TODO\n{self.get_rls_notes}"
+            else:
+                return f"PR: #{p.number} _{p.title}_ implemented by TODO"
         else:
             if self.contains_release_notes:
                 return f"#{self.__gh_issue.number} _{self.__gh_issue.title}_ implemented by TODO\n{self.get_rls_notes}"
