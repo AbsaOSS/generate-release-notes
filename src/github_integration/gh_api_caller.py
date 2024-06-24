@@ -47,10 +47,10 @@ def fetch_latest_release(repo: Repository) -> Optional[GitRelease]:
 def fetch_all_issues(repo: Repository, release: Optional[GitRelease]) -> list[Issue]:
     if release is None:
         logging.info(f"Fetching all issues for {repo.full_name}")
-        issues = repo.get_issues()
+        issues = repo.get_issues(state="all")
     else:
         logging.info(f"Fetching all issues since {release.published_at} for {repo.full_name}")
-        issues = repo.get_issues(since=release.published_at)
+        issues = repo.get_issues(state="all", since=release.published_at)
 
     parsed_issues = []
     logging.info(f"Found {len(list(issues))} issues for {repo.full_name}")
