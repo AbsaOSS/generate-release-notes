@@ -1,5 +1,6 @@
 from typing import Optional
 
+from github_integration.github_manager import GithubManager
 from github_integration.model.issue import Issue
 from github_integration.model.pull_request import PullRequest
 
@@ -100,6 +101,29 @@ class Record:
             return "#" in self.__pulls[0].body      # this is only testing code
         return False
 
+    @property
+    def assignee(self) -> Optional[str]:
+        return None
+
+    @property
+    def contributors(self) -> Optional[str]:
+        return None
+
+    @property
+    def pr_links(self) -> Optional[str]:
+        if len(self.__pulls) == 0:
+            return None
+
+        gh_manager = GithubManager()
+
+        template = "[#{number}](https://github.com/{full_name}/pull/{number})"
+        res = [
+            template.format(number=pull.number, full_name=gh_manager.get_repository_full_name())
+            for pull in self.__pulls
+        ]
+
+        return ", ".join(res)
+
     def pull_request(self, index: int = 0):
         return self.__pulls[index]
 
@@ -107,27 +131,39 @@ class Record:
         self.__pulls.append(pull)
 
     # TODO add user defined row format feature
+    #   - what else replaceable information could be interesting?
     def to_chapter_row(self, row_format="", increment_in_chapters=True):
-        # Example of default format
-        # - #37 _Example Issue without PR_ implemented by "Missing Assignee or Contributor"
-        #   - Example Issue to show usage of feature label and closed Issue without linked PR.
-        #   - Test release note without leading bullet
-        # - #38 _Example Issue without Release notes comment_ implemented by "Missing Assignee or Contributor"
-
         if increment_in_chapters:
             self.increment_present_in_chapters()
 
         if self.__gh_issue is None:
             p = self.__pulls[0]
+
+            row = f"PR: #{p.number} _{p.title}_"
+
+            if p.assignee is not None:
+                row = f"{row}, implemented by {self.assignee}"
+
             if self.contains_release_notes:
-                return f"PR: #{p.number} _{p.title}_ implemented by TODO\n{self.get_rls_notes}"
-            else:
-                return f"PR: #{p.number} _{p.title}_ implemented by TODO"
+                return f"{row}\n{self.get_rls_notes}"
+
+            return row
         else:
+            row = f"#{self.__gh_issue.number} _{self.__gh_issue.title}_"
+
+            if self.assignee is not None:
+                row = f"{row}, implemented by {self.assignee}"
+
+            if self.contributors is not None:
+                row = f"{row}, contributed by {self.contributors}"
+
+            if len(self.__pulls) > 0:
+                row = f"{row} in {self.pr_links}"
+
             if self.contains_release_notes:
-                return f"#{self.__gh_issue.number} _{self.__gh_issue.title}_ implemented by TODO\n{self.get_rls_notes}"
-            else:
-                return f"#{self.__gh_issue.number} _{self.__gh_issue.title}_ implemented by TODO"
+                return f"{row}\n{self.get_rls_notes}"
+
+            return row
 
     def contains_labels(self, labels: list[str]) -> bool:
         if self.is_issue:

@@ -13,9 +13,12 @@ from release_notes.model.custom_chapters import CustomChapters
 from release_notes.model.record import Record
 from release_notes.release_notes_builder import ReleaseNotesBuilder
 from release_notes.factory.record_factory import RecordFactory
+from github_integration.github_manager import GithubManager
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+github_manager = GithubManager()
 
 
 def validate_inputs(owner: str, repo_name: str, tag_name: str, chapters_json: str, warnings: bool,
@@ -88,10 +91,12 @@ def release_notes_generator(g: Github, repository_id: str, tag_name: str, custom
     # merge data to Release Notes records form
     rls_notes_records: dict[int, Record] = RecordFactory.generate(
         issues=issues,
-        pulls=pulls,
+        pulls=pulls
     )
 
     formatter = RecordFormatter()
+    github_manager.set_repository(repository)
+    github_manager.set_git_release(release)
 
     # build rls notes
     return ReleaseNotesBuilder(

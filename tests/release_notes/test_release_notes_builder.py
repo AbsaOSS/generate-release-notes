@@ -42,7 +42,8 @@ def generate_full_dataset() -> dict[int, Record]:
             issue_url=None,
             html_url=None,
             patch_url=None,
-            diff_url=None
+            diff_url=None,
+            assignee=None
         ),
         # [1] - PR without Issue and with Release notes in description - with bug label
         PullRequest(
@@ -61,7 +62,8 @@ def generate_full_dataset() -> dict[int, Record]:
             issue_url=None,
             html_url=None,
             patch_url=None,
-            diff_url=None
+            diff_url=None,
+            assignee=None
         ),
         # [2] - PR without Issue and without Release notes in description - with no labels - closed state
         PullRequest(
@@ -80,7 +82,8 @@ def generate_full_dataset() -> dict[int, Record]:
             issue_url=None,
             html_url=None,
             patch_url=None,
-            diff_url=None
+            diff_url=None,
+            assignee=None
         ),
         # [3, 4] - 2 PRs with Issue '2' - no labels, both with Release notes
         PullRequest(
@@ -99,7 +102,8 @@ def generate_full_dataset() -> dict[int, Record]:
             issue_url=None,
             html_url=None,
             patch_url=None,
-            diff_url=None
+            diff_url=None,
+            assignee=None
         ),
         PullRequest(
             id=6,
@@ -117,7 +121,8 @@ def generate_full_dataset() -> dict[int, Record]:
             issue_url=None,
             html_url=None,
             patch_url=None,
-            diff_url=None
+            diff_url=None,
+            assignee=None
         ),
         # [5] - 1 PRs with Issue '11' - no labels, with Release notes - PR linked to Open Issue
         PullRequest(
@@ -136,7 +141,8 @@ def generate_full_dataset() -> dict[int, Record]:
             issue_url=None,
             html_url=None,
             patch_url=None,
-            diff_url=None
+            diff_url=None,
+            assignee=None
         )
     ]
 
@@ -179,7 +185,7 @@ No entries detected.
 ### Bugfixes 🛠
 No entries detected.
 
-### Closed Issues without Pull Request (Release Notes) ⚠️
+### Closed Issues without Pull Request ⚠️
 All closed issues linked to a Pull Request.
 
 ### Closed Issues without User Defined Labels ⚠️
@@ -206,32 +212,35 @@ release_notes_full = """### Breaking Changes 💥
 No entries detected.
 
 ### New Features 🎉
-- #4 _I4+2PR+l-enhancement_ implemented by TODO
+- #4 _I4+2PR+l-enhancement_ in [#105](https://github.com/None/pull/105), [#106](https://github.com/None/pull/106)
   - PR 5 release note
   - PR 6 release note
 
 ### Bugfixes 🛠
-- #1 _I1+1PR+l-bug_ implemented by TODO
+- #1 _I1+1PR+l-bug_ in [#101](https://github.com/None/pull/101)
   - PR 1 First release note
   - PR 1 Second release note
 
-### Closed Issues without Pull Request (Release Notes) ⚠️
-- #7 _I7+0PR+l-enhancement_ implemented by TODO
-- #8 _I8+0PR+l-spike_ implemented by TODO
-- #9 _I9+0PR+l-any_ implemented by TODO
+### Closed Issues without Pull Request ⚠️
+- #7 _I7+0PR+l-enhancement_
+- #8 _I8+0PR+l-spike_
+- #9 _I9+0PR+l-any_
 
 ### Closed Issues without User Defined Labels ⚠️
-- #8 _I8+0PR+l-spike_ implemented by TODO
-- #9 _I9+0PR+l-any_ implemented by TODO
+- #8 _I8+0PR+l-spike_
+- #9 _I9+0PR+l-any_
 
 ### Merged PRs without Issue and User Defined Labels ⚠️
-- PR2+2xRLS+0I+l-no
+- PR: #102 _PR2+2xRLS+0I+l-no_
+  - PR 2 First release note
+  - PR 2 Second release note
 
 ### Closed PRs without Issue and User Defined Labels ⚠️
-- PR3+0xRLS+0I+l-bug
+- PR: #103 _PR3+0xRLS+0I+l-bug_
 
 ### Merged PRs Linked to 'Not Closed' Issue ⚠️
-- PR11+1xRLS+1I+l-no
+- PR: #111 _PR11+1xRLS+1I+l-no_
+  - PR 11 release note
 
 ### Others - No Topic ⚠️
 Previous filters caught all Issues or Pull Requests.
@@ -241,32 +250,35 @@ http://example.com/changelog
 """
 
 release_notes_full_no_empty_chapters = """### New Features 🎉
-- #4 _I4+2PR+l-enhancement_ implemented by TODO
+- #4 _I4+2PR+l-enhancement_ in [#105](https://github.com/None/pull/105), [#106](https://github.com/None/pull/106)
   - PR 5 release note
   - PR 6 release note
 
 ### Bugfixes 🛠
-- #1 _I1+1PR+l-bug_ implemented by TODO
+- #1 _I1+1PR+l-bug_ in [#101](https://github.com/None/pull/101)
   - PR 1 First release note
   - PR 1 Second release note
 
-### Closed Issues without Pull Request (Release Notes) ⚠️
-- #7 _I7+0PR+l-enhancement_ implemented by TODO
-- #8 _I8+0PR+l-spike_ implemented by TODO
-- #9 _I9+0PR+l-any_ implemented by TODO
+### Closed Issues without Pull Request ⚠️
+- #7 _I7+0PR+l-enhancement_
+- #8 _I8+0PR+l-spike_
+- #9 _I9+0PR+l-any_
 
 ### Closed Issues without User Defined Labels ⚠️
-- #8 _I8+0PR+l-spike_ implemented by TODO
-- #9 _I9+0PR+l-any_ implemented by TODO
+- #8 _I8+0PR+l-spike_
+- #9 _I9+0PR+l-any_
 
 ### Merged PRs without Issue and User Defined Labels ⚠️
-- PR2+2xRLS+0I+l-no
+- PR: #102 _PR2+2xRLS+0I+l-no_
+  - PR 2 First release note
+  - PR 2 Second release note
 
 ### Closed PRs without Issue and User Defined Labels ⚠️
-- PR3+0xRLS+0I+l-bug
+- PR: #103 _PR3+0xRLS+0I+l-bug_
 
 ### Merged PRs Linked to 'Not Closed' Issue ⚠️
-- PR11+1xRLS+1I+l-no
+- PR: #111 _PR11+1xRLS+1I+l-no_
+  - PR 11 release note
 
 #### Full Changelog
 http://example.com/changelog
@@ -276,12 +288,12 @@ release_notes_full_no_warnings = """### Breaking Changes 💥
 No entries detected.
 
 ### New Features 🎉
-- #4 _I4+2PR+l-enhancement_ implemented by TODO
+- #4 _I4+2PR+l-enhancement_ in [#105](https://github.com/None/pull/105), [#106](https://github.com/None/pull/106)
   - PR 5 release note
   - PR 6 release note
 
 ### Bugfixes 🛠
-- #1 _I1+1PR+l-bug_ implemented by TODO
+- #1 _I1+1PR+l-bug_ in [#101](https://github.com/None/pull/101)
   - PR 1 First release note
   - PR 1 Second release note
 
@@ -300,6 +312,7 @@ def test_build_full_with_empty_chapters():
                                   custom_chapters=custom_chapters)
     expected_release_notes = release_notes_full
     actual_release_notes = builder.build()
+    # print("Actual - no data:\n" + actual_release_notes)
     assert expected_release_notes == actual_release_notes
 
 
@@ -307,11 +320,16 @@ def test_build_no_data_with_empty_chapters():
     custom_chapters = CustomChapters()
     custom_chapters.from_json(chapters_json)
 
-    builder = ReleaseNotesBuilder(records={}, changelog_url=changelog_url, formatter=formatter,
-                                  custom_chapters=custom_chapters)
     expected_release_notes = release_notes_no_data
+
+    builder = ReleaseNotesBuilder(
+        records={},
+        changelog_url=changelog_url,
+        formatter=formatter,
+        custom_chapters=custom_chapters)
+
     actual_release_notes = builder.build()
-    print("Actual - no data:\n" + actual_release_notes)
+    # print("Actual - no data:\n" + actual_release_notes)
     assert expected_release_notes == actual_release_notes
 
 
@@ -319,11 +337,16 @@ def test_build_no_warnings():
     custom_chapters = CustomChapters()
     custom_chapters.from_json(chapters_json)
 
-    builder = ReleaseNotesBuilder(records=generate_full_dataset(), changelog_url=changelog_url, formatter=formatter,
-                                  custom_chapters=custom_chapters, warnings=False)
     expected_release_notes = release_notes_full_no_warnings
+
+    builder = ReleaseNotesBuilder(
+        records=generate_full_dataset(),
+        changelog_url=changelog_url,
+        formatter=formatter,
+        custom_chapters=custom_chapters, warnings=False)
+
     actual_release_notes = builder.build()
-    print("Actual:\n" + actual_release_notes)
+    # print("Actual:\n" + actual_release_notes)
     assert expected_release_notes == actual_release_notes
 
 
@@ -331,13 +354,18 @@ def test_build_full_no_empty_chapters():
     custom_chapters_no_empty_chapters = CustomChapters()
     custom_chapters_no_empty_chapters.from_json(chapters_json)
     custom_chapters_no_empty_chapters.print_empty_chapters = False
+
     expected_release_notes = release_notes_full_no_empty_chapters
 
-    builder = ReleaseNotesBuilder(records=generate_full_dataset(), changelog_url=changelog_url, formatter=formatter,
-                                  custom_chapters=custom_chapters_no_empty_chapters, print_empty_chapters=False)
+    builder = ReleaseNotesBuilder(
+        records=generate_full_dataset(),
+        changelog_url=changelog_url,
+        formatter=formatter,
+        custom_chapters=custom_chapters_no_empty_chapters,
+        print_empty_chapters=False)
 
     actual_release_notes = builder.build()
-    print("Actual:\n" + actual_release_notes)
+    # print("Actual:\n" + actual_release_notes)
     assert expected_release_notes == actual_release_notes
 
 

@@ -98,7 +98,8 @@ def fetch_finished_pull_requests(repo: Repository) -> list[PullRequest]:
             issue_url=pull.issue_url if pull.issue_url else None,
             html_url=pull.html_url if pull.html_url else None,
             patch_url=pull.patch_url if pull.patch_url else None,
-            diff_url=pull.diff_url if pull.diff_url else None
+            diff_url=pull.diff_url if pull.diff_url else None,
+            assignee=pull.assignee.login if pull.assignee else None
         )
         pull_requests.append(pr)
 

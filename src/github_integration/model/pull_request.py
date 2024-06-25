@@ -10,14 +10,16 @@ class PullRequest:
     def __init__(self, id: int, number: int, title: str, labels: list[str], body: str, state: str,
                  created_at: datetime, updated_at: datetime, closed_at: Optional[datetime],
                  merged_at: Optional[datetime], milestone: Optional[str],
-                 url: str, issue_url: Optional[str], html_url: Optional[str], patch_url: Optional[str], diff_url: Optional[str]):
+                 url: str, issue_url: Optional[str], html_url: Optional[str], patch_url: Optional[str],
+                 diff_url: Optional[str], assignee: Optional[str]):
         self.id = id
         self.number = number
         self.title = title
-        self.labels = labels            # TODO - is additional hiden API call needed to get labels?
+        self.labels = labels
         self.state = state
         # self.user = user              # TODO - is support needed ?
-        # self.assignee = assignee      # TODO - is support needed ? often no assigned user
+        self.assignee = assignee
+        self.contibutors = None
         self.body = body
 
         self.created_at = created_at

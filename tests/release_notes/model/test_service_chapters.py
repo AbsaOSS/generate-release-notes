@@ -13,7 +13,7 @@ def test_init():
 def test_chapter_titles():
     service_chapters = ServiceChapters()
     expected_titles = [
-        "Closed Issues without Pull Request (Release Notes) ⚠️",
+        "Closed Issues without Pull Request ⚠️",
         "Closed Issues without User Defined Labels ⚠️",
         "Merged PRs without Issue and User Defined Labels ⚠️",
         "Closed PRs without Issue and User Defined Labels ⚠️",

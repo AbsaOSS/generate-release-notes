@@ -193,6 +193,7 @@ def test_fetch_finished_pull_requests_multiple_pulls(caplog):
     mock_pull1.html_url = ""
     mock_pull1.patch_url = ""
     mock_pull1.diff_url = ""
+    mock_pull1.assignee = None
 
     mock_pull2 = Mock(spec=GithubPullRequest)
     mock_pull2.id = 2
@@ -211,6 +212,7 @@ def test_fetch_finished_pull_requests_multiple_pulls(caplog):
     mock_pull2.html_url = ""
     mock_pull2.patch_url = ""
     mock_pull2.diff_url = ""
+    mock_pull2.assignee = None
 
     mock_repo = Mock(spec=Repository)
     mock_repo.get_pulls.return_value = [mock_pull1, mock_pull2]
