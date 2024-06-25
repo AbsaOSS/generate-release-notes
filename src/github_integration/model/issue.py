@@ -3,6 +3,8 @@ from github.Issue import Issue as GitIssue
 
 
 class Issue:
+    ISSUE_STATE_CLOSED = "closed"
+
     def __init__(self, issue: GitIssue):
         self.__issue = issue
         self.__labels = None

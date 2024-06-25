@@ -31,14 +31,14 @@ class Record:
     def is_closed(self):
         if self.__gh_issue is None:
             # no issue ==> stand-alone PR
-            return self.__pulls[0].is_closed
+            return self.__pulls[0].state == PullRequest.PR_STATE_CLOSED
             # TODO - check if this is the final state of the PR - cancel
         else:
-            return self.__gh_issue.is_closed
+            return self.__gh_issue.state == Issue.ISSUE_STATE_CLOSED
 
     @property
     def is_closed_issue(self):
-        return self.is_issue and self.__gh_issue.is_closed
+        return self.is_issue and self.__gh_issue.state == Issue.ISSUE_STATE_CLOSED
 
     @property
     def is_merged_pr(self):

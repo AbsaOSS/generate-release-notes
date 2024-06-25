@@ -24,15 +24,12 @@ class ReleaseNotesBuilder:
         user_defined_chapters.populate(self.records)
         user_defined_chapters_str = user_defined_chapters.to_string()
 
-        logging.debug(f"User defined chapters: {user_defined_chapters_str}")
-
         user_defined_labels_nested = [user_defined_chapters.chapters[key].labels for key in user_defined_chapters.chapters.keys()]
         user_defined_labels = list(chain.from_iterable(user_defined_labels_nested))
 
-        logging.debug(f"User defined labels: {user_defined_labels}")
-
         if self.warnings:
             service_chapters = ServiceChapters(print_empty_chapters=self.print_empty_chapters, user_defined_labels=user_defined_labels)
+            logging.debug(f"TODO - Populate Service Chapters")
             service_chapters.populate(self.records)
 
             service_chapters_str = service_chapters.to_string()

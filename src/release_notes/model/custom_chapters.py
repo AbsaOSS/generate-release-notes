@@ -10,7 +10,6 @@ class CustomChapters(BaseChapters):
     def populate(self, records: dict[int, Record]):
         for nr in records.keys():                               # iterate all records
             for ch_key in self.chapters.keys():                 # iterate all chapters
-                logging.debug(f"Populating chapter {ch_key} with record {nr}")
                 for record_label in records[nr].labels:         # iterate all labels of the record (issue, or 1st PR)
                     if record_label in self.chapters[ch_key].labels and records[nr].pulls_count > 0:
                         self.chapters[ch_key].add_row(nr, records[nr].to_chapter_row())
