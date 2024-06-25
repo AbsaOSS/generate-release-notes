@@ -136,9 +136,9 @@ class Record:
     def register_pull_request(self, pull):
         self.__pulls.append(pull)
 
-    def register_commit(self, pull_nr: int, commit: Commit):
+    def register_commit(self, commit: Commit):
         for pull in self.__pulls:
-            if pull.number == pull_nr:
+            if commit.sha == pull.merge_commit_sha:
                 pull.register_commit(commit)
                 return
 

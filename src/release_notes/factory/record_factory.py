@@ -46,7 +46,7 @@ class RecordFactory:
 
         detected_PRs = 0
         for commit in commits:
-            for key, record in records:
+            for key, record in records.items():
                 if record.is_commit_sha_present(commit.sha):
                     record.register_commit(commit)
                     detected_PRs += 1
