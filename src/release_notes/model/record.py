@@ -116,7 +116,7 @@ class Record:
             return None
 
         res = ", ".join(authors)
-        logging.debug(f"XXX Authors: {res} for record {self.__gh_issue.number}")
+        logging.debug(f"XXX method authors: {res}")
         return res
 
     @property
