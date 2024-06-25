@@ -119,3 +119,9 @@ class PullRequest:
             return None
 
         return self.__merge_commits[0].author
+
+    def register_commit(self, commit: Commit):
+        if self.__merge_commits is None:
+            self.__merge_commits = []
+
+        self.__merge_commits.append(commit)

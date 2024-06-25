@@ -2,6 +2,7 @@ import logging
 from typing import Optional
 
 from github_integration.github_manager import GithubManager
+from github_integration.model.commit import Commit
 from github_integration.model.issue import Issue
 from github_integration.model.pull_request import PullRequest
 
@@ -134,6 +135,14 @@ class Record:
 
     def register_pull_request(self, pull):
         self.__pulls.append(pull)
+
+    def register_commit(self, pull_nr: int, commit: Commit):
+        for pull in self.__pulls:
+            if pull.number == pull_nr:
+                pull.register_commit(commit)
+                return
+
+        logging.error(f"Commit {commit.sha} not registered in any PR of record {self.__gh_issue.number}")
 
     # TODO add user defined row format feature
     #   - what else replaceable information could be interesting?
