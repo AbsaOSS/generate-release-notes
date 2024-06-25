@@ -105,11 +105,16 @@ class Record:
 
     @property
     def authors(self) -> Optional[str]:
+        authors: list[str] = []
+
         for pull in self.__pulls:
             if pull.author is not None:
-                return pull.author
+                authors.append(f"@{pull.author}")
 
-        return None
+        if len(authors) > 0:
+            return None
+
+        return ", ".join(authors)
 
     @property
     def contributors(self) -> Optional[str]:
