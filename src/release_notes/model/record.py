@@ -1,3 +1,4 @@
+import logging
 from typing import Optional
 
 from github_integration.github_manager import GithubManager
@@ -167,9 +168,10 @@ class Record:
 
     def contains_labels(self, labels: list[str]) -> bool:
         if self.is_issue:
+            logging.debug(f"Check labels - Issue: {labels} for record nr {self.__gh_issue.number}, title {self.__gh_issue.title}")
             return self.__gh_issue.contains_labels(labels)
         else:
-            # print(f"Check labels - PR: {self.__pulls[0].labels} for {labels}")
+            print(f"Check labels - PR: {labels} for record nr {self.__pulls[0].number}, title {self.__pulls[0].title}")
             return self.__pulls[0].contains_labels(labels)
 
     def increment_present_in_chapters(self):
