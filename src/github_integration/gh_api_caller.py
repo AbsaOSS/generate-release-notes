@@ -75,13 +75,16 @@ def fetch_finished_pull_requests(repo: Repository) -> list[PullRequest]:
 
 
 def fetch_commits(repo: Repository) -> list[Commit]:
-    logging.info(f"Fetching all closed PRs for {repo.full_name}")
+    logging.info(f"Fetching all commits {repo.full_name}")
     raw_commits = repo.get_commits()
 
     commits = []
     for raw_commit in raw_commits:
+        # for reference commit auhtor - use raw_commit.author
+
         logging.debug(f"Raw Commit: {raw_commit}, Author: {raw_commit.author}, Commiter: {raw_commit.committer}.")
         logging.debug(f"Raw Commit.commit: Message: {raw_commit.commit.message}, Author: {raw_commit.commit.author}, Commiter: {raw_commit.commit.committer}.")
+
         commits.append(Commit(raw_commit))
 
     return commits

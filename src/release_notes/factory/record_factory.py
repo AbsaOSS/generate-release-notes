@@ -42,8 +42,10 @@ class RecordFactory:
                 records[pull.number].register_pull_request(pull)
                 logging.debug(f"Created record for PR {pull.number}: {pull.title}")
 
-        # for commit in commits:
-        #     logging.debug(f"Registering commit {commit.message} to Issue {commit.issue_number}")
+        for commit in commits:
+            for pull in pulls:
+                if commit.sha in pull.merge_commit_sha:
+                    logging.debug("Commit SHA found in Pull merge commit SHA for PR {pull.number}.")
 
         logging.info(f"Generated {len(records)} records from {len(issues)} issues and {len(pulls)} PRs.")
         return records

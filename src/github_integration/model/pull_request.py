@@ -87,6 +87,10 @@ class PullRequest:
         # TODO
         return []
 
+    @property
+    def merge_commit_sha(self) -> str:
+        return self.__source_pull.merge_commit_sha
+
     def extract_issue_numbers_from_body(self) -> list[int]:
         # Regex pattern to match issue numbers following keywords like "Close", "Fix", "Resolve"
         regex_pattern = re.compile(r'([Cc]los(e|es|ed)|[Ff]ix(es|ed)?|[Rr]esolv(e|es|ed))\s*#\s*([0-9]+)')
