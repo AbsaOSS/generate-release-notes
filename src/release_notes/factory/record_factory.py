@@ -38,6 +38,7 @@ class RecordFactory:
 
             if len(parent_issues_numbers) == 0:
                 records[pull.number] = Record()
+                records[pull.number].register_pull_request(pull)
                 logging.debug(f"Created record for PR {pull.number}: {pull.title}")
 
         logging.info(f"Generated {len(records)} records from {len(issues)} issues and {len(pulls)} PRs.")
