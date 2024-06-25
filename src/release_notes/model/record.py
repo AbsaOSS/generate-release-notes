@@ -17,19 +17,19 @@ class Record:
         self.__present_in_chapters = 0
 
     @property
-    def is_present_in_chapters(self):
+    def is_present_in_chapters(self) -> bool:
         return self.__present_in_chapters > 0
 
     @property
-    def is_pr(self):
+    def is_pr(self) -> bool:
         return self.__gh_issue is None
 
     @property
-    def is_issue(self):
+    def is_issue(self) -> bool:
         return self.__gh_issue is not None
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool:
         if self.__gh_issue is None:
             # no issue ==> stand-alone PR
             return self.__pulls[0].state == PullRequest.PR_STATE_CLOSED
@@ -38,11 +38,11 @@ class Record:
             return self.__gh_issue.state == Issue.ISSUE_STATE_CLOSED
 
     @property
-    def is_closed_issue(self):
+    def is_closed_issue(self) -> bool:
         return self.is_issue and self.__gh_issue.state == Issue.ISSUE_STATE_CLOSED
 
     @property
-    def is_merged_pr(self):
+    def is_merged_pr(self) -> bool:
         if self.__gh_issue is None:
             return self.__pulls[0].is_merged
         return False
@@ -80,7 +80,7 @@ class Record:
         return release_notes.rstrip()
 
     @property
-    def contains_release_notes(self):
+    def contains_release_notes(self) -> bool:
         if self.__is_release_note_detected:
             return self.__is_release_note_detected
 
@@ -94,7 +94,7 @@ class Record:
         return len(self.__pulls)
 
     @property
-    def does_pr_mention_issue(self):
+    def does_pr_mention_issue(self) -> bool:
         # TODO - cela ta metoda je divna - mozna zmena kontextu
 
         if self.__gh_issue is None:
@@ -125,7 +125,7 @@ class Record:
 
         return ", ".join(res)
 
-    def pull_request(self, index: int = 0):
+    def pull_request(self, index: int = 0) -> PullRequest:
         return self.__pulls[index]
 
     def register_pull_request(self, pull):
@@ -133,7 +133,7 @@ class Record:
 
     # TODO add user defined row format feature
     #   - what else replaceable information could be interesting?
-    def to_chapter_row(self, row_format="", increment_in_chapters=True):
+    def to_chapter_row(self, row_format="", increment_in_chapters=True) -> str:
         if increment_in_chapters:
             self.increment_present_in_chapters()
 
@@ -178,5 +178,5 @@ class Record:
     def increment_present_in_chapters(self):
         self.__present_in_chapters += 1
 
-    def present_in_chapters(self):
+    def present_in_chapters(self) -> int:
         return self.__present_in_chapters

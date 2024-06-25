@@ -19,43 +19,43 @@ class PullRequest:
         self.__mentioned_issues: list[int] = self.extract_issue_numbers_from_body()
 
     @property
-    def id(self):
+    def id(self) -> int:
         return self.__source_pull.id
 
     @property
-    def number(self):
+    def number(self) -> int:
         return self.__source_pull.number
 
     @property
-    def title(self):
+    def title(self) -> str:
         return self.__source_pull.title
 
     @property
-    def body(self):
+    def body(self) -> str:
         return self.__source_pull.body if self.__source_pull.body else ""
 
     @property
-    def state(self):
+    def state(self) -> str:
         return self.__source_pull.state
 
     @property
-    def created_at(self):
+    def created_at(self) -> datetime:
         return self.__source_pull.created_at
 
     @property
-    def updated_at(self):
+    def updated_at(self) -> datetime:
         return self.__source_pull.updated_at
 
     @property
-    def closed_at(self):
+    def closed_at(self) -> Optional[datetime]:
         return self.__source_pull.closed_at if self.__source_pull.closed_at else None
 
     @property
-    def merged_at(self):
+    def merged_at(self) -> Optional[datetime]:
         return self.__source_pull.merged_at if self.__source_pull.merged_at else None
 
     @property
-    def assignee(self):
+    def assignee(self) -> Optional[str]:
         return self.__source_pull.assignee.login if self.__source_pull.assignee else None
 
     @property
@@ -66,15 +66,15 @@ class PullRequest:
         return self.__labels
 
     @property
-    def is_merged(self):
+    def is_merged(self) -> bool:
         return self.merged_at is not None and self.state == self.PR_STATE_MERGED
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool:
         return self.closed_at is not None and self.state == self.PR_STATE_CLOSED
 
     @property
-    def body_contains_issue_mention(self):
+    def body_contains_issue_mention(self) -> bool:
         return self.__body_contains_issue_mention
 
     def extract_issue_numbers_from_body(self) -> list[int]:
