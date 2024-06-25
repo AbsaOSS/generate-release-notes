@@ -1,3 +1,6 @@
+from unittest.mock import Mock
+
+import github
 import pytest
 import json
 
@@ -8,142 +11,144 @@ from release_notes.formatter.record_formatter import RecordFormatter
 from release_notes.model.custom_chapters import CustomChapters
 from release_notes.model.record import Record
 from release_notes.release_notes_builder import ReleaseNotesBuilder
+from github.Issue import Issue as GitIssue
+from github.PullRequest import PullRequest as GitPullRequest
 
 
 def generate_full_dataset() -> dict[int, Record]:
+    # Mock the get_labels method
+    mock_label_1 = Mock()
+    mock_label_1.name = "bug"
+    mock_label_2 = Mock()
+    mock_label_2.name = "enhancement"
+    mock_label_3 = Mock()
+    mock_label_3.name = "spike"
+    mock_label_4 = Mock()
+    mock_label_4.name = "error"
+
+    mock_git_issue_id_1 = Mock(spec=GitIssue)
+    mock_git_issue_id_1.number = 1
+    mock_git_issue_id_1.title = "I1+1PR+l-bug"
+    mock_git_issue_id_1.body = "Dummy body"
+    mock_git_issue_id_1.state = "closed"
+    mock_git_issue_id_1.get_labels.return_value = [mock_label_1]
+    mock_git_issue_id_1.created_at = datetime.now()
+
+    mock_git_issue_id_2 = Mock(spec=GitIssue)
+    mock_git_issue_id_2.number = 4
+    mock_git_issue_id_2.title = "I4+2PR+l-enhancement"
+    mock_git_issue_id_2.body = "Dummy body"
+    mock_git_issue_id_2.state = "closed"
+    mock_git_issue_id_2.get_labels.return_value = [mock_label_2]
+    mock_git_issue_id_2.created_at = datetime.now()
+
+    mock_git_issue_id_3 = Mock(spec=GitIssue)
+    mock_git_issue_id_3.number = 7
+    mock_git_issue_id_3.title = "I7+0PR+l-enhancement"
+    mock_git_issue_id_3.body = "Dummy body"
+    mock_git_issue_id_3.state = "closed"
+    mock_git_issue_id_3.get_labels.return_value = [mock_label_2]
+    mock_git_issue_id_3.created_at = datetime.now()
+
+    mock_git_issue_id_4 = Mock(spec=GitIssue)
+    mock_git_issue_id_4.number = 8
+    mock_git_issue_id_4.title = "I8+0PR+l-spike"
+    mock_git_issue_id_4.body = "Dummy body"
+    mock_git_issue_id_4.state = "closed"
+    mock_git_issue_id_4.get_labels.return_value = [mock_label_3]
+    mock_git_issue_id_4.created_at = datetime.now()
+
+    mock_git_issue_id_5 = Mock(spec=GitIssue)
+    mock_git_issue_id_5.number = 9
+    mock_git_issue_id_5.title = "I9+0PR+l-any"
+    mock_git_issue_id_5.body = "Dummy body"
+    mock_git_issue_id_5.state = "closed"
+    mock_git_issue_id_5.get_labels.return_value = []
+    mock_git_issue_id_5.created_at = datetime.now()
+
     issues = [
-        # labeled issue with one PR
-        Issue(id=1, number=1, title="I1+1PR+l-bug", body="Dummy body", state="closed", labels=["bug"], created_at=datetime.now()),
-        # labeled issue with two PRs
-        Issue(id=2, number=4, title="I4+2PR+l-enhancement", body="Dummy body", state="closed", labels=["enhancement"], created_at=datetime.now()),
-        # labeled issue with no PRs ==> no rls notes
-        Issue(id=3, number=7, title="I7+0PR+l-enhancement", body="Dummy body", state="closed", labels=["enhancement"], created_at=datetime.now()),
-        # labeled issue with no PRs, no user defined label ==> no rls notes
-        Issue(id=4, number=8, title="I8+0PR+l-spike", body="Dummy body", state="closed", labels=["spike"], created_at=datetime.now()),
-        # labeled issue with no PRs, no label ==> no rls notes
-        Issue(id=5, number=9, title="I9+0PR+l-any", body="Dummy body", state="closed", labels=[], created_at=datetime.now()),
+        Issue(mock_git_issue_id_1),     # labeled issue with one PR
+        Issue(mock_git_issue_id_2),     # labeled issue with two PRs
+        Issue(mock_git_issue_id_3),     # labeled issue with no PRs ==> no rls notes
+        Issue(mock_git_issue_id_4),     # labeled issue with no PRs, no user defined label ==> no rls notes
+        Issue(mock_git_issue_id_5),     # labeled issue with no PRs, no label ==> no rls notes
     ]
 
+    mock_git_pr_id_101 = Mock(spec=GitPullRequest)
+    mock_git_pr_id_101.number = 101
+    mock_git_pr_id_101.title = "PR1+2xRLS+1I+l-no"
+    mock_git_pr_id_101.body = "Dummy body\nCloses #1\n\nRelease notes:\n- PR 1 First release note\n- PR 1 Second release note\n"
+    mock_git_pr_id_101.get_labels.return_value = []
+    mock_git_pr_id_101.state = "merged"
+    mock_git_pr_id_101.created_at = datetime.now()
+    mock_git_pr_id_101.updated_at = datetime.now()
+    mock_git_pr_id_101.closed_at = None
+    mock_git_pr_id_101.merged_at = datetime.now()
+
+    mock_git_pr_id_102 = Mock(spec=GitPullRequest)
+    mock_git_pr_id_102.number = 102
+    mock_git_pr_id_102.title = "PR2+2xRLS+0I+l-no"
+    mock_git_pr_id_102.body = "Dummy body\n\nRelease notes:\n- PR 2 First release note\n- PR 2 Second release note\n"
+    mock_git_pr_id_102.get_labels.return_value = []
+    mock_git_pr_id_102.state = "merged"
+    mock_git_pr_id_102.created_at = datetime.now()
+    mock_git_pr_id_102.updated_at = datetime.now()
+    mock_git_pr_id_102.closed_at = None
+    mock_git_pr_id_102.merged_at = datetime.now()
+
+    mock_git_pr_id_103 = Mock(spec=GitPullRequest)
+    mock_git_pr_id_103.number = 103
+    mock_git_pr_id_103.title = "PR3+0xRLS+0I+l-bug"
+    mock_git_pr_id_103.body = "Dummy body"
+    mock_git_pr_id_103.get_labels.return_value = [mock_label_4]
+    mock_git_pr_id_103.state = "closed"
+    mock_git_pr_id_103.created_at = datetime.now()
+    mock_git_pr_id_103.updated_at = datetime.now()
+    mock_git_pr_id_103.closed_at = datetime.now()
+    mock_git_pr_id_103.merged_at = None
+
+    mock_git_pr_id_105 = Mock(spec=GitPullRequest)
+    mock_git_pr_id_105.number = 105
+    mock_git_pr_id_105.title = "PR5+2xRLS+1I+l-no"
+    mock_git_pr_id_105.body = "Dummy body\nCloses #2\n\nRelease notes:\n- PR 5 release note\n"
+    mock_git_pr_id_105.get_labels.return_value = []
+    mock_git_pr_id_105.labels = []
+    mock_git_pr_id_105.state = "merged"
+    mock_git_pr_id_105.created_at = datetime.now()
+    mock_git_pr_id_105.updated_at = datetime.now()
+    mock_git_pr_id_105.closed_at = None
+    mock_git_pr_id_105.merged_at = datetime.now()
+
+    mock_git_pr_id_106 = Mock(spec=GitPullRequest)
+    mock_git_pr_id_106.number = 106
+    mock_git_pr_id_106.title = "PR6+1xRLS+1I+l-no"
+    mock_git_pr_id_106.body = "Dummy body\nCloses #1\n\nRelease notes:\n- PR 6 release note\n"
+    mock_git_pr_id_106.get_labels.return_value = [mock_label_1]
+    mock_git_pr_id_106.labels = ['bug']
+    mock_git_pr_id_106.state = "merged"
+    mock_git_pr_id_106.created_at = datetime.now()
+    mock_git_pr_id_106.updated_at = datetime.now()
+    mock_git_pr_id_106.closed_at = None
+    mock_git_pr_id_106.merged_at = datetime.now()
+
+    mock_git_pr_id_111 = Mock(spec=GitPullRequest)
+    mock_git_pr_id_111.number = 111
+    mock_git_pr_id_111.title = "PR11+1xRLS+1I+l-no"
+    mock_git_pr_id_111.body = "Dummy body\nFixes #10\n\nRelease notes:\n- PR 11 release note\n"
+    mock_git_pr_id_111.get_labels.return_value = []
+    mock_git_pr_id_111.state = "merged"
+    mock_git_pr_id_111.created_at = datetime.now()
+    mock_git_pr_id_111.updated_at = datetime.now()
+    mock_git_pr_id_111.closed_at = None
+    mock_git_pr_id_111.merged_at = datetime.now()
+
     pulls = [
-        # [0] - PR 1 to Issue 1
-        PullRequest(
-            id=1,
-            number=101,
-            title="PR1+2xRLS+1I+l-no",
-            labels=[],
-            body="Dummy body\nCloses #1\n\nRelease notes:\n- PR 1 First release note\n- PR 1 Second release note\n",
-            state="merged",
-            created_at=datetime.now(),
-            updated_at=datetime.now(),
-            closed_at=None,
-            merged_at=datetime.now(),
-            milestone=None,
-            url="http://example.com/pr1",
-            issue_url=None,
-            html_url=None,
-            patch_url=None,
-            diff_url=None,
-            assignee=None
-        ),
-        # [1] - PR without Issue and with Release notes in description - with bug label
-        PullRequest(
-            id=2,
-            number=102,
-            title="PR2+2xRLS+0I+l-no",
-            labels=[],
-            body="Dummy body\n\nRelease notes:\n- PR 2 First release note\n- PR 2 Second release note\n",
-            state="merged",
-            created_at=datetime.now(),
-            updated_at=datetime.now(),
-            closed_at=None,
-            merged_at=datetime.now(),
-            milestone=None,
-            url="http://example.com/pr2",
-            issue_url=None,
-            html_url=None,
-            patch_url=None,
-            diff_url=None,
-            assignee=None
-        ),
-        # [2] - PR without Issue and without Release notes in description - with no labels - closed state
-        PullRequest(
-            id=3,
-            number=103,
-            title="PR3+0xRLS+0I+l-bug",
-            labels=['error'],
-            body="Dummy body",
-            state="closed",
-            created_at=datetime.now(),
-            updated_at=datetime.now(),
-            closed_at=datetime.now(),
-            merged_at=None,
-            milestone=None,
-            url="http://example.com/pr3",
-            issue_url=None,
-            html_url=None,
-            patch_url=None,
-            diff_url=None,
-            assignee=None
-        ),
-        # [3, 4] - 2 PRs with Issue '2' - no labels, both with Release notes
-        PullRequest(
-            id=5,
-            number=105,
-            title="PR5+2xRLS+1I+l-no",
-            labels=[],
-            body="Dummy body\ncloses #2\n\nRelease notes:\n- PR 5 release note\n",
-            state="merged",
-            created_at=datetime.now(),
-            updated_at=datetime.now(),
-            closed_at=None,
-            merged_at=datetime.now(),
-            milestone=None,
-            url="http://example.com/pr5",
-            issue_url=None,
-            html_url=None,
-            patch_url=None,
-            diff_url=None,
-            assignee=None
-        ),
-        PullRequest(
-            id=6,
-            number=106,
-            title="PR6+1xRLS+1I+l-no",
-            labels=['bug'],     # wrong label - should be ignored by logic
-            body="Dummy body\nFixes #1\n\nRelease notes:\n- PR 6 release note\n",
-            state="merged",
-            created_at=datetime.now(),
-            updated_at=datetime.now(),
-            closed_at=None,
-            merged_at=datetime.now(),
-            milestone=None,
-            url="http://example.com/pr6",
-            issue_url=None,
-            html_url=None,
-            patch_url=None,
-            diff_url=None,
-            assignee=None
-        ),
-        # [5] - 1 PRs with Issue '11' - no labels, with Release notes - PR linked to Open Issue
-        PullRequest(
-            id=11,
-            number=111,
-            title="PR11+1xRLS+1I+l-no",
-            labels=[],
-            body="Dummy body\nFixes #10\n\nRelease notes:\n- PR 11 release note\n",
-            state="merged",
-            created_at=datetime.now(),
-            updated_at=datetime.now(),
-            closed_at=None,
-            merged_at=datetime.now(),
-            milestone=None,
-            url="http://example.com/pr6",
-            issue_url=None,
-            html_url=None,
-            patch_url=None,
-            diff_url=None,
-            assignee=None
-        )
+        PullRequest(mock_git_pr_id_101),    # [0] - PR 1 to Issue 1
+        PullRequest(mock_git_pr_id_102),    # [1] - PR without Issue and with Release notes in description - with bug label
+        PullRequest(mock_git_pr_id_103),    # [2] - PR without Issue and without Release notes in description - with no labels - closed state
+        PullRequest(mock_git_pr_id_105),    # [3, 4] - 2 PRs with Issue '2' - no labels, both with Release notes
+        PullRequest(mock_git_pr_id_106),
+        PullRequest(mock_git_pr_id_111),    # [5] - 1 PRs with Issue '11' - no labels, with Release notes - PR linked to Open Issue
     ]
 
     records_full = {}
@@ -231,15 +236,15 @@ No entries detected.
 - #9 _I9+0PR+l-any_
 
 ### Merged PRs without Issue and User Defined Labels ⚠️
-- PR: #102 _PR2+2xRLS+0I+l-no_
+- PR: #102 _PR2+2xRLS+0I+l-no_, implemented by None
   - PR 2 First release note
   - PR 2 Second release note
 
 ### Closed PRs without Issue and User Defined Labels ⚠️
-- PR: #103 _PR3+0xRLS+0I+l-bug_
+- PR: #103 _PR3+0xRLS+0I+l-bug_, implemented by None
 
 ### Merged PRs Linked to 'Not Closed' Issue ⚠️
-- PR: #111 _PR11+1xRLS+1I+l-no_
+- PR: #111 _PR11+1xRLS+1I+l-no_, implemented by None
   - PR 11 release note
 
 ### Others - No Topic ⚠️
@@ -269,15 +274,15 @@ release_notes_full_no_empty_chapters = """### New Features 🎉
 - #9 _I9+0PR+l-any_
 
 ### Merged PRs without Issue and User Defined Labels ⚠️
-- PR: #102 _PR2+2xRLS+0I+l-no_
+- PR: #102 _PR2+2xRLS+0I+l-no_, implemented by None
   - PR 2 First release note
   - PR 2 Second release note
 
 ### Closed PRs without Issue and User Defined Labels ⚠️
-- PR: #103 _PR3+0xRLS+0I+l-bug_
+- PR: #103 _PR3+0xRLS+0I+l-bug_, implemented by None
 
 ### Merged PRs Linked to 'Not Closed' Issue ⚠️
-- PR: #111 _PR11+1xRLS+1I+l-no_
+- PR: #111 _PR11+1xRLS+1I+l-no_, implemented by None
   - PR 11 release note
 
 #### Full Changelog
@@ -308,9 +313,11 @@ def test_build_full_with_empty_chapters():
     custom_chapters = CustomChapters()
     custom_chapters.from_json(chapters_json)
 
+    expected_release_notes = release_notes_full
+
     builder = ReleaseNotesBuilder(records=generate_full_dataset(), changelog_url=changelog_url, formatter=formatter,
                                   custom_chapters=custom_chapters)
-    expected_release_notes = release_notes_full
+
     actual_release_notes = builder.build()
     # print("Actual - no data:\n" + actual_release_notes)
     assert expected_release_notes == actual_release_notes

@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime, timedelta
-from io import StringIO
 
 import pytest
 
@@ -11,6 +10,7 @@ from github.GitRelease import GitRelease
 from github.Repository import Repository
 from github_integration.gh_api_caller import (get_gh_repository, fetch_latest_release, fetch_all_issues,
                                               fetch_finished_pull_requests, generate_change_url, show_rate_limit)
+from github_integration.model.pull_request import PullRequest
 
 
 class MockIssue:
@@ -148,16 +148,12 @@ def test_fetch_closed_issues_with_release(caplog):
 
 
 def test_fetch_closed_issues_without_release(caplog):
-    mock_label = Mock()
-    mock_label.name = "bug"
-
     mock_issue = Mock(spec=GithubIssue)
-    mock_issue.id = 1
     mock_issue.title = "Issue 1"
     mock_issue.number = 1
-    mock_issue.labels = [mock_label]
     mock_issue.body = "Dummy body"
     mock_issue.state = "closed"
+    mock_issue.labels = ["bug"]
 
     mock_repo = Mock(spec=Repository)
     mock_repo.get_issues.return_value = [mock_issue]
@@ -167,7 +163,7 @@ def test_fetch_closed_issues_without_release(caplog):
         issues = fetch_all_issues(mock_repo, None)
 
     assert 1 == len(issues)
-    assert 1 == issues[0].id
+    assert 1 == issues[0].number
     assert "Issue 1" == issues[0].title
     assert ["bug"] == issues[0].labels
     assert "Found 1 issues for test/repo" in caplog.text
@@ -176,8 +172,12 @@ def test_fetch_closed_issues_without_release(caplog):
 # fetch_finished_pull_requests
 
 def test_fetch_finished_pull_requests_multiple_pulls(caplog):
+    mock_label_1 = Mock()
+    mock_label_1.name = "bug"
+    mock_label_2 = Mock()
+    mock_label_2.name = "enhancement"
+
     mock_pull1 = Mock(spec=GithubPullRequest)
-    mock_pull1.id = 1
     mock_pull1.number = 1
     mock_pull1.title = "PR 1"
     mock_pull1.body = "Dummy body\n\nRelease notes:\n- First release note\n- Second release note"
@@ -185,15 +185,7 @@ def test_fetch_finished_pull_requests_multiple_pulls(caplog):
     mock_pull1.created_at = datetime(2023, 1, 1)
     mock_pull1.updated_at = datetime(2023, 1, 2)
     mock_pull1.closed_at = datetime(2023, 1, 3)
-    mock_pull1.merged_at = datetime(2023, 1, 4)
-    mock_pull1.milestone = Mock(title="v1.0.0")
-    mock_pull1.labels = [Mock(name="bug")]
-    mock_pull1.url = ""
-    mock_pull1.issue_url = "https://api.github.com/repos/owner/repo/issues/123"
-    mock_pull1.html_url = ""
-    mock_pull1.patch_url = ""
-    mock_pull1.diff_url = ""
-    mock_pull1.assignee = None
+    mock_pull1.merged_at = None
 
     mock_pull2 = Mock(spec=GithubPullRequest)
     mock_pull2.id = 2
@@ -204,27 +196,19 @@ def test_fetch_finished_pull_requests_multiple_pulls(caplog):
     mock_pull2.created_at = datetime(2023, 1, 5)
     mock_pull2.updated_at = datetime(2023, 1, 6)
     mock_pull2.closed_at = datetime(2023, 1, 7)
-    mock_pull2.merged_at = datetime(2023, 1, 8)
-    mock_pull2.milestone = None
-    mock_pull2.labels = [Mock(name="enhancement")]
-    mock_pull2.url = ""
-    mock_pull2.issue_url = "https://api.github.com/repos/owner/repo/issues/456"
-    mock_pull2.html_url = ""
-    mock_pull2.patch_url = ""
-    mock_pull2.diff_url = ""
-    mock_pull2.assignee = None
+    mock_pull2.merged_at = None
 
     mock_repo = Mock(spec=Repository)
-    mock_repo.get_pulls.return_value = [mock_pull1, mock_pull2]
+    mock_repo.get_pulls.return_value = [PullRequest(mock_pull1), PullRequest(mock_pull2)]
     mock_repo.full_name = "test/repo"
 
     with caplog.at_level(logging.DEBUG):
         pull_requests = fetch_finished_pull_requests(mock_repo)
 
     assert 2 == len(pull_requests)
-    assert 1 == pull_requests[0].id
+    assert 1 == pull_requests[0].number
     assert "PR 1" == pull_requests[0].title
-    assert 2 == pull_requests[1].id
+    assert 2 == pull_requests[1].number
     assert "PR 2" == pull_requests[1].title
     assert "Found 2 PRs for test/repo" in caplog.text
 

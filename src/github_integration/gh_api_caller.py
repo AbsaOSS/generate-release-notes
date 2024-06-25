@@ -55,20 +55,7 @@ def fetch_all_issues(repo: Repository, release: Optional[GitRelease]) -> list[Is
     parsed_issues = []
     logging.info(f"Found {len(list(issues))} issues for {repo.full_name}")
     for issue in list(issues):
-        # logging.debug(f"Processing issue {issue.number}, title: {issue.title}")
-        # Hint: be careful here what you are passing to the Issue constructor
-        #   when selected value not received in first API then second wave
-        #   will be called !!!!
-        # TODO - how about to do not parse the issue and keep the origin with ready to use link to GH API?
-        parsed_issues.append(Issue(
-            id=issue.id,
-            number=issue.number,
-            title=issue.title,
-            labels=[label.name for label in issue.labels],
-            body=issue.body,
-            state=issue.state,
-            created_at=datetime.now()
-        ))
+        parsed_issues.append(issue)
 
     return parsed_issues
 
@@ -82,25 +69,7 @@ def fetch_finished_pull_requests(repo: Repository) -> list[PullRequest]:
     logging.info(f"Found {len(list(pulls))} PRs for {repo.full_name}")
     for pull in list(pulls):
         # logging.debug(f"Processing PR {pull.number}, title: {pull.title}")
-        pr = PullRequest(
-            id=pull.id,
-            number=pull.number,
-            title=pull.title,
-            labels=[label.name for label in pull.labels],
-            body=pull.body if pull.body else "",
-            state=pull.state,
-            created_at=pull.created_at,
-            updated_at=pull.updated_at,
-            closed_at=pull.closed_at if pull.closed_at else None,
-            merged_at=pull.merged_at if pull.merged_at else None,
-            milestone=pull.milestone.title if pull.milestone else None,
-            url=pull.url,
-            issue_url=pull.issue_url if pull.issue_url else None,
-            html_url=pull.html_url if pull.html_url else None,
-            patch_url=pull.patch_url if pull.patch_url else None,
-            diff_url=pull.diff_url if pull.diff_url else None,
-            assignee=pull.assignee.login if pull.assignee else None
-        )
+        pr = PullRequest(pull)
         pull_requests.append(pr)
 
     return pull_requests

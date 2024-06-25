@@ -2,42 +2,68 @@ import re
 from datetime import datetime
 from typing import Optional
 
+from github.PullRequest import PullRequest as GitPullRequest
+
 
 class PullRequest:
     PR_STATE_CLOSED = "closed"
     PR_STATE_MERGED = "merged"
 
-    def __init__(self, id: int, number: int, title: str, labels: list[str], body: str, state: str,
-                 created_at: datetime, updated_at: datetime, closed_at: Optional[datetime],
-                 merged_at: Optional[datetime], milestone: Optional[str],
-                 url: str, issue_url: Optional[str], html_url: Optional[str], patch_url: Optional[str],
-                 diff_url: Optional[str], assignee: Optional[str]):
-        self.id = id
-        self.number = number
-        self.title = title
-        self.labels = labels
-        self.state = state
-        # self.user = user              # TODO - is support needed ?
-        self.assignee = assignee
-        self.contibutors = None
-        self.body = body
+    def __init__(self, pull: GitPullRequest):
+        self.__source_pull = pull
 
-        self.created_at = created_at
-        self.updated_at = updated_at
-        self.closed_at = closed_at
-        self.merged_at = merged_at
-
-        self.milestone = milestone
-
-        # TODO - these values have to be composed from known paths and PR values
-        self.url = url
-        self.issue_url = issue_url
-        self.html_url = html_url
-        self.patch_url = patch_url
-        self.diff_url = diff_url
+        # for local storage of data required additional API call
+        self.__labels = None
 
         self.__body_contains_issue_mention = False
         self.__mentioned_issues: list[int] = self.extract_issue_numbers_from_body()
+
+    @property
+    def id(self):
+        return self.__source_pull.id
+
+    @property
+    def number(self):
+        return self.__source_pull.number
+
+    @property
+    def title(self):
+        return self.__source_pull.title
+
+    @property
+    def body(self):
+        return self.__source_pull.body if self.__source_pull.body else ""
+
+    @property
+    def state(self):
+        return self.__source_pull.state
+
+    @property
+    def created_at(self):
+        return self.__source_pull.created_at
+
+    @property
+    def updated_at(self):
+        return self.__source_pull.updated_at
+
+    @property
+    def closed_at(self):
+        return self.__source_pull.closed_at if self.__source_pull.closed_at else None
+
+    @property
+    def merged_at(self):
+        return self.__source_pull.merged_at if self.__source_pull.merged_at else None
+
+    @property
+    def assignee(self):
+        return self.__source_pull.assignee.login if self.__source_pull.assignee else None
+
+    @property
+    def labels(self) -> list[str]:
+        if self.__labels is None:
+            self.__labels = [label.name for label in self.__source_pull.get_labels()]
+
+        return self.__labels
 
     @property
     def is_merged(self):
