@@ -82,8 +82,8 @@ def fetch_commits(repo: Repository) -> list[Commit]:
     for raw_commit in raw_commits:
         # for reference commit auhtor - use raw_commit.author
 
-        logging.debug(f"Raw Commit: {raw_commit}, Author: {raw_commit.author}, Commiter: {raw_commit.committer}.")
-        logging.debug(f"Raw Commit.commit: Message: {raw_commit.commit.message}, Author: {raw_commit.commit.author}, Commiter: {raw_commit.commit.committer}.")
+        # logging.debug(f"Raw Commit: {raw_commit}, Author: {raw_commit.author}, Commiter: {raw_commit.committer}.")
+        # logging.debug(f"Raw Commit.commit: Message: {raw_commit.commit.message}, Author: {raw_commit.commit.author}, Commiter: {raw_commit.commit.committer}.")
 
         commits.append(Commit(raw_commit))
 

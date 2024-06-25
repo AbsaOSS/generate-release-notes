@@ -42,7 +42,7 @@ class RecordFactory:
                 records[pull.number].register_pull_request(pull)
                 logging.debug(f"Created record for PR {pull.number}: {pull.title}")
 
-        logging.debug(f"XXX Received {len(issues)} issues, {len(pulls)} PRs and {len(commits)} commits.")
+        # logging.debug(f"XXX Received {len(issues)} issues, {len(pulls)} PRs and {len(commits)} commits.")
 
         detected_PRs = 0
         for commit in commits:
@@ -50,9 +50,9 @@ class RecordFactory:
                 if record.is_commit_sha_present(commit.sha):
                     record.register_commit(commit)
                     detected_PRs += 1
-                    logging.debug(f"XXX Commit SHA found in Pull merge commit SHA for record {key}, message: {commit.message}")
+                    # logging.debug(f"XXX Commit SHA found in Pull merge commit SHA for record {key}, message: {commit.message}")
 
-        logging.debug(f"XXX Detected PRs from commits: {detected_PRs}")
+        # logging.debug(f"XXX Detected PRs from commits: {detected_PRs}")
 
         logging.info(f"Generated {len(records)} records from {len(issues)} issues and {len(pulls)} PRs.")
         return records

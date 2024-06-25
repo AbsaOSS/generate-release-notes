@@ -109,6 +109,7 @@ class Record:
 
         for pull in self.__pulls:
             if pull.author is not None:
+                logging.debug(f"XXX Adding Author: {pull.author} to record {pull.number}")
                 authors.append(f"@{pull.author}")
 
         if len(authors) > 0:
