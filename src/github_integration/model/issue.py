@@ -42,6 +42,16 @@ class Issue:
     def created_at(self) -> datetime:
         return self.__issue.created_at
 
+    @property
+    def authors(self) -> list[str]:
+        # TODO
+        return []
+
+    @property
+    def contributors(self) -> list[str]:
+        # TODO
+        return []
+
     def is_closed(self) -> bool:
         return self.state == "closed"
 

@@ -77,6 +77,16 @@ class PullRequest:
     def body_contains_issue_mention(self) -> bool:
         return self.__body_contains_issue_mention
 
+    @property
+    def author(self) -> Optional[str]:
+        # TODO check - maybe will be filled in another way
+        return self.__source_pull.user.login
+
+    @property
+    def contributors(self) -> list[str]:
+        # TODO
+        return []
+
     def extract_issue_numbers_from_body(self) -> list[int]:
         # Regex pattern to match issue numbers following keywords like "Close", "Fix", "Resolve"
         regex_pattern = re.compile(r'([Cc]los(e|es|ed)|[Ff]ix(es|ed)?|[Rr]esolv(e|es|ed))\s*#\s*([0-9]+)')

@@ -1,5 +1,6 @@
 import logging
 
+from github_integration.model.commit import Commit
 from github_integration.model.issue import Issue
 from github_integration.model.pull_request import PullRequest
 from release_notes.model.record import Record
@@ -8,7 +9,7 @@ from release_notes.model.record import Record
 class RecordFactory:
 
     @staticmethod
-    def generate(issues: list[Issue], pulls: list[PullRequest]) -> dict[int, Record]:
+    def generate(issues: list[Issue], pulls: list[PullRequest], commits: list[Commit]) -> dict[int, Record]:
         """
         Generates a dictionary of ReleaseNotesRecord instances.
         The key is the issue or pr number.
@@ -40,6 +41,9 @@ class RecordFactory:
                 records[pull.number] = Record()
                 records[pull.number].register_pull_request(pull)
                 logging.debug(f"Created record for PR {pull.number}: {pull.title}")
+
+        # for commit in commits:
+        #     logging.debug(f"Registering commit {commit.message} to Issue {commit.issue_number}")
 
         logging.info(f"Generated {len(records)} records from {len(issues)} issues and {len(pulls)} PRs.")
         return records

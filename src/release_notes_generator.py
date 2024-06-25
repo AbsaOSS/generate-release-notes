@@ -7,7 +7,8 @@ from github import Github, Auth
 
 from github_integration.gh_action import get_action_input, set_action_output, set_action_failed
 from github_integration.gh_api_caller import (get_gh_repository, fetch_latest_release, fetch_all_issues,
-                                              fetch_finished_pull_requests, generate_change_url, show_rate_limit)
+                                              fetch_finished_pull_requests, generate_change_url, show_rate_limit,
+                                              fetch_commits)
 from release_notes.formatter.record_formatter import RecordFormatter
 from release_notes.model.custom_chapters import CustomChapters
 from release_notes.model.record import Record
@@ -85,13 +86,17 @@ def release_notes_generator(g: Github, repository_id: str, tag_name: str, custom
     pulls = fetch_finished_pull_requests(repository)
     show_rate_limit(g)
 
+    # get commits since last release
+    commits = fetch_commits(repository)
+
     # generate change url
     changelog_url = generate_change_url(repository, release, tag_name)
 
     # merge data to Release Notes records form
     rls_notes_records: dict[int, Record] = RecordFactory.generate(
         issues=issues,
-        pulls=pulls
+        pulls=pulls,
+        commits=commits
     )
 
     formatter = RecordFormatter()

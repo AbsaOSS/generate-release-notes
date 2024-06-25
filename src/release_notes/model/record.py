@@ -103,7 +103,7 @@ class Record:
         return False
 
     @property
-    def assignee(self) -> Optional[str]:
+    def authors(self) -> Optional[str]:
         return None
 
     @property
@@ -142,8 +142,12 @@ class Record:
 
             row = f"PR: #{p.number} _{p.title}_"
 
-            if p.assignee is not None:
-                row = f"{row}, implemented by {self.assignee}"
+            # Issue can have more authors (as multiple PRs can be present)
+            if self.authors is not None:
+                row = f"{row}, implemented by {self.authors}"
+
+            if self.contributors is not None:
+                row = f"{row}, contributed by {self.contributors}"
 
             if self.contains_release_notes:
                 return f"{row}\n{self.get_rls_notes}"
@@ -152,8 +156,8 @@ class Record:
         else:
             row = f"#{self.__gh_issue.number} _{self.__gh_issue.title}_"
 
-            if self.assignee is not None:
-                row = f"{row}, implemented by {self.assignee}"
+            if self.authors is not None:
+                row = f"{row}, implemented by {self.__gh_issue.authors}"
 
             if self.contributors is not None:
                 row = f"{row}, contributed by {self.contributors}"
@@ -168,11 +172,8 @@ class Record:
 
     def contains_labels(self, labels: list[str]) -> bool:
         if self.is_issue:
-            logging.debug(f"Check labels - Issue: {labels} for record nr {self.__gh_issue.number}, title {self.__gh_issue.title}")
-            logging.debug(f"type: {type(self.__gh_issue)}")
             return self.__gh_issue.contains_labels(labels)
         else:
-            print(f"Check labels - PR: {labels} for record nr {self.__pulls[0].number}, title {self.__pulls[0].title}")
             return self.__pulls[0].contains_labels(labels)
 
     def increment_present_in_chapters(self):

@@ -28,8 +28,8 @@ def test_chapters_to_string():
     chapters.add_row("Test Chapter", 1, "Test Row")
     expected_output = "### Test Chapter\n- Test Row"
 
-    print(f"Actual:\nx{chapters.to_string()}x")
-    print(f"Expected:\nx{expected_output}x")
+    # print(f"Actual:\nx{chapters.to_string()}x")
+    # print(f"Expected:\nx{expected_output}x")
 
     assert expected_output == chapters.to_string()
 
