@@ -115,7 +115,9 @@ class Record:
         if len(authors) > 0:
             return None
 
-        return ", ".join(authors)
+        res = ", ".join(authors)
+        logging.debug(f"XXX Authors: {res} for record {self.__gh_issue.number}")
+        return res
 
     @property
     def contributors(self) -> Optional[str]:
@@ -145,6 +147,7 @@ class Record:
     def register_commit(self, commit: Commit):
         for pull in self.__pulls:
             if commit.sha == pull.merge_commit_sha:
+                logging.debug(f"YYY Record: Registering commit {commit.sha} to PR {pull.number}")
                 pull.register_commit(commit)
                 return
 
