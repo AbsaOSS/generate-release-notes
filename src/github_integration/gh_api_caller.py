@@ -55,7 +55,7 @@ def fetch_all_issues(repo: Repository, release: Optional[GitRelease]) -> list[Is
     parsed_issues = []
     logging.info(f"Found {len(list(issues))} issues for {repo.full_name}")
     for issue in list(issues):
-        parsed_issues.append(issue)
+        parsed_issues.append(Issue(issue))
 
     return parsed_issues
 
@@ -68,9 +68,7 @@ def fetch_finished_pull_requests(repo: Repository) -> list[PullRequest]:
     pull_requests = []
     logging.info(f"Found {len(list(pulls))} PRs for {repo.full_name}")
     for pull in list(pulls):
-        # logging.debug(f"Processing PR {pull.number}, title: {pull.title}")
-        pr = PullRequest(pull)
-        pull_requests.append(pr)
+        pull_requests.append(PullRequest(pull))
 
     return pull_requests
 

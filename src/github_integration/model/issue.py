@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from github.Issue import Issue as GitIssue
+from github import Issue as GitIssue
 
 
 class Issue:
