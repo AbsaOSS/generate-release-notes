@@ -4,6 +4,8 @@ from typing import Optional
 
 from github.PullRequest import PullRequest as GitPullRequest
 
+from github_integration.model.commit import Commit
+
 
 class PullRequest:
     PR_STATE_CLOSED = "closed"
@@ -17,6 +19,7 @@ class PullRequest:
 
         self.__body_contains_issue_mention = False
         self.__mentioned_issues: list[int] = self.extract_issue_numbers_from_body()
+        self.__merge_commits: Optional[list[Commit]] = None
 
     @property
     def id(self) -> int:
@@ -79,8 +82,7 @@ class PullRequest:
 
     @property
     def author(self) -> Optional[str]:
-        # TODO check - maybe will be filled in another way
-        return self.__source_pull.user.login
+        return self.__merge_commit_author()
 
     @property
     def contributors(self) -> list[str]:
@@ -111,3 +113,9 @@ class PullRequest:
             if label in self.labels:
                 return True
         return False
+
+    def __merge_commit_author(self) -> Optional[str]:
+        if self.__merge_commits is None:
+            return None
+
+        return self.__merge_commits[0].author

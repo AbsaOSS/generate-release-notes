@@ -104,6 +104,10 @@ class Record:
 
     @property
     def authors(self) -> Optional[str]:
+        for pull in self.__pulls:
+            if pull.author is not None:
+                return pull.author
+
         return None
 
     @property
@@ -157,7 +161,7 @@ class Record:
             row = f"#{self.__gh_issue.number} _{self.__gh_issue.title}_"
 
             if self.authors is not None:
-                row = f"{row}, implemented by {self.__gh_issue.authors}"
+                row = f"{row}, implemented by {self.authors}"
 
             if self.contributors is not None:
                 row = f"{row}, contributed by {self.contributors}"
@@ -181,3 +185,10 @@ class Record:
 
     def present_in_chapters(self) -> int:
         return self.__present_in_chapters
+
+    def is_commit_sha_present(self, sha: str) -> bool:
+        for pull in self.__pulls:
+            if pull.merge_commit_sha == sha:
+                return True
+
+        return False

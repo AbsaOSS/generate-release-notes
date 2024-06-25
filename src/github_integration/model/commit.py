@@ -10,3 +10,11 @@ class Commit:
     @property
     def sha(self) -> str:
         return self.__commit.sha
+
+    @property
+    def message(self) -> str:
+        return self.__commit.commit.message
+
+    @property
+    def author(self) -> str:
+        return self.__commit.author.login
