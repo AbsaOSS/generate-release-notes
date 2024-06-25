@@ -47,3 +47,4 @@ class Issue:
         for label in labels:
             if label in self.labels:
                 return True
+        return False

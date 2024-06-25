@@ -96,3 +96,4 @@ class PullRequest:
         for label in labels:
             if label in self.labels:
                 return True
+        return False
