@@ -19,12 +19,17 @@ class ReleaseNotesBuilder:
         self.print_empty_chapters = print_empty_chapters
 
     def build(self) -> str:
+        logging.info("Building Release Notes")
         user_defined_chapters = self.custom_chapters
         user_defined_chapters.populate(self.records)
         user_defined_chapters_str = user_defined_chapters.to_string()
 
+        logging.debug(f"User defined chapters: {user_defined_chapters_str}")
+
         user_defined_labels_nested = [user_defined_chapters.chapters[key].labels for key in user_defined_chapters.chapters.keys()]
         user_defined_labels = list(chain.from_iterable(user_defined_labels_nested))
+
+        logging.debug(f"User defined labels: {user_defined_labels}")
 
         if self.warnings:
             service_chapters = ServiceChapters(print_empty_chapters=self.print_empty_chapters, user_defined_labels=user_defined_labels)

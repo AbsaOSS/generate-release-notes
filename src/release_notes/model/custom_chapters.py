@@ -1,4 +1,5 @@
 import json
+import logging
 
 from release_notes.model.base_chapters import BaseChapters
 from release_notes.model.chapter import Chapter
@@ -10,6 +11,7 @@ class CustomChapters(BaseChapters):
         for nr in records.keys():                               # iterate all records
             for ch_key in self.chapters.keys():                 # iterate all chapters
                 for record_label in records[nr].labels:         # iterate all labels of the record (issue, or 1st PR)
+                    logging.debug(f"Populating chapter {ch_key} with record {nr} with label {record_label}")
                     if record_label in self.chapters[ch_key].labels and records[nr].pulls_count > 0:
                         self.chapters[ch_key].add_row(nr, records[nr].to_chapter_row())
 
