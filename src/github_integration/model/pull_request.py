@@ -26,7 +26,7 @@ class PullRequest:
         self.__labels = None
 
         self.__body_contains_issue_mention = False
-        self.__mentioned_issues: list[int] = self.extract_issue_numbers_from_body()
+        self.__mentioned_issues: list[int] = self.__extract_issue_numbers_from_body()
         self.__merge_commits: Optional[list[Commit]] = None
 
     @property
@@ -188,7 +188,7 @@ class PullRequest:
         """
         return self.__source_pull.merge_commit_sha
 
-    def extract_issue_numbers_from_body(self) -> list[int]:
+    def __extract_issue_numbers_from_body(self) -> list[int]:
         """
         Extracts the numbers of the issues mentioned in the body of the pull request.
 

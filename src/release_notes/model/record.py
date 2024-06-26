@@ -156,17 +156,13 @@ class Record:
         return len(self.__pulls)
 
     @property
-    def does_pr_mention_issue(self) -> bool:
+    def pr_contains_issue_mentions(self) -> bool:
         """
-        Checks if the pull request mentions an issue.
+        Checks if the pull request mentions an issue. The logic checks only first pr in record.
 
         :return: A boolean indicating whether the pull request mentions an issue.
         """
-
-        # TODO in Issue named 'Configurable regex-based Release note detection in the PR body'
-        if self.__gh_issue is None:
-            return "#" in self.__pulls[0].body      # this is only testing code
-        return False
+        return self.__pulls[0].body_contains_issue_mention
 
     @property
     def authors(self) -> Optional[str]:

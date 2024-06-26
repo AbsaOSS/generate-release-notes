@@ -109,18 +109,18 @@ class ServiceChapters(BaseChapters):
         """
         if record.is_merged_pr:
             # check record properties if it fits to a chapter: MERGED_PRS_WITHOUT_ISSUE
-            if not record.does_pr_mention_issue and not record.contains_labels(self.user_defined_labels):
+            if not record.pr_contains_issue_mentions and not record.contains_labels(self.user_defined_labels):
                 self.chapters[self.MERGED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS].add_row(nr, record.to_chapter_row())
 
             # check record properties if it fits to a chapter: MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES
-            if record.does_pr_mention_issue:
+            if record.pr_contains_issue_mentions:
                 self.chapters[self.MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES].add_row(nr, record.to_chapter_row())
 
             if not record.is_present_in_chapters:
                 self.chapters[self.OTHERS_NO_TOPIC].add_row(nr, record.to_chapter_row())
 
         # check record properties if it fits to a chapter: CLOSED_PRS_WITHOUT_ISSUE
-        elif record.is_closed and not record.does_pr_mention_issue and not record.contains_labels(self.user_defined_labels):
+        elif record.is_closed and not record.pr_contains_issue_mentions and not record.contains_labels(self.user_defined_labels):
             self.chapters[self.CLOSED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS].add_row(nr, record.to_chapter_row())
 
         if not record.is_present_in_chapters:

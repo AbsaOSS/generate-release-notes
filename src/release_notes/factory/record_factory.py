@@ -31,7 +31,7 @@ class RecordFactory:
                 logging.debug(f"Created record for issue {issue.number}: {issue.title}")
 
         for pull in pulls:
-            parent_issues_numbers = pull.extract_issue_numbers_from_body()
+            parent_issues_numbers = pull.__extract_issue_numbers_from_body()
 
             for parent_issues_number in parent_issues_numbers:
                 if parent_issues_number not in records.keys():
