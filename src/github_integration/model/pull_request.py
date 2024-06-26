@@ -13,7 +13,6 @@ class PullRequest:
     """
 
     PR_STATE_CLOSED = "closed"
-    PR_STATE_MERGED = "merged"
 
     def __init__(self, pull: GitPullRequest):
         """
@@ -139,7 +138,7 @@ class PullRequest:
 
         :return: True if the pull request is merged, False otherwise.
         """
-        return self.merged_at is not None and self.state == self.PR_STATE_MERGED
+        return self.state == self.PR_STATE_CLOSED and self.merged_at is not None and self.closed_at is not None
 
     @property
     def is_closed(self) -> bool:
@@ -148,7 +147,7 @@ class PullRequest:
 
         :return: True if the pull request is closed, False otherwise.
         """
-        return self.closed_at is not None and self.state == self.PR_STATE_CLOSED
+        return self.state == self.PR_STATE_CLOSED and self.closed_at is not None and self.merged_at is None
 
     @property
     def body_contains_issue_mention(self) -> bool:
