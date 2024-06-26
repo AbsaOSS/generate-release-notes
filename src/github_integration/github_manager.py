@@ -43,7 +43,7 @@ class GithubManager:
         self.__g = None
         self.__repository = None
         self.__git_release = None
-
+        logging.debug(f"GitHub Manager created.")
 
     @property
     def github(self) -> Github:
@@ -61,6 +61,7 @@ class GithubManager:
 
         :return: The Github object.
         """
+        logging.debug(f"Set GitHub object: {g}")
         self.__g = g
 
     @property
