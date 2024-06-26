@@ -7,6 +7,9 @@ from release_notes.model.record import Record
 
 
 class RecordFactory:
+    """
+    A class used to generate records for release notes.
+    """
 
     @staticmethod
     def generate(issues: list[Issue], pulls: list[PullRequest], commits: list[Commit]) -> dict[int, Record]:
@@ -14,10 +17,10 @@ class RecordFactory:
         Generates a dictionary of ReleaseNotesRecord instances.
         The key is the issue or pr number.
 
-        @param issues: The list of Issue instances.
-        @param pulls: The list of PullRequest instances.
-
-        @return: The dictionary of ReleaseNotesRecord instances.
+        :param issues: The list of Issue instances.
+        :param pulls: The list of PullRequest instances.
+        :param commits: The list of Commit instances.
+        :return: The dictionary of ReleaseNotesRecord instances.
         """
         records = {}
         pull_numbers = [pull.number for pull in pulls]

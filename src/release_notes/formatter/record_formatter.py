@@ -3,23 +3,31 @@ from release_notes.model.record import Record
 
 
 class RecordFormatter:
-
-    # Default entry row
-    # - #37 _Example Issue without PR_ implemented by "Missing Assignee or Contributor"
-    #   - Example Issue to show usage of feature label and closed Issue without linked PR.
-    #   - Test release note without leading bullet
-    #
-    # - #52 _Add Tag into Release Draft_ implemented by @user in [#53](https://github.com/absa-group/living-doc-example-project/pull/53)
+    """
+    A class used to format records for release notes.
+    """
 
     DEFAULT_ISSUE_PATTERN: str = "- #{number} _{title}_ implemented by {developers} in {pull_requests}\n{release_note_rows}"
     DEFAULT_PULL_REQUESTS_PATTERN: str = "[#{number}]({url})"
 
     def __init__(self, issue_pattern: str = DEFAULT_ISSUE_PATTERN,
                  pull_requests_pattern: str = DEFAULT_PULL_REQUESTS_PATTERN):
+        """
+        Constructs all the necessary attributes for the RecordFormatter object.
+
+        :param issue_pattern: A string pattern for formatting issues.
+        :param pull_requests_pattern: A string pattern for formatting pull requests.
+        """
         self.issue_pattern = issue_pattern
         self.pull_requests_pattern = pull_requests_pattern
 
     def format(self, record: Record) -> str:
+        """
+        Formats a record.
+
+        :param record: The Record object to format.
+        :return: The formatted record as a string.
+        """
         # create a dict of supported keys and values - from record
         params = {
             "title": record.__gh_issue.title if record.__gh_issue is not None else record.__pulls[0].title,
@@ -37,9 +45,21 @@ class RecordFormatter:
         return self.issue_pattern.format(**params)
 
     def _format_pulls(self, pulls: list['PullRequest']) -> str:
+        """
+        Formats a list of pull requests.
+
+        :param pulls: The list of PullRequest objects to format.
+        :return: The formatted pull requests as a string.
+        """
         return ", ".join([self.pull_requests_pattern.format(number=pr.number, url=pr.url) for pr in pulls])
 
     def _format_developers(self, record: 'Record') -> str:
+        """
+        Formats the developers of a record.
+
+        :param record: The Record object whose developers to format.
+        :return: The formatted developers as a string.
+        """
         developers = []
         # if record.gh_issue and record.gh_issue.assignees:
         #     developers.extend(record.gh_issue.assignees)
@@ -49,5 +69,11 @@ class RecordFormatter:
         return ', '.join(developers) if developers else "developers"
 
     def _format_release_note_rows(self, record: 'Record') -> str:
+        """
+        Formats the release note rows of a record.
+
+        :param record: The Record object whose release note rows to format.
+        :return: The formatted release note rows as a string.
+        """
         return "  - release notes 1\n  - release notes 2"
         # return "\n  - ".join(record.release_note_rows()) if record.release_note_rows() else "  - No release notes"

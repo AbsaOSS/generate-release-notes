@@ -25,6 +25,21 @@ github_manager = GithubManager()
 def validate_inputs(owner: str, repo_name: str, tag_name: str, chapters_json: str, warnings: bool,
                     published_at: bool, skip_release_notes_label: str, print_empty_chapters: bool,
                     chapters_to_pr_without_issue: bool, verbose: bool):
+    """
+    Validates the inputs provided for the release notes generator.
+
+    :param owner: The owner of the repository.
+    :param repo_name: The name of the repository.
+    :param tag_name: The name of the tag.
+    :param chapters_json: The JSON string containing the chapters.
+    :param warnings: A boolean indicating whether to show warnings.
+    :param published_at: A boolean indicating whether to show the published date.
+    :param skip_release_notes_label: The label to skip release notes.
+    :param print_empty_chapters: A boolean indicating whether to print empty chapters.
+    :param chapters_to_pr_without_issue: A boolean indicating whether to add chapters to PR without issue.
+    :param verbose: A boolean indicating whether to enable verbose logging.
+    :raises ValueError: If any of the inputs are invalid.
+    """
     if not isinstance(owner, str) or not owner.strip():
         raise ValueError("Owner must be a non-empty string.")
 
@@ -71,6 +86,20 @@ def validate_inputs(owner: str, repo_name: str, tag_name: str, chapters_json: st
 def release_notes_generator(g: Github, repository_id: str, tag_name: str, custom_chapters: CustomChapters, warnings: bool,
                             published_at: bool, skip_release_notes_label: str, print_empty_chapters: bool,
                             chapters_to_pr_without_issue: bool) -> Optional[str]:
+    """
+    Generates the release notes for a given repository.
+
+    :param g: The Github instance.
+    :param repository_id: The ID of the repository.
+    :param tag_name: The name of the tag.
+    :param custom_chapters: The custom chapters for the release notes.
+    :param warnings: A boolean indicating whether to show warnings.
+    :param published_at: A boolean indicating whether to show the published date.
+    :param skip_release_notes_label: The label to skip release notes.
+    :param print_empty_chapters: A boolean indicating whether to print empty chapters.
+    :param chapters_to_pr_without_issue: A boolean indicating whether to add chapters to PR without issue.
+    :return: The generated release notes as a string, or None if the repository could not be found.
+    """
     # get GitHub repository object (1 API call)
     if (repository := get_gh_repository(g, repository_id)) is None: return None
 
@@ -115,6 +144,9 @@ def release_notes_generator(g: Github, repository_id: str, tag_name: str, custom
 
 
 def run():
+    """
+    Runs the 'Release Notes Generator' GitHub Action.
+    """
     logging.info("Starting 'Release Notes Generator' GitHub Action")
 
     try:

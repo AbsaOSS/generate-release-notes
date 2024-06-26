@@ -11,6 +11,16 @@ class ReleaseNotesBuilder:
     def __init__(self, records: dict[int, Record], changelog_url: str,
                  formatter: RecordFormatter, custom_chapters: CustomChapters,
                  warnings: bool = True, print_empty_chapters: bool = True):
+        """
+        Constructs all the necessary attributes for the ReleaseNotesBuilder object.
+
+        :param records: A dictionary of records where the key is an integer and the value is a Record object.
+        :param changelog_url: The URL of the changelog.
+        :param formatter: A RecordFormatter object used to format the records.
+        :param custom_chapters: A CustomChapters object representing the custom chapters.
+        :param warnings: A boolean indicating whether to show warnings.
+        :param print_empty_chapters: A boolean indicating whether to print empty chapters.
+        """
         self.records = records
         self.changelog_url = changelog_url
         self.formatter = formatter
@@ -19,6 +29,11 @@ class ReleaseNotesBuilder:
         self.print_empty_chapters = print_empty_chapters
 
     def build(self) -> str:
+        """
+        Builds the release notes.
+
+        :return: The release notes as a string.
+        """
         logging.info("Building Release Notes")
         user_defined_chapters = self.custom_chapters
         user_defined_chapters.populate(self.records)
