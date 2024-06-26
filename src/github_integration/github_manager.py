@@ -54,6 +54,7 @@ class GithubManager:
 
         :return: The Github object.
         """
+        print(f"XXX Get GitHub object: {self.__g}")
         return self.__g
 
     @github.setter

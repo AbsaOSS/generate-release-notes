@@ -169,7 +169,7 @@ def run():
         # Init GitHub instance
         auth = Auth.Token(token=github_token)
         g = Github(auth=auth, per_page=100)
-        GithubManager().g = g    # creat singleton instance and init with g (Github)
+        GithubManager().github = g    # creat singleton instance and init with g (Github)
         GithubManager().show_rate_limit()
 
         validate_inputs(owner, repo_name, tag_name, chapters_json, warnings, published_at,
