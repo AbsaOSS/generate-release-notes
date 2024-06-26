@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import pytest
 
 from unittest.mock import Mock, patch
-from release_notes_generator import validate_inputs, release_notes_generator, run
+from release_notes_generator import validate_inputs
 
 
 # validate_inputs

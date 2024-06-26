@@ -6,15 +6,13 @@ from typing import Optional
 from github import Github, Auth
 
 from github_integration.gh_action import get_action_input, set_action_output, set_action_failed
-from github_integration.gh_api_caller import (get_gh_repository, fetch_latest_release, fetch_all_issues,
-                                              fetch_finished_pull_requests, generate_change_url, show_rate_limit,
-                                              fetch_commits)
+from github_integration.github_manager import GithubManager
+
 from release_notes.formatter.record_formatter import RecordFormatter
 from release_notes.model.custom_chapters import CustomChapters
 from release_notes.model.record import Record
 from release_notes.release_notes_builder import ReleaseNotesBuilder
 from release_notes.factory.record_factory import RecordFactory
-from github_integration.github_manager import GithubManager
 
 
 # Configure logging
@@ -83,7 +81,7 @@ def validate_inputs(owner: str, repo_name: str, tag_name: str, chapters_json: st
     logging.debug(f'Verbose logging: {verbose}')
 
 
-def release_notes_generator(g: Github, repository_id: str, tag_name: str, custom_chapters: CustomChapters, warnings: bool,
+def release_notes_generator(repository_id: str, tag_name: str, custom_chapters: CustomChapters, warnings: bool,
                             published_at: bool, skip_release_notes_label: str, print_empty_chapters: bool,
                             chapters_to_pr_without_issue: bool) -> Optional[str]:
     """
@@ -101,25 +99,25 @@ def release_notes_generator(g: Github, repository_id: str, tag_name: str, custom
     :return: The generated release notes as a string, or None if the repository could not be found.
     """
     # get GitHub repository object (1 API call)
-    if (repository := get_gh_repository(g, repository_id)) is None: return None
+    if (repository := GithubManager().fetch_repository(repository_id)) is None: return None
 
     # get latest release (1 API call)
-    release = fetch_latest_release(repository)
-    show_rate_limit(g)
+    release = GithubManager().fetch_latest_release()
+    GithubManager().show_rate_limit()
 
     # get closed issues since last release (N API calls - pagination)
-    issues = fetch_all_issues(repository, release)
-    show_rate_limit(g)
+    issues = GithubManager().fetch_issues()
+    GithubManager().show_rate_limit()
 
     # get finished PRs since last release
-    pulls = fetch_finished_pull_requests(repository)
-    show_rate_limit(g)
+    pulls = GithubManager().fetch_pull_requests()
+    GithubManager().show_rate_limit()
 
     # get commits since last release
-    commits = fetch_commits(repository)
+    commits = GithubManager().fetch_commits()
 
     # generate change url
-    changelog_url = generate_change_url(repository, release, tag_name)
+    changelog_url = GithubManager().get_change_url(tag_name)
 
     # merge data to Release Notes records form
     rls_notes_records: dict[int, Record] = RecordFactory.generate(
@@ -129,8 +127,6 @@ def release_notes_generator(g: Github, repository_id: str, tag_name: str, custom
     )
 
     formatter = RecordFormatter()
-    github_manager.set_repository(repository)
-    github_manager.set_git_release(release)
 
     # build rls notes
     return ReleaseNotesBuilder(
@@ -173,7 +169,8 @@ def run():
         # Init GitHub instance
         auth = Auth.Token(token=github_token)
         g = Github(auth=auth, per_page=100)
-        show_rate_limit(g)
+        GithubManager().g = g    # creat singleton instance and init with g (Github)
+        GithubManager().show_rate_limit()
 
         validate_inputs(owner, repo_name, tag_name, chapters_json, warnings, published_at,
                         skip_release_notes_label, print_empty_chapters, chapters_to_pr_without_issue, verbose)
@@ -181,13 +178,13 @@ def run():
         custom_chapters = CustomChapters(print_empty_chapters=print_empty_chapters)
         custom_chapters.from_json(chapters_json)
 
-        rls_notes = release_notes_generator(g, local_repository_id, tag_name, custom_chapters, warnings, published_at,
+        rls_notes = release_notes_generator(local_repository_id, tag_name, custom_chapters, warnings, published_at,
                                            skip_release_notes_label, print_empty_chapters, chapters_to_pr_without_issue)
         logging.debug(f"Release notes: \n{rls_notes}")
 
         set_action_output('release-notes', rls_notes)
         logging.info("GitHub Action 'Release Notes Generator' completed successfully")
-        show_rate_limit(g)
+        GithubManager().show_rate_limit()
 
     except Exception as error:
         stack_trace = traceback.format_exc()
