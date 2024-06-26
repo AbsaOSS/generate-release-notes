@@ -76,6 +76,15 @@ class Record:
         return self.is_issue and self.__gh_issue.state == Issue.ISSUE_STATE_CLOSED
 
     @property
+    def is_open_issue(self) -> bool:
+        """
+        Checks if the record is a open issue.
+
+        :return: A boolean indicating whether the record is a closed issue.
+        """
+        return self.is_issue and self.__gh_issue.state == Issue.ISSUE_STATE_OPEN
+
+    @property
     def is_merged_pr(self) -> bool:
         """
         Checks if the record is a merged pull request.

@@ -10,6 +10,7 @@ class Issue:
     """
 
     ISSUE_STATE_CLOSED = "closed"
+    ISSUE_STATE_OPEN = "open"
 
     def __init__(self, issue: GitIssue):
         """

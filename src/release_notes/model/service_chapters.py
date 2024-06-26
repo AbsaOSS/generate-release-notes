@@ -79,7 +79,7 @@ class ServiceChapters(BaseChapters):
                 self.__populate_pr(records[nr], nr)
 
             else:
-                if not records[nr].is_present_in_chapters:
+                if not records[nr].is_open_issue or not records[nr].is_present_in_chapters:
                     self.chapters[self.OTHERS_NO_TOPIC].add_row(nr, records[nr].to_chapter_row())
 
     def __populate_closed_issues(self, record: Record, nr: int):
