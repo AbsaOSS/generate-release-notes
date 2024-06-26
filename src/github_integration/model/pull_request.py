@@ -166,6 +166,8 @@ class PullRequest:
 
         :return: The author of the pull request as a string, or None if there is no author.
         """
+        # TODO in Issue named 'Chapter line formatting - authors'
+        # Note: maybe introduce merge author? as stand-alone attribute
         return self.__merge_commit_author()
 
     @property
@@ -175,7 +177,7 @@ class PullRequest:
 
         :return: The contributors of the pull request as a list of strings.
         """
-        # TODO
+        # TODO in Isssue named 'Chapter line formatting - contributors'
         return []
 
     @property
@@ -238,7 +240,8 @@ class PullRequest:
 
         :param commit: The Commit object to register.
         """
-        # TODO this naming is wrong
+        # TODO in in Issue named 'Chapter line formatting - authors' or in 'Chapter line formatting - contributors'
+        #   Note: this naming is wrong
         #   - possible collection of merge commit - all commit call
         #   - possible collection of commits - direct PR call
         if self.__merge_commits is None:

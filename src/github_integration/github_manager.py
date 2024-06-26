@@ -31,8 +31,6 @@ def singleton(cls):
 
     return get_instance
 
-
-# TODO - review existing method and decide their integration here
 @singleton
 class GithubManager:
     """
@@ -160,7 +158,6 @@ class GithubManager:
         :param state: The state of the pull requests to fetch. If None, fetches pull requests of all states.
         :return: A list of PullRequest objects.
         """
-        # TODO - decide: pulls = repo.get_pulls(state='closed', sort='created', direction='desc')
         logging.info(f"Fetching all closed PRs for {self.__repository.full_name}")
         if state is None:
             pulls = self.__repository.get_pulls()

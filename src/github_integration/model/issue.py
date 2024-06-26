@@ -93,7 +93,7 @@ class Issue:
 
         :return: The authors of the issue as a list of strings.
         """
-        # TODO
+        # TODO in Issue named 'Chapter line formatting - authors'
         return []
 
     @property
@@ -103,7 +103,7 @@ class Issue:
 
         :return: The contributors of the issue as a list of strings.
         """
-        # TODO
+        # TODO in Issue named 'Chapter line formatting - contributors'
         return []
 
     def is_closed(self) -> bool:

@@ -63,7 +63,6 @@ class Record:
         if self.__gh_issue is None:
             # no issue ==> stand-alone PR
             return self.__pulls[0].state == PullRequest.PR_STATE_CLOSED
-            # TODO - check if this is the final state of the PR - cancel
         else:
             return self.__gh_issue.state == Issue.ISSUE_STATE_CLOSED
 
@@ -99,8 +98,9 @@ class Record:
         else:
             return self.__gh_issue.labels
 
-    # TODO - 'Release notest:' as detection pattern default - can be defined by user
-    # TODO - '-' as leading line mark for each release note to be used
+    # TODO in Issue named 'Configurable regex-based Release note detection in the PR body'
+    #   - 'Release notest:' as detection pattern default - can be defined by user
+    #   - '-' as leading line mark for each release note to be used
     @property
     def get_rls_notes(self, detection_pattern=RELEASE_NOTE_DETECTION_PATTERN, line_mark=RELEASE_NOTE_LINE_MARK) -> str:
         """
@@ -163,10 +163,8 @@ class Record:
         :return: A boolean indicating whether the pull request mentions an issue.
         """
 
-        # TODO - cela ta metoda je divna - mozna zmena kontextu
-
+        # TODO in Issue named 'Configurable regex-based Release note detection in the PR body'
         if self.__gh_issue is None:
-            # TODO - reimplement this to detect issues from body, the link not usable
             return "#" in self.__pulls[0].body      # this is only testing code
         return False
 
@@ -178,8 +176,7 @@ class Record:
         :return: The authors of the record as a string, or None if there are no authors.
         """
         return None
-
-        # TODO - reimplement this to detect authors of merge commit by PR vs commit comparing SHA
+        # TODO in Issue named 'Chapter line formatting - authors'
         # authors: list[str] = []
         #
         # for pull in self.__pulls:
@@ -252,8 +249,7 @@ class Record:
 
         logging.error(f"Commit {commit.sha} not registered in any PR of record {self.__gh_issue.number}")
 
-    # TODO add user defined row format feature
-    #   - what else replaceable information could be interesting?
+    # TODO in Issue named 'Chapter line formatting - default'
     def to_chapter_row(self, row_format="", increment_in_chapters=True) -> str:
         """
         Converts the record to a row in a chapter.

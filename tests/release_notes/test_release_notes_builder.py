@@ -170,8 +170,6 @@ def generate_full_dataset() -> dict[int, Record]:
 
     return records_full
 
-# TODO check state vs date when reopen - issue & PR
-
 formatter = RecordFormatter()
 changelog_url = "http://example.com/changelog"
 chapters_json = json.dumps([
