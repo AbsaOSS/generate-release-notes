@@ -99,7 +99,8 @@ def release_notes_generator(repository_id: str, tag_name: str, custom_chapters: 
     :return: The generated release notes as a string, or None if the repository could not be found.
     """
     # get GitHub repository object (1 API call)
-    if (repository := GithubManager().fetch_repository(repository_id)) is None: return None
+    if GithubManager().fetch_repository(repository_id) is None:
+        return None
 
     # get latest release (1 API call)
     GithubManager().fetch_latest_release()
@@ -110,7 +111,7 @@ def release_notes_generator(repository_id: str, tag_name: str, custom_chapters: 
     GithubManager().show_rate_limit()
 
     # get finished PRs since last release
-    pulls = GithubManager().fetch_pull_requests()
+    pulls = GithubManager().fetch_pull_requests(state='closed')
     GithubManager().show_rate_limit()
 
     # get commits since last release

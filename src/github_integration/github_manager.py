@@ -212,7 +212,8 @@ class GithubManager:
     # others
 
     def show_rate_limit(self):
-        if logging.getLogger().isEnabledFor(logging.DEBUG):
+        if not logging.getLogger().isEnabledFor(logging.DEBUG):
+            # save API Call when not in debug mode
             return
 
         if self.__g is None:
