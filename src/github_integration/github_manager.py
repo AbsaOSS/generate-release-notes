@@ -26,7 +26,9 @@ def singleton(cls):
 
     def get_instance(*args, **kwargs):
         if cls not in instances:
+            print(f"XXX - create instance")
             instances[cls] = cls(*args, **kwargs)
+        print(f"XXX - return instance")
         return instances[cls]
 
     return get_instance
@@ -43,7 +45,7 @@ class GithubManager:
         self.__g = None
         self.__repository = None
         self.__git_release = None
-        logging.debug(f"GitHub Manager created.")
+        logging.debug(f"XXX GitHub Manager created.")
 
     @property
     def github(self) -> Github:
@@ -61,7 +63,7 @@ class GithubManager:
 
         :return: The Github object.
         """
-        logging.debug(f"Set GitHub object: {g}")
+        logging.debug(f"XXX Set GitHub object: {g}")
         self.__g = g
 
     @property
