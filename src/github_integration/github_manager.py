@@ -26,12 +26,11 @@ def singleton(cls):
 
     def get_instance(*args, **kwargs):
         if cls not in instances:
-            print(f"XXX - create instance")
             instances[cls] = cls(*args, **kwargs)
-        print(f"XXX - return instance")
         return instances[cls]
 
     return get_instance
+
 
 @singleton
 class GithubManager:
@@ -45,7 +44,6 @@ class GithubManager:
         self.__g = None
         self.__repository = None
         self.__git_release = None
-        print(f"XXX GitHub Manager created.")
 
     @property
     def github(self) -> Github:
@@ -54,7 +52,6 @@ class GithubManager:
 
         :return: The Github object.
         """
-        print(f"XXX Get GitHub object: {self.__g}")
         return self.__g
 
     @github.setter
@@ -64,7 +61,6 @@ class GithubManager:
 
         :return: The Github object.
         """
-        print(f"XXX Set GitHub object: {g}")
         self.__g = g
 
     @property
@@ -114,7 +110,7 @@ class GithubManager:
         :return: The fetched GitRelease object representing the latest release, or None if there is no release or the fetch failed.
         """
         try:
-            logging.info(f"Fetching latest release for {repo.full_name}")
+            logging.info(f"Fetching latest release for {self.__repository.full_name}")
             release = self.__repository.get_latest_release()
             logging.debug(f"Found latest release: {release.tag_name}, created at: {release.created_at}, "
                           f"published at: {release.published_at}")

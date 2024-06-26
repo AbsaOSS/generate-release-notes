@@ -102,7 +102,7 @@ def release_notes_generator(repository_id: str, tag_name: str, custom_chapters: 
     if (repository := GithubManager().fetch_repository(repository_id)) is None: return None
 
     # get latest release (1 API call)
-    release = GithubManager().fetch_latest_release()
+    GithubManager().fetch_latest_release()
     GithubManager().show_rate_limit()
 
     # get closed issues since last release (N API calls - pagination)
