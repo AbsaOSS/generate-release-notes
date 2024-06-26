@@ -188,6 +188,15 @@ class PullRequest:
         """
         return self.__source_pull.merge_commit_sha
 
+    @property
+    def mentioned_issues(self) -> list[int]:
+        """
+        Gets the numbers of the issues mentioned in the body of the pull request.
+
+        :return: The numbers of the issues mentioned in the body of the pull request as a list of integers.
+        """
+        return self.__mentioned_issues
+
     def __extract_issue_numbers_from_body(self) -> list[int]:
         """
         Extracts the numbers of the issues mentioned in the body of the pull request.
