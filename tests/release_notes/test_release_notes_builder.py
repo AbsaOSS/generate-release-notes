@@ -5,6 +5,11 @@ import pytest
 import json
 
 from datetime import datetime
+
+from github import Github
+from github.Repository import Repository
+
+from github_integration.github_manager import GithubManager
 from github_integration.model.issue import Issue
 from github_integration.model.pull_request import PullRequest
 from release_notes.formatter.record_formatter import RecordFormatter
@@ -251,7 +256,7 @@ http://example.com/changelog
 release_notes_no_data_no_empty_chapters = release_notes_no_data_no_warning_no_empty_chapters
 
 release_notes_data_custom_chapters_one_label = """### Bugfixes 🛠
-- #1 _I1+0PR+1L-bug_ in [#101](https://github.com/None/pull/101), [#102](https://github.com/None/pull/102)
+- #1 _I1+0PR+1L-bug_ in [#101](https://github.com/test/full_name/pull/101), [#102](https://github.com/test/full_name/pull/102)
   - PR 101 1st release note
   - PR 101 2nd release note
   - PR 102 1st release note
@@ -262,7 +267,7 @@ http://example.com/changelog
 """
 
 release_notes_data_custom_chapters_more_labels_duplicity_reduction_on = """### New Features 🎉
-- #1 _I1+0PR+2L-bug-enhancement_ in [#101](https://github.com/None/pull/101), [#102](https://github.com/None/pull/102)
+- #1 _I1+0PR+2L-bug-enhancement_ in [#101](https://github.com/test/full_name/pull/101), [#102](https://github.com/test/full_name/pull/102)
   - PR 101 1st release note
   - PR 101 2nd release note
   - PR 102 1st release note
@@ -273,7 +278,7 @@ http://example.com/changelog
 """
 
 release_notes_data_custom_chapters_more_labels_duplicity_reduction_off = """### New Features 🎉
-- #1 _I1+0PR+2L-bug-enhancement_ in [#101](https://github.com/None/pull/101), [#102](https://github.com/None/pull/102)
+- #1 _I1+0PR+2L-bug-enhancement_ in [#101](https://github.com/test/full_name/pull/101), [#102](https://github.com/test/full_name/pull/102)
   - PR 101 1st release note
   - PR 101 2nd release note
   - PR 102 1st release note
@@ -332,7 +337,7 @@ http://example.com/changelog
 """
 
 release_notes_data_closed_issue_with_pr_without_user_labels = """### Closed Issues without User Defined Labels ⚠️
-- #1 _I1+0PR+0L_ in [#101](https://github.com/None/pull/101), [#102](https://github.com/None/pull/102)
+- #1 _I1+0PR+0L_ in [#101](https://github.com/test/full_name/pull/101), [#102](https://github.com/test/full_name/pull/102)
   - PR 101 1st release note
   - PR 101 2nd release note
   - PR 102 1st release note
@@ -373,7 +378,7 @@ http://example.com/changelog
 """
 
 release_notes_data_closed_issue_with_merged_prs_without_user_labels = """### Closed Issues without User Defined Labels ⚠️
-- #1 _I1+0PR+0L_ in [#101](https://github.com/None/pull/101), [#102](https://github.com/None/pull/102)
+- #1 _I1+0PR+0L_ in [#101](https://github.com/test/full_name/pull/101), [#102](https://github.com/test/full_name/pull/102)
   - PR 101 1st release note
   - PR 101 2nd release note
   - PR 102 1st release note
@@ -384,7 +389,7 @@ http://example.com/changelog
 """
 
 release_notes_data_closed_issue_with_merged_prs_with_user_labels = """### New Features 🎉
-- #1 _I1+0PR+2L-bug-enhancement_ in [#101](https://github.com/None/pull/101), [#102](https://github.com/None/pull/102)
+- #1 _I1+0PR+2L-bug-enhancement_ in [#101](https://github.com/test/full_name/pull/101), [#102](https://github.com/test/full_name/pull/102)
   - PR 101 1st release note
   - PR 101 2nd release note
   - PR 102 1st release note
@@ -660,6 +665,11 @@ def test_release_notes_builder(test_case):
 
     custom_chapters = CustomChapters(print_empty_chapters=False)
     custom_chapters.from_json(chapters_json)
+
+    GithubManager().github = Mock(spec=Github)
+    repository_mock = Mock(spec=Repository)
+    GithubManager()._GithubManager__repository = repository_mock
+    repository_mock.full_name = 'test/full_name'
 
     builder = ReleaseNotesBuilder(records=records,
                                   changelog_url=changelog_url,

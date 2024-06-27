@@ -1,276 +1,163 @@
+from unittest.mock import MagicMock, patch, Mock
+
 import pytest
+from github import Github
+from github.Repository import Repository
+
+from github_integration.github_manager import GithubManager
 
 
-class MockIssue:
-    def __init__(self, id, title, labels, is_closed, linked_pr_id):
-        self.id = id
-        self.title = title
-        self.labels = labels
-        self.is_closed = is_closed
-        self.linked_pr_id = linked_pr_id
+# singleton
+
+def test_singleton():
+    manager1 = GithubManager()
+    manager2 = GithubManager()
+    assert manager1 is manager2
 
 
-# get_gh_repository
+# GithubManager.fetch_repository
 
-# @patch('github.Github.get_repo')
-# def test_get_gh_repository_found(mock_get_repo):
-#     g = Github()
-#     repo_id = 'test/repo'
+def test_fetch_repository():
+    github_mock = Mock(spec=Github)
+    GithubManager().github = github_mock
+
+    repository_mock = Mock(spec=Repository)
+    github_mock.get_repo.return_value = repository_mock
+
+    repository_id = 'test_repo'
+
+    result = GithubManager().fetch_repository(repository_id)
+
+    assert repository_mock == result
+    github_mock.get_repo.assert_called_with(repository_id)
+
+# @patch('github_manager.logging')
+# def test_fetch_repository_not_found(logging_mock):
+#     github_manager = GithubManager()
+#     github_mock = Mock(spec=Github)
+#     github_manager.github = github_mock
+#     github_mock.get_repo.side_effect = Exception('Not Found')
+#     repository_id = 'non_existent_repo'
 #
-#     mock_repo = MagicMock(spec=Repository)
-#     mock_get_repo.return_value = mock_repo
-#
-#     result = get_gh_repository(g, repo_id)
-#
-#     mock_get_repo.assert_called_with(repo_id)
-#     assert mock_repo == result
-#
-#
-# @patch('github.Github.get_repo')
-# def test_get_gh_repository_not_found_exception(mock_get_repo, caplog):
-#     g = Github()
-#     repo_id = 'test/repo'
-#
-#     mock_get_repo.side_effect = Exception("Not Found")
-#
-#     with caplog.at_level(logging.ERROR):
-#         result = get_gh_repository(g, repo_id)
-#
+#     result = github_manager.fetch_repository(repository_id)
 #     assert result is None
-#     assert "Repository not found" in caplog.text
-#     assert repo_id in caplog.text
+#     logging_mock.error.assert_called_with(f"Repository not found: {repository_id}")
 #
+# def test_fetch_latest_release():
+#     github_manager = GithubManager()
+#     github_mock = Mock(spec=Github)
+#     github_manager.github = github_mock
+#     repository_mock = Mock(spec=Repository)
+#     github_manager._GithubManager__repository = repository_mock
+#     release_mock = Mock(spec=GitRelease)
+#     repository_mock.get_latest_release.return_value = release_mock
 #
-# @patch('github.Github.get_repo')
-# def test_get_gh_repository_exception(mock_get_repo, caplog):
-#     g = Github()
-#     repo_id = 'test/repo'
+#     result = github_manager.fetch_latest_release()
+#     assert result == release_mock
+#     repository_mock.get_latest_release.assert_called_once()
 #
-#     mock_get_repo.side_effect = Exception("Other error")
+# @patch('github_manager.logging')
+# def test_fetch_latest_release_not_found(logging_mock):
+#     github_manager = GithubManager()
+#     github_mock = Mock(spec=Github)
+#     github_manager.github = github_mock
+#     repository_mock = Mock(spec=Repository)
+#     github_manager._GithubManager__repository = repository_mock
+#     repository_mock.get_latest_release.side_effect = Exception('Not Found')
 #
-#     with caplog.at_level(logging.ERROR):
-#         result = get_gh_repository(g, repo_id)
-#
+#     result = github_manager.fetch_latest_release()
 #     assert result is None
-#     assert "Fetching repository failed for test/repo" in caplog.text
-#     assert "Other error" in caplog.text
+#     logging_mock.error.assert_called_with(f"Latest release not found for {repository_mock.full_name}. 1st release for repository!")
 #
+# def test_fetch_issues():
+#     github_manager = GithubManager()
+#     github_mock = Mock(spec=Github)
+#     github_manager.github = github_mock
+#     repository_mock = Mock(spec=Repository)
+#     github_manager._GithubManager__repository = repository_mock
+#     issues_mock = [Mock(), Mock()]
+#     repository_mock.get_issues.return_value = issues_mock
 #
-# # fetch_latest_release
+#     result = github_manager.fetch_issues()
+#     assert len(result) == len(issues_mock)
+#     repository_mock.get_issues.assert_called_with(state="all")
 #
-# def test_fetch_latest_release_found():
-#     mock_release = Mock(spec=GitRelease)
-#     mock_release.tag_name = "v1.0.0"
-#     mock_release.created_at = datetime(2023, 1, 1)
-#     mock_release.published_at = datetime(2023, 1, 2)
+# def test_fetch_pull_requests():
+#     github_manager = GithubManager()
+#     github_mock = Mock(spec=Github)
+#     github_manager.github = github_mock
+#     repository_mock = Mock(spec=Repository)
+#     github_manager._GithubManager__repository = repository_mock
+#     pulls_mock = [Mock(), Mock()]
+#     repository_mock.get_pulls.return_value = pulls_mock
 #
-#     mock_repo = Mock(spec=Repository)
-#     mock_repo.get_latest_release.return_value = mock_release
+#     result = github_manager.fetch_pull_requests()
+#     assert len(result) == len(pulls_mock)
+#     repository_mock.get_pulls.assert_called_with(state="closed")
 #
-#     release = fetch_latest_release(mock_repo)
+# def test_fetch_commits():
+#     github_manager = GithubManager()
+#     github_mock = Mock(spec=Github)
+#     github_manager.github = github_mock
+#     repository_mock = Mock(spec=Repository)
+#     github_manager._GithubManager__repository = repository_mock
+#     commits_mock = [Mock(), Mock()]
+#     repository_mock.get_commits.return_value = commits_mock
 #
-#     assert mock_release == release
-#     assert "v1.0.0" == release.tag_name
-#     assert datetime(2023, 1, 1) == release.created_at
-#     assert datetime(2023, 1, 2) == release.published_at
+#     result = github_manager.fetch_commits()
+#     assert len(result) == len(commits_mock)
+#     repository_mock.get_commits.assert_called_once()
 #
+# def test_get_change_url_with_release():
+#     github_manager = GithubManager()
+#     github_mock = Mock(spec=Github)
+#     github_manager.github = github_mock
+#     repository_mock = Mock(spec=Repository)
+#     github_manager._GithubManager__repository = repository_mock
+#     release_mock = Mock(spec=GitRelease)
+#     github_manager._GithubManager__git_release = release_mock
+#     release_mock.tag_name = 'v1.0.0'
+#     tag_name = 'v2.0.0'
 #
-# def test_fetch_latest_release_not_found(caplog):
-#     # Mock the Repository object to raise an exception
-#     mock_repo = Mock(spec=Repository)
-#     mock_repo.get_latest_release.side_effect = Exception("Not Found")
+#     result = github_manager.get_change_url(tag_name)
+#     expected_url = f"https://github.com/{repository_mock.full_name}/compare/{release_mock.tag_name}...{tag_name}"
+#     assert result == expected_url
 #
-#     with caplog.at_level(logging.ERROR):
-#         release = fetch_latest_release(mock_repo)
+# def test_get_change_url_without_release():
+#     github_manager = GithubManager()
+#     github_mock = Mock(spec=Github)
+#     github_manager.github = github_mock
+#     repository_mock = Mock(spec=Repository)
+#     github_manager._GithubManager__repository = repository_mock
+#     tag_name = 'v2.0.0'
 #
-#     assert release is None
-#     assert "Latest release not found" in caplog.text
-#     assert "not found" in caplog.text
+#     result = github_manager.get_change_url(tag_name)
+#     expected_url = f"https://github.com/{repository_mock.full_name}/commits/{tag_name}"
+#     assert result == expected_url
 #
+# def test_get_repository_full_name():
+#     github_manager = GithubManager()
+#     github_mock = Mock(spec=Github)
+#     github_manager.github = github_mock
+#     repository_mock = Mock(spec=Repository)
+#     github_manager._GithubManager__repository = repository_mock
+#     repository_mock.full_name = 'test/full_name'
 #
-# def test_fetch_latest_release_exception(caplog):
-#     # Mock the Repository object to raise a different exception
-#     mock_repo = Mock(spec=Repository)
-#     mock_repo.get_latest_release.side_effect = Exception("Some other error")
+#     result = github_manager.get_repository_full_name()
+#     assert result == 'test/full_name'
 #
-#     with caplog.at_level(logging.ERROR):
-#         release = fetch_latest_release(mock_repo)
+# @patch('github_manager.logging')
+# def test_show_rate_limit(logging_mock):
+#     github_manager = GithubManager()
+#     github_mock = Mock(spec=Github)
+#     github_manager.github = github_mock
+#     rate_limit_mock = Mock()
+#     rate_limit_mock.core.remaining = 50
+#     rate_limit_mock.core.limit = 5000
+#     github_mock.get_rate_limit.return_value = rate_limit_mock
 #
-#     assert release is None
-#     assert "Fetching latest release failed" in caplog.text
-#     assert "Some other error" in caplog.text
-#
-#
-# # fetch_closed_issues
-#
-# def test_fetch_closed_issues_with_release(caplog):
-#     mock_release = Mock(spec=GitRelease)
-#     mock_release.published_at = datetime(2023, 1, 2)
-#
-#     mock_label = Mock()
-#     mock_label.name = "bug"
-#
-#     mock_issue = Mock(spec=GithubIssue)
-#     mock_issue.id = 1
-#     mock_issue.title = "Issue 1"
-#     mock_issue.labels = [mock_label]
-#     mock_issue.number = 1
-#     mock_issue.pull_request = None
-#     mock_issue.body = "Dummy body"
-#     mock_issue.state = "closed"
-#
-#     mock_repo = Mock(spec=Repository)
-#     mock_repo.get_issues.return_value = [mock_issue]
-#     mock_repo.full_name = "test/repo"
-#
-#     with caplog.at_level(logging.DEBUG):
-#         issues = fetch_all_issues(mock_repo, mock_release)
-#
-#     assert 1 == len(issues)
-#     assert 1 == issues[0].id
-#     assert 1 == issues[0].number
-#     assert "Issue 1" == issues[0].title
-#     assert ["bug"] == issues[0].labels
-#     assert issues[0].is_closed is True
-#     assert "Found 1 issues for test/repo" in caplog.text
-#
-#
-# def test_fetch_closed_issues_without_release(caplog):
-#     mock_issue = Mock(spec=GithubIssue)
-#     mock_issue.title = "Issue 1"
-#     mock_issue.number = 1
-#     mock_issue.body = "Dummy body"
-#     mock_issue.state = "closed"
-#     mock_issue.labels = ["bug"]
-#
-#     mock_repo = Mock(spec=Repository)
-#     mock_repo.get_issues.return_value = [mock_issue]
-#     mock_repo.full_name = "test/repo"
-#
-#     with caplog.at_level(logging.DEBUG):
-#         issues = fetch_all_issues(mock_repo, None)
-#
-#     assert 1 == len(issues)
-#     assert 1 == issues[0].number
-#     assert "Issue 1" == issues[0].title
-#     assert ["bug"] == issues[0].labels
-#     assert "Found 1 issues for test/repo" in caplog.text
-#
-#
-# # fetch_finished_pull_requests
-#
-# def test_fetch_finished_pull_requests_multiple_pulls(caplog):
-#     mock_label_1 = Mock()
-#     mock_label_1.name = "bug"
-#     mock_label_2 = Mock()
-#     mock_label_2.name = "enhancement"
-#
-#     mock_pull1 = Mock(spec=GithubPullRequest)
-#     mock_pull1.number = 1
-#     mock_pull1.title = "PR 1"
-#     mock_pull1.body = "Dummy body\n\nRelease notes:\n- First release note\n- Second release note"
-#     mock_pull1.state = "closed"
-#     mock_pull1.created_at = datetime(2023, 1, 1)
-#     mock_pull1.updated_at = datetime(2023, 1, 2)
-#     mock_pull1.closed_at = datetime(2023, 1, 3)
-#     mock_pull1.merged_at = None
-#
-#     mock_pull2 = Mock(spec=GithubPullRequest)
-#     mock_pull2.id = 2
-#     mock_pull2.number = 2
-#     mock_pull2.title = "PR 2"
-#     mock_pull2.body = "Dummy body"
-#     mock_pull2.state = "closed"
-#     mock_pull2.created_at = datetime(2023, 1, 5)
-#     mock_pull2.updated_at = datetime(2023, 1, 6)
-#     mock_pull2.closed_at = datetime(2023, 1, 7)
-#     mock_pull2.merged_at = None
-#
-#     mock_repo = Mock(spec=Repository)
-#     mock_repo.get_pulls.return_value = [PullRequest(mock_pull1), PullRequest(mock_pull2)]
-#     mock_repo.full_name = "test/repo"
-#
-#     with caplog.at_level(logging.DEBUG):
-#         pull_requests = fetch_finished_pull_requests(mock_repo)
-#
-#     assert 2 == len(pull_requests)
-#     assert 1 == pull_requests[0].number
-#     assert "PR 1" == pull_requests[0].title
-#     assert 2 == pull_requests[1].number
-#     assert "PR 2" == pull_requests[1].title
-#     assert "Found 2 PRs for test/repo" in caplog.text
-#
-#
-# # generate_change_url
-#
-# def test_generate_change_url_with_release(caplog):
-#     mock_release = Mock(spec=GitRelease)
-#     mock_release.tag_name = "v1.0.0"
-#
-#     mock_repo = Mock(spec=Repository)
-#     mock_repo.full_name = "owner/repo"
-#
-#     tag_name = "v1.1.0"
-#     expected_url = f"https://github.com/owner/repo/compare/v1.0.0...v1.1.0"
-#
-#     with caplog.at_level(logging.DEBUG):
-#         url = generate_change_url(mock_repo, mock_release, tag_name)
-#
-#     assert expected_url == url
-#     assert f"Changelog URL: {expected_url}" in caplog.text
-#
-#
-# def test_generate_change_url_without_release(caplog):
-#     mock_repo = Mock(spec=Repository)
-#     mock_repo.full_name = "owner/repo"
-#
-#     tag_name = "v1.1.0"
-#     expected_url = f"https://github.com/owner/repo/commits/v1.1.0"
-#
-#     with caplog.at_level(logging.DEBUG):
-#         url = generate_change_url(mock_repo, None, tag_name)
-#
-#     assert expected_url == url
-#     assert f"Changelog URL: {expected_url}" in caplog.text
-#
-#
-# # show_rate_limit
-#
-# def test_show_rate_limit_not_reached(caplog):
-#     mock_core_rate = Mock(spec=Rate)
-#     mock_core_rate.remaining = 15
-#     mock_core_rate.limit = 60
-#
-#     mock_rate_limit = Mock(spec=RateLimit)
-#     mock_rate_limit.core = mock_core_rate
-#
-#     mock_github = Mock(spec=Github)
-#     mock_github.get_rate_limit.return_value = mock_rate_limit
-#
-#     with caplog.at_level(logging.DEBUG):
-#         show_rate_limit(mock_github)
-#
-#     assert "Rate limit: 15 remaining of 60" in caplog.text
-#
-#
-# @patch("time.sleep", return_value=None)
-# def test_show_rate_limit_reached(mock_sleep, caplog):
-#     mock_core_rate = Mock(spec=Rate)
-#     mock_core_rate.remaining = 5
-#     mock_core_rate.limit = 60
-#     mock_core_rate.reset = datetime.utcnow() + timedelta(minutes=5)
-#
-#     mock_rate_limit = Mock(spec=RateLimit)
-#     mock_rate_limit.core = mock_core_rate
-#
-#     mock_github = Mock(spec=Github)
-#     mock_github.get_rate_limit.return_value = mock_rate_limit
-#
-#     with caplog.at_level(logging.DEBUG):
-#         show_rate_limit(mock_github)
-#
-#     assert "Rate limit reached. Sleeping for " in caplog.text
-#     assert mock_sleep.called
+#     github_manager.show_rate_limit()
+#     logging_mock.debug.assert_called_with(f"Rate limit: {rate_limit_mock.core.remaining} remaining of {rate_limit_mock.core.limit}")
 
 
 if __name__ == '__main__':

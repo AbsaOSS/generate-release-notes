@@ -213,11 +213,9 @@ class Record:
         if len(self.__pulls) == 0:
             return None
 
-        gh_manager = GithubManager()
-
         template = "[#{number}](https://github.com/{full_name}/pull/{number})"
         res = [
-            template.format(number=pull.number, full_name=gh_manager.get_repository_full_name())
+            template.format(number=pull.number, full_name=GithubManager().get_repository_full_name())
             for pull in self.__pulls
         ]
 
