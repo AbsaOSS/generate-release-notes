@@ -128,21 +128,52 @@ def __get_default_pull_request_mock(issue_number: Optional[int] = None, state="c
 
 
 def __get_record_mock_1_issue_with_2_prs(issue_state: str = "closed", issue_labels: list[str] = None,
-                                         pr_with_rls_notes: bool = True, second_pr_merged: bool = True) -> dict[int, Record]:
-    # create 1 closed issue without PR
-    issue = __get_default_issue_mock(number=1, state=issue_state, labels=issue_labels)
+                                         pr_with_rls_notes: bool = True, second_pr_merged: bool = True,
+                                         is_closed_not_planned:bool = False) -> dict[int, Record]:
+    # create 1 issue
+    state_reason = None
+    if is_closed_not_planned:
+        state_reason = "not_planned"
+
+    issue = __get_default_issue_mock(number=1, state=issue_state, labels=issue_labels, state_reason=state_reason)
+
     # create 2 PRs
+    pr1 = __get_default_pull_request_mock(issue_number=1, number=101, with_rls_notes=pr_with_rls_notes)
+    pr2 = __get_default_pull_request_mock(issue_number=1, number=102, with_rls_notes=pr_with_rls_notes,
+                                          is_merged=second_pr_merged)
+    records = {}
+    if issue_state == "closed":
+        records[0] = Record(issue)
+    else:
+        records[0] = Record()
+    records[0].register_pull_request(pr1)
+    records[0].register_pull_request(pr2)
+
+    return records
+
+
+def __get_record_mock_2_issue_with_2_prs(issue_1_state: str = "closed", issue_2_state: str = "closed",
+                                         issue_1_labels: list[str] = None, issue_2_labels: list[str] = None,
+                                         pr_with_rls_notes: bool = True, second_pr_merged: bool = True)-> dict[int, Record]:
+    # create 2 issues
+    issue1 = __get_default_issue_mock(number=1, state=issue_1_state, labels=issue_1_labels)
+    issue2 = __get_default_issue_mock(number=2, state=issue_2_state, labels=issue_2_labels)
+    # create 2 PRs per issue
     pr1 = __get_default_pull_request_mock(issue_number=1, number=101, with_rls_notes=pr_with_rls_notes)
     pr2 = __get_default_pull_request_mock(issue_number=1, number=102, with_rls_notes=pr_with_rls_notes,
                                           is_merged=second_pr_merged)
 
     records = {}
-    if issue_state == "closed":
-        records[0] = Record(issue)
+    if issue_1_state == "closed":
+        records[0] = Record(issue1)
     else:
-        records[0] = Record()               # Note: Issue in open state is not registered to record set
+        records[0] = Record()
+    if issue_2_state == "closed":
+        records[1] = Record(issue2)
+    else:
+        records[1] = Record()
     records[0].register_pull_request(pr1)
-    records[0].register_pull_request(pr2)
+    records[1].register_pull_request(pr2)
 
     return records
 
@@ -315,6 +346,49 @@ release_notes_data_open_pr_without_issue = """### Others - No Topic ⚠️
 - PR: #101 _PR 101_
   - PR 101 1st release note
   - PR 101 2nd release note
+
+#### Full Changelog
+http://example.com/changelog
+"""
+
+release_notes_data_merged_pr_with_user_labels_duplicity_reduction_on = """### New Features 🎉
+- PR: #101 _PR 101_
+  - PR 101 1st release note
+  - PR 101 2nd release note
+
+#### Full Changelog
+http://example.com/changelog
+"""
+
+release_notes_data_merged_prs_with_open_issues = """### Merged PRs Linked to 'Not Closed' Issue ⚠️
+- PR: #101 _PR 101_
+  - PR 101 1st release note
+  - PR 101 2nd release note
+- PR: #102 _PR 102_
+  - PR 102 1st release note
+  - PR 102 2nd release note
+
+#### Full Changelog
+http://example.com/changelog
+"""
+
+release_notes_data_closed_issue_with_merged_prs_without_user_labels = """### Closed Issues without User Defined Labels ⚠️
+- #1 _I1+0PR+0L_ in [#101](https://github.com/None/pull/101), [#102](https://github.com/None/pull/102)
+  - PR 101 1st release note
+  - PR 101 2nd release note
+  - PR 102 1st release note
+  - PR 102 2nd release note
+
+#### Full Changelog
+http://example.com/changelog
+"""
+
+release_notes_data_closed_issue_with_merged_prs_with_user_labels = """### New Features 🎉
+- #1 _I1+0PR+2L-bug-enhancement_ in [#101](https://github.com/None/pull/101), [#102](https://github.com/None/pull/102)
+  - PR 101 1st release note
+  - PR 101 2nd release note
+  - PR 102 1st release note
+  - PR 102 2nd release note
 
 #### Full Changelog
 http://example.com/changelog
@@ -531,8 +605,47 @@ test_cases = [
     # ---------------------------------------------------------------------------------------------
     # Alternative paths - see pull request in all logical states ==> in correct service chapters
 
-    # TODO next
+    # Test: Merged PR without Issue without user label
+    #   - covered in 'test_build_merged_pr_service_chapter_without_issue_and_user_labels'
 
+    {
+        # Test: Merged PR without Issue with more user label - duplicity reduction on
+        "test_name": "test_merged_pr_without_issue_with_more_user_labels_duplicity_reduction_on",
+        "expected_release_notes": release_notes_data_merged_pr_with_user_labels_duplicity_reduction_on,
+        "records": __get_record_mock_1_pr_with_no_issue(labels=['bug', 'enhancement'])
+    },
+    # {
+    #     # Test: Merged PR without Issue with more user label - duplicity reduction off - TODO
+    #     "test_name": "test_merged_pr_without_issue_with_more_user_labels_duplicity_reduction_on",
+    #     "expected_release_notes": release_notes_data_service_chapters_merged_pr_no_issue_no_user_labels,
+    #     "records": __get_record_mock_1_pr_with_no_issue(labels=['bug', 'enhancement'])
+    # },
+    {
+        # Test: Merged PR with mentioned Open (Init) Issues | same to Reopen as it is same state
+        "test_name": "test_merged_pr_with_open_init_issue_mention",
+        "expected_release_notes": release_notes_data_merged_prs_with_open_issues,
+        "records": __get_record_mock_2_issue_with_2_prs(issue_1_state="open", issue_2_state="open")
+    },
+
+
+    # Test: Merged PR with mentioned Closed Issues
+    #   - covered in 'test_build_closed_issue_with_prs_without_user_label'
+    {
+        # Test: Merged PR with mentioned Closed (not planned) Issues - without user labels
+        "test_name": "test_merged_pr_with_closed_issue_mention_without_user_labels",
+        "expected_release_notes": release_notes_data_closed_issue_with_merged_prs_without_user_labels,
+        "records": __get_record_mock_1_issue_with_2_prs(issue_state="closed", is_closed_not_planned=True)
+    },
+    {
+        # Test: Merged PR with mentioned Closed (not planned) Issues - with user labels
+        "test_name": "test_merged_pr_with_closed_issue_mention_with_user_labels",
+        "expected_release_notes": release_notes_data_closed_issue_with_merged_prs_with_user_labels,
+        "records": __get_record_mock_1_issue_with_2_prs(issue_state="closed", is_closed_not_planned=True,
+                                                        issue_labels=['bug', 'enhancement'])
+    },
+
+    # Test: Merged PR without mentioned Issue
+    #   - covered in 'test_build_merged_pr_service_chapter_without_issue_and_user_labels'
 ]
 
 

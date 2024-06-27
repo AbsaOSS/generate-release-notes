@@ -148,7 +148,7 @@ class GithubManager:
 
         return parsed_issues
 
-    def fetch_pull_requests(self, since: datetime = None, state: str = 'all') -> list[PullRequest]:
+    def fetch_pull_requests(self, since: datetime = None) -> list[PullRequest]:
         """
         Fetches all pull requests from the current repository.
         If a 'since' datetime is provided, fetches all pull requests since that time.
@@ -159,7 +159,7 @@ class GithubManager:
         :return: A list of PullRequest objects.
         """
         logging.info(f"Fetching all closed PRs for {self.__repository.full_name}")
-        pulls = self.__repository.get_pulls(state=state)
+        pulls = self.__repository.get_pulls(state="closed")
 
         pull_requests = []
         logging.info(f"Found {len(list(pulls))} PRs for {self.__repository.full_name}")

@@ -82,7 +82,6 @@ class ServiceChapters(BaseChapters):
                 if records[nr].is_open_issue or records[nr].is_present_in_chapters:
                     pass
                 else:
-                    print(f"XXX 3")
                     self.chapters[self.OTHERS_NO_TOPIC].add_row(nr, records[nr].to_chapter_row())
 
     def __populate_closed_issues(self, record: Record, nr: int):
@@ -101,7 +100,6 @@ class ServiceChapters(BaseChapters):
             self.chapters[self.CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS].add_row(nr, record.to_chapter_row())
 
         if not record.is_present_in_chapters:
-            print(f"XXX 2")
             self.chapters[self.OTHERS_NO_TOPIC].add_row(nr, record.to_chapter_row())
 
     def __populate_pr(self, record: Record, nr: int):
@@ -128,5 +126,4 @@ class ServiceChapters(BaseChapters):
             self.chapters[self.CLOSED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS].add_row(nr, record.to_chapter_row())
 
         if not record.is_present_in_chapters:
-            print(f"XXX 1")
             self.chapters[self.OTHERS_NO_TOPIC].add_row(nr, record.to_chapter_row())
