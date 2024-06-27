@@ -34,7 +34,7 @@ from github.PullRequest import PullRequest as GitPullRequest
             - Without
         
     Pull Request can be in 2 states:    
-        - Open                              [state = open]                          "this state is not mined"
+        - Open                              [state = open]                          
         - Open (Reopened)                   [state = open, no other flag detected - additional comment required]  
         
         Ready for review
@@ -93,11 +93,12 @@ def __get_default_issue_mock(number: int, state: str, labels: list[str] = None,
 
 def __get_default_pull_request_mock(issue_number: Optional[int] = None, state="closed", number: int = 101,
                                     with_rls_notes: bool = True, labels: list[str] = None,
-                                    is_merged: bool = True) -> PullRequest:
+                                    is_merged: bool = True, is_draft: bool = False) -> PullRequest:
     mock_pr = Mock(spec=GitPullRequest)
     mock_pr.state = state
     mock_pr.number = number
     mock_pr.title = f"PR {number}"
+    mock_pr.draft = is_draft
 
     mock_pr.body = "Dummy body"
     if issue_number is not None:
@@ -147,10 +148,10 @@ def __get_record_mock_1_issue_with_2_prs(issue_state: str = "closed", issue_labe
 
 
 def __get_record_mock_1_pr_with_no_issue(state: str = "closed", is_merged: bool = True, labels: list[str] = None,
-                                         with_rls_notes: bool = True) -> dict[int, Record]:
+                                         with_rls_notes: bool = True, is_draft: bool = False) -> dict[int, Record]:
     # create 2 PRs
     pr1 = __get_default_pull_request_mock(number=101, state=state, is_merged=is_merged, with_rls_notes=with_rls_notes,
-                                          labels=labels)
+                                          labels=labels, is_draft=is_draft)
 
     records = {}
     records[0] = Record()
@@ -292,6 +293,33 @@ release_notes_data_service_chapters_open_issue_and_merged_pr_no_user_labels = ""
 http://example.com/changelog
 """
 
+release_notes_data_closed_issue_no_pr_with_user_labels = """### Closed Issues without Pull Request ⚠️
+- #1 _I1+0PR+2L-bug-breaking-changes_
+
+#### Full Changelog
+http://example.com/changelog
+"""
+
+release_notes_data_closed_issue_with_pr_without_user_labels = """### Closed Issues without User Defined Labels ⚠️
+- #1 _I1+0PR+0L_ in [#101](https://github.com/None/pull/101), [#102](https://github.com/None/pull/102)
+  - PR 101 1st release note
+  - PR 101 2nd release note
+  - PR 102 1st release note
+  - PR 102 2nd release note
+
+#### Full Changelog
+http://example.com/changelog
+"""
+
+release_notes_data_open_pr_without_issue = """### Others - No Topic ⚠️
+- PR: #101 _PR 101_
+  - PR 101 1st release note
+  - PR 101 2nd release note
+
+#### Full Changelog
+http://example.com/changelog
+"""
+
 # build
 
 
@@ -367,85 +395,138 @@ def test_build_no_data_no_empty_chapters():
 
 # Define test cases
 test_cases = [
+    # ---------------------------------------------------------------------------------------------
+    #   from custom/uer defined chapters
+    # ---------------------------------------------------------------------------------------------
     # Happy paths - see closed issue in used defined chapters
     {
-        # Goal: issue in Closed (1st) state is visible in the release notes - with one label
+        # Test: issue in Closed (1st) state is visible in the release notes - with one label
         "test_name": "test_build_closed_issue_with_one_custom_label",
         "expected_release_notes": release_notes_data_custom_chapters_one_label,
         "records": __get_record_mock_1_issue_with_2_prs(issue_labels=['bug'])
     },
     {
-        # Goal: issue in Closed (1st) state is visible in the release notes - with more label - duplicity reduction on
+        # Test: issue in Closed (1st) state is visible in the release notes - with more label - duplicity reduction on
         "test_name": "test_build_closed_issue_with_more_custom_labels_duplicity_reduction_on",
         "expected_release_notes": release_notes_data_custom_chapters_more_labels_duplicity_reduction_on,
         "records": __get_record_mock_1_issue_with_2_prs(issue_labels=['bug', 'enhancement'])
     },
     # {
-    #     # Goal: issue in Closed (1st) state is visible in the release notes - with more label - duplicity reduction off
+    #     # Test: issue in Closed (1st) state is visible in the release notes - with more label - duplicity reduction off
     #     # TODO - switch off duplicity reduction
     #     "test_name": "test_build_closed_issue_with_more_custom_labels_duplicity_reduction_off",
     #     "expected_release_notes": release_notes_data_custom_chapters_more_labels_duplicity_reduction_off,
     #     "records": __get_record_mock_with_2_prs(issue_labels=['bug', 'enhancement'])
     # },
     # ---------------------------------------------------------------------------------------------
+    #   from service chapters point of view
+    # ---------------------------------------------------------------------------------------------
     # Happy paths - see closed issue in services chapters
     {
-        # Goal: issue in Closed (1st) - visible in service chapters - without pull requests and user defined labels - no labels
+        # Test: issue in Closed (1st) - visible in service chapters - without pull requests and user defined labels - no labels
         "test_name": "test_build_closed_issue_service_chapter_without_pull_request_and_user_defined_label",
         "expected_release_notes": release_notes_data_service_chapters_closed_issue_no_pr_no_user_labels,
         "records": {0: Record(__get_default_issue_mock(number=1, state="closed"))}
     },
     {
-        # Goal: pr in merged (1st) state is visible in the release notes service chapters - no labels
+        # Test: pr in merged (1st) state is visible in the release notes service chapters - no labels
         "test_name": "test_build_merged_pr_service_chapter_without_issue_and_user_labels",
         "expected_release_notes": release_notes_data_service_chapters_merged_pr_no_issue_no_user_labels,
         "records": __get_record_mock_1_pr_with_no_issue()
     },
     {
-        # Goal: pr in closed state is visible in the release notes service chapters - no labels
+        # Test: pr in closed state is visible in the release notes service chapters - no labels
         "test_name": "test_build_merged_pr_service_chapter_without_issue_and_user_labels",
         "expected_release_notes": release_notes_data_service_chapters_closed_pr_no_issue_no_user_labels,
         "records": __get_record_mock_1_pr_with_no_issue(is_merged=False)
     },
     {
-        # Goal: issue in open state with pr in merged state is visible in the release notes service chapters - no labels
+        # Test: issue in open state with pr in merged state is visible in the release notes service chapters - no labels
         "test_name": "test_build_open_issue_with_merged_pr_service_chapter_linked_to_not_closed_issue",
         "expected_release_notes": release_notes_data_service_chapters_open_issue_and_merged_pr_no_user_labels,
         "records": __get_record_mock_1_issue_with_2_prs(issue_state="open")
     },
-    # Goal: No Topic service chapter is here to catch unexpected and 'new' data combinations - do not lost them
+    # Test: No Topic service chapter is here to catch unexpected and 'new' data combinations - do not lost them
     # ---------------------------------------------------------------------------------------------
-    # Alternative paths - see issue in all states (except 1st closed) without labels ==> in correct service chapters
-    # TODO next
-
-    # {
-    #     # Goal: issue in Open (Initial) state is not visible in the release notes - no labels
-    #     "test_name": "test_build_open_issue",
-    #     "expected_release_notes": release_notes_no_data,
-    #     "records": {0: Record(__get_default_issue_mock(number=1, state="open"))}
-    # },
-    # {
-    #     # Goal: issue in Open (Reopened) state is not visible in the release notes - no labels
-    #     "test_name": "test_build_reopened_issue",
-    #     "expected_release_notes": release_notes_no_data,
-    #     "records": {0: Record(__get_default_issue_mock(number=1, state="open", state_reason="reopened"))}
-    # },
-    # {
-    #     # Goal: issue in Closed (not_planned) state is visible in the release notes - no labels
-    #     "test_name": "test_build_closed_not_planned_issue",
-    #     "expected_release_notes": release_notes_no_data,
-    #     "records": {0: Record(__get_default_issue_mock(number=1, state="closed", state_reason="not_planned"))}
-    # }
+    #   from Issues states point of view
+    # ---------------------------------------------------------------------------------------------
+    # Alternative paths - see issue in all states without labels ==> in correct service chapters
+    {
+        # Test: issue in Open (Initial) state is not visible in the release notes - no labels
+        "test_name": "test_build_open_issue",
+        "expected_release_notes": release_notes_no_data_no_warning_no_empty_chapters,
+        "records": {0: Record(__get_default_issue_mock(number=1, state="open"))}
+    },
+    {
+        # Test: issue in Open (Reopened) state is not visible in the release notes - no labels
+        "test_name": "test_build_reopened_issue",
+        "expected_release_notes": release_notes_no_data_no_warning_no_empty_chapters,
+        "records": {0: Record(__get_default_issue_mock(number=1, state="open", state_reason="reopened"))}
+    },
+    {
+        # Test: issue in Closed (1st) state is not visible in the release notes - no labels
+        "test_name": "test_build_closed_issue",
+        "expected_release_notes": release_notes_data_service_chapters_closed_issue_no_pr_no_user_labels,
+        "records": {0: Record(__get_default_issue_mock(number=1, state="closed"))}
+    },
+    {
+        # Test: issue in Closed (not_planned) state is visible in the release notes - no labels
+        "test_name": "test_build_closed_not_planned_issue",
+        "expected_release_notes": release_notes_data_service_chapters_closed_issue_no_pr_no_user_labels,
+        "records": {0: Record(__get_default_issue_mock(number=1, state="closed", state_reason="not_planned"))}
+    },
 
     # ---------------------------------------------------------------------------------------------
     # Alternative paths - see issue in all logical states ==> in correct service chapters
+    {
+        # Test: Closed Issue without linked PR with user labels ==> not part of custom chapters as there is no merged change
+        "test_name": "test_build_closed_issue_with_user_labels_no_prs",
+        "expected_release_notes": release_notes_data_closed_issue_no_pr_with_user_labels,
+        "records": {0: Record(__get_default_issue_mock(number=1, state="closed", labels=['bug', 'breaking-changes']))}
+    },
 
-    # TODO next
+    # Test: Closed Issue without linked PR without user labels
+    #   - covered in 'test_build_merged_pr_service_chapter_without_issue_and_user_labels'
+
+    # Test: Closed Issue with 1+ merged PRs with 1+ user labels
+    #   - covered in 'test_build_closed_issue_with_more_custom_labels_duplicity_reduction_off'
+
+    {
+        # Test: Closed Issue with 1+ merged PRs without user labels
+        "test_name": "test_build_closed_issue_with_prs_without_user_label",
+        "expected_release_notes": release_notes_data_closed_issue_with_pr_without_user_labels,
+        "records": __get_record_mock_1_issue_with_2_prs()
+    },
 
     # ---------------------------------------------------------------------------------------------
+    #   from PR states point of view
+    # ---------------------------------------------------------------------------------------------
     # Alternative paths - see pull request in all states ==> in correct service chapters
-
-    # TODO next
+    {
+        # Test: Open PR without Issue   ==> Open PR are ignored as they are not merged - no change to document
+        #   - Note: this should not happen, but if this happens, it will be reported in Others - No Topic chapter
+        "test_name": "test_build_open_pr_without_issue",
+        "expected_release_notes": release_notes_data_open_pr_without_issue,
+        "records": __get_record_mock_1_pr_with_no_issue(state="open")
+    },
+    {
+        # Test: Ready for review - Merged PR (is change in repo)
+        "test_name": "test_build_merged_pr_without_issue_ready_for_review",
+        "expected_release_notes": release_notes_data_service_chapters_merged_pr_no_issue_no_user_labels,
+        "records": __get_record_mock_1_pr_with_no_issue(state="closed")
+    },
+    {
+        # Test: Ready for review - Closed PR (not planned)
+        "test_name": "test_build_closed_pr_without_issue_ready_for_review",
+        "expected_release_notes": release_notes_data_service_chapters_closed_pr_no_issue_no_user_labels,
+        "records": __get_record_mock_1_pr_with_no_issue(state="closed", is_merged=False)
+    },
+    {
+        # Test: Draft - Closed PR (not planned)
+        "test_name": "test_build_closed_pr_without_issue_draft",
+        "expected_release_notes": release_notes_data_service_chapters_closed_pr_no_issue_no_user_labels,
+        "records": __get_record_mock_1_pr_with_no_issue(state="closed", is_merged=False, is_draft=True)
+    },
 
     # ---------------------------------------------------------------------------------------------
     # Alternative paths - see pull request in all logical states ==> in correct service chapters
