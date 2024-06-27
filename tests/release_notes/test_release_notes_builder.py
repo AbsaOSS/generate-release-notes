@@ -1,12 +1,12 @@
+from typing import Optional
 from unittest.mock import Mock
 
-import github
 import pytest
 import json
 
 from datetime import datetime
-from github_integration.model.pull_request import PullRequest
 from github_integration.model.issue import Issue
+from github_integration.model.pull_request import PullRequest
 from release_notes.formatter.record_formatter import RecordFormatter
 from release_notes.model.custom_chapters import CustomChapters
 from release_notes.model.record import Record
@@ -14,165 +14,154 @@ from release_notes.release_notes_builder import ReleaseNotesBuilder
 from github.Issue import Issue as GitIssue
 from github.PullRequest import PullRequest as GitPullRequest
 
+"""
+    Issue can be in 2 states (each in 2 'sub' states):
+        - Open
+            - Open (initial)                [state_reason = null]
+            - Reopened                      [state_reason = "reopened"]
+        - Closed
+            - Closed                        [state_reason = null]
+            - Closed (Not planned)          [state_reason = "not_planned"]
+          
+    Issue can have these logical states:
+        - by linked PR
+            - With one
+            - With multiple
+            - Without
+        - by user labels
+            - With one
+            - With multiple
+            - Without
+        
+    Pull Request can be in 2 states:    
+        - Open                              [state = open]                          "this state is not mined"
+        - Open (Reopened)                   [state = open, no other flag detected - additional comment required]  
+        
+        Ready for review
+        - Closed                            [state - closed, all *_at = time, draft = false]
+        - Closed (not planned)              [state = closed, merged_at = null, draft = false]
+        
+        Draft
+        - xx Closed xx                      [state - closed, Not possible to merge !!!]
+        - Closed (not planned)              [state = closed, merged_at = null, draft = true]           
+        
+    Pull Request can have these logical states:
+        - by user labels
+            - With one
+            - With multiple
+            - Without
+        - by link/mention Issue
+            - With one in state
+                - Open (init)
+                - Open (Reopened)
+                - Closed
+                - Closed (not planned)                
+            - With multiple in these states
+                - Open (init)
+                - Open (Reopened)
+                - Closed
+                - Closed (not planned)
+            - Without linked Issue								
+"""
 
-def generate_full_dataset() -> dict[int, Record]:
-    # Mock the get_labels method
-    mock_label_1 = Mock()
-    mock_label_1.name = "bug"
-    mock_label_2 = Mock()
-    mock_label_2.name = "enhancement"
-    mock_label_3 = Mock()
-    mock_label_3.name = "spike"
-    mock_label_4 = Mock()
-    mock_label_4.name = "error"
 
-    mock_git_issue_id_1 = Mock(spec=GitIssue)
-    mock_git_issue_id_1.number = 1
-    mock_git_issue_id_1.title = "I1+1PR+l-bug"
-    mock_git_issue_id_1.body = "Dummy body"
-    mock_git_issue_id_1.state = "closed"
-    mock_git_issue_id_1.get_labels.return_value = [mock_label_1]
-    mock_git_issue_id_1.created_at = datetime.now()
+def __get_default_issue_mock(number: int, state: str, labels: list[str] = None,
+                             state_reason: Optional[str] = None) -> Issue:
+    mock_issue = Mock(spec=GitIssue)
+    mock_issue.number = number
+    mock_issue.body = "Dummy body"
+    mock_issue.state = state
+    mock_issue.created_at = datetime.now()
+    mock_issue.state_reason = state_reason
 
-    mock_git_issue_id_2 = Mock(spec=GitIssue)
-    mock_git_issue_id_2.number = 4
-    mock_git_issue_id_2.title = "I4+2PR+l-enhancement"
-    mock_git_issue_id_2.body = "Dummy body"
-    mock_git_issue_id_2.state = "closed"
-    mock_git_issue_id_2.get_labels.return_value = [mock_label_2]
-    mock_git_issue_id_2.created_at = datetime.now()
+    if labels is None:
+        mock_issue.title = f"I1+0PR+0L"
+        mock_issue.get_labels.return_value = []
+    else:
+        labels_str = "-".join(labels)
+        labels_mocks = []
+        for label in labels:
+            mock_label = Mock()
+            mock_label.name = label
+            labels_mocks.append(mock_label)
 
-    mock_git_issue_id_3 = Mock(spec=GitIssue)
-    mock_git_issue_id_3.number = 7
-    mock_git_issue_id_3.title = "I7+0PR+l-enhancement"
-    mock_git_issue_id_3.body = "Dummy body"
-    mock_git_issue_id_3.state = "closed"
-    mock_git_issue_id_3.get_labels.return_value = [mock_label_2]
-    mock_git_issue_id_3.created_at = datetime.now()
+        mock_issue.title = f"I1+0PR+{len(labels)}L-{labels_str}"
+        mock_issue.get_labels.return_value = labels_mocks
 
-    mock_git_issue_id_4 = Mock(spec=GitIssue)
-    mock_git_issue_id_4.number = 8
-    mock_git_issue_id_4.title = "I8+0PR+l-spike"
-    mock_git_issue_id_4.body = "Dummy body"
-    mock_git_issue_id_4.state = "closed"
-    mock_git_issue_id_4.get_labels.return_value = [mock_label_3]
-    mock_git_issue_id_4.created_at = datetime.now()
+    return Issue(mock_issue)
 
-    mock_git_issue_id_5 = Mock(spec=GitIssue)
-    mock_git_issue_id_5.number = 9
-    mock_git_issue_id_5.title = "I9+0PR+l-any"
-    mock_git_issue_id_5.body = "Dummy body"
-    mock_git_issue_id_5.state = "closed"
-    mock_git_issue_id_5.get_labels.return_value = []
-    mock_git_issue_id_5.created_at = datetime.now()
 
-    issues = [
-        Issue(mock_git_issue_id_1),     # labeled issue with one PR
-        Issue(mock_git_issue_id_2),     # labeled issue with two PRs
-        Issue(mock_git_issue_id_3),     # labeled issue with no PRs ==> no rls notes
-        Issue(mock_git_issue_id_4),     # labeled issue with no PRs, no user defined label ==> no rls notes
-        Issue(mock_git_issue_id_5),     # labeled issue with no PRs, no label ==> no rls notes
-    ]
+def __get_default_pull_request_mock(issue_number: Optional[int] = None, state="closed", number: int = 101,
+                                    with_rls_notes: bool = True, labels: list[str] = None,
+                                    is_merged: bool = True) -> PullRequest:
+    mock_pr = Mock(spec=GitPullRequest)
+    mock_pr.state = state
+    mock_pr.number = number
+    mock_pr.title = f"PR {number}"
 
-    mock_git_pr_id_101 = Mock(spec=GitPullRequest)
-    mock_git_pr_id_101.number = 101
-    mock_git_pr_id_101.title = "PR1+2xRLS+1I+l-no"
-    mock_git_pr_id_101.body = "Dummy body\nCloses #1\n\nRelease notes:\n- PR 1 First release note\n- PR 1 Second release note\n"
-    mock_git_pr_id_101.get_labels.return_value = []
-    mock_git_pr_id_101.state = "merged"
-    mock_git_pr_id_101.created_at = datetime.now()
-    mock_git_pr_id_101.updated_at = datetime.now()
-    mock_git_pr_id_101.closed_at = None
-    mock_git_pr_id_101.merged_at = datetime.now()
+    mock_pr.body = "Dummy body"
+    if issue_number is not None:
+        mock_pr.body += f"\nCloses #{issue_number}"
+    if with_rls_notes:
+        mock_pr.body += f"\n\nRelease notes:\n- PR {number} 1st release note\n- PR {number} 2nd release note\n"
 
-    mock_git_pr_id_102 = Mock(spec=GitPullRequest)
-    mock_git_pr_id_102.number = 102
-    mock_git_pr_id_102.title = "PR2+2xRLS+0I+l-no"
-    mock_git_pr_id_102.body = "Dummy body\n\nRelease notes:\n- PR 2 First release note\n- PR 2 Second release note\n"
-    mock_git_pr_id_102.get_labels.return_value = []
-    mock_git_pr_id_102.state = "merged"
-    mock_git_pr_id_102.created_at = datetime.now()
-    mock_git_pr_id_102.updated_at = datetime.now()
-    mock_git_pr_id_102.closed_at = None
-    mock_git_pr_id_102.merged_at = datetime.now()
+    labels_mocks = []
+    if labels is not None:
+        for label in labels:
+            mock_label = Mock()
+            mock_label.name = label
+            labels_mocks.append(mock_label)
+    mock_pr.get_labels.return_value = labels_mocks
 
-    mock_git_pr_id_103 = Mock(spec=GitPullRequest)
-    mock_git_pr_id_103.number = 103
-    mock_git_pr_id_103.title = "PR3+0xRLS+0I+l-bug"
-    mock_git_pr_id_103.body = "Dummy body"
-    mock_git_pr_id_103.get_labels.return_value = [mock_label_4]
-    mock_git_pr_id_103.state = "closed"
-    mock_git_pr_id_103.created_at = datetime.now()
-    mock_git_pr_id_103.updated_at = datetime.now()
-    mock_git_pr_id_103.closed_at = datetime.now()
-    mock_git_pr_id_103.merged_at = None
+    mock_pr.created_at = datetime.now()
+    mock_pr.updated_at = datetime.now()
 
-    mock_git_pr_id_105 = Mock(spec=GitPullRequest)
-    mock_git_pr_id_105.number = 105
-    mock_git_pr_id_105.title = "PR5+2xRLS+1I+l-no"
-    mock_git_pr_id_105.body = "Dummy body\nCloses #2\n\nRelease notes:\n- PR 5 release note\n"
-    mock_git_pr_id_105.get_labels.return_value = []
-    mock_git_pr_id_105.labels = []
-    mock_git_pr_id_105.state = "merged"
-    mock_git_pr_id_105.created_at = datetime.now()
-    mock_git_pr_id_105.updated_at = datetime.now()
-    mock_git_pr_id_105.closed_at = None
-    mock_git_pr_id_105.merged_at = datetime.now()
+    if is_merged:
+        mock_pr.merged_at = datetime.now()
+        mock_pr.closed_at = datetime.now()
+    else:
+        mock_pr.merged_at = None
+        mock_pr.closed_at = datetime.now()
 
-    mock_git_pr_id_106 = Mock(spec=GitPullRequest)
-    mock_git_pr_id_106.number = 106
-    mock_git_pr_id_106.title = "PR6+1xRLS+1I+l-no"
-    mock_git_pr_id_106.body = "Dummy body\nCloses #1\n\nRelease notes:\n- PR 6 release note\n"
-    mock_git_pr_id_106.get_labels.return_value = [mock_label_1]
-    mock_git_pr_id_106.labels = ['bug']
-    mock_git_pr_id_106.state = "merged"
-    mock_git_pr_id_106.created_at = datetime.now()
-    mock_git_pr_id_106.updated_at = datetime.now()
-    mock_git_pr_id_106.closed_at = None
-    mock_git_pr_id_106.merged_at = datetime.now()
+    return PullRequest(mock_pr)
 
-    mock_git_pr_id_111 = Mock(spec=GitPullRequest)
-    mock_git_pr_id_111.number = 111
-    mock_git_pr_id_111.title = "PR11+1xRLS+1I+l-no"
-    mock_git_pr_id_111.body = "Dummy body\nFixes #10\n\nRelease notes:\n- PR 11 release note\n"
-    mock_git_pr_id_111.get_labels.return_value = []
-    mock_git_pr_id_111.state = "merged"
-    mock_git_pr_id_111.created_at = datetime.now()
-    mock_git_pr_id_111.updated_at = datetime.now()
-    mock_git_pr_id_111.closed_at = None
-    mock_git_pr_id_111.merged_at = datetime.now()
 
-    pulls = [
-        PullRequest(mock_git_pr_id_101),    # [0] - PR 1 to Issue 1
-        PullRequest(mock_git_pr_id_102),    # [1] - PR without Issue and with Release notes in description - with bug label
-        PullRequest(mock_git_pr_id_103),    # [2] - PR without Issue and without Release notes in description - with no labels - closed state
-        PullRequest(mock_git_pr_id_105),    # [3, 4] - 2 PRs with Issue '2' - no labels, both with Release notes
-        PullRequest(mock_git_pr_id_106),
-        PullRequest(mock_git_pr_id_111),    # [5] - 1 PRs with Issue '11' - no labels, with Release notes - PR linked to Open Issue
-    ]
+def __get_record_mock_1_issue_with_2_prs(issue_state: str = "closed", issue_labels: list[str] = None,
+                                         pr_with_rls_notes: bool = True, second_pr_merged: bool = True) -> dict[int, Record]:
+    # create 1 closed issue without PR
+    issue = __get_default_issue_mock(number=1, state=issue_state, labels=issue_labels)
+    # create 2 PRs
+    pr1 = __get_default_pull_request_mock(issue_number=1, number=101, with_rls_notes=pr_with_rls_notes)
+    pr2 = __get_default_pull_request_mock(issue_number=1, number=102, with_rls_notes=pr_with_rls_notes,
+                                          is_merged=second_pr_merged)
 
-    records_full = {}
-    records_full[1] = Record(issues[0])                      # with one PR
-    records_full[2] = Record()
-    records_full[3] = Record()
-    records_full[4] = Record(issues[1])                      # with two PRs
-    records_full[5] = Record(issues[2])                      # with no PRs ==> no rls notes
-    records_full[6] = Record(issues[3])                      # with no PRs, no user defined label ==> no rls notes
-    records_full[7] = Record(issues[4])                      # with no PRs, no label ==> no rls notes
-    records_full[8] = Record()                               # Issue is not in closed state ==> not returned in mining
+    records = {}
+    if issue_state == "closed":
+        records[0] = Record(issue)
+    else:
+        records[0] = Record()               # Note: Issue in open state is not registered to record set
+    records[0].register_pull_request(pr1)
+    records[0].register_pull_request(pr2)
 
-    records_full[1].register_pull_request(pulls[0])
-    records_full[2].register_pull_request(pulls[1])          # PR only, without Release notes in description - with no labels - merged state
-    records_full[3].register_pull_request(pulls[2])          # PR only, without Release notes in description - with no labels - closed state
-    records_full[4].register_pull_request(pulls[3])
-    records_full[4].register_pull_request(pulls[4])
-    records_full[8].register_pull_request(pulls[5])
+    return records
 
-    return records_full
 
-formatter = RecordFormatter()
-changelog_url = "http://example.com/changelog"
-chapters_json = json.dumps([
+def __get_record_mock_1_pr_with_no_issue(state: str = "closed", is_merged: bool = True, labels: list[str] = None,
+                                         with_rls_notes: bool = True) -> dict[int, Record]:
+    # create 2 PRs
+    pr1 = __get_default_pull_request_mock(number=101, state=state, is_merged=is_merged, with_rls_notes=with_rls_notes,
+                                          labels=labels)
+
+    records = {}
+    records[0] = Record()
+    records[0].register_pull_request(pr1)
+
+    return records
+
+
+default_formatter = RecordFormatter()
+default_changelog_url = "http://example.com/changelog"
+default_chapters_json = json.dumps([
     {"title": "Breaking Changes 💥", "label": "breaking-change"},
     {"title": "New Features 🎉", "label": "feature"},
     {"title": "New Features 🎉", "label": "enhancement"},
@@ -210,167 +199,282 @@ Previous filters caught all Issues or Pull Requests.
 http://example.com/changelog
 """
 
-
-release_notes_full = """### Breaking Changes 💥
+release_notes_no_data_no_warning = """### Breaking Changes 💥
 No entries detected.
 
 ### New Features 🎉
-- #4 _I4+2PR+l-enhancement_ in [#105](https://github.com/None/pull/105), [#106](https://github.com/None/pull/106)
-  - PR 5 release note
-  - PR 6 release note
-
-### Bugfixes 🛠
-- #1 _I1+1PR+l-bug_ in [#101](https://github.com/None/pull/101)
-  - PR 1 First release note
-  - PR 1 Second release note
-
-### Closed Issues without Pull Request ⚠️
-- #7 _I7+0PR+l-enhancement_
-- #8 _I8+0PR+l-spike_
-- #9 _I9+0PR+l-any_
-
-### Closed Issues without User Defined Labels ⚠️
-- #8 _I8+0PR+l-spike_
-- #9 _I9+0PR+l-any_
-
-### Merged PRs without Issue and User Defined Labels ⚠️
-- PR: #102 _PR2+2xRLS+0I+l-no_, implemented by None
-  - PR 2 First release note
-  - PR 2 Second release note
-
-### Closed PRs without Issue and User Defined Labels ⚠️
-- PR: #103 _PR3+0xRLS+0I+l-bug_, implemented by None
-
-### Merged PRs Linked to 'Not Closed' Issue ⚠️
-- PR: #111 _PR11+1xRLS+1I+l-no_, implemented by None
-  - PR 11 release note
-
-### Others - No Topic ⚠️
-Previous filters caught all Issues or Pull Requests.
-
-#### Full Changelog
-http://example.com/changelog
-"""
-
-release_notes_full_no_empty_chapters = """### New Features 🎉
-- #4 _I4+2PR+l-enhancement_ in [#105](https://github.com/None/pull/105), [#106](https://github.com/None/pull/106)
-  - PR 5 release note
-  - PR 6 release note
-
-### Bugfixes 🛠
-- #1 _I1+1PR+l-bug_ in [#101](https://github.com/None/pull/101)
-  - PR 1 First release note
-  - PR 1 Second release note
-
-### Closed Issues without Pull Request ⚠️
-- #7 _I7+0PR+l-enhancement_
-- #8 _I8+0PR+l-spike_
-- #9 _I9+0PR+l-any_
-
-### Closed Issues without User Defined Labels ⚠️
-- #8 _I8+0PR+l-spike_
-- #9 _I9+0PR+l-any_
-
-### Merged PRs without Issue and User Defined Labels ⚠️
-- PR: #102 _PR2+2xRLS+0I+l-no_, implemented by None
-  - PR 2 First release note
-  - PR 2 Second release note
-
-### Closed PRs without Issue and User Defined Labels ⚠️
-- PR: #103 _PR3+0xRLS+0I+l-bug_, implemented by None
-
-### Merged PRs Linked to 'Not Closed' Issue ⚠️
-- PR: #111 _PR11+1xRLS+1I+l-no_, implemented by None
-  - PR 11 release note
-
-#### Full Changelog
-http://example.com/changelog
-"""
-
-release_notes_full_no_warnings = """### Breaking Changes 💥
 No entries detected.
 
-### New Features 🎉
-- #4 _I4+2PR+l-enhancement_ in [#105](https://github.com/None/pull/105), [#106](https://github.com/None/pull/106)
-  - PR 5 release note
-  - PR 6 release note
-
 ### Bugfixes 🛠
-- #1 _I1+1PR+l-bug_ in [#101](https://github.com/None/pull/101)
-  - PR 1 First release note
-  - PR 1 Second release note
+No entries detected.
 
 #### Full Changelog
 http://example.com/changelog
 """
 
+release_notes_no_data_no_warning_no_empty_chapters = """#### Full Changelog
+http://example.com/changelog
+"""
+
+release_notes_no_data_no_empty_chapters = release_notes_no_data_no_warning_no_empty_chapters
+
+release_notes_data_custom_chapters_one_label = """### Bugfixes 🛠
+- #1 _I1+0PR+1L-bug_ in [#101](https://github.com/None/pull/101), [#102](https://github.com/None/pull/102)
+  - PR 101 1st release note
+  - PR 101 2nd release note
+  - PR 102 1st release note
+  - PR 102 2nd release note
+
+#### Full Changelog
+http://example.com/changelog
+"""
+
+release_notes_data_custom_chapters_more_labels_duplicity_reduction_on = """### New Features 🎉
+- #1 _I1+0PR+2L-bug-enhancement_ in [#101](https://github.com/None/pull/101), [#102](https://github.com/None/pull/102)
+  - PR 101 1st release note
+  - PR 101 2nd release note
+  - PR 102 1st release note
+  - PR 102 2nd release note
+
+#### Full Changelog
+http://example.com/changelog
+"""
+
+release_notes_data_custom_chapters_more_labels_duplicity_reduction_off = """### New Features 🎉
+- #1 _I1+0PR+2L-bug-enhancement_ in [#101](https://github.com/None/pull/101), [#102](https://github.com/None/pull/102)
+  - PR 101 1st release note
+  - PR 101 2nd release note
+  - PR 102 1st release note
+  - PR 102 2nd release note
+
+TODO - add bug chapter
+
+#### Full Changelog
+http://example.com/changelog
+"""
+
+release_notes_data_service_chapters_closed_issue_no_pr_no_user_labels = """### Closed Issues without Pull Request ⚠️
+- #1 _I1+0PR+0L_
+
+### Closed Issues without User Defined Labels ⚠️
+- #1 _I1+0PR+0L_
+
+#### Full Changelog
+http://example.com/changelog
+"""
+
+release_notes_data_service_chapters_merged_pr_no_issue_no_user_labels = """### Merged PRs without Issue and User Defined Labels ⚠️
+- PR: #101 _PR 101_
+  - PR 101 1st release note
+  - PR 101 2nd release note
+
+#### Full Changelog
+http://example.com/changelog
+"""
+
+release_notes_data_service_chapters_closed_pr_no_issue_no_user_labels = """### Closed PRs without Issue and User Defined Labels ⚠️
+- PR: #101 _PR 101_
+  - PR 101 1st release note
+  - PR 101 2nd release note
+
+#### Full Changelog
+http://example.com/changelog
+"""
+
+release_notes_data_service_chapters_open_issue_and_merged_pr_no_user_labels = """### Merged PRs Linked to 'Not Closed' Issue ⚠️
+- PR: #101 _PR 101_
+  - PR 101 1st release note
+  - PR 101 2nd release note
+  - PR 102 1st release note
+  - PR 102 2nd release note
+
+#### Full Changelog
+http://example.com/changelog
+"""
 
 # build
 
-def test_build_full_with_empty_chapters():
+
+def test_build_no_data():
     custom_chapters = CustomChapters()
-    custom_chapters.from_json(chapters_json)
-
-    expected_release_notes = release_notes_full
-
-    builder = ReleaseNotesBuilder(records=generate_full_dataset(), changelog_url=changelog_url, formatter=formatter,
-                                  custom_chapters=custom_chapters)
-
-    actual_release_notes = builder.build()
-    # print("Actual - no data:\n" + actual_release_notes)
-    assert expected_release_notes == actual_release_notes
-
-
-def test_build_no_data_with_empty_chapters():
-    custom_chapters = CustomChapters()
-    custom_chapters.from_json(chapters_json)
+    custom_chapters.from_json(default_chapters_json)
 
     expected_release_notes = release_notes_no_data
 
     builder = ReleaseNotesBuilder(
-        records={},
-        changelog_url=changelog_url,
-        formatter=formatter,
+        records={},                         # empty record data set
+        changelog_url=default_changelog_url,
+        formatter=default_formatter,
         custom_chapters=custom_chapters)
 
     actual_release_notes = builder.build()
-    # print("Actual - no data:\n" + actual_release_notes)
     assert expected_release_notes == actual_release_notes
 
 
-def test_build_no_warnings():
+def test_build_no_data_no_warnings():
     custom_chapters = CustomChapters()
-    custom_chapters.from_json(chapters_json)
+    custom_chapters.from_json(default_chapters_json)
 
-    expected_release_notes = release_notes_full_no_warnings
+    expected_release_notes = release_notes_no_data_no_warning
 
     builder = ReleaseNotesBuilder(
-        records=generate_full_dataset(),
-        changelog_url=changelog_url,
-        formatter=formatter,
-        custom_chapters=custom_chapters, warnings=False)
+        records={},                         # empty record data set
+        changelog_url=default_changelog_url,
+        formatter=default_formatter,
+        custom_chapters=custom_chapters,
+        warnings=False)
 
     actual_release_notes = builder.build()
-    # print("Actual:\n" + actual_release_notes)
     assert expected_release_notes == actual_release_notes
 
 
-def test_build_full_no_empty_chapters():
+def test_build_no_data_no_warnings_no_empty_chapters():
     custom_chapters_no_empty_chapters = CustomChapters()
-    custom_chapters_no_empty_chapters.from_json(chapters_json)
+    custom_chapters_no_empty_chapters.from_json(default_chapters_json)
     custom_chapters_no_empty_chapters.print_empty_chapters = False
 
-    expected_release_notes = release_notes_full_no_empty_chapters
+    expected_release_notes = release_notes_no_data_no_warning_no_empty_chapters
 
     builder = ReleaseNotesBuilder(
-        records=generate_full_dataset(),
-        changelog_url=changelog_url,
-        formatter=formatter,
+        records={},
+        changelog_url=default_changelog_url,
+        formatter=default_formatter,
+        custom_chapters=custom_chapters_no_empty_chapters,
+        warnings=False,
+        print_empty_chapters=False)
+
+    actual_release_notes = builder.build()
+    assert expected_release_notes == actual_release_notes
+
+
+def test_build_no_data_no_empty_chapters():
+    custom_chapters_no_empty_chapters = CustomChapters()
+    custom_chapters_no_empty_chapters.from_json(default_chapters_json)
+    custom_chapters_no_empty_chapters.print_empty_chapters = False
+
+    expected_release_notes = release_notes_no_data_no_empty_chapters
+
+    builder = ReleaseNotesBuilder(
+        records={},
+        changelog_url=default_changelog_url,
+        formatter=default_formatter,
         custom_chapters=custom_chapters_no_empty_chapters,
         print_empty_chapters=False)
 
     actual_release_notes = builder.build()
-    # print("Actual:\n" + actual_release_notes)
+    assert expected_release_notes == actual_release_notes
+
+
+# Define test cases
+test_cases = [
+    # Happy paths - see closed issue in used defined chapters
+    {
+        # Goal: issue in Closed (1st) state is visible in the release notes - with one label
+        "test_name": "test_build_closed_issue_with_one_custom_label",
+        "expected_release_notes": release_notes_data_custom_chapters_one_label,
+        "records": __get_record_mock_1_issue_with_2_prs(issue_labels=['bug'])
+    },
+    {
+        # Goal: issue in Closed (1st) state is visible in the release notes - with more label - duplicity reduction on
+        "test_name": "test_build_closed_issue_with_more_custom_labels_duplicity_reduction_on",
+        "expected_release_notes": release_notes_data_custom_chapters_more_labels_duplicity_reduction_on,
+        "records": __get_record_mock_1_issue_with_2_prs(issue_labels=['bug', 'enhancement'])
+    },
+    # {
+    #     # Goal: issue in Closed (1st) state is visible in the release notes - with more label - duplicity reduction off
+    #     # TODO - switch off duplicity reduction
+    #     "test_name": "test_build_closed_issue_with_more_custom_labels_duplicity_reduction_off",
+    #     "expected_release_notes": release_notes_data_custom_chapters_more_labels_duplicity_reduction_off,
+    #     "records": __get_record_mock_with_2_prs(issue_labels=['bug', 'enhancement'])
+    # },
+    # ---------------------------------------------------------------------------------------------
+    # Happy paths - see closed issue in services chapters
+    {
+        # Goal: issue in Closed (1st) - visible in service chapters - without pull requests and user defined labels - no labels
+        "test_name": "test_build_closed_issue_service_chapter_without_pull_request_and_user_defined_label",
+        "expected_release_notes": release_notes_data_service_chapters_closed_issue_no_pr_no_user_labels,
+        "records": {0: Record(__get_default_issue_mock(number=1, state="closed"))}
+    },
+    {
+        # Goal: pr in merged (1st) state is visible in the release notes service chapters - no labels
+        "test_name": "test_build_merged_pr_service_chapter_without_issue_and_user_labels",
+        "expected_release_notes": release_notes_data_service_chapters_merged_pr_no_issue_no_user_labels,
+        "records": __get_record_mock_1_pr_with_no_issue()
+    },
+    {
+        # Goal: pr in closed state is visible in the release notes service chapters - no labels
+        "test_name": "test_build_merged_pr_service_chapter_without_issue_and_user_labels",
+        "expected_release_notes": release_notes_data_service_chapters_closed_pr_no_issue_no_user_labels,
+        "records": __get_record_mock_1_pr_with_no_issue(is_merged=False)
+    },
+    {
+        # Goal: issue in open state with pr in merged state is visible in the release notes service chapters - no labels
+        "test_name": "test_build_open_issue_with_merged_pr_service_chapter_linked_to_not_closed_issue",
+        "expected_release_notes": release_notes_data_service_chapters_open_issue_and_merged_pr_no_user_labels,
+        "records": __get_record_mock_1_issue_with_2_prs(issue_state="open")
+    },
+    # Goal: No Topic service chapter is here to catch unexpected and 'new' data combinations - do not lost them
+    # ---------------------------------------------------------------------------------------------
+    # Alternative paths - see issue in all states (except 1st closed) without labels ==> in correct service chapters
+    # TODO next
+
+    # {
+    #     # Goal: issue in Open (Initial) state is not visible in the release notes - no labels
+    #     "test_name": "test_build_open_issue",
+    #     "expected_release_notes": release_notes_no_data,
+    #     "records": {0: Record(__get_default_issue_mock(number=1, state="open"))}
+    # },
+    # {
+    #     # Goal: issue in Open (Reopened) state is not visible in the release notes - no labels
+    #     "test_name": "test_build_reopened_issue",
+    #     "expected_release_notes": release_notes_no_data,
+    #     "records": {0: Record(__get_default_issue_mock(number=1, state="open", state_reason="reopened"))}
+    # },
+    # {
+    #     # Goal: issue in Closed (not_planned) state is visible in the release notes - no labels
+    #     "test_name": "test_build_closed_not_planned_issue",
+    #     "expected_release_notes": release_notes_no_data,
+    #     "records": {0: Record(__get_default_issue_mock(number=1, state="closed", state_reason="not_planned"))}
+    # }
+
+    # ---------------------------------------------------------------------------------------------
+    # Alternative paths - see issue in all logical states ==> in correct service chapters
+
+    # TODO next
+
+    # ---------------------------------------------------------------------------------------------
+    # Alternative paths - see pull request in all states ==> in correct service chapters
+
+    # TODO next
+
+    # ---------------------------------------------------------------------------------------------
+    # Alternative paths - see pull request in all logical states ==> in correct service chapters
+
+    # TODO next
+
+]
+
+
+@pytest.mark.parametrize("test_case", test_cases, ids=[tc["test_name"] for tc in test_cases])
+def test_release_notes_builder(test_case):
+    # Extract values from test case
+    expected_release_notes = test_case.get("expected_release_notes", release_notes_no_data)
+    records = test_case.get("records", {})
+    changelog_url = test_case.get("changelog_url", default_changelog_url)
+    formatter = test_case.get("formatter", default_formatter)
+    chapters_json = test_case.get("chapters_json", default_chapters_json)
+
+    custom_chapters = CustomChapters(print_empty_chapters=False)
+    custom_chapters.from_json(chapters_json)
+
+    builder = ReleaseNotesBuilder(records=records,
+                                  changelog_url=changelog_url,
+                                  formatter=formatter,
+                                  custom_chapters=custom_chapters,
+                                  print_empty_chapters=False)
+
+    actual_release_notes = builder.build()
+    print(f"Actual - {test_case['test_name']}:\n" + actual_release_notes)
     assert expected_release_notes == actual_release_notes
 
 

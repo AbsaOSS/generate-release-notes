@@ -44,12 +44,14 @@ class ReleaseNotesBuilder:
 
         if self.warnings:
             service_chapters = ServiceChapters(print_empty_chapters=self.print_empty_chapters, user_defined_labels=user_defined_labels)
-            logging.debug(f"TODO - Populate Service Chapters")
             service_chapters.populate(self.records)
 
             service_chapters_str = service_chapters.to_string()
-            release_notes = f"""{user_defined_chapters_str}\n\n{service_chapters_str}\n\n#### Full Changelog\n{self.changelog_url}\n"""
+            if len(service_chapters_str) > 0:
+                release_notes = f"""{user_defined_chapters_str}\n\n{service_chapters_str}\n\n#### Full Changelog\n{self.changelog_url}\n"""
+            else:
+                release_notes = f"""{user_defined_chapters_str}\n\n#### Full Changelog\n{self.changelog_url}\n"""
         else:
             release_notes = f"""{user_defined_chapters_str}\n\n#### Full Changelog\n{self.changelog_url}\n"""
 
-        return release_notes
+        return release_notes.lstrip()

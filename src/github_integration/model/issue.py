@@ -107,6 +107,15 @@ class Issue:
         # TODO in Issue named 'Chapter line formatting - contributors'
         return []
 
+    @property
+    def state_reason(self) -> Optional[str]:
+        """
+        Gets the reason for the state of the issue.
+
+        :return: The reason for the state of the issue as a string.
+        """
+        return self.__issue.state_reason
+
     def is_closed(self) -> bool:
         """
         Checks if the issue is closed.
