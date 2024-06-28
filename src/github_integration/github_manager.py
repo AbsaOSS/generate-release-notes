@@ -114,8 +114,7 @@ class GithubManager:
         try:
             logging.info(f"Fetching latest release for {self.__repository.full_name}")
             release = self.__repository.get_latest_release()
-            logging.debug(f"Found latest release: {release.tag_name}, created at: {release.created_at}, "
-                          f"published at: {release.published_at}")
+            logging.debug(f"Found latest release: {release.tag_name}, created at: {release.created_at}, published at: {release.published_at}")
             self.__git_release = release
 
         except Exception as e:
@@ -123,8 +122,7 @@ class GithubManager:
                 logging.error(f"Latest release not found for {self.__repository.full_name}. 1st release for repository!")
                 self.__git_release = None
             else:
-                logging.error(f"Fetching latest release failed for {self.__repository.full_name}: {str(e)}. "
-                              f"Expected first release for repository.")
+                logging.error(f"Fetching latest release failed for {self.__repository.full_name}: {str(e)}. Expected first release for repository.")
                 self.__git_release = None
 
         return self.__git_release
@@ -176,8 +174,8 @@ class GithubManager:
 
         commits = []
         for raw_commit in raw_commits:
+            # Note: kept for near future development
             # for reference commit author - use raw_commit.author
-
             # logging.debug(f"Raw Commit: {raw_commit}, Author: {raw_commit.author}, Commiter: {raw_commit.committer}.")
             # logging.debug(f"Raw Commit.commit: Message: {raw_commit.commit.message}, Author: {raw_commit.commit.author}, Commiter: {raw_commit.commit.committer}.")
 
@@ -188,13 +186,12 @@ class GithubManager:
     # get methods
 
     def get_change_url(self, tag_name: str) -> str:
-        if self.__git_release:
-            # If there is a latest release, create a URL pointing to commits since the latest release
-            changelog_url = f"https://github.com/{self.__repository.full_name}/compare/{self.__git_release.tag_name}...{tag_name}"
-
-        else:
+        if self.__git_release is None:
             # If there is no latest release, create a URL pointing to all commits
             changelog_url = f"https://github.com/{self.__repository.full_name}/commits/{tag_name}"
+        else:
+            # If there is a latest release, create a URL pointing to commits since the latest release
+            changelog_url = f"https://github.com/{self.__repository.full_name}/compare/{self.__git_release.tag_name}...{tag_name}"
 
         return changelog_url
 
