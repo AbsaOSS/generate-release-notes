@@ -34,6 +34,8 @@ def singleton(cls):
 
 @singleton
 class GithubManager:
+    RATE_LIMIT_THRESHOLD_PERCENTAGE = 10  # Start sleeping logic when less than 10% of rate limit remains
+
     """
     A singleton class used to manage GitHub interactions.
     """
@@ -219,7 +221,8 @@ class GithubManager:
 
         rate_limit: RateLimit = self.__g.get_rate_limit()
 
-        if rate_limit.core.remaining < rate_limit.core.limit/10:
+        threshold = rate_limit.core.limit * self.RATE_LIMIT_THRESHOLD_PERCENTAGE / 100
+        if rate_limit.core.remaining < threshold:
             reset_time = rate_limit.core.reset
             sleep_time = (reset_time - datetime.utcnow()).total_seconds() + 10
             logging.debug(f"Rate limit reached. Sleeping for {sleep_time} seconds.")
