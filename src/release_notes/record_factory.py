@@ -34,7 +34,7 @@ class RecordFactory:
             parent_issues_numbers = pull.mentioned_issues
 
             for parent_issues_number in parent_issues_numbers:
-                if parent_issues_number not in records.keys():
+                if parent_issues_number not in records:
                     logging.error(f"Detected PR {pull.number} linked to issue {parent_issues_number} which is not in the list of issues.")
 
                 records[parent_issues_number].register_pull_request(pull)

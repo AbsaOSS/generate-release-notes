@@ -39,7 +39,7 @@ class ReleaseNotesBuilder:
         user_defined_chapters.populate(self.records)
         user_defined_chapters_str = user_defined_chapters.to_string()
 
-        user_defined_labels_nested = [user_defined_chapters.chapters[key].labels for key in user_defined_chapters.chapters.keys()]
+        user_defined_labels_nested = [user_defined_chapters.chapters[key].labels for key in user_defined_chapters.chapters]
         user_defined_labels = list(chain.from_iterable(user_defined_labels_nested))
 
         if self.warnings:

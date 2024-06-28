@@ -71,7 +71,7 @@ class ServiceChapters(BaseChapters):
 
         :param records: A dictionary of records where the key is an integer and the value is a Record object.
         """
-        for nr in records.keys():                               # iterate all records
+        for nr in records:                               # iterate all records
             if records[nr].is_closed_issue:
                 self.__populate_closed_issues(records[nr], nr)
 

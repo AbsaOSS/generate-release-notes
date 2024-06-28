@@ -32,6 +32,7 @@ def test_fetch_repository():
     github_mock.get_repo.assert_called_with(repository_id)
 
 # @patch('github_manager.logging')
+
 # def test_fetch_repository_not_found(logging_mock):
 #     github_manager = GithubManager()
 #     github_mock = Mock(spec=Github)
