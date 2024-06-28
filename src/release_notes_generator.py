@@ -1,4 +1,3 @@
-import json
 import logging
 import traceback
 
@@ -6,14 +5,14 @@ from typing import Optional
 from github import Github, Auth
 
 from action.action_inputs import ActionInputs
-from github_integration.gh_action import get_action_input, set_action_output, set_action_failed
+from github_integration.gh_action import set_action_output, set_action_failed
 from github_integration.github_manager import GithubManager
 
-from release_notes.formatter.record_formatter import RecordFormatter
+from release_notes.record_formatter import RecordFormatter
 from release_notes.model.custom_chapters import CustomChapters
 from release_notes.model.record import Record
 from release_notes.release_notes_builder import ReleaseNotesBuilder
-from release_notes.factory.record_factory import RecordFactory
+from release_notes.record_factory import RecordFactory
 
 
 # Configure logging

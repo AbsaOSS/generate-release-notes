@@ -29,8 +29,9 @@ class RecordFormatter:
         :return: The formatted record as a string.
         """
         # create a dict of supported keys and values - from record
+        # TODO - fix wrong access to private members
         params = {
-            "title": record.__gh_issue.title if record.__gh_issue is not None else record.__pulls[0].title,
+            "title": record. __gh_issue.title if record.__gh_issue is not None else record.__pulls[0].title,
             "number": record.__gh_issue.number if record.__gh_issue is not None else record.__pulls[0].number,
             "labels": record.labels,
             "is_closed": record.is_closed,
