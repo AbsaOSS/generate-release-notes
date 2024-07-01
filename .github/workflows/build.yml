@@ -38,9 +38,8 @@ jobs:
 
       - name: Check overall coverage
         run: |
-          coverage report
-          coverage xml -o coverage.xml
-          coverage fail --fail-under=80
+          coverage report --fail-under=80
+          coverage xml -o coverage_overall.xml
         shell: bash
 
       - name: Check changed files coverage
@@ -59,4 +58,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: coverage-report
-          path: coverage.xml
+          path: coverage_overall.xml
