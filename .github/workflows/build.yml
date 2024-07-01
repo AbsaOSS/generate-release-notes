@@ -1,0 +1,32 @@
+name: Build and Test
+on:
+  pull_request:
+    branches:
+      - '**'
+    types: [ opened, synchronize, reopened ]
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Python dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -r ${{ github.action_path }}/requirements.txt
+        shell: bash
+
+      - name: Call command python3
+        run: python3 --version
+        shell: bash
+
+      - name: print PYTHONPATH env variable
+        run: echo $PYTHONPATH
+        shell: bash
+
+      - name: Build and run unit tests
+        run: pytest --cov=src --cov-report html tests/ -vv
