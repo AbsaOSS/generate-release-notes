@@ -246,7 +246,6 @@ class Record:
         """
         for pull in self.__pulls:
             if commit.sha == pull.merge_commit_sha:
-                logging.debug(f"YYY Record: Registering commit {commit.sha} to PR {pull.number}")
                 pull.register_commit(commit)
                 return
 

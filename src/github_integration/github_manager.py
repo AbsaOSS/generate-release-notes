@@ -149,6 +149,7 @@ class GithubManager:
         parsed_issues = []
         logging.info(f"Found {len(list(issues))} issues for {self.__repository.full_name}")
         for issue in list(issues):
+            logging.debug(f"Found issue: {issue.number} - {issue.title}")
             parsed_issues.append(Issue(issue))
 
         return parsed_issues
