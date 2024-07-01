@@ -24,8 +24,8 @@ jobs:
         run: python3 --version
         shell: bash
 
-      - name: set PYTHONPATH
-        run: echo "::set-env name=PYTHONPATH::${GITHUB_WORKSPACE}/src"
+      - name: Set PYTHONPATH environment variable
+        run: echo "PYTHONPATH=${GITHUB_WORKSPACE}/src" >> $GITHUB_ENV
         shell: bash
 
       - name: print PYTHONPATH env variable
