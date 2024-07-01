@@ -1,5 +1,6 @@
 import json
 import logging
+from distutils.util import strtobool
 
 from github_integration.gh_action import get_action_input
 

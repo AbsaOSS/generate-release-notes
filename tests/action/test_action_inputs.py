@@ -64,5 +64,55 @@ def test_validate_inputs_failure(method, value, expected_error):
         stop_mocks(patchers)
 
 
+@patch('action.action_inputs.get_action_input', return_value='owner/repo_name')
+def test_get_github_repository(mock_get_action_input):
+    assert ActionInputs.get_github_repository() == 'owner/repo_name'
+
+
+@patch('action.action_inputs.get_action_input', return_value='token')
+def test_get_github_token(mock_get_action_input):
+    assert ActionInputs.get_github_token() == 'token'
+
+
+@patch('action.action_inputs.get_action_input', return_value='v1.0.0')
+def test_get_tag_name(mock_get_action_input):
+    assert ActionInputs.get_tag_name() == 'v1.0.0'
+
+
+@patch('action.action_inputs.get_action_input', return_value='{"chapter": "content"}')
+def test_get_chapters_json(mock_get_action_input):
+    assert ActionInputs.get_chapters_json() == '{"chapter": "content"}'
+
+
+@patch('action.action_inputs.get_action_input', return_value='true')
+def test_get_warnings(mock_get_action_input):
+    assert ActionInputs.get_warnings() is True
+
+
+@patch('action.action_inputs.get_action_input', return_value='true')
+def test_get_published_at(mock_get_action_input):
+    assert ActionInputs.get_published_at() is True
+
+
+@patch('action.action_inputs.get_action_input', return_value='skip')
+def test_get_skip_release_notes_label(mock_get_action_input):
+    assert ActionInputs.get_skip_release_notes_label() == 'skip'
+
+
+@patch('action.action_inputs.get_action_input', return_value='true')
+def test_get_print_empty_chapters(mock_get_action_input):
+    assert ActionInputs.get_print_empty_chapters() is True
+
+
+@patch('action.action_inputs.get_action_input', return_value='true')
+def test_get_chapters_to_pr_without_issue(mock_get_action_input):
+    assert ActionInputs.get_chapters_to_pr_without_issue() is True
+
+
+@patch('action.action_inputs.get_action_input', return_value='true')
+def test_get_verbose(mock_get_action_input):
+    assert ActionInputs.get_verbose() is True
+
+
 if __name__ == '__main__':
     pytest.main()

@@ -1,5 +1,6 @@
 import logging
 
+from github_integration.github_manager import GithubManager
 from github_integration.model.commit import Commit
 from github_integration.model.issue import Issue
 from github_integration.model.pull_request import PullRequest
@@ -35,7 +36,9 @@ class RecordFactory:
 
             for parent_issues_number in parent_issues_numbers:
                 if parent_issues_number not in records:
-                    logging.error(f"Detected PR {pull.number} linked to issue {parent_issues_number} which is not in the list of issues.")
+                    logging.warning(f"Detected PR {pull.number} linked to issue {parent_issues_number} which is not in the list of received issues. Fetching ...")
+                    issue = GithubManager().fetch_issue(parent_issues_number)
+                    records[parent_issues_number] = Record(issue)
 
                 records[parent_issues_number].register_pull_request(pull)
                 logging.debug(f"Registering PR {pull.number}: {pull.title} to Issue {parent_issues_number}: ")
@@ -45,17 +48,12 @@ class RecordFactory:
                 records[pull.number].register_pull_request(pull)
                 logging.debug(f"Created record for PR {pull.number}: {pull.title}")
 
-        # logging.debug(f"XXX Received {len(issues)} issues, {len(pulls)} PRs and {len(commits)} commits.")
-
-        detected_PRs = 0
+        detected_prs = 0
         for commit in commits:
             for key, record in records.items():
                 if record.is_commit_sha_present(commit.sha):
                     record.register_commit(commit)
-                    detected_PRs += 1
-                    # logging.debug(f"XXX Commit SHA found in Pull merge commit SHA for record {key}, message: {commit.message}")
-
-        # logging.debug(f"XXX Detected PRs from commits: {detected_PRs}")
+                    detected_prs += 1
 
         logging.info(f"Generated {len(records)} records from {len(issues)} issues and {len(pulls)} PRs.")
         return records

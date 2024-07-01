@@ -127,6 +127,11 @@ class GithubManager:
 
         return self.__git_release
 
+    def fetch_issue(self, issue_number: int) -> Issue:
+        issue = self.__repository.get_issue(issue_number)
+        logging.debug(f"Fetched issue: {issue.title}")
+        return Issue(issue)
+
     def fetch_issues(self, since: datetime = None, state: str = None) -> list[Issue]:
         """
         Fetches all issues from the current repository.

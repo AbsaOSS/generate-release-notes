@@ -256,3 +256,11 @@ class PullRequest:
             self.__merge_commits = []
 
         self.__merge_commits.append(commit)
+
+    def commits_count(self) -> int:
+        """
+        Gets the number of commits in the pull request.
+
+        :return: The number of commits in the pull request as an integer.
+        """
+        return len(self.__merge_commits) if self.__merge_commits is not None else 0

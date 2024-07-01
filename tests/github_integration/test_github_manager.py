@@ -8,11 +8,13 @@ from github.Repository import Repository
 
 from github_integration.github_manager import GithubManager
 
+
 # Mock classes
 
 class MockPullRequest:
     def __init__(self, body):
         self.body = body
+
 
 # singleton
 
@@ -38,6 +40,7 @@ def test_fetch_repository():
     assert repository_mock == result
     github_mock.get_repo.assert_called_with(repository_id)
 
+
 @patch('github_integration.github_manager.logging')
 def test_fetch_repository_not_found(logging_mock):
     github_mock = Mock(spec=Github)
@@ -49,6 +52,7 @@ def test_fetch_repository_not_found(logging_mock):
 
     assert result is None
     logging_mock.error.assert_called_with(f"Repository not found: {repository_id}")
+
 
 @patch('github_integration.github_manager.logging')
 def test_fetch_repository_exception(logging_mock):
@@ -78,6 +82,7 @@ def test_fetch_latest_release():
     assert release_mock == result
     repository_mock.get_latest_release.assert_called_once()
 
+
 @patch('github_integration.github_manager.logging')
 def test_fetch_latest_release_not_found(logging_mock):
     github_mock = Mock(spec=Github)
@@ -90,6 +95,7 @@ def test_fetch_latest_release_not_found(logging_mock):
 
     assert result is None
     logging_mock.error.assert_called_with(f"Latest release not found for {repository_mock.full_name}. 1st release for repository!")
+
 
 @patch('github_integration.github_manager.logging')
 def test_fetch_latest_release_exception(logging_mock):
@@ -120,6 +126,7 @@ def test_fetch_issues_without_git_release():
 
     assert len(issues_mock) == len(result)
     repository_mock.get_issues.assert_called_with(state="all")      # get all state of issues in 'one' call
+
 
 def test_fetch_issues_with_git_release():
     github_mock = Mock(spec=Github)
@@ -152,6 +159,7 @@ def test_fetch_pull_requests():
 
     assert len(pulls_mock) == len(result)
     repository_mock.get_pulls.assert_called_with(state="closed")
+
 
 # GithubManager.fetch_commits
 
@@ -186,6 +194,7 @@ def test_get_change_url_with_release():
 
     assert expected_url == result
 
+
 def test_get_change_url_without_release():
     github_mock = Mock(spec=Github)
     GithubManager().github = github_mock
@@ -214,6 +223,7 @@ def test_get_repository_full_name():
 
     assert 'test/full_name' == result
 
+
 def test_get_repository_full_name_without_repository():
     github_mock = Mock(spec=Github)
     GithubManager().github = github_mock
@@ -222,6 +232,7 @@ def test_get_repository_full_name_without_repository():
     result = GithubManager().get_repository_full_name()
 
     assert result is None
+
 
 # GithubManager.show_rate_limit
 
@@ -238,6 +249,7 @@ def test_show_rate_limit_threshold_not_reached(logging_mock):
     GithubManager().show_rate_limit()
 
     logging_mock.debug.assert_called_with(f"Rate limit: {rate_limit_mock.core.remaining} remaining of {rate_limit_mock.core.limit}")
+
 
 @patch('github_integration.github_manager.logging')
 @patch('time.sleep', return_value=None)
@@ -260,6 +272,7 @@ def test_show_rate_limit_threshold_reached(datetime_mock, time_sleep_mock, loggi
     logging_mock.debug.assert_called_with(f"Rate limit reached. Sleeping for {70.0} seconds.")
     time_sleep_mock.assert_called_with(70.0)
 
+
 @patch('github_integration.github_manager.logging')
 def test_show_rate_limit_log_level_info(logging_mock):
     logging_mock.getLogger.return_value.isEnabledFor.return_value = False
@@ -268,6 +281,7 @@ def test_show_rate_limit_log_level_info(logging_mock):
 
     logging_mock.debug.assert_not_called()
     logging_mock.error.assert_not_called()
+
 
 @patch('github_integration.github_manager.logging')
 def test_show_rate_limit_no_github(logging_mock):
