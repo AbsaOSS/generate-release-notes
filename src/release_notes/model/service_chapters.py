@@ -79,8 +79,10 @@ class ServiceChapters(BaseChapters):
                 self.__populate_pr(records[nr], nr)
 
             else:
-                if records[nr].is_present_in_chapters or (records[nr].is_open_issue and records[nr].pulls_count == 0):
+                if records[nr].is_open_issue and records[nr].pulls_count == 0:
                     pass
+                elif records[nr].is_open_issue and records[nr].pulls_count > 0:
+                    self.chapters[self.MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES].add_row(nr, records[nr].to_chapter_row())
                 else:
                     self.chapters[self.OTHERS_NO_TOPIC].add_row(nr, records[nr].to_chapter_row())
 
