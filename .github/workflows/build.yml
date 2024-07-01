@@ -47,9 +47,11 @@ jobs:
           # Get the list of changed Python files
           CHANGED_FILES=$(git diff --name-only --diff-filter=AMR ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep '.py$')
           
-          # Generate coverage report for changed files
-          coverage report --include="$CHANGED_FILES"
+          # print linst of changed file
+          echo "Changed Python files:"
+          echo "$CHANGED_FILES"
           
+          # Generate coverage report for changed files
           # Fail if the coverage for changed files is below threshold
           coverage report --include="$CHANGED_FILES" | grep TOTAL | awk '{if ($4 < 80.0) exit 1}'
         shell: bash
