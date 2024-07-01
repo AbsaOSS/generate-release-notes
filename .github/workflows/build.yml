@@ -18,6 +18,7 @@ jobs:
         run: |
           python3 -m pip install --upgrade pip
           python3 -m pip install -r requirements.txt
+          python3 -m pip install pytest-cov coverage
         shell: bash
 
       - name: Call command python3
@@ -33,4 +34,29 @@ jobs:
         shell: bash
 
       - name: Build and run unit tests
-        run: pytest
+        run: pytest --cov=src --cov-report html tests/ -vv
+
+      - name: Check overall coverage
+        run: |
+          coverage report
+          coverage xml -o coverage.xml
+          coverage fail --fail-under=80
+        shell: bash
+
+      - name: Check changed files coverage
+        run: |
+          # Get the list of changed Python files
+          CHANGED_FILES=$(git diff --name-only --diff-filter=AMR ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep '.py$')
+          
+          # Generate coverage report for changed files
+          coverage report --include="$CHANGED_FILES"
+          
+          # Fail if the coverage for changed files is below threshold
+          coverage report --include="$CHANGED_FILES" | grep TOTAL | awk '{if ($4 < 80.0) exit 1}'
+        shell: bash
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: coverage.xml
