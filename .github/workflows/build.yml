@@ -45,17 +45,19 @@ jobs:
       - name: Check changed files coverage
         run: |
           # Get the list of changed Python files
-          CHANGED_FILES=$(git diff --name-only --diff-filter=AMR ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep '.py$')
-          CHANGED_FILES=$(echo $CHANGED_FILES | tr '\n' ',')
+          CHANGED_FILES_SRC=$(git diff --name-only --diff-filter=AMR ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep '.py$')
+          echo "Changed Python files 0: $CHANGED_FILES"
+
+          CHANGED_FILES=$(echo CHANGED_FILES_SRC | tr '\n' ',')
           echo "Changed Python files 1: $CHANGED_FILES"
 
-          CHANGED_FILES=$(echo $CHANGED_FILES | tr '\r\n' ',')
+          CHANGED_FILES=$(echo CHANGED_FILES_SRC | tr '\r\n' ',')
           echo "Changed Python files 2: $CHANGED_FILES"
           
-          CHANGED_FILES=$(echo $CHANGED_FILES | tr -s '\r\n' ',')
+          CHANGED_FILES=$(echo CHANGED_FILES_SRC | tr -s '\r\n' ',')
           echo "Changed Python files 3: $CHANGED_FILES"
           
-          CHANGED_FILES=$(echo $CHANGED_FILES | paste -sd "," -)
+          CHANGED_FILES=$(echo CHANGED_FILES_SRC | paste -sd "," -)
           
           # print linst of changed file
           echo "Changed Python files 4: $CHANGED_FILES"
