@@ -46,22 +46,12 @@ jobs:
         run: |
           # Get the list of changed Python files
           CHANGED_FILES_SRC=$(git diff --name-only --diff-filter=AMR ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep '.py$')
-          echo "Changed Python files 0: $CHANGED_FILES"
+          echo "Changed Python files 1: $CHANGED_FILES_SRC"
 
-          CHANGED_FILES=$(echo $CHANGED_FILES_SRC | tr '\n' ',')
-          echo "Changed Python files 1: $CHANGED_FILES"
-
-          CHANGED_FILES=$(echo $CHANGED_FILES_SRC | tr '\r\n' ',')
+          # Convert list to comma-delimited string
+          CHANGED_FILES=$(echo "$CHANGED_FILES_SRC" | awk '{printf "%s,", $0} END {print ""}' | sed 's/,$//')
           echo "Changed Python files 2: $CHANGED_FILES"
           
-          CHANGED_FILES=$(echo $CHANGED_FILES_SRC | tr -s '\r\n' ',')
-          echo "Changed Python files 3: $CHANGED_FILES"
-          
-          CHANGED_FILES=$(echo $CHANGED_FILES_SRC | paste -sd "," -)
-          
-          # print linst of changed file
-          echo "Changed Python files 4: $CHANGED_FILES"
-  
           # Generate coverage report for changed files
           # Fail if the coverage for changed files is below threshold
           coverage report --include="$CHANGED_FILES" | grep TOTAL | awk '{if ($4 < 80.0) exit 1}'
