@@ -19,6 +19,12 @@ from release_notes.record_factory import RecordFactory
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
+def init_github_manager() -> None:
+    auth = Auth.Token(token=ActionInputs.get_github_token())
+    g = Github(auth=auth, per_page=100)
+    GithubManager().github = g
+
+
 def generate_release_notes(custom_chapters: CustomChapters) -> Optional[str]:
     """
     Generates the release notes for a given repository.
@@ -80,16 +86,13 @@ def run():
         else:
             logging.info("Verbose logging disabled")
 
-        # Init GitHub instance
-        auth = Auth.Token(token=ActionInputs.get_github_token())
-        g = Github(auth=auth, per_page=100)
-        GithubManager().github = g    # creat singleton instance and init with g (Github)
+        init_github_manager()
         GithubManager().show_rate_limit()
 
         ActionInputs.validate_inputs()
 
-        custom_chapters = CustomChapters(print_empty_chapters=ActionInputs.get_print_empty_chapters())
-        custom_chapters.from_json(ActionInputs.get_chapters_json())
+        custom_chapters = (CustomChapters(print_empty_chapters=ActionInputs.get_print_empty_chapters())
+                           .from_json(ActionInputs.get_chapters_json()))
 
         rls_notes = generate_release_notes(custom_chapters)
         logging.debug(f"Release notes: \n{rls_notes}")
@@ -100,6 +103,7 @@ def run():
 
     except Exception as error:
         stack_trace = traceback.format_exc()
+        logging.error(f'Action failed with error: {error}\nStack trace: {stack_trace}')
         set_action_failed(f'Action failed with error: {error}\nStack trace: {stack_trace}')
 
 

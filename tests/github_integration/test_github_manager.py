@@ -6,7 +6,9 @@ from github import Github
 from github.GitRelease import GitRelease
 from github.Repository import Repository
 
+from action.action_inputs import ActionInputs
 from github_integration.github_manager import GithubManager
+from github_integration.model.issue import Issue
 
 
 # Mock classes
@@ -83,6 +85,12 @@ def test_fetch_latest_release():
     repository_mock.get_latest_release.assert_called_once()
 
 
+def test_fetch_latest_release_no_repository():
+    result = GithubManager().reset().fetch_latest_release()
+
+    assert result is None
+
+
 @patch('github_integration.github_manager.logging')
 def test_fetch_latest_release_not_found(logging_mock):
     github_mock = Mock(spec=Github)
@@ -112,6 +120,44 @@ def test_fetch_latest_release_exception(logging_mock):
     logging_mock.error.assert_called_with(f"Fetching latest release failed for owner/test: Unexpected error. Expected first release for repository.")
 
 
+# GithubManager.fetch_issue
+
+def test_fetch_issue_success():
+    github_mock = Mock(spec=Github)
+    GithubManager().github = github_mock
+    repository_mock = Mock(spec=Repository)
+    GithubManager()._GithubManager__repository = repository_mock
+    issue_number = 123
+    issue_mock = Mock()
+    issue_mock.number = issue_number
+    repository_mock.get_issue.return_value = issue_mock
+
+    result = GithubManager().fetch_issue(issue_number)
+
+    assert issue_number == result.number
+    repository_mock.get_issue.assert_called_with(issue_number)
+
+
+def test_fetch_issue_success_no_repository():
+    result = GithubManager().reset().fetch_issue(123)
+
+    assert result is None
+
+
+def test_fetch_issue_success_failed():
+    github_mock = Mock(spec=Github)
+    GithubManager().github = github_mock
+    repository_mock = Mock(spec=Repository)
+    GithubManager()._GithubManager__repository = repository_mock
+    issue_number = 123
+    repository_mock.get_issue.side_effect = Exception('Unexpected error')
+
+    result = GithubManager().fetch_issue(issue_number)
+
+    assert result is None
+    repository_mock.get_issue.assert_called_with(issue_number)
+
+
 # GithubManager.fetch_issues
 
 def test_fetch_issues_without_git_release():
@@ -125,7 +171,13 @@ def test_fetch_issues_without_git_release():
     result = GithubManager().fetch_issues()
 
     assert len(issues_mock) == len(result)
-    repository_mock.get_issues.assert_called_with(state="all")      # get all state of issues in 'one' call
+    repository_mock.get_issues.assert_called_with(state="all", since=None)      # get all state of issues in 'one' call
+
+
+def test_fetch_issues_without_git_release_no_repository():
+    result = GithubManager().reset().fetch_issues()
+
+    assert len(result) == 0
 
 
 def test_fetch_issues_with_git_release():
@@ -134,7 +186,8 @@ def test_fetch_issues_with_git_release():
     repository_mock = Mock(spec=Repository)
     GithubManager()._GithubManager__repository = repository_mock
     git_release_mock = Mock()
-    git_release_mock.published_at = datetime(2023, 1, 1)
+    git_release_mock.created_at = datetime(2023, 1, 1)
+    git_release_mock.published_at = datetime(2023, 1, 2)
     GithubManager()._GithubManager__git_release = git_release_mock
     issues_mock = [Mock(), Mock()]
     repository_mock.get_issues.return_value = issues_mock
@@ -142,6 +195,23 @@ def test_fetch_issues_with_git_release():
     result = GithubManager().fetch_issues()
 
     assert len(issues_mock) == len(result)
+    repository_mock.get_issues.assert_called_with(state="all", since=git_release_mock.published_at)
+
+
+def test_fetch_issues_with_git_release_failed():
+    github_mock = Mock(spec=Github)
+    GithubManager().github = github_mock
+    repository_mock = Mock(spec=Repository)
+    GithubManager()._GithubManager__repository = repository_mock
+    git_release_mock = Mock()
+    git_release_mock.created_at = datetime(2023, 1, 1)
+    git_release_mock.published_at = datetime(2023, 1, 2)
+    GithubManager()._GithubManager__git_release = git_release_mock
+    repository_mock.get_issues.side_effect = Exception('Unexpected error')
+
+    result = GithubManager().fetch_issues()
+
+    assert len(result) == 0
     repository_mock.get_issues.assert_called_with(state="all", since=git_release_mock.published_at)
 
 
@@ -208,6 +278,12 @@ def test_get_change_url_without_release():
     result = GithubManager().get_change_url(tag_name)
 
     assert expected_url == result
+
+
+def test_get_change_url_no_repository():
+    result = GithubManager().reset().get_change_url('v1.0.0')
+
+    assert result == ""
 
 
 # GithubManager.repository_full_name
@@ -294,6 +370,15 @@ def test_show_rate_limit_no_github(logging_mock):
     assert GithubManager().github is None
     assert GithubManager().repository is None
     assert GithubManager().git_release is None
+
+
+@patch('github_integration.github_manager.logging')
+def test_show_rate_limit_failed(logging_mock):
+    github_mock = Mock(spec=Github)
+    GithubManager().github = github_mock
+    github_mock.get_rate_limit.side_effect = Exception('Unexpected error')
+
+    GithubManager().show_rate_limit()
 
 
 if __name__ == '__main__':

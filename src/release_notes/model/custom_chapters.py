@@ -24,7 +24,7 @@ class CustomChapters(BaseChapters):
                         if not records[nr].is_present_in_chapters:
                             self.chapters[ch_key].add_row(nr, records[nr].to_chapter_row())
 
-    def from_json(self, json_string: str):
+    def from_json(self, json_string: str) -> 'CustomChapters':
         """
         Populates the custom chapters from a JSON string.
 
@@ -38,3 +38,5 @@ class CustomChapters(BaseChapters):
                 self.chapters[title] = Chapter(title, labels)
             else:
                 self.chapters[title].labels.extend(labels)
+
+        return self

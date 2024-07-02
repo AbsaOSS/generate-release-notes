@@ -17,11 +17,7 @@ from github_integration.model.pull_request import PullRequest
 def singleton(cls):
     """
     A decorator for making a class a singleton.
-
-    :param cls: The class to make a singleton.
-    :return: The singleton instance of the class.
     """
-
     instances = {}
 
     def get_instance(*args, **kwargs):
@@ -40,12 +36,15 @@ class GithubManager:
     A singleton class used to manage GitHub interactions.
     """
     def __init__(self):
-        """
-        Constructs all the necessary attributes for the GithubManager object.
-        """
         self.__g = None
         self.__repository = None
         self.__git_release = None
+
+    def reset(self) -> 'GithubManager':
+        self.__g = None
+        self.__repository = None
+        self.__git_release = None
+        return self
 
     @property
     def github(self) -> Github:
@@ -98,10 +97,9 @@ class GithubManager:
         except Exception as e:
             if "Not Found" in str(e):
                 logging.error(f"Repository not found: {repository_id}")
-                self.__repository = None
             else:
                 logging.error(f"Fetching repository failed for {repository_id}: {str(e)}")
-                self.__repository = None
+            self.__repository = None
 
         return self.__repository
 
@@ -111,48 +109,61 @@ class GithubManager:
 
         :return: The fetched GitRelease object representing the latest release, or None if there is no release or the fetch failed.
         """
+        if not self.__repository:
+            logging.error("Repository is not set.")
+            return None
+
         try:
             logging.info(f"Fetching latest release for {self.__repository.full_name}")
             release = self.__repository.get_latest_release()
             logging.debug(f"Found latest release: {release.tag_name}, created at: {release.created_at}, published at: {release.published_at}")
             self.__git_release = release
-
         except Exception as e:
             if "Not Found" in str(e):
                 logging.error(f"Latest release not found for {self.__repository.full_name}. 1st release for repository!")
-                self.__git_release = None
             else:
                 logging.error(f"Fetching latest release failed for {self.__repository.full_name}: {str(e)}. Expected first release for repository.")
-                self.__git_release = None
+            self.__git_release = None
 
         return self.__git_release
 
-    def fetch_issue(self, issue_number: int) -> Issue:
-        issue = self.__repository.get_issue(issue_number)
-        logging.debug(f"Fetched issue: {issue.title}")
-        return Issue(issue)
+    def fetch_issue(self, issue_number: int) -> Optional[Issue]:
+        if not self.__repository:
+            logging.error("Repository is not set.")
+            return None
 
-    def fetch_issues(self, since: datetime = None, state: str = None) -> list[Issue]:
+        try:
+            logging.info(f"Fetching issue number: {issue_number}")
+            issue = self.__repository.get_issue(issue_number)
+            logging.debug(f"Fetched issue: {issue.title}")
+            return Issue(issue)
+        except Exception as e:
+            logging.error(f"Fetching issue failed for issue number {issue_number}: {str(e)}")
+            return None
+
+    def fetch_issues(self, since: Optional[datetime] = None, state: Optional[str] = None) -> list[Issue]:
         """
         Fetches all issues from the current repository.
         If a since is set, fetches all issues since the defined time.
 
         :return: A list of Issue objects.
         """
-        if self.__git_release is None:
-            logging.info(f"Fetching all issues for {self.__repository.full_name}")
-            issues = self.__repository.get_issues(state="all")
-        else:
-            logging.info(f"Fetching all issues since {self.__git_release.published_at} for {self.__repository.full_name}")
-            issues = self.__repository.get_issues(state="all", since=self.__git_release.published_at)
+        if not self.__repository:
+            logging.error("Repository is not set.")
+            return []
 
-        parsed_issues = []
-        logging.info(f"Found {len(list(issues))} issues for {self.__repository.full_name}")
-        for issue in list(issues):
-            logging.debug(f"Found issue: {issue.number} - {issue.title}")
-            parsed_issues.append(Issue(issue))
+        if not since:
+            since = self.__get_since()
 
-        return parsed_issues
+        try:
+            logging.info(f"Fetching all issues for {self.__repository.full_name} since {since}")
+            issues = self.__repository.get_issues(state=state or "all", since=since)
+            parsed_issues = [Issue(issue) for issue in issues]
+            logging.info(f"Found {len(parsed_issues)} issues for {self.__repository.full_name}")
+            return parsed_issues
+        except Exception as e:
+            logging.error(f"Fetching issues failed: {str(e)}")
+            return []
 
     def fetch_pull_requests(self, since: datetime = None) -> list[PullRequest]:
         """
@@ -192,6 +203,10 @@ class GithubManager:
     # get methods
 
     def get_change_url(self, tag_name: str) -> str:
+        if not self.__repository:
+            logging.error("Repository is not set.")
+            return ""
+
         if self.__git_release is None:
             # If there is no latest release, create a URL pointing to all commits
             changelog_url = f"https://github.com/{self.__repository.full_name}/commits/{tag_name}"
@@ -207,13 +222,14 @@ class GithubManager:
 
         :return: The full name of the repository as a string, or None if the repository is not set.
         """
-        if self.__repository is not None:
-            return self.__repository.full_name
-        return None
+        return self.__repository.full_name if self.__repository else None
 
     # others
 
     def show_rate_limit(self):
+        """
+        Shows the current rate limit and sleeps if the rate limit is reached.
+        """
         if not logging.getLogger().isEnabledFor(logging.DEBUG):
             # save API Call when not in debug mode
             return
@@ -222,13 +238,31 @@ class GithubManager:
             logging.error("GitHub object is not set.")
             return
 
-        rate_limit: RateLimit = self.__g.get_rate_limit()
+        try:
+            rate_limit: RateLimit = self.__g.get_rate_limit()
 
-        threshold = rate_limit.core.limit * self.RATE_LIMIT_THRESHOLD_PERCENTAGE / 100
-        if rate_limit.core.remaining < threshold:
-            reset_time = rate_limit.core.reset
-            sleep_time = (reset_time - datetime.utcnow()).total_seconds() + 10
-            logging.debug(f"Rate limit reached. Sleeping for {sleep_time} seconds.")
-            time.sleep(sleep_time)
-        else:
-            logging.debug(f"Rate limit: {rate_limit.core.remaining} remaining of {rate_limit.core.limit}")
+            threshold = rate_limit.core.limit * self.RATE_LIMIT_THRESHOLD_PERCENTAGE / 100
+            if rate_limit.core.remaining < threshold:
+                reset_time = rate_limit.core.reset
+                sleep_time = (reset_time - datetime.utcnow()).total_seconds() + 10
+                logging.debug(f"Rate limit reached. Sleeping for {sleep_time} seconds.")
+                time.sleep(sleep_time)
+            else:
+                logging.debug(f"Rate limit: {rate_limit.core.remaining} remaining of {rate_limit.core.limit}")
+        except Exception as e:
+            logging.error(f"Failed to get rate limit: {str(e)}")
+
+    def __get_since(self) -> Optional[datetime]:
+        """
+        Gets the 'since' datetime for fetching issues, pull requests, and commits.
+        :return: The 'since' datetime, or None if it is not set.
+        """
+        if not self.__repository:
+            logging.error("Repository is not set.")
+            return None
+
+        if not self.__git_release:
+            logging.error("Latest release is not set.")
+            return None
+
+        return self.__git_release.published_at if self.__git_release.published_at else self.__git_release.created_at

@@ -26,34 +26,43 @@ class RecordFactory:
         records = {}
         pull_numbers = [pull.number for pull in pulls]
 
+        def create_record_for_issue(issue: Issue):
+            records[issue.number] = Record(issue)
+            logging.debug(f"Created record for issue {issue.number}: {issue.title}")
+
+        def register_pull_request(pull: PullRequest):
+            for parent_issue_number in pull.mentioned_issues:
+                if parent_issue_number not in records:
+                    logging.warning(
+                        f"Detected PR {pull.number} linked to issue {parent_issue_number} which is not in the list of received issues. Fetching ..."
+                    )
+                    issue = GithubManager().fetch_issue(parent_issue_number)
+                    create_record_for_issue(issue)
+                records[parent_issue_number].register_pull_request(pull)
+                logging.debug(
+                    f"Registering PR {pull.number}: {pull.title} to Issue {parent_issue_number}"
+                )
+
+        def register_commit_to_record(commit: Commit):
+            for record in records.values():
+                if record.is_commit_sha_present(commit.sha):
+                    record.register_commit(commit)
+                    return True
+            return False
+
         for issue in issues:
             if issue.number not in pull_numbers:
-                records[issue.number] = Record(issue)
-                logging.debug(f"Created record for issue {issue.number}: {issue.title}")
+                create_record_for_issue(issue)
 
         for pull in pulls:
-            parent_issues_numbers = pull.mentioned_issues
-
-            for parent_issues_number in parent_issues_numbers:
-                if parent_issues_number not in records:
-                    logging.warning(f"Detected PR {pull.number} linked to issue {parent_issues_number} which is not in the list of received issues. Fetching ...")
-                    issue = GithubManager().fetch_issue(parent_issues_number)
-                    records[parent_issues_number] = Record(issue)
-
-                records[parent_issues_number].register_pull_request(pull)
-                logging.debug(f"Registering PR {pull.number}: {pull.title} to Issue {parent_issues_number}: ")
-
-            if len(parent_issues_numbers) == 0:
+            if not pull.mentioned_issues:
                 records[pull.number] = Record()
                 records[pull.number].register_pull_request(pull)
                 logging.debug(f"Created record for PR {pull.number}: {pull.title}")
+            else:
+                register_pull_request(pull)
 
-        detected_prs = 0
-        for commit in commits:
-            for key, record in records.items():
-                if record.is_commit_sha_present(commit.sha):
-                    record.register_commit(commit)
-                    detected_prs += 1
+        detected_prs = sum(register_commit_to_record(commit) for commit in commits)
 
-        logging.info(f"Generated {len(records)} records from {len(issues)} issues and {len(pulls)} PRs.")
+        logging.info(f"Generated {len(records)} records from {len(issues)} issues and {len(pulls)} PRs, with {detected_prs} commits detected.")
         return records
