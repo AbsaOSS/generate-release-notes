@@ -48,16 +48,16 @@ jobs:
           CHANGED_FILES_SRC=$(git diff --name-only --diff-filter=AMR ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep '.py$')
           echo "Changed Python files 0: $CHANGED_FILES"
 
-          CHANGED_FILES=$(echo CHANGED_FILES_SRC | tr '\n' ',')
+          CHANGED_FILES=$(echo $CHANGED_FILES_SRC | tr '\n' ',')
           echo "Changed Python files 1: $CHANGED_FILES"
 
-          CHANGED_FILES=$(echo CHANGED_FILES_SRC | tr '\r\n' ',')
+          CHANGED_FILES=$(echo $CHANGED_FILES_SRC | tr '\r\n' ',')
           echo "Changed Python files 2: $CHANGED_FILES"
           
-          CHANGED_FILES=$(echo CHANGED_FILES_SRC | tr -s '\r\n' ',')
+          CHANGED_FILES=$(echo $CHANGED_FILES_SRC | tr -s '\r\n' ',')
           echo "Changed Python files 3: $CHANGED_FILES"
           
-          CHANGED_FILES=$(echo CHANGED_FILES_SRC | paste -sd "," -)
+          CHANGED_FILES=$(echo $CHANGED_FILES_SRC | paste -sd "," -)
           
           # print linst of changed file
           echo "Changed Python files 4: $CHANGED_FILES"
