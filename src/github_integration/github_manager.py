@@ -152,7 +152,7 @@ class GithubManager:
             logging.error("Repository is not set.")
             return []
 
-        if not since:
+        if since is None:
             since = self.__get_since()
 
         try:
@@ -257,12 +257,11 @@ class GithubManager:
         Gets the 'since' datetime for fetching issues, pull requests, and commits.
         :return: The 'since' datetime, or None if it is not set.
         """
-        if not self.__repository:
+        if self.__repository is None:
             logging.error("Repository is not set.")
             return None
 
-        if not self.__git_release:
-            logging.error("Latest release is not set.")
-            return None
+        if self.__git_release is None:
+            return self.__repository.created_at
 
         return self.__git_release.published_at if self.__git_release.published_at else self.__git_release.created_at

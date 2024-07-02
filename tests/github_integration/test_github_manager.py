@@ -164,6 +164,8 @@ def test_fetch_issues_without_git_release():
     github_mock = Mock(spec=Github)
     GithubManager().github = github_mock
     repository_mock = Mock(spec=Repository)
+    repository_created_at = datetime(2023, 1, 1)
+    repository_mock.created_at = repository_created_at
     GithubManager()._GithubManager__repository = repository_mock
     issues_mock = [Mock(), Mock()]
     repository_mock.get_issues.return_value = issues_mock
@@ -171,7 +173,7 @@ def test_fetch_issues_without_git_release():
     result = GithubManager().fetch_issues()
 
     assert len(issues_mock) == len(result)
-    repository_mock.get_issues.assert_called_with(state="all", since=None)      # get all state of issues in 'one' call
+    repository_mock.get_issues.assert_called_with(state="all", since=repository_created_at)      # get all state of issues in 'one' call
 
 
 def test_fetch_issues_without_git_release_no_repository():
