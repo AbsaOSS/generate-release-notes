@@ -31,7 +31,8 @@ jobs:
           python -m venv venv
           source venv/bin/activate
           cd external-repo
-          python -m pip install .
+          pip uninstall PyCompositeActionLib -y
+          python3 -m pip install .
           pip list | grep PyCompositeActionLib
 
       - name: Install project dependencies
