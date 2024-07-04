@@ -33,7 +33,7 @@ jobs:
           cd external-repo
           pip uninstall PyCompositeActionLib -y
           python3 -m pip install .
-          pip list | grep PyCompositeActionLib
+          pip list
           pip show PyCompositeActionLib
 
       - name: Install project dependencies
