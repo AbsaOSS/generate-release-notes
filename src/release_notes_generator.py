@@ -4,7 +4,7 @@ import traceback
 from typing import Optional
 from github import Github, Auth
 
-from action_inputs import ActionInputs
+from action.action_inputs import ActionInputs
 from github_integration.gh_action import set_action_output, set_action_failed
 from github_integration.github_manager import GithubManager
 

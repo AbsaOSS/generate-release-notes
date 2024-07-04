@@ -2,4 +2,3 @@ coverage==7.5.2
 pytest==7.4.3
 pytest-cov==5.0.0
 PyGithub==1.59.0
-PyCompositeActionLib==0.1.0
