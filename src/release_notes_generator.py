@@ -4,7 +4,6 @@ import traceback
 from typing import Optional
 from github import Github, Auth
 
-from action.action_inputs import ActionInputs
 from github_integration.gh_action import set_action_output, set_action_failed
 from github_integration.github_manager import GithubManager
 
@@ -13,7 +12,7 @@ from release_notes.model.custom_chapters import CustomChapters
 from release_notes.model.record import Record
 from release_notes.release_notes_builder import ReleaseNotesBuilder
 from release_notes.record_factory import RecordFactory
-
+from action_inputs import ActionInputs
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

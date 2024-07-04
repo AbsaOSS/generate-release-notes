@@ -1,13 +1,11 @@
 import json
 import logging
-from datetime import datetime
-from distutils.util import strtobool
-from typing import Optional
 
+from action.action_inputs import BaseActionInputs
 from github_integration.gh_action import get_action_input
 
 
-class ActionInputs:
+class ActionInputs(BaseActionInputs):
     GITHUB_REPOSITORY = 'GITHUB_REPOSITORY'
     GITHUB_TOKEN = 'github-token'
     TAG_NAME = 'tag-name'
