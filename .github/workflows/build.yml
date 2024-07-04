@@ -33,6 +33,11 @@ jobs:
           cd external-repo
           python -m pip install .
 
+      - name: Print path to local dev install of library
+        run: |
+          python -m venv venv
+          pip list | grep PyCompositeActionLib
+
       - name: Install project dependencies
         run: |
           source venv/bin/activate
