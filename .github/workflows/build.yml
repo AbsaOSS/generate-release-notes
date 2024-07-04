@@ -17,7 +17,7 @@ jobs:
       - name: Checkout external repository
         uses: actions/checkout@v2
         with:
-          repository: AbsaOSS/py-composite-action-lib
+          repository: AbsaOSS/py-composite-action-lib@feature/4-Integrate-code-from-Release-Notes-Generator-action
           path: external-repo
 
       - name: Set up Python
