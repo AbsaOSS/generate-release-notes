@@ -34,6 +34,7 @@ jobs:
           pip uninstall PyCompositeActionLib -y
           python3 -m pip install .
           pip list | grep PyCompositeActionLib
+          pip show PyCompositeActionLib
 
       - name: Install project dependencies
         run: |
