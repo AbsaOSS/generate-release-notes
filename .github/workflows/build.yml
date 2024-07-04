@@ -61,6 +61,7 @@ jobs:
 
       - name: Check overall coverage
         run: |
+          source venv/bin/activate
           coverage report --fail-under=80
           coverage xml -o coverage_overall.xml
         shell: bash
