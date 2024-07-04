@@ -14,15 +14,35 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install Python dependencies
+      - name: Checkout external repository
+        uses: actions/checkout@v2
+        with:
+          repository: AbsaOSS/py-composite-action-lib
+          path: external-repo
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install external repository locally
         run: |
+          python -m venv venv
+          source venv/bin/activate
+          cd external-repo
+          python -m pip install .
+
+      - name: Install project dependencies
+        run: |
+          source venv/bin/activate
           python3 -m pip install --upgrade pip
           python3 -m pip install -r requirements.txt
-          python3 -m pip install pytest-cov coverage
         shell: bash
 
       - name: Call command python3
-        run: python3 --version
+        run: |
+          source venv/bin/activate
+          python3 --version
         shell: bash
 
       - name: Set PYTHONPATH environment variable
@@ -34,7 +54,9 @@ jobs:
         shell: bash
 
       - name: Build and run unit tests
-        run: pytest --cov=src --cov-report html tests/ -vv
+        run: |
+          source venv/bin/activate
+          pytest --cov=src --cov-report html tests/ -vv
 
       - name: Check overall coverage
         run: |
