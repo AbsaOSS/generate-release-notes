@@ -35,7 +35,7 @@ jobs:
 
       - name: Print path to local dev install of library
         run: |
-          python -m venv venv
+          source venv/bin/activate
           pip list | grep PyCompositeActionLib
 
       - name: Install project dependencies
