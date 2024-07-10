@@ -21,14 +21,12 @@ jobs:
 
       - name: Install project dependencies
         run: |
-          source venv/bin/activate
           python3 -m pip install --upgrade pip
           python3 -m pip install -r requirements.txt
         shell: bash
 
       - name: Call command python3
         run: |
-          source venv/bin/activate
           python3 --version
         shell: bash
 
@@ -42,12 +40,10 @@ jobs:
 
       - name: Build and run unit tests
         run: |
-          source venv/bin/activate
           pytest --cov=src --cov-report html tests/ -vv
 
       - name: Check overall coverage
         run: |
-          source venv/bin/activate
           coverage report --fail-under=80
           coverage xml -o coverage_overall.xml
         shell: bash
