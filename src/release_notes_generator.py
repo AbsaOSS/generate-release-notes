@@ -37,10 +37,12 @@ def generate_release_notes(g: Github, custom_chapters: CustomChapters) -> Option
         return None
 
     # get latest release (1 API call)
-    rls = safe_call(repo.get_latest_release)
+    rls = safe_call(repo.get_latest_release)()
+    if rls is None:
+        logging.info(f"Latest release not found for {repo.full_name}. 1st release for repository!")
 
     # get all issues since last release (N API calls - pagination)
-    since = rls.published_at if rls else None
+    since = rls.published_at if rls else repo.created_at
     issues = safe_call(repo.get_issues)(state=Constants.ISSUE_STATE_ALL, since=since)
 
     # get finished PRs since last release (N API calls - pagination)
@@ -48,7 +50,7 @@ def generate_release_notes(g: Github, custom_chapters: CustomChapters) -> Option
 
     # get commits since last release (N API calls - pagination)
     # experimental: not possible to pair all returned commits by sha to PRs
-    commits = safe_call(repo.get_commits)
+    commits = safe_call(repo.get_commits)()
 
     # generate change url
     changelog_url = get_change_url(tag_name=ActionInputs.get_tag_name(), repository=repo, git_release=rls)
@@ -57,9 +59,9 @@ def generate_release_notes(g: Github, custom_chapters: CustomChapters) -> Option
     rls_notes_records: dict[int, Record] = RecordFactory.generate(
         github=g,
         repo=repo,
-        issues=issues,
-        pulls=pulls,
-        commits=commits
+        issues=list(issues),        # PaginatedList --> list
+        pulls=list(pulls),          # PaginatedList --> list
+        commits=list(commits)       # PaginatedList --> list
     )
 
     # build rls notes

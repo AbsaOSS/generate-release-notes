@@ -147,7 +147,7 @@ class Record:
 
         # Iterate over all PRs
         for pull in self.__pulls:
-            body_lines = pull.body.split('\n')
+            body_lines = pull.body.split('\n') if pull.body is not None else []
             inside_release_notes = False
 
             for line in body_lines:
@@ -270,7 +270,7 @@ class Record:
         """
         for pull in self.__pulls:
             if commit.sha == pull.merge_commit_sha:
-                if self.__pull_commits.get(pull.number) is not None:
+                if self.__pull_commits.get(pull.number) is None:
                     self.__pull_commits[pull.number] = []
                 self.__pull_commits[pull.number].append(commit)
                 return

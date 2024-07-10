@@ -76,7 +76,7 @@ class RecordFactory:
             else:
                 register_pull_request(pull)
 
-        detected_prs = sum(register_commit_to_record(commit) for commit in commits)
+        detected_prs_count = sum(register_commit_to_record(commit) for commit in commits)
 
-        logging.info(f"Generated {len(records)} records from {len(issues)} issues and {len(pulls)} PRs, with {detected_prs} commits detected.")
+        logging.info(f"Generated {len(records)} records from {len(issues)} issues and {len(pulls)} PRs, with {detected_prs_count} commits detected.")
         return records

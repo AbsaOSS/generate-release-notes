@@ -22,9 +22,10 @@ def safe_call_decorator(rate_limiter: GithubRateLimiter):
     Decorator factory to create a rate-limited safe call function.
     """
     def decorator(method: Callable) -> Callable:
+        # Note: Keep log decorator first to log correct method name.
+        @debug_log_decorator
         @wraps(method)
         @rate_limiter
-        @debug_log_decorator
         def wrapped(*args, **kwargs) -> Optional[Any]:
             try:
                 return method(*args, **kwargs)

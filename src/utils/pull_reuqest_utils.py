@@ -13,7 +13,7 @@ def extract_issue_numbers_from_body(pr: PullRequest) -> list[int]:
     regex_pattern = re.compile(r'([Cc]los(e|es|ed)|[Ff]ix(es|ed)?|[Rr]esolv(e|es|ed))\s*#\s*([0-9]+)')
 
     # Extract all issue numbers from the PR body
-    issue_matches = regex_pattern.findall(pr.body)
+    issue_matches = regex_pattern.findall(pr.body if pr.body else "")
 
     # Extract the issue numbers from the matches
     issue_numbers = [int(match[-1]) for match in issue_matches]
