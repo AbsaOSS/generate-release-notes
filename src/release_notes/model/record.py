@@ -1,10 +1,13 @@
 import logging
 from typing import Optional
 
-from github_integration.github_manager import GithubManager
-from github_integration.model.commit import Commit
-from github_integration.model.issue import Issue
-from github_integration.model.pull_request import PullRequest
+from github.Issue import Issue
+from github.PullRequest import PullRequest
+from github.Repository import Repository
+from github.Commit import Commit
+
+from utils.constants import Constants
+from utils.pull_reuqest_utils import extract_issue_numbers_from_body
 
 
 class Record:
@@ -15,16 +18,37 @@ class Record:
     RELEASE_NOTE_DETECTION_PATTERN = "Release notes:"
     RELEASE_NOTE_LINE_MARK = "-"
 
-    def __init__(self, issue: Optional[Issue] = None):
+    def __init__(self, repo: Repository, issue: Optional[Issue] = None):
         """
         Constructs all the necessary attributes for the Record object.
 
         :param issue: An optional Issue object associated with the record.
         """
+        self.__repo: Repository = repo
         self.__gh_issue: Issue = issue
         self.__pulls: list[PullRequest] = []
+        self.__pull_commits: dict = {}
+
         self.__is_release_note_detected: bool = False
         self.__present_in_chapters = 0
+
+    @property
+    def issue(self) -> Optional[Issue]:
+        """
+        Gets the issue associated with the record.
+
+        :return: The Issue object associated with the record, or None if there is no issue.
+        """
+        return self.__gh_issue
+
+    @property
+    def pulls(self) -> list[PullRequest]:
+        """
+        Gets the pull requests associated with the record.
+
+        :return: The list of PullRequest objects associated with the record.
+        """
+        return self.__pulls
 
     @property
     def is_present_in_chapters(self) -> bool:
@@ -42,7 +66,7 @@ class Record:
 
         :return: A boolean indicating whether the record is a pull request.
         """
-        return self.__gh_issue is None
+        return self.__gh_issue is None and len(self.__pulls) == 1
 
     @property
     def is_issue(self) -> bool:
@@ -62,9 +86,9 @@ class Record:
         """
         if self.__gh_issue is None:
             # no issue ==> stand-alone PR
-            return self.__pulls[0].state == PullRequest.PR_STATE_CLOSED
+            return self.__pulls[0].state == Constants.PR_STATE_CLOSED
         else:
-            return self.__gh_issue.state == Issue.ISSUE_STATE_CLOSED
+            return self.__gh_issue.state == Constants.ISSUE_STATE_CLOSED
 
     @property
     def is_closed_issue(self) -> bool:
@@ -73,7 +97,7 @@ class Record:
 
         :return: A boolean indicating whether the record is a closed issue.
         """
-        return self.is_issue and self.__gh_issue.state == Issue.ISSUE_STATE_CLOSED
+        return self.is_issue and self.__gh_issue.state == Constants.ISSUE_STATE_CLOSED
 
     @property
     def is_open_issue(self) -> bool:
@@ -82,7 +106,7 @@ class Record:
 
         :return: A boolean indicating whether the record is a closed issue.
         """
-        return self.is_issue and self.__gh_issue.state == Issue.ISSUE_STATE_OPEN
+        return self.is_issue and self.__gh_issue.state == Constants.ISSUE_STATE_OPEN
 
     @property
     def is_merged_pr(self) -> bool:
@@ -92,7 +116,7 @@ class Record:
         :return: A boolean indicating whether the record is a merged pull request.
         """
         if self.__gh_issue is None:
-            return self.__pulls[0].is_merged
+            return self.is_pull_request_merged(self.__pulls[0])
         return False
 
     @property
@@ -103,9 +127,9 @@ class Record:
         :return: A list of the labels of the record.
         """
         if self.__gh_issue is None:
-            return self.__pulls[0].labels
+            return [label.name for label in self.__pulls[0].labels]
         else:
-            return self.__gh_issue.labels
+            return [label.name for label in self.__gh_issue.labels]
 
     # TODO in Issue named 'Configurable regex-based Release note detection in the PR body'
     #   - 'Release notest:' as detection pattern default - can be defined by user
@@ -171,7 +195,7 @@ class Record:
 
         :return: A boolean indicating whether the pull request mentions an issue.
         """
-        return self.__pulls[0].body_contains_issue_mention
+        return len(extract_issue_numbers_from_body(self.__pulls[0])) > 0
 
     @property
     def authors(self) -> Optional[str]:
@@ -215,7 +239,7 @@ class Record:
 
         template = "[#{number}](https://github.com/{full_name}/pull/{number})"
         res = [
-            template.format(number=pull.number, full_name=GithubManager().get_repository_full_name())
+            template.format(number=pull.number, full_name=self.__repo.full_name)
             for pull in self.__pulls
         ]
 
@@ -246,7 +270,9 @@ class Record:
         """
         for pull in self.__pulls:
             if commit.sha == pull.merge_commit_sha:
-                pull.register_commit(commit)
+                if self.__pull_commits.get(pull.number) is not None:
+                    self.__pull_commits[pull.number] = []
+                self.__pull_commits[pull.number].append(commit)
                 return
 
         logging.error(f"Commit {commit.sha} not registered in any PR of record {self.__gh_issue.number}")
@@ -304,9 +330,14 @@ class Record:
         :return: A boolean indicating whether the record contains any of the specified labels.
         """
         if self.is_issue:
-            return self.__gh_issue.contains_labels(labels)
+            labels = self.__gh_issue.labels
         else:
-            return self.__pulls[0].contains_labels(labels)
+            labels = self.__pulls[0].labels
+
+        for label in labels:
+            if label in self.labels:
+                return True
+        return False
 
     def increment_present_in_chapters(self):
         """
@@ -334,3 +365,7 @@ class Record:
                 return True
 
         return False
+
+    @staticmethod
+    def is_pull_request_merged(pull: PullRequest) -> bool:
+        return pull.state == Constants.PR_STATE_CLOSED and pull.merged_at is not None and pull.closed_at is not None

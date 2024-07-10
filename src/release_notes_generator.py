@@ -10,6 +10,7 @@ from release_notes.model.record import Record
 from release_notes.release_notes_builder import ReleaseNotesBuilder
 from release_notes.record_factory import RecordFactory
 from action_inputs import ActionInputs
+from utils.constants import Constants
 
 from utils.decorators import safe_call_decorator
 from utils.utils import get_change_url
@@ -40,7 +41,7 @@ def generate_release_notes(g: Github, custom_chapters: CustomChapters) -> Option
 
     # get all issues since last release (N API calls - pagination)
     since = rls.published_at if rls else None
-    issues = safe_call(repo.get_issues, state="all", since=since)
+    issues = safe_call(repo.get_issues, state=Constants.ISSUE_STATE_ALL, since=since)
 
     # get finished PRs since last release (N API calls - pagination)
     pulls = safe_call(repo.get_pulls, state='closed')
@@ -54,18 +55,18 @@ def generate_release_notes(g: Github, custom_chapters: CustomChapters) -> Option
 
     # merge data to Release Notes records form
     rls_notes_records: dict[int, Record] = RecordFactory.generate(
+        github=g,
+        repo=repo,
         issues=issues,
         pulls=pulls,
         commits=commits
     )
 
-    formatter = RecordFormatter()
-
     # build rls notes
     return ReleaseNotesBuilder(
         records=rls_notes_records,
         custom_chapters=custom_chapters,
-        formatter=formatter,
+        formatter=RecordFormatter(),
         warnings=ActionInputs.get_warnings(),
         print_empty_chapters=ActionInputs.get_print_empty_chapters(),
         changelog_url=changelog_url
