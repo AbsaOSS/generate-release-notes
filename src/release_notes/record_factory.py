@@ -45,7 +45,8 @@ class RecordFactory:
                         f"Detected PR {pull.number} linked to issue {parent_issue_number} which is not in the list of received issues. Fetching ..."
                     )
 
-                    parent_issue = safe_call(repo.get_issue, parent_issue_number)
+
+                    parent_issue = safe_call(repo.get_issue)(parent_issue_number)
                     create_record_for_issue(repo, parent_issue)
 
                 records[parent_issue_number].register_pull_request(pull)

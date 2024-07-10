@@ -33,7 +33,7 @@ def generate_release_notes(g: Github, custom_chapters: CustomChapters) -> Option
     safe_call = safe_call_decorator(rate_limiter)
 
     # get GitHub repository object (1 API call)
-    if repo := safe_call(g.get_repo, ActionInputs.get_github_repository()) is None:
+    if repo := safe_call(g.get_repo)(ActionInputs.get_github_repository()) is None:
         return None
 
     # get latest release (1 API call)
@@ -41,10 +41,10 @@ def generate_release_notes(g: Github, custom_chapters: CustomChapters) -> Option
 
     # get all issues since last release (N API calls - pagination)
     since = rls.published_at if rls else None
-    issues = safe_call(repo.get_issues, state=Constants.ISSUE_STATE_ALL, since=since)
+    issues = safe_call(repo.get_issues)(state=Constants.ISSUE_STATE_ALL, since=since)
 
     # get finished PRs since last release (N API calls - pagination)
-    pulls = safe_call(repo.get_pulls, state='closed')
+    pulls = safe_call(repo.get_pulls)(state='closed')
 
     # get commits since last release (N API calls - pagination)
     # experimental: not possible to pair all returned commits by sha to PRs
