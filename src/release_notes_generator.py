@@ -33,7 +33,7 @@ def generate_release_notes(g: Github, custom_chapters: CustomChapters) -> Option
     safe_call = safe_call_decorator(rate_limiter)
 
     # get GitHub repository object (1 API call)
-    if repo := safe_call(g.get_repo)(ActionInputs.get_github_repository()) is None:
+    if (repo := safe_call(g.get_repo)(ActionInputs.get_github_repository())) is None:
         return None
 
     # get latest release (1 API call)

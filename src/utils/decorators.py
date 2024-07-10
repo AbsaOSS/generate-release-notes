@@ -1,13 +1,14 @@
 import logging
+
 from typing import Callable, Optional, Any
-
 from utils.github_rate_limiter import GithubRateLimiter
-
+from functools import wraps
 
 def debug_log_decorator(method: Callable) -> Callable:
     """
     Decorator to add debug logging for a method call.
     """
+    @wraps(method)
     def wrapped(*args, **kwargs) -> Optional[Any]:
         logging.debug(f"Calling method {method.__name__} with args: {args} and kwargs: {kwargs}")
         result = method(*args, **kwargs)
@@ -21,6 +22,7 @@ def safe_call_decorator(rate_limiter: GithubRateLimiter):
     Decorator factory to create a rate-limited safe call function.
     """
     def decorator(method: Callable) -> Callable:
+        @wraps(method)
         @rate_limiter
         @debug_log_decorator
         def wrapped(*args, **kwargs) -> Optional[Any]:
