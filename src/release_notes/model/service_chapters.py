@@ -1,4 +1,3 @@
-from github_integration.model.pull_request import PullRequest
 from release_notes.model.base_chapters import BaseChapters
 from release_notes.model.chapter import Chapter
 from release_notes.model.record import Record

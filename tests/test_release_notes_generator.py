@@ -1,11 +1,10 @@
 import pytest
 from unittest.mock import Mock, patch
 
-from github_integration.github_manager import GithubManager
-from release_notes.model.custom_chapters import CustomChapters
 from github import Github
 
-from release_notes_generator import generate_release_notes, run  # Adjust import to match your module name
+from release_notes.model.custom_chapters import CustomChapters
+from release_notes_generator import generate_release_notes, run
 
 
 @pytest.fixture
@@ -19,13 +18,12 @@ def mock_github_manager():
 
 def test_generate_release_notes_repository_not_found(mock_github_manager):
     github_mock = Mock(spec=Github)
-    GithubManager().github = github_mock
     github_mock.get_repo.return_value = None
 
     custom_chapters = CustomChapters(print_empty_chapters=True)
 
     with patch('github_integration.github_manager.GithubManager', return_value=mock_github_manager):
-        release_notes = generate_release_notes(custom_chapters)
+        release_notes = generate_release_notes(github_mock, custom_chapters)
 
     assert release_notes is None
 

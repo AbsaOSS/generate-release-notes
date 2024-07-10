@@ -1,5 +1,4 @@
 import json
-import logging
 
 from release_notes.model.base_chapters import BaseChapters
 from release_notes.model.chapter import Chapter
