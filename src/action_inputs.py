@@ -1,11 +1,10 @@
 import json
 import logging
 
-from action.action_inputs import BaseActionInputs
-from github_integration.gh_action import get_action_input
+from utils.gh_action import get_action_input
 
 
-class ActionInputs(BaseActionInputs):
+class ActionInputs:
     GITHUB_REPOSITORY = 'GITHUB_REPOSITORY'
     GITHUB_TOKEN = 'github-token'
     TAG_NAME = 'tag-name'

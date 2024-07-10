@@ -14,27 +14,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Checkout external repository
-        uses: actions/checkout@v2
-        with:
-          repository: AbsaOSS/py-composite-action-lib
-          path: external-repo
-          ref: feature/4-Integrate-code-from-Release-Notes-Generator-action
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
-      - name: Install external repository locally
-        run: |
-          python -m venv venv
-          source venv/bin/activate
-          cd external-repo
-          pip uninstall PyCompositeActionLib -y
-          python3 -m pip install -e .
-          pip list
-          pip show PyCompositeActionLib
 
       - name: Install project dependencies
         run: |
