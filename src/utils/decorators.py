@@ -4,6 +4,7 @@ from typing import Callable, Optional, Any
 from utils.github_rate_limiter import GithubRateLimiter
 from functools import wraps
 
+
 def debug_log_decorator(method: Callable) -> Callable:
     """
     Decorator to add debug logging for a method call.

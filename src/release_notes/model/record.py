@@ -33,6 +33,17 @@ class Record:
         self.__present_in_chapters = 0
 
     @property
+    def number(self) -> int:
+        """
+        Gets the number of the record.
+
+        :return: The number of the record as an integer.
+        """
+        if self.__gh_issue is None:
+            return self.__pulls[0].number
+        return self.__gh_issue.number
+
+    @property
     def issue(self) -> Optional[Issue]:
         """
         Gets the issue associated with the record.
@@ -245,13 +256,28 @@ class Record:
 
         return ", ".join(res)
 
-    def pull_request(self, index: int = 0) -> PullRequest:
+    def pull_request_commit_count(self, index: int = 0) -> int:
+        """
+        Gets the count of commits associated with the pull request.
+
+        :param index: The index of the pull request.
+        :return: The count of commits associated with the pull request.
+        """
+        if index < 0 or index >= len(self.__pulls):
+            return 0
+
+        pull = self.__pulls[index]
+        return len(self.__pull_commits.get(pull.number)) if self.__pull_commits.get(pull.number) is not None else 0
+
+    def pull_request(self, index: int = 0) -> Optional[PullRequest]:
         """
         Gets a pull request associated with the record.
 
         :param index: The index of the pull request.
         :return: The PullRequest object.
         """
+        if index < 0 or index >= len(self.__pulls):
+            return None
         return self.__pulls[index]
 
     def register_pull_request(self, pull):
@@ -275,7 +301,7 @@ class Record:
                 self.__pull_commits[pull.number].append(commit)
                 return
 
-        logging.error(f"Commit {commit.sha} not registered in any PR of record {self.__gh_issue.number}")
+        logging.error(f"Commit {commit.sha} not registered in any PR of record {self.number}")
 
     # TODO in Issue named 'Chapter line formatting - default'
     def to_chapter_row(self, row_format="", increment_in_chapters=True) -> str:
@@ -329,15 +355,10 @@ class Record:
         :param labels: A list of labels to check for.
         :return: A boolean indicating whether the record contains any of the specified labels.
         """
-        if self.is_issue:
-            labels = self.__gh_issue.labels
-        else:
-            labels = self.__pulls[0].labels
-
         for label in labels:
-            if label in self.labels:
-                return True
-        return False
+            if label not in self.labels:
+                return False
+        return True
 
     def increment_present_in_chapters(self):
         """

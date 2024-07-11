@@ -5,6 +5,7 @@ from src.release_notes.model.chapter import Chapter
 
 def test_chapter_init():
     chapter = Chapter("Test Title", ["label1", "label2"])
+
     assert chapter.title == "Test Title"
     assert chapter.labels == ["label1", "label2"]
     assert chapter.rows == {}
@@ -15,6 +16,7 @@ def test_chapter_init():
 def test_add_row():
     chapter = Chapter("Test Title", ["label1", "label2"])
     chapter.add_row(1, "Test Row")
+
     assert {1: "Test Row"} == chapter.rows
 
 
@@ -25,6 +27,7 @@ def test_to_string_ascending():
     chapter.add_row(1, "Test Row 1")
     chapter.add_row(2, "Test Row 2")
     expected_output = "### Test Title\n- Test Row 1\n- Test Row 2"
+
     assert expected_output == chapter.to_string(sort_ascending=True)
 
 
@@ -35,3 +38,17 @@ def test_to_string_descending():
     expected_output = "### Test Title\n- Test Row 2\n- Test Row 1"
 
     assert expected_output == chapter.to_string(sort_ascending=False)
+
+
+def test_to_string_print_empty_chapters():
+    chapter = Chapter("Test Title", ["label1", "label2"])
+    expected_output = "### Test Title\nNo entries detected."
+
+    assert expected_output == chapter.to_string()
+
+
+def test_to_string_not_print_empty_chapters():
+    chapter = Chapter("Test Title", ["label1", "label2"])
+    expected_output = ""
+
+    assert expected_output == chapter.to_string(print_empty_chapters=False)

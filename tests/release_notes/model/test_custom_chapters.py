@@ -1,5 +1,20 @@
+from unittest.mock import Mock
+
+import pytest
+
 from release_notes.model.chapter import Chapter
 from release_notes.model.custom_chapters import CustomChapters
+from release_notes.model.record import Record
+
+
+@pytest.fixture
+def custom_chapters():
+    chapters = CustomChapters()
+    chapters.chapters = {
+        'Chapter 1': Chapter('Chapter 1', ['bug', 'enhancement']),
+        'Chapter 2': Chapter('Chapter 2', ['feature'])
+    }
+    return chapters
 
 
 # __init__
@@ -11,27 +26,70 @@ def test_chapters_init():
     assert chapters.chapters == {}
 
 
-# add_row
+# populate
 
-def test_chapters_add_row():
-    chapters = CustomChapters()
-    chapters.add_row("Test Chapter", 1, "Test Row")
+def test_populate(custom_chapters):
+    record1 = Mock(spec=Record)
+    record1.labels = ['bug']
+    record1.pulls_count = 1
+    record1.is_present_in_chapters = False
+    record1.to_chapter_row.return_value = "Record 1 Chapter Row"
 
-    assert "Test Chapter" in chapters.chapters
-    assert {1: "Test Row"} == chapters.chapters["Test Chapter"].rows
+    record2 = Mock(spec=Record)
+    record2.labels = ['enhancement']
+    record2.pulls_count = 1
+    record2.is_present_in_chapters = False
+    record2.to_chapter_row.return_value = "Record 2 Chapter Row"
+
+    record3 = Mock(spec=Record)
+    record3.labels = ['feature']
+    record3.pulls_count = 1
+    record3.is_present_in_chapters = False
+    record3.to_chapter_row.return_value = "Record 3 Chapter Row"
+
+    records = {
+        1: record1,
+        2: record2,
+        3: record3,
+    }
+
+    custom_chapters.populate(records)
+
+    assert 1 in custom_chapters.chapters['Chapter 1'].rows
+    assert custom_chapters.chapters['Chapter 1'].rows[1] == "Record 1 Chapter Row"
+    assert 2 in custom_chapters.chapters['Chapter 1'].rows
+    assert custom_chapters.chapters['Chapter 1'].rows[2] == "Record 2 Chapter Row"
+    assert 3 in custom_chapters.chapters['Chapter 2'].rows
+    assert custom_chapters.chapters['Chapter 2'].rows[3] == "Record 3 Chapter Row"
 
 
-# to_string
+def test_populate_no_pulls_count(custom_chapters):
+    record1 = Mock(spec=Record)
+    record1.labels = ['bug']
+    record1.pulls_count = 0
+    record1.is_present_in_chapters = False
 
-def test_chapters_to_string():
-    chapters = CustomChapters()
-    chapters.add_row("Test Chapter", 1, "Test Row")
-    expected_output = "### Test Chapter\n- Test Row"
+    records = {
+        1: record1,
+    }
 
-    # print(f"Actual:\nx{chapters.to_string()}x")
-    # print(f"Expected:\nx{expected_output}x")
+    custom_chapters.populate(records)
+    assert 1 not in custom_chapters.chapters['Chapter 1'].rows
 
-    assert expected_output == chapters.to_string()
+
+def test_populate_no_matching_labels(custom_chapters):
+    record1 = Mock(spec=Record)
+    record1.labels = ['non-existent-label']
+    record1.pulls_count = 1
+    record1.is_present_in_chapters = False
+
+    records = {
+        1: record1,
+    }
+
+    custom_chapters.populate(records)
+    assert 1 not in custom_chapters.chapters['Chapter 1'].rows
+    assert 1 not in custom_chapters.chapters['Chapter 2'].rows
 
 
 # from_json

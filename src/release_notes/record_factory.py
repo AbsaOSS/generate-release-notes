@@ -44,8 +44,6 @@ class RecordFactory:
                     logging.warning(
                         f"Detected PR {pull.number} linked to issue {parent_issue_number} which is not in the list of received issues. Fetching ..."
                     )
-
-
                     parent_issue = safe_call(repo.get_issue)(parent_issue_number)
                     create_record_for_issue(repo, parent_issue)
 
