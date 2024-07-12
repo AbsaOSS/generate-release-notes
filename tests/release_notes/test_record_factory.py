@@ -12,7 +12,6 @@ from github.Repository import Repository
 
 from release_notes.model.record import Record
 from release_notes.record_factory import RecordFactory
-from utils.github_rate_limiter import GithubRateLimiter
 
 
 @pytest.fixture
@@ -244,3 +243,30 @@ def test_generate_with_no_pulls(mock_github, mock_repo):
     # Verify that PRs are registered
     assert 0 == records[1].pulls_count
     assert 0 == records[2].pulls_count
+
+
+def test_generate_with_wrong_issue_number_in_pull_body_mention(mock_github, mock_repo):
+    issue1, issue2, pr1, pr2, commit1, commit2 = setup_issues_pulls_commits()
+    pr1.body = "Closes #100"
+    issues = [issue1, issue2]
+    pulls = [pr1, pr2]
+    commits = [commit1, commit2]
+
+    mock_rate_limit = Mock()
+    mock_rate_limit.core.remaining = 10
+    mock_rate_limit.core.reset.timestamp.return_value = time.time() + 3600
+    mock_github.get_rate_limit.return_value = mock_rate_limit
+    mock_repo.get_issue.return_value = None
+
+    records = RecordFactory.generate(mock_github, mock_repo, issues, pulls, commits)
+
+    # Verify the record creation
+    assert 3 == len(records)
+    assert isinstance(records[1], Record)
+    assert isinstance(records[2], Record)
+    assert isinstance(records[101], Record)
+
+    # Verify that PRs are registered
+    assert 0 == records[1].pulls_count
+    assert 1 == records[2].pulls_count
+    assert 1 == records[101].pulls_count

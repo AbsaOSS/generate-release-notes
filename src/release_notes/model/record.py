@@ -348,15 +348,30 @@ class Record:
 
             return row
 
-    def contains_labels(self, labels: list[str]) -> bool:
+    def contains_min_one_label(self, labels: list[str]) -> bool:
         """
-        Checks if the record contains any of the specified labels.
+        Checks if the record contains at least one of the received labels.
 
         :param labels: A list of labels to check for.
         :return: A boolean indicating whether the record contains any of the specified labels.
         """
-        for label in labels:
-            if label not in self.labels:
+        for lbl in self.labels:
+            if lbl in labels:
+                return True
+        return False
+
+    def contain_all_labels(self, labels: list[str]) -> bool:
+        """
+        Checks if the record contains all of received labels.
+
+        :param labels: A list of labels to check for.
+        :return: A boolean indicating whether the record contains any of the specified labels.
+        """
+        if len(self.labels) != len(labels):
+            return False
+
+        for lbl in self.labels:
+            if lbl not in labels:
                 return False
         return True
 

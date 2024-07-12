@@ -234,22 +234,24 @@ def test_to_chapter_row_with_issue_no_rls_notes(record_with_issue_closed_no_rls_
 
 def test_contains_labels_with_issue(record_with_issue_open):
     # Test with labels present in the issue
-    assert record_with_issue_open.contains_labels(['label1'])
-    assert record_with_issue_open.contains_labels(['label2'])
-    assert record_with_issue_open.contains_labels(['label1', 'label2'])
+    assert record_with_issue_open.contains_min_one_label(['label1'])
+    assert record_with_issue_open.contains_min_one_label(['label2'])
+    assert record_with_issue_open.contains_min_one_label(['label1', 'label2'])
 
     # Test with labels not present in the issue
-    assert not record_with_issue_open.contains_labels(['label3'])
-    assert not record_with_issue_open.contains_labels(['label1', 'label3'])
+    assert not record_with_issue_open.contains_min_one_label(['label3'])
+    assert record_with_issue_open.contains_min_one_label(['label1', 'label3'])
+    assert not record_with_issue_open.contain_all_labels(['label1', 'label3'])
 
 
 def test_contains_labels_with_pull(mock_pull, record_with_pull_closed):
     # Test with labels present in the pull request
-    assert record_with_pull_closed.contains_labels(['label1'])
+    assert record_with_pull_closed.contains_min_one_label(['label1'])
 
     # Test with labels not present in the pull request
-    assert not record_with_pull_closed.contains_labels(['label2'])
-    assert not record_with_pull_closed.contains_labels(['label1', 'label2'])
+    assert not record_with_pull_closed.contains_min_one_label(['label2'])
+    assert record_with_pull_closed.contains_min_one_label(['label1', 'label2'])
+    assert not record_with_pull_closed.contain_all_labels(['label1', 'label2'])
 
 
 # present_in_chapters

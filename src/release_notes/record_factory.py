@@ -45,12 +45,20 @@ class RecordFactory:
                         f"Detected PR {pull.number} linked to issue {parent_issue_number} which is not in the list of received issues. Fetching ..."
                     )
                     parent_issue = safe_call(repo.get_issue)(parent_issue_number)
-                    create_record_for_issue(repo, parent_issue)
+                    if parent_issue is not None:
+                        create_record_for_issue(repo, parent_issue)
 
-                records[parent_issue_number].register_pull_request(pull)
-                logging.debug(
-                    f"Registering PR {pull.number}: {pull.title} to Issue {parent_issue_number}"
-                )
+                if parent_issue_number in records:
+                    records[parent_issue_number].register_pull_request(pull)
+                    logging.debug(
+                        f"Registering PR {pull.number}: {pull.title} to Issue {parent_issue_number}"
+                    )
+                else:
+                    records[pull.number] = Record(repo)
+                    records[pull.number].register_pull_request(pull)
+                    logging.debug(
+                        f"Registering stand-alone PR {pull.number}: {pull.title} as mentioned Issue {parent_issue_number} not found."
+                    )
 
         def register_commit_to_record(commit: Commit):
             for record in records.values():
