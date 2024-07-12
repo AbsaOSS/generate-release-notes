@@ -184,11 +184,14 @@ The action includes four specific warning chapters to highlight potential areas 
   - **Purpose**: Lists pull requests that are closed (not merged) but not associated with any issues.
   - **Importance**: Highlighting closed PRs without linked issues ensures transparency in the project's history. It helps track important decisions and clarifies the reasoning behind changes, even if they aren't merged. This practice enhances the project's documentation quality and aids in understanding its evolution.
 
+- **_Others - No Topic_**
+  - **Purpose**: This chapter lists issues that do not fall into any of the predefined chapters.
+  - **Importance**: Helps maintainers identify issues that may not have been categorized correctly. This ensures that all issues are properly documented and organized in the release notes.
 
 Each warning chapter acts as a quality check, ensuring that the release notes are comprehensive, well-organized, and meaningful. By addressing these warnings, project maintainers can significantly improve the clarity and effectiveness of their release documentation.
 
 
-How To Build
+## Get Started
 
 Clone the repository and navigate to the project directory:
 
@@ -201,6 +204,7 @@ Install the dependencies:
 
 ```
 pip install -r requirements.txt
+export PYTHONPATH=<your path>/generate-release-notes/src
 ```
 
 ## Running unit test
@@ -250,7 +254,7 @@ export INPUT_VERBOSE="true"
 
 # CI in-build variables
 export GITHUB_REPOSITORY="< owner >/< repo-name >"
-export INPUT_GITHUB_TOKEN="< your token >}"
+export INPUT_GITHUB_TOKEN=$(printenv <your-env-token-var>)
 
 # Run the Python script
 python3 ./src/generate-release-notes.py
