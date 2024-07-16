@@ -25,13 +25,13 @@ jobs:
         run: python3 --version
         shell: bash
 
-#      - name: Set PYTHONPATH environment variable
-#        run: echo "PYTHONPATH=${GITHUB_WORKSPACE}/release_notes_generator" >> $GITHUB_ENV
-#        shell: bash
+      - name: Set PYTHONPATH environment variable
+        run: echo "PYTHONPATH=${GITHUB_WORKSPACE}/release_notes_generator" >> $GITHUB_ENV
+        shell: bash
 
-#      - name: print PYTHONPATH env variable
-#        run: echo $PYTHONPATH
-#        shell: bash
+      - name: print PYTHONPATH env variable
+        run: echo $PYTHONPATH
+        shell: bash
 
       - name: Build and run unit tests
         run: pytest --cov=release_notes_generator --cov-report html tests/ -vv
