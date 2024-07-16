@@ -53,6 +53,10 @@ runs:
       run: python3 --version
       shell: bash
 
+    - name: Set PYTHONPATH environment variable
+      run: echo "PYTHONPATH=${GITHUB_WORKSPACE}/release_notes_generator/release_notes_generator"
+      shell: bash
+
     - name: print PYTHONPATH env variable
       run: echo $PYTHONPATH
       shell: bash
