@@ -26,7 +26,7 @@ jobs:
         shell: bash
 
       - name: Set PYTHONPATH environment variable
-        run: echo "PYTHONPATH=${GITHUB_WORKSPACE}/release_notes_generator" >> $GITHUB_ENV
+        run: echo "PYTHONPATH=${GITHUB_WORKSPACE}/release_notes_generator/release_notes_generator" >> $GITHUB_ENV
         shell: bash
 
       - name: print PYTHONPATH env variable
