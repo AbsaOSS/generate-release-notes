@@ -30,7 +30,7 @@ jobs:
         shell: bash
 
       - name: print PYTHONPATH env variable
-        run: echo $PYTHONPATH
+        run: echo $GITHUB_ENV
         shell: bash
 
       - name: Build and run unit tests
