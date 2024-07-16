@@ -6,8 +6,8 @@ from github.PullRequest import PullRequest
 from github.Repository import Repository
 from github.Commit import Commit
 
-from utils.constants import Constants
-from utils.pull_reuqest_utils import extract_issue_numbers_from_body
+from release_notes_generator.utils.constants import Constants
+from release_notes_generator.utils.pull_reuqest_utils import extract_issue_numbers_from_body
 
 
 class Record:
@@ -256,18 +256,17 @@ class Record:
 
         return ", ".join(res)
 
-    def pull_request_commit_count(self, index: int = 0) -> int:
+    def pull_request_commit_count(self, pull_number: int = 0) -> int:
         """
         Gets the count of commits associated with the pull request.
 
-        :param index: The index of the pull request.
+        :param pull_number: The number of the pull request.
         :return: The count of commits associated with the pull request.
         """
-        if index < 0 or index >= len(self.__pulls):
-            return 0
-
-        pull = self.__pulls[index]
-        return len(self.__pull_commits.get(pull.number)) if self.__pull_commits.get(pull.number) is not None else 0
+        for pull in self.__pulls:
+            if pull.number == pull_number:
+                return len(self.__pull_commits.get(pull.number)) if pull.number in self.__pull_commits else 0
+        return 0
 
     def pull_request(self, index: int = 0) -> Optional[PullRequest]:
         """

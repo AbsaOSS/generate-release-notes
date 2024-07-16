@@ -1,4 +1,4 @@
-from src.release_notes.model.chapter import Chapter
+from release_notes_generator.model.chapter import Chapter
 
 
 # __init__

@@ -1,6 +1,6 @@
-from release_notes.model.base_chapters import BaseChapters
-from release_notes.model.chapter import Chapter
-from release_notes.model.record import Record
+from release_notes_generator.model.base_chapters import BaseChapters
+from release_notes_generator.model.chapter import Chapter
+from release_notes_generator.model.record import Record
 
 
 class ServiceChapters(BaseChapters):
@@ -18,7 +18,8 @@ class ServiceChapters(BaseChapters):
 
     OTHERS_NO_TOPIC: str = "Others - No Topic ⚠️"
 
-    def __init__(self, sort_ascending: bool = True, print_empty_chapters: bool = True, user_defined_labels: list[str] = None):
+    def __init__(self, sort_ascending: bool = True, print_empty_chapters: bool = True,
+                 user_defined_labels: list[str] = None, used_record_numbers: list[int] = None):
         """
         Constructs all the necessary attributes for the ServiceChapters object.
 
@@ -31,6 +32,12 @@ class ServiceChapters(BaseChapters):
 
         self.user_defined_labels = user_defined_labels if user_defined_labels is not None else []
         self.sort_ascending = sort_ascending
+
+        if used_record_numbers is None:
+            self.used_record_numbers = []
+        else:
+            self.used_record_numbers = used_record_numbers
+
         self.chapters = {
             self.CLOSED_ISSUES_WITHOUT_PULL_REQUESTS: Chapter(
                 title=self.CLOSED_ISSUES_WITHOUT_PULL_REQUESTS,
@@ -70,7 +77,12 @@ class ServiceChapters(BaseChapters):
 
         :param records: A dictionary of records where the key is an integer and the value is a Record object.
         """
-        for nr in records:                               # iterate all records
+        for nr in records:
+            if nr in self.used_record_numbers:
+                # TODO - duplicities not allowed in this version in default
+                continue
+
+            # iterate all records
             if records[nr].is_closed_issue:
                 self.__populate_closed_issues(records[nr], nr)
 
@@ -93,14 +105,17 @@ class ServiceChapters(BaseChapters):
         :param nr: The number of the record.
         """
         # check record properties if it fits to a chapter: CLOSED_ISSUES_WITHOUT_PULL_REQUESTS
+        populated = False
         if record.pulls_count == 0:
             self.chapters[self.CLOSED_ISSUES_WITHOUT_PULL_REQUESTS].add_row(nr, record.to_chapter_row())
+            populated = True
 
         # check record properties if it fits to a chapter: CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS
         if not record.contains_min_one_label(self.user_defined_labels):
             self.chapters[self.CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS].add_row(nr, record.to_chapter_row())
+            populated = True
 
-        if not record.is_present_in_chapters:
+        if not populated:
             self.chapters[self.OTHERS_NO_TOPIC].add_row(nr, record.to_chapter_row())
 
     def __populate_pr(self, record: Record, nr: int):
@@ -126,5 +141,6 @@ class ServiceChapters(BaseChapters):
         elif record.is_closed and not record.pr_contains_issue_mentions and not record.contains_min_one_label(self.user_defined_labels):
             self.chapters[self.CLOSED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS].add_row(nr, record.to_chapter_row())
 
-        if not record.is_present_in_chapters:
+        else:
+            # not record.is_present_in_chapters:
             self.chapters[self.OTHERS_NO_TOPIC].add_row(nr, record.to_chapter_row())

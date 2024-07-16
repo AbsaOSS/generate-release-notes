@@ -1,8 +1,8 @@
 import json
 
-from release_notes.model.base_chapters import BaseChapters
-from release_notes.model.chapter import Chapter
-from release_notes.model.record import Record
+from release_notes_generator.model.base_chapters import BaseChapters
+from release_notes_generator.model.chapter import Chapter
+from release_notes_generator.model.record import Record
 
 
 class CustomChapters(BaseChapters):
@@ -22,6 +22,7 @@ class CustomChapters(BaseChapters):
                     if record_label in self.chapters[ch_key].labels and records[nr].pulls_count > 0:
                         if not records[nr].is_present_in_chapters:
                             self.chapters[ch_key].add_row(nr, records[nr].to_chapter_row())
+                            self.populated_record_numbers_list.append(nr)
 
     def from_json(self, json_string: str) -> 'CustomChapters':
         """

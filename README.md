@@ -222,7 +222,7 @@ This will execute all tests located in the tests directory and generate a code c
 Code coverage is collected using pytest-cov coverage tool. To run the tests and collect coverage information, use the following command:
 
 ```
-pytest --cov=src --cov-report html tests/
+pytest --cov=release_notes_generator --cov-report html tests/
 ```
 
 See the coverage report on the path:

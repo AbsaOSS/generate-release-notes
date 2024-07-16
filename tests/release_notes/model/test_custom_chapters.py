@@ -1,47 +1,32 @@
-from unittest.mock import Mock
-
-import pytest
-
-from release_notes.model.chapter import Chapter
-from release_notes.model.custom_chapters import CustomChapters
-from release_notes.model.record import Record
-
-
-@pytest.fixture
-def custom_chapters():
-    chapters = CustomChapters()
-    chapters.chapters = {
-        'Chapter 1': Chapter('Chapter 1', ['bug', 'enhancement']),
-        'Chapter 2': Chapter('Chapter 2', ['feature'])
-    }
-    return chapters
+from release_notes_generator.model.chapter import Chapter
+from release_notes_generator.model.custom_chapters import CustomChapters
+from release_notes_generator.model.record import Record
 
 
 # __init__
 
-def test_chapters_init():
-    chapters = CustomChapters()
-
-    assert chapters.sort_ascending == True
-    assert chapters.chapters == {}
+def test_chapters_init(custom_chapters):
+    assert custom_chapters.sort_ascending == True
+    assert custom_chapters.chapters['Chapter 1'].labels == ['bug', 'enhancement']
+    assert custom_chapters.chapters['Chapter 2'].labels == ['feature']
 
 
 # populate
 
-def test_populate(custom_chapters):
-    record1 = Mock(spec=Record)
+def test_populate(custom_chapters, mocker):
+    record1 = mocker.Mock(spec=Record)
     record1.labels = ['bug']
     record1.pulls_count = 1
     record1.is_present_in_chapters = False
     record1.to_chapter_row.return_value = "Record 1 Chapter Row"
 
-    record2 = Mock(spec=Record)
+    record2 = mocker.Mock(spec=Record)
     record2.labels = ['enhancement']
     record2.pulls_count = 1
     record2.is_present_in_chapters = False
     record2.to_chapter_row.return_value = "Record 2 Chapter Row"
 
-    record3 = Mock(spec=Record)
+    record3 = mocker.Mock(spec=Record)
     record3.labels = ['feature']
     record3.pulls_count = 1
     record3.is_present_in_chapters = False
@@ -63,8 +48,8 @@ def test_populate(custom_chapters):
     assert custom_chapters.chapters['Chapter 2'].rows[3] == "Record 3 Chapter Row"
 
 
-def test_populate_no_pulls_count(custom_chapters):
-    record1 = Mock(spec=Record)
+def test_populate_no_pulls_count(custom_chapters, mocker):
+    record1 = mocker.Mock(spec=Record)
     record1.labels = ['bug']
     record1.pulls_count = 0
     record1.is_present_in_chapters = False
@@ -77,8 +62,8 @@ def test_populate_no_pulls_count(custom_chapters):
     assert 1 not in custom_chapters.chapters['Chapter 1'].rows
 
 
-def test_populate_no_matching_labels(custom_chapters):
-    record1 = Mock(spec=Record)
+def test_populate_no_matching_labels(custom_chapters, mocker):
+    record1 = mocker.Mock(spec=Record)
     record1.labels = ['non-existent-label']
     record1.pulls_count = 1
     record1.is_present_in_chapters = False

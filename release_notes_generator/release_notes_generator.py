@@ -1,21 +1,21 @@
 import logging
 import traceback
 
-from typing import Optional, Callable
+from typing import Optional
 from github import Github, Auth
 
-from release_notes.record_formatter import RecordFormatter
-from release_notes.model.custom_chapters import CustomChapters
-from release_notes.model.record import Record
-from release_notes.release_notes_builder import ReleaseNotesBuilder
-from release_notes.record_factory import RecordFactory
-from action_inputs import ActionInputs
-from utils.constants import Constants
+from release_notes_generator.record.record_formatter import RecordFormatter
+from release_notes_generator.model.custom_chapters import CustomChapters
+from release_notes_generator.model.record import Record
+from release_notes_generator.release_notes_builder import ReleaseNotesBuilder
+from release_notes_generator.record.record_factory import RecordFactory
+from release_notes_generator.action_inputs import ActionInputs
+from release_notes_generator.utils.constants import Constants
 
-from utils.decorators import safe_call_decorator
-from utils.utils import get_change_url
-from utils.github_rate_limiter import GithubRateLimiter
-from utils.gh_action import set_action_output, set_action_failed
+from release_notes_generator.utils.decorators import safe_call_decorator
+from release_notes_generator.utils.utils import get_change_url
+from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
+from release_notes_generator.utils.gh_action import set_action_output, set_action_failed
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

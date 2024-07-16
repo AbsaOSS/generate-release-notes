@@ -1,6 +1,6 @@
 from github.PullRequest import PullRequest
 
-from release_notes.model.record import Record
+from release_notes_generator.model.record import Record
 
 
 class RecordFormatter:

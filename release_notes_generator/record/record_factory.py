@@ -6,11 +6,11 @@ from github.PullRequest import PullRequest
 from github.Repository import Repository
 from github.Commit import Commit
 
-from release_notes.model.record import Record
+from release_notes_generator.model.record import Record
 
-from utils.decorators import safe_call_decorator
-from utils.github_rate_limiter import GithubRateLimiter
-from utils.pull_reuqest_utils import extract_issue_numbers_from_body
+from release_notes_generator.utils.decorators import safe_call_decorator
+from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
+from release_notes_generator.utils.pull_reuqest_utils import extract_issue_numbers_from_body
 
 
 class RecordFactory:

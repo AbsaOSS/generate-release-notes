@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
-from release_notes.model.chapter import Chapter
-from release_notes.model.record import Record
+from release_notes_generator.model.chapter import Chapter
+from release_notes_generator.model.record import Record
 
 
 class BaseChapters(ABC):
@@ -18,6 +18,16 @@ class BaseChapters(ABC):
         self.sort_ascending = sort_ascending
         self.print_empty_chapters = print_empty_chapters
         self.chapters: dict[str, Chapter] = {}
+        self.populated_record_numbers: list[int] = []
+
+    @property
+    def populated_record_numbers_list(self) -> list[int]:
+        """
+        Gets the list of populated record numbers.
+
+        :return: A list of populated record numbers.
+        """
+        return self.populated_record_numbers
 
     def add_row(self, chapter_key: str, number: int, row: str):
         """

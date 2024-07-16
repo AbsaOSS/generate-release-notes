@@ -1,18 +1,20 @@
 import pytest
 
-from release_notes.model.base_chapters import BaseChapters
+from release_notes_generator.model.base_chapters import BaseChapters
 
 
+# Local Record class for testing
 class Record:
     pass
 
 
+# Local Chapters class for testing
 class Chapters(BaseChapters):
     def populate(self, records: dict[int, Record]):
         pass  # Implement a minimal populate method for testing
 
 
-# Test cases
+# Local Test Fixtures
 @pytest.fixture
 def chapters():
     return Chapters()

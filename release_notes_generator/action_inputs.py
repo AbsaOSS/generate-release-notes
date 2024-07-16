@@ -1,7 +1,7 @@
 import json
 import logging
 
-from utils.gh_action import get_action_input
+from release_notes_generator.utils.gh_action import get_action_input
 
 
 class ActionInputs:

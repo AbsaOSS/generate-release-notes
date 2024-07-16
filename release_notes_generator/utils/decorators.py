@@ -1,7 +1,7 @@
 import logging
 
 from typing import Callable, Optional, Any
-from utils.github_rate_limiter import GithubRateLimiter
+from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
 from functools import wraps
 
 

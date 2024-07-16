@@ -1,10 +1,10 @@
 import logging
 from itertools import chain
 
-from release_notes.record_formatter import RecordFormatter
-from release_notes.model.custom_chapters import CustomChapters
-from release_notes.model.record import Record
-from release_notes.model.service_chapters import ServiceChapters
+from release_notes_generator.record.record_formatter import RecordFormatter
+from release_notes_generator.model.custom_chapters import CustomChapters
+from release_notes_generator.model.record import Record
+from release_notes_generator.model.service_chapters import ServiceChapters
 
 
 class ReleaseNotesBuilder:
@@ -43,7 +43,9 @@ class ReleaseNotesBuilder:
         user_defined_labels = list(chain.from_iterable(user_defined_labels_nested))
 
         if self.warnings:
-            service_chapters = ServiceChapters(print_empty_chapters=self.print_empty_chapters, user_defined_labels=user_defined_labels)
+            service_chapters = ServiceChapters(print_empty_chapters=self.print_empty_chapters,
+                                               user_defined_labels=user_defined_labels,
+                                               used_record_numbers=user_defined_chapters.populated_record_numbers)
             service_chapters.populate(self.records)
 
             service_chapters_str = service_chapters.to_string()
