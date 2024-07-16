@@ -73,5 +73,5 @@ runs:
         INPUT_GITHUB_REPOSITORY: ${{ github.repository }}
 
       run: |
-        python3 ${{ github.action_path }}/src/release_notes_generator.py
+        python3 ${{ github.action_path }}/release_notes_generator/release_notes_generator.py
       shell: bash
