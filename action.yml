@@ -53,14 +53,14 @@ runs:
       run: python3 --version
       shell: bash
 
-#    - name: Set PYTHONPATH environment variable
-#      run: echo "PYTHONPATH=${GITHUB_WORKSPACE}/release_notes_generator"
-#      shell: bash
-#
-#    - name: print PYTHONPATH env variable
-#      run: echo $PYTHONPATH
-#      shell: bash
-#
+    - name: Set PROJECT_ROOT and update PYTHONPATH
+      run: |
+        PROJECT_ROOT="$(pwd)"
+        export PYTHONPATH="${PYTHONPATH}:${PROJECT_ROOT}"
+        echo "PYTHONPATH: ${PYTHONPATH}"
+        echo "Current working directory: $(pwd)"
+      shell: bash
+
     - name: Call Release Notes Generator
       id: release-notes-generator
       env:
