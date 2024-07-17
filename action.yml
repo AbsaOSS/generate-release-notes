@@ -59,10 +59,6 @@ runs:
         export PYTHONPATH="${PYTHONPATH}:${PROJECT_ROOT}"
         echo "PYTHONPATH: ${PYTHONPATH}"
         echo "Current working directory: $(pwd)"
-      shell: bash
-
-    - name: List directory contents
-      run: |
         echo "Contents of ${PROJECT_ROOT}:"
         ls -la "${PROJECT_ROOT}"
       shell: bash
