@@ -57,13 +57,6 @@ runs:
       run: |
         ACTION_ROOT="${{ github.action_path }}"
         export PYTHONPATH="${PYTHONPATH}:${ACTION_ROOT}/release_notes_generator"
-        echo "PYTHONPATH: ${PYTHONPATH}"
-        echo "Current working directory: $(pwd)"
-        echo "Current action root directory: ${ACTION_ROOT}"
-        echo "Contents of ${ACTION_ROOT}:"
-        ls -la "${ACTION_ROOT}"
-        echo "Contents of ${ACTION_ROOT}/release_notes_generator:"
-        ls -la "${ACTION_ROOT}/release_notes_generator"
       shell: bash
 
     - name: Call Release Notes Generator
