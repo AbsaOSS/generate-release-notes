@@ -11,7 +11,7 @@ setup(
     author='Miroslav Pojer',
     author_email='miroslav.pojer@absa.africa',
     url='https://github.com/AbsaOSS/generate-release-notes',
-    packages=find_packages(),
+    packages=["release_notes_generator", "tests"],
     install_requires=[
         'PyGithub',
     ],
