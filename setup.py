@@ -18,7 +18,7 @@ setup(
     python_requires='>=3.11',
     entry_points={
         'console_scripts': [
-            'generate-release-notes=release_notes_generator.generator:run',
+            'generate-release-notes=generator:run',
         ],
     },
     classifiers=[

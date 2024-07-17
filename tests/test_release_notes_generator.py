@@ -2,7 +2,7 @@ import time
 
 from github import Github
 
-from release_notes_generator.generator import generate_release_notes, run
+from generator import generate_release_notes, run
 from release_notes_generator.model.custom_chapters import CustomChapters
 
 
