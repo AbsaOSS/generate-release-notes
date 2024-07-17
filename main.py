@@ -12,6 +12,7 @@ from release_notes_generator.utils.gh_action import set_action_output, set_actio
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+
 def run():
     """
     Runs the 'Release Notes Generator' GitHub Action.
@@ -33,7 +34,7 @@ def run():
         custom_chapters = (CustomChapters(print_empty_chapters=ActionInputs.get_print_empty_chapters())
                            .from_json(ActionInputs.get_chapters_json()))
 
-        rls_notes = ReleaseNotesGenerator(py_github, custom_chapters).generate_release_notes()
+        rls_notes = ReleaseNotesGenerator(py_github, custom_chapters).generate()
         logging.debug(f"Release notes: \n{rls_notes}")
 
         # Set the output for the GitHub Action

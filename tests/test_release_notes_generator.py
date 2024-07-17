@@ -20,7 +20,7 @@ def test_generate_release_notes_repository_not_found(mocker):
 
     custom_chapters = CustomChapters(print_empty_chapters=True)
 
-    release_notes = ReleaseNotesGenerator(github_mock, custom_chapters).generate_release_notes()
+    release_notes = ReleaseNotesGenerator(github_mock, custom_chapters).generate()
 
     assert release_notes is None
 
@@ -43,6 +43,6 @@ def test_generate_release_notes_latest_release_not_found(mocker, mock_repo, mock
 
     custom_chapters = CustomChapters(print_empty_chapters=True)
 
-    release_notes = ReleaseNotesGenerator(github_mock, custom_chapters).generate_release_notes()
+    release_notes = ReleaseNotesGenerator(github_mock, custom_chapters).generate()
 
     assert release_notes is not None

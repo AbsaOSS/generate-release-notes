@@ -26,7 +26,7 @@ class ReleaseNotesGenerator:
         self.rate_limiter = GithubRateLimiter(self.github_instance)
         self.safe_call = safe_call_decorator(self.rate_limiter)
 
-    def generate_release_notes(self) -> Optional[str]:
+    def generate(self) -> Optional[str]:
         """
         Generates the release notes for a given repository.
 
