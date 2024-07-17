@@ -59,7 +59,7 @@ runs:
         export PYTHONPATH="${PYTHONPATH}:${ACTION_ROOT}"
         echo "PYTHONPATH: ${PYTHONPATH}"
         echo "Current working directory: $(pwd)"
-        echo "Current action root directory: ACTION_ROOT"
+        echo "Current action root directory: ${ACTION_ROOT}"
         echo "Contents of ${ACTION_ROOT}:"
         ls -la "${ACTION_ROOT}"
       shell: bash
