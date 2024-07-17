@@ -15,9 +15,9 @@ from release_notes_generator.utils.decorators import safe_call_decorator
 from release_notes_generator.utils.utils import get_change_url
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
 
-
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
 
 class ReleaseNotesGenerator:
     def __init__(self, github_instance: Github, custom_chapters: CustomChapters):

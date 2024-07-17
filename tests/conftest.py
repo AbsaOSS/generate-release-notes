@@ -157,7 +157,7 @@ def mock_issue_closed(mocker):
 
 
 @pytest.fixture
-def mock_issue_closed_I1_bug(mocker):
+def mock_issue_closed_i1_bug(mocker):
     issue = mocker.Mock(spec=Issue)
     issue.state = Constants.ISSUE_STATE_CLOSED
     label1 = mocker.Mock(spec=MockLabel)
@@ -348,17 +348,17 @@ def record_with_issue_closed_one_pull(mock_repo, mock_issue_closed, mock_pull_cl
 
 
 @pytest.fixture
-def record_with_issue_closed_one_pull_merged(mock_repo, mock_issue_closed_I1_bug, mock_pull_merged):
-    rec = Record(repo=mock_repo, issue=mock_issue_closed_I1_bug)
+def record_with_issue_closed_one_pull_merged(mock_repo, mock_issue_closed_i1_bug, mock_pull_merged):
+    rec = Record(repo=mock_repo, issue=mock_issue_closed_i1_bug)
     rec.register_pull_request(mock_pull_merged)
     mock_repo.full_name = 'org/repo'
     return rec
 
 
 @pytest.fixture
-def record_with_issue_closed_two_pulls(mock_repo, mock_issue_closed_I1_bug, mock_pull_closed_with_rls_notes_101,
+def record_with_issue_closed_two_pulls(mock_repo, mock_issue_closed_i1_bug, mock_pull_closed_with_rls_notes_101,
                                        mock_pull_closed_with_rls_notes_102):
-    rec = Record(repo=mock_repo, issue=mock_issue_closed_I1_bug)
+    rec = Record(repo=mock_repo, issue=mock_issue_closed_i1_bug)
     rec.register_pull_request(mock_pull_closed_with_rls_notes_101)
     rec.register_pull_request(mock_pull_closed_with_rls_notes_102)
     mock_repo.full_name = 'org/repo'
