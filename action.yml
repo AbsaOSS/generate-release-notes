@@ -55,12 +55,13 @@ runs:
 
     - name: Set PROJECT_ROOT and update PYTHONPATH
       run: |
-        PROJECT_ROOT="$(pwd)"
-        export PYTHONPATH="${PYTHONPATH}:${PROJECT_ROOT}"
+        ACTION_ROOT="${{ github.action_path }}"
+        export PYTHONPATH="${PYTHONPATH}:${ACTION_ROOT}"
         echo "PYTHONPATH: ${PYTHONPATH}"
         echo "Current working directory: $(pwd)"
-        echo "Contents of ${PROJECT_ROOT}:"
-        ls -la "${PROJECT_ROOT}"
+        echo "Current action root directory: ACTION_ROOT"
+        echo "Contents of ${ACTION_ROOT}:"
+        ls -la "${ACTION_ROOT}"
       shell: bash
 
     - name: Call Release Notes Generator
