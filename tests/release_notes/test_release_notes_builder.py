@@ -2,7 +2,7 @@ import json
 
 from release_notes_generator.record.record_formatter import RecordFormatter
 from release_notes_generator.model.custom_chapters import CustomChapters
-from release_notes_generator.release_notes_builder import ReleaseNotesBuilder
+from release_notes_generator.builder import ReleaseNotesBuilder
 
 
 """

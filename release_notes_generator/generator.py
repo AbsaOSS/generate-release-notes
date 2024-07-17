@@ -7,7 +7,7 @@ from github import Github, Auth
 from release_notes_generator.record.record_formatter import RecordFormatter
 from release_notes_generator.model.custom_chapters import CustomChapters
 from release_notes_generator.model.record import Record
-from release_notes_generator.release_notes_builder import ReleaseNotesBuilder
+from release_notes_generator.builder import ReleaseNotesBuilder
 from release_notes_generator.record.record_factory import RecordFactory
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.utils.constants import Constants
