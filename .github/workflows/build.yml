@@ -18,7 +18,6 @@ jobs:
         run: |
           python3 -m pip install --upgrade pip
           python3 -m pip install -r requirements.txt
-#          python3 -m pip install pytest-cov coverage
         shell: bash
 
       - name: Call command python3

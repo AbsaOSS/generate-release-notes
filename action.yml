@@ -82,5 +82,5 @@ runs:
         INPUT_GITHUB_REPOSITORY: ${{ github.repository }}
 
       run: |
-        python3 ${{ github.action_path }}/generator.py
+        python3 ${{ github.action_path }}/main.py
       shell: bash

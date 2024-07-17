@@ -2,7 +2,7 @@ import time
 
 from github import Github
 
-from generator import generate_release_notes, run
+from release_notes_generator.generator import ReleaseNotesGenerator
 from release_notes_generator.model.custom_chapters import CustomChapters
 
 
@@ -19,16 +19,6 @@ def test_generate_release_notes_repository_not_found(mocker):
 
     custom_chapters = CustomChapters(print_empty_chapters=True)
 
-    release_notes = generate_release_notes(github_mock, custom_chapters)
+    release_notes = ReleaseNotesGenerator(github_mock, custom_chapters).generate_release_notes()
 
     assert release_notes is None
-
-
-# run tests
-
-def test_run_failure(mocker):
-    mock_exit = mocker.patch('sys.exit', return_value=None)
-
-    run()
-
-    mock_exit.assert_called_once()

@@ -257,7 +257,7 @@ export GITHUB_REPOSITORY="< owner >/< repo-name >"
 export INPUT_GITHUB_TOKEN=$(printenv <your-env-token-var>)
 
 # Run the Python script
-python3 ./release_notes_generator/generator.py
+python3 ./release_notes_generator/main.py
 ```
 
 ### Contribution Guidelines
