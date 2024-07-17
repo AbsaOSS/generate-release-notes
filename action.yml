@@ -56,7 +56,7 @@ runs:
     - name: Set PROJECT_ROOT and update PYTHONPATH
       run: |
         ACTION_ROOT="${{ github.action_path }}"
-        export PYTHONPATH="${PYTHONPATH}:${ACTION_ROOT}"
+        export PYTHONPATH="${PYTHONPATH}:${ACTION_ROOT}/release_notes_generator"
         echo "PYTHONPATH: ${PYTHONPATH}"
         echo "Current working directory: $(pwd)"
         echo "Current action root directory: ${ACTION_ROOT}"
