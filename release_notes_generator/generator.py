@@ -55,11 +55,13 @@ class ReleaseNotesGenerator:
             commits=list(commits)       # PaginatedList --> list
         )
 
-        return ReleaseNotesBuilder(
+        release_notes_builder = ReleaseNotesBuilder(
             records=rls_notes_records,
             custom_chapters=self.custom_chapters,
             formatter=RecordFormatter(),
             warnings=ActionInputs.get_warnings(),
             print_empty_chapters=ActionInputs.get_print_empty_chapters(),
             changelog_url=changelog_url
-        ).build()
+        )
+
+        return release_notes_builder.build()

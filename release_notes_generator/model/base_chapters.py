@@ -47,9 +47,11 @@ class BaseChapters(ABC):
 
         :return: The chapters as a string.
         """
-        result = "".join([chapter.to_string(
-            sort_ascending=self.sort_ascending,
-            print_empty_chapters=self.print_empty_chapters) + "\n\n" for chapter in self.chapters.values()])
+        result = ""
+        for chapter in self.chapters.values():
+            chapter_string = chapter.to_string(sort_ascending=self.sort_ascending,
+                                               print_empty_chapters=self.print_empty_chapters)
+            result += (chapter_string + "\n\n")
 
         # Note: strip is required to remove leading newline chars when empty chapters are not printed option
         return result.strip()

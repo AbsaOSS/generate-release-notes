@@ -265,7 +265,11 @@ class Record:
         """
         for pull in self.__pulls:
             if pull.number == pull_number:
-                return len(self.__pull_commits.get(pull.number)) if pull.number in self.__pull_commits else 0
+                if pull.number in self.__pull_commits:
+                    return len(self.__pull_commits.get(pull.number))
+                else:
+                    return 0
+
         return 0
 
     def pull_request(self, index: int = 0) -> Optional[PullRequest]:
