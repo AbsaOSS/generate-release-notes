@@ -47,7 +47,7 @@ runs:
       with:
         python-version: '3.11'
         cache: 'pip'
-        cache-dependency-path: '${{ ACTION_ROOT }}/requirements.txt'
+        cache-dependency-path: '${{ github.action_path }}/requirements.txt'
 
     - name: Set PROJECT_ROOT and update PYTHONPATH
       run: |
