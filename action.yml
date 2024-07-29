@@ -46,11 +46,8 @@ runs:
     - uses: actions/setup-python@v5.1.1
       with:
         python-version: '3.11'
-
-    - name: Install Python dependencies
-      run: |
-        pip install -r requirements.txt
-      shell: bash
+        cache: 'pip'
+        cache-dependency-path: '**/requirements.txt'
 
     - name: Set PROJECT_ROOT and update PYTHONPATH
       run: |
