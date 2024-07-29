@@ -47,15 +47,16 @@ runs:
       with:
         python-version: '3.11'
 
+    - name: Install Python dependencies
+      run: pip install -r requirements.txt
+      shell: bash
+
     - name: Set PROJECT_ROOT and update PYTHONPATH
       run: |
         ACTION_ROOT="${{ github.action_path }}"
         export PYTHONPATH="${PYTHONPATH}:${ACTION_ROOT}/release_notes_generator"
       shell: bash
 
-    - name: Install Python dependencies
-      run: pip install -r requirements.txt
-      shell: bash
 
     - name: Call Release Notes Generator
       id: release-notes-generator
