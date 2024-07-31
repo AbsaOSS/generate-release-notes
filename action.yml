@@ -60,10 +60,22 @@ runs:
   using: 'composite'
   steps:
     # setup-python is not called as it is expected that it was done in the workflow that uses this action
-
     - name: Install Python dependencies
       run: |
-        python --version
+        python_version=$(python --version 2>&1 | grep -oP '\d+\.\d+\.\d+')
+        required_version="3.11.0"
+        
+        function version { echo "$@" | awk -F. '{ printf("%d%03d%03d\n", $1,$2,$3); }'; }
+        
+        echo "Current Python version: $python_version"
+        echo "Required Python version: $required_version"
+        
+        if [ $(version $python_version) -lt $(version $required_version) ]; then
+          echo "Python version is less than $required_version"
+          exit 1
+        else
+          echo "Python version meets the minimum requirement of $required_version"
+        fi
         pip install -r ${{ github.action_path }}/requirements.txt
 
     - name: Set PROJECT_ROOT and update PYTHONPATH
@@ -84,6 +96,5 @@ runs:
         INPUT_CHAPTERS_TO_PR_WITHOUT_ISSUE: ${{ inputs.chapters-to-pr-without-issue }}
         INPUT_VERBOSE: ${{ inputs.verbose }}
         INPUT_GITHUB_REPOSITORY: ${{ github.repository }}
-
       run: |
         python ${{ github.action_path }}/main.py
