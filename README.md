@@ -26,6 +26,10 @@ This GitHub Action automatically generates release notes for a given release tag
 
 Generate Release Notes action is dedicated to enhance the quality and organization of project documentation. Its primary purpose is to categorize release notes according to various labels, perfectly aligning with the unique organizational needs of each project. In addition, it offers robust support for acknowledging the efforts of contributors, thereby fostering a sense of recognition and appreciation within the team. Another noteworthy feature of this tool is its capability to detect potential gaps in documentation, ensuring that release notes are comprehensive and leave no stone unturned. Well maintained release notes are a vital component in maintaining high-quality, meticulously organized documentation, which is indispensable in the development process. This repository reflects our commitment to excellence in project documentation and team collaboration.
 
+## Requirements
+- **GitHub Token**: A GitHub token with permission to fetch repository data such as Issues and Pull Requests.
+- **Python 3.11+**: Ensure you have Python 3.11 installed on your system.
+
 ## Inputs
 ### `GITHUB_TOKEN`
 - **Description**: Your GitHub token for authentication. Store it as a secret and reference it in the workflow file as secrets.GITHUB_TOKEN.
