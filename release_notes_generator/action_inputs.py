@@ -16,6 +16,7 @@
 
 import json
 import logging
+import os
 
 from release_notes_generator.utils.gh_action import get_action_input
 
@@ -31,6 +32,7 @@ class ActionInputs:
     PRINT_EMPTY_CHAPTERS = 'print-empty-chapters'
     CHAPTERS_TO_PR_WITHOUT_ISSUE = 'chapters-to-pr-without-issue'
     VERBOSE = 'verbose'
+    RUNNER_DEBUG = 'RUNNER_DEBUG'
 
     @staticmethod
     def get_github_repository() -> str:
@@ -70,7 +72,7 @@ class ActionInputs:
 
     @staticmethod
     def get_verbose() -> bool:
-        return get_action_input(ActionInputs.VERBOSE).lower() == 'true'
+        return os.getenv('RUNNER_DEBUG', 0) == 1 or get_action_input(ActionInputs.VERBOSE).lower() == 'true'
 
     @staticmethod
     def validate_inputs():

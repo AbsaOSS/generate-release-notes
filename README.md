@@ -72,7 +72,7 @@ Generate Release Notes action is dedicated to enhance the quality and organizati
 - **Description**: Set to true to enable verbose logging for detailed output during the action's execution.
 - **Required**: No
 - **Default**: false
-
+- **Note**: If workflow run in debug regime, 'verbose' logging is activated.
 
 ## Outputs
 The output of the action is a markdown string containing the release notes for the specified tag. This string can be used in subsequent steps to publish the release notes to a file, create a GitHub release, or send notifications.
