@@ -1,0 +1,78 @@
+#
+# Copyright 2023 ABSA Group Limited
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+name: Build and Test
+on:
+  pull_request:
+    branches:
+      - '**'
+    types: [ opened, synchronize, reopened ]
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5.1.1
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Python dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Set PYTHONPATH environment variable
+        run: echo "PYTHONPATH=${GITHUB_WORKSPACE}/release_notes_generator/release_notes_generator" >> $GITHUB_ENV
+
+      - name: Build and run unit tests
+        run: pytest --cov=release_notes_generator --cov-report html tests/ -vv
+
+      - name: Check overall coverage
+        run: |
+          coverage report --fail-under=80
+          coverage xml -o coverage_overall.xml
+
+      - name: Check changed files coverage
+        run: |
+          # Get the list of changed Python files
+          CHANGED_FILES=$(git diff --name-only --diff-filter=AMR ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep '.py$')
+          echo "Changed Python files: $CHANGED_FILES"
+
+          # Convert list to comma-delimited string
+          CHANGED_FILES=$(echo "$CHANGED_FILES" | awk '{printf "%s,", $0} END {print ""}' | sed 's/,$//')
+          
+          # Generate coverage report for changed files
+          CHANGED_FILES_REPORT=$(coverage report --include="$CHANGED_FILES")
+          echo "Changed Python files: $CHANGED_FILES_REPORT"
+
+          # Fail if the coverage for changed files is below threshold
+          coverage report --include="$CHANGED_FILES" | grep TOTAL | awk '{if ($4 < 80.0) exit 1}'
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: coverage_overall.xml
