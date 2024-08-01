@@ -66,10 +66,10 @@ jobs:
           
           # Generate coverage report for changed files
           CHANGED_FILES_REPORT=$(coverage report --include="$CHANGED_FILES")
-          echo "Changed Python files: $CHANGED_FILES_REPORT"
+          echo "Changed Python files report:\n$CHANGED_FILES_REPORT"
 
           # Fail if the coverage for changed files is below threshold
-          coverage report --include="$CHANGED_FILES" | grep TOTAL | awk '{if ($4 < 80.0) exit 1}'
+          coverage report --include="$CHANGED_FILES" | grep TOTAL | awk '{if ($3 < 80.0) exit 1}'
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v3

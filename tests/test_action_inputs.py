@@ -125,6 +125,25 @@ def test_get_chapters_to_pr_without_issue(mocker):
     assert ActionInputs.get_chapters_to_pr_without_issue() is False
 
 
-def test_get_verbose(mocker):
+def test_get_verbose_verbose_by_action_input(mocker):
     mocker.patch('release_notes_generator.action_inputs.get_action_input', return_value='true')
+    mocker.patch('os.getenv', return_value=0)
     assert ActionInputs.get_verbose() is True
+
+
+def test_get_verbose_verbose_by_workflow_debug(mocker):
+    mocker.patch('release_notes_generator.action_inputs.get_action_input', return_value='false')
+    mocker.patch('os.getenv', return_value=1)
+    assert ActionInputs.get_verbose() is True
+
+
+def test_get_verbose_verbose_by_both(mocker):
+    mocker.patch('release_notes_generator.action_inputs.get_action_input', return_value='true')
+    mocker.patch('os.getenv', return_value=1)
+    assert ActionInputs.get_verbose() is True
+
+
+def test_get_verbose_not_verbose(mocker):
+    mocker.patch('release_notes_generator.action_inputs.get_action_input', return_value='false')
+    mocker.patch('os.getenv', return_value=0)
+    assert ActionInputs.get_verbose() is False

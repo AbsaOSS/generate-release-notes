@@ -72,7 +72,7 @@ class ActionInputs:
 
     @staticmethod
     def get_verbose() -> bool:
-        return os.getenv('RUNNER_DEBUG', 0) or get_action_input(ActionInputs.VERBOSE).lower() == 'true'
+        return os.getenv('RUNNER_DEBUG', 0) == 1 or get_action_input(ActionInputs.VERBOSE).lower() == 'true'
 
     @staticmethod
     def validate_inputs():
