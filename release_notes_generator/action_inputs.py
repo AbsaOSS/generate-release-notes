@@ -92,11 +92,8 @@ class ActionInputs:
         else:
             owner = repo_name = ""
 
-        if not isinstance(owner, str) or not owner.strip():
-            errors.append("Owner must be a non-empty string.")
-
-        if not isinstance(repo_name, str) or not repo_name.strip():
-            errors.append("Repo name must be a non-empty string.")
+        if not isinstance(owner, str) or not owner.strip() or not isinstance(repo_name, str) or not repo_name.strip():
+            errors.append("Owner and Repo must be a non-empty string.")
 
         tag_name = ActionInputs.get_tag_name()
         if not isinstance(tag_name, str) or not tag_name.strip():

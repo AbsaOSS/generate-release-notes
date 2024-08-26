@@ -32,8 +32,8 @@ success_case = {
 }
 
 failure_cases = [
-    ('get_github_repository', '', "Owner must be a non-empty string."),
-    ('get_github_repository', 'owner/', "Repo name must be a non-empty string."),
+    ('get_github_repository', '', "Owner and Repo must be a non-empty string."),
+    ('get_github_repository', 'owner/', "Owner and Repo must be a non-empty string."),
     ('get_tag_name', '', "Tag name must be a non-empty string."),
     ('get_chapters_json', 'invalid_json', "Chapters JSON must be a valid JSON string."),
     ('get_warnings', 'not_bool', "Warnings must be a boolean."),
@@ -73,8 +73,15 @@ def test_validate_inputs_failure(method, value, expected_error, mocker):
     case[method] = value
     patchers = apply_mocks(case, mocker)
     try:
-        with pytest.raises(ValueError, match=expected_error):
-            ActionInputs.validate_inputs()
+        mock_error = mocker.patch('logging.error')
+        mock_exit = mocker.patch('sys.exit')
+
+        ActionInputs.validate_inputs()
+
+        mock_error.assert_called_with(expected_error)
+        mock_error.assert_called
+        mock_exit.assert_called_once_with(1)
+
     finally:
         stop_mocks(patchers)
 
