@@ -17,6 +17,7 @@
 import json
 import logging
 import os
+import sys
 
 from release_notes_generator.utils.gh_action import get_action_input
 
@@ -81,9 +82,10 @@ class ActionInputs:
     def validate_inputs():
         """
         Validates the inputs provided for the release notes generator.
-
-        :raises ValueError: If any of the inputs are invalid.
+        Logs any validation errors and exits if any are found.
         """
+        errors = []
+
         repository_id = ActionInputs.get_github_repository()
         if '/' in repository_id:
             owner, repo_name = ActionInputs.get_github_repository().split('/')
@@ -91,45 +93,51 @@ class ActionInputs:
             owner = repo_name = ""
 
         if not isinstance(owner, str) or not owner.strip():
-            raise ValueError("Owner must be a non-empty string.")
+            errors.append("Owner must be a non-empty string.")
 
         if not isinstance(repo_name, str) or not repo_name.strip():
-            raise ValueError("Repo name must be a non-empty string.")
+            errors.append("Repo name must be a non-empty string.")
 
         tag_name = ActionInputs.get_tag_name()
         if not isinstance(tag_name, str) or not tag_name.strip():
-            raise ValueError("Tag name must be a non-empty string.")
+            errors.append("Tag name must be a non-empty string.")
 
+        chapters_json = ActionInputs.get_chapters_json()
         try:
-            chapters_json = ActionInputs.get_chapters_json()
             json.loads(chapters_json)
         except json.JSONDecodeError:
-            raise ValueError("Chapters JSON must be a valid JSON string.")
+            errors.append("Chapters JSON must be a valid JSON string.")
 
         warnings = ActionInputs.get_warnings()
         if not isinstance(warnings, bool):
-            raise ValueError("Warnings must be a boolean.")
+            errors.append("Warnings must be a boolean.")
 
         published_at = ActionInputs.get_published_at()
         if not isinstance(published_at, bool):
-            raise ValueError("Published at must be a boolean.")
+            errors.append("Published at must be a boolean.")
 
         skip_release_notes_label = ActionInputs.get_skip_release_notes_label()
         if not isinstance(skip_release_notes_label, str) or not skip_release_notes_label.strip():
-            raise ValueError("Skip release notes label must be a non-empty string.")
+            errors.append("Skip release notes label must be a non-empty string.")
 
         verbose = ActionInputs.get_verbose()
         if not isinstance(verbose, bool):
-            raise ValueError("Verbose logging must be a boolean.")
+            errors.append("Verbose logging must be a boolean.")
 
         # Features
         print_empty_chapters = ActionInputs.get_print_empty_chapters()
         if not isinstance(print_empty_chapters, bool):
-            raise ValueError("Print empty chapters must be a boolean.")
+            errors.append("Print empty chapters must be a boolean.")
 
         chapters_to_pr_without_issue = ActionInputs.get_chapters_to_pr_without_issue()
         if not isinstance(chapters_to_pr_without_issue, bool):
-            raise ValueError("Chapters to PR without issue must be a boolean.")
+            errors.append("Chapters to PR without issue must be a boolean.")
+
+        # Log errors if any
+        if errors:
+            for error in errors:
+                logging.error(error)
+            sys.exit(1)
 
         logging.debug(f'Repository: {owner}/{repo_name}')
         logging.debug(f'Tag name: {tag_name}')
