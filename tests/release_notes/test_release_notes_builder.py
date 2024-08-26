@@ -517,7 +517,8 @@ def test_build_no_data_no_empty_chapters(mocker):
 
 
 def test_build_closed_issue_with_one_custom_label(
-        custom_chapters_not_print_empty_chapters, record_with_issue_closed_two_pulls, mocker):
+        custom_chapters_not_print_empty_chapters, record_with_issue_closed_two_pulls, mocker
+):
     expected_release_notes = release_notes_data_custom_chapters_one_label
     rec = record_with_issue_closed_two_pulls
     mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
@@ -534,7 +535,8 @@ def test_build_closed_issue_with_one_custom_label(
 
 
 def test_build_closed_issue_with_more_custom_labels_duplicity_reduction_on(
-        custom_chapters_not_print_empty_chapters, record_with_issue_closed_two_pulls, mocker):
+        custom_chapters_not_print_empty_chapters, record_with_issue_closed_two_pulls, mocker
+):
     expected_release_notes = release_notes_data_custom_chapters_more_labels_duplicity_reduction_on
     rec = record_with_issue_closed_two_pulls
     rec.issue.labels.append(MockLabel("enhancement"))
@@ -553,7 +555,8 @@ def test_build_closed_issue_with_more_custom_labels_duplicity_reduction_on(
 
 
 def test_build_closed_issue_service_chapter_without_pull_request_and_user_defined_label(
-        custom_chapters_not_print_empty_chapters, record_with_issue_closed_no_pull, mocker):
+        custom_chapters_not_print_empty_chapters, record_with_issue_closed_no_pull, mocker
+):
     expected_release_notes = release_notes_data_service_chapters_closed_issue_no_pr_no_user_labels
     rec = record_with_issue_closed_no_pull
     mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
@@ -588,7 +591,8 @@ def test_build_merged_pr_service_chapter_without_issue_and_user_labels(
 
 
 def test_build_closed_pr_service_chapter_without_issue_and_user_labels(
-        custom_chapters_not_print_empty_chapters, record_with_no_issue_one_pull_closed, mocker):
+        custom_chapters_not_print_empty_chapters, record_with_no_issue_one_pull_closed, mocker
+):
     expected_release_notes = release_notes_data_service_chapters_closed_pr_no_issue_no_user_labels
     rec = record_with_no_issue_one_pull_closed
     mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)

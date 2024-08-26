@@ -265,7 +265,7 @@ export GITHUB_REPOSITORY="< owner >/< repo-name >"
 export INPUT_GITHUB_TOKEN=$(printenv <your-env-token-var>)
 
 # Run the Python script
-python3 /<path-to-action-project-root>/main.py
+python3 ./<path-to-action-project-root>/main.py
 ```
 
 ### Contribution Guidelines

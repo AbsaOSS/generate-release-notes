@@ -17,7 +17,7 @@
 import logging
 
 from typing import Optional
-from github import Github, Auth
+from github import Github
 
 from release_notes_generator.record.record_formatter import RecordFormatter
 from release_notes_generator.model.custom_chapters import CustomChapters
