@@ -25,9 +25,10 @@ a way that integrates with GitHub's action runner system.
 
 import os
 import sys
+from typing import Optional
 
 
-def get_action_input(name: str) -> str:
+def get_action_input(name: str, default: Optional[str] = None) -> str:
     """
     Retrieve the value of a specified input parameter from environment variables.
 
@@ -35,14 +36,12 @@ def get_action_input(name: str) -> str:
     underscores, converting the string to uppercase, and prefixing it with 'INPUT_'.
     It then retrieves the value of this environment variable.
 
-    Args:
-        name (str): The name of the input parameter.
+    @param name: The name of the input parameter.
+    @param default: The default value to return if the environment variable is not set.
 
-    Returns:
-        str: The value of the specified input parameter, or an empty string if the environment
-        variable is not set.
+    @return: The value of the specified input parameter, or an empty string if the environment
     """
-    return os.getenv(f'INPUT_{name.replace("-", "_").upper()}', '')
+    return os.getenv(f'INPUT_{name.replace("-", "_").upper()}', default=default)
 
 
 def set_action_output(name: str, value: str, default_output_path: str = "default_output.txt"):
@@ -52,11 +51,10 @@ def set_action_output(name: str, value: str, default_output_path: str = "default
     This function writes the output in a specific format that includes the name of the
     output and its value. The output is appended to the specified file.
 
-    Args:
-        name (str): The name of the output parameter.
-        value (str): The value of the output parameter.
-        default_output_path (str, optional): The default file path to which the output is
-        written if the 'GITHUB_OUTPUT' environment variable is not set. Defaults to "default_output.txt".
+    @param name: The name of the output parameter.
+    @param value: The value of the output parameter.
+    @param default_output_path: The default file path to which the output is written if the
+    'GITHUB_OUTPUT' environment variable is not set. Defaults to "default_output.txt".
     """
     output_file = os.getenv('GITHUB_OUTPUT', default_output_path)
     with open(output_file, 'a', encoding="utf-8") as f:
@@ -72,8 +70,7 @@ def set_action_failed(message: str):
     This function prints an error message in the format expected by GitHub Actions
     and then exits the script with a non-zero status code.
 
-    Args:
-        message (str): The error message to be displayed.
+    @param message: The error message to be displayed.
     """
     print(f'::error::{message}')
     sys.exit(1)
