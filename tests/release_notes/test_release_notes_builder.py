@@ -306,9 +306,10 @@ def test_build_no_data():
     assert expected_release_notes == actual_release_notes
 
 
-def test_build_no_data_no_warnings():
+def test_build_no_data_no_warnings(mocker):
     custom_chapters = CustomChapters()
     custom_chapters.from_json(default_chapters_json)
+    mocker.patch('release_notes_generator.builder.ActionInputs.get_warnings', return_value=False)
 
     expected_release_notes = release_notes_no_data_no_warning
 
@@ -317,16 +318,18 @@ def test_build_no_data_no_warnings():
         changelog_url=default_changelog_url,
         formatter=default_formatter,
         custom_chapters=custom_chapters,
-        warnings=False)
+        )
 
     actual_release_notes = builder.build()
     assert expected_release_notes == actual_release_notes
 
 
-def test_build_no_data_no_warnings_no_empty_chapters():
+def test_build_no_data_no_warnings_no_empty_chapters(mocker):
     custom_chapters_no_empty_chapters = CustomChapters()
     custom_chapters_no_empty_chapters.from_json(default_chapters_json)
     custom_chapters_no_empty_chapters.print_empty_chapters = False
+    mocker.patch('release_notes_generator.builder.ActionInputs.get_warnings', return_value=False)
+    mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
 
     expected_release_notes = release_notes_no_data_no_warning_no_empty_chapters
 
@@ -335,17 +338,17 @@ def test_build_no_data_no_warnings_no_empty_chapters():
         changelog_url=default_changelog_url,
         formatter=default_formatter,
         custom_chapters=custom_chapters_no_empty_chapters,
-        warnings=False,
-        print_empty_chapters=False)
+        )
 
     actual_release_notes = builder.build()
     assert expected_release_notes == actual_release_notes
 
 
-def test_build_no_data_no_empty_chapters():
+def test_build_no_data_no_empty_chapters(mocker):
     custom_chapters_no_empty_chapters = CustomChapters()
     custom_chapters_no_empty_chapters.from_json(default_chapters_json)
     custom_chapters_no_empty_chapters.print_empty_chapters = False
+    mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
 
     expected_release_notes = release_notes_no_data_no_empty_chapters
 
@@ -354,7 +357,7 @@ def test_build_no_data_no_empty_chapters():
         changelog_url=default_changelog_url,
         formatter=default_formatter,
         custom_chapters=custom_chapters_no_empty_chapters,
-        print_empty_chapters=False)
+        )
 
     actual_release_notes = builder.build()
     assert expected_release_notes == actual_release_notes
@@ -513,32 +516,36 @@ def test_build_no_data_no_empty_chapters():
     #   - covered in 'test_build_merged_pr_service_chapter_without_issue_and_user_labels'
 
 
-def test_build_closed_issue_with_one_custom_label(custom_chapters_not_print_empty_chapters,
-                                                  record_with_issue_closed_two_pulls):
+def test_build_closed_issue_with_one_custom_label(
+        custom_chapters_not_print_empty_chapters, record_with_issue_closed_two_pulls, mocker):
     expected_release_notes = release_notes_data_custom_chapters_one_label
     rec = record_with_issue_closed_two_pulls
+    mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
+
     builder = ReleaseNotesBuilder(records={rec.number: rec},
                                   changelog_url=default_changelog_url,
                                   formatter=default_formatter,
                                   custom_chapters=custom_chapters_not_print_empty_chapters,
-                                  print_empty_chapters=False)
+                                  )
 
     actual_release_notes = builder.build()
 
     assert expected_release_notes == actual_release_notes
 
 
-def test_build_closed_issue_with_more_custom_labels_duplicity_reduction_on(custom_chapters_not_print_empty_chapters,
-                                                                           record_with_issue_closed_two_pulls):
+def test_build_closed_issue_with_more_custom_labels_duplicity_reduction_on(
+        custom_chapters_not_print_empty_chapters, record_with_issue_closed_two_pulls, mocker):
     expected_release_notes = release_notes_data_custom_chapters_more_labels_duplicity_reduction_on
     rec = record_with_issue_closed_two_pulls
     rec.issue.labels.append(MockLabel("enhancement"))
     rec.issue.title = 'I1+bug-enhancement'
+    mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
+
     builder = ReleaseNotesBuilder(records={rec.number: rec},
                                   changelog_url=default_changelog_url,
                                   formatter=default_formatter,
                                   custom_chapters=custom_chapters_not_print_empty_chapters,
-                                  print_empty_chapters=False)
+                                  )
 
     actual_release_notes = builder.build()
 
@@ -546,14 +553,16 @@ def test_build_closed_issue_with_more_custom_labels_duplicity_reduction_on(custo
 
 
 def test_build_closed_issue_service_chapter_without_pull_request_and_user_defined_label(
-        custom_chapters_not_print_empty_chapters, record_with_issue_closed_no_pull):
+        custom_chapters_not_print_empty_chapters, record_with_issue_closed_no_pull, mocker):
     expected_release_notes = release_notes_data_service_chapters_closed_issue_no_pr_no_user_labels
     rec = record_with_issue_closed_no_pull
+    mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
+
     builder = ReleaseNotesBuilder(records={rec.number: rec},
                                   changelog_url=default_changelog_url,
                                   formatter=default_formatter,
                                   custom_chapters=custom_chapters_not_print_empty_chapters,
-                                  print_empty_chapters=False)
+                                  )
 
     actual_release_notes = builder.build()
 
@@ -561,14 +570,17 @@ def test_build_closed_issue_service_chapter_without_pull_request_and_user_define
 
 
 def test_build_merged_pr_service_chapter_without_issue_and_user_labels(
-        custom_chapters_not_print_empty_chapters, record_with_no_issue_one_pull_merged):
+        custom_chapters_not_print_empty_chapters, record_with_no_issue_one_pull_merged, mocker
+):
     expected_release_notes = release_notes_data_service_chapters_merged_pr_no_issue_no_user_labels
     rec = record_with_no_issue_one_pull_merged
+    mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
+
     builder = ReleaseNotesBuilder(records={rec.number: rec},
                                   changelog_url=default_changelog_url,
                                   formatter=default_formatter,
                                   custom_chapters=custom_chapters_not_print_empty_chapters,
-                                  print_empty_chapters=False)
+                                  )
 
     actual_release_notes = builder.build()
 
@@ -576,14 +588,16 @@ def test_build_merged_pr_service_chapter_without_issue_and_user_labels(
 
 
 def test_build_closed_pr_service_chapter_without_issue_and_user_labels(
-        custom_chapters_not_print_empty_chapters, record_with_no_issue_one_pull_closed):
+        custom_chapters_not_print_empty_chapters, record_with_no_issue_one_pull_closed, mocker):
     expected_release_notes = release_notes_data_service_chapters_closed_pr_no_issue_no_user_labels
     rec = record_with_no_issue_one_pull_closed
+    mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
+
     builder = ReleaseNotesBuilder(records={rec.number: rec},
                                   changelog_url=default_changelog_url,
                                   formatter=default_formatter,
                                   custom_chapters=custom_chapters_not_print_empty_chapters,
-                                  print_empty_chapters=False)
+                                  )
 
     actual_release_notes = builder.build()
 
@@ -591,43 +605,53 @@ def test_build_closed_pr_service_chapter_without_issue_and_user_labels(
 
 
 def test_build_open_issue_with_merged_pr_service_chapter_linked_to_not_closed_issue(
-        custom_chapters_not_print_empty_chapters, record_with_issue_open_two_pulls_closed):
+        custom_chapters_not_print_empty_chapters, record_with_issue_open_two_pulls_closed, mocker
+):
     expected_release_notes = release_notes_data_service_chapters_open_issue_and_merged_pr_no_user_labels
     rec = record_with_issue_open_two_pulls_closed
+    mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
+
     builder = ReleaseNotesBuilder(records={rec.number: rec},
                                   changelog_url=default_changelog_url,
                                   formatter=default_formatter,
                                   custom_chapters=custom_chapters_not_print_empty_chapters,
-                                  print_empty_chapters=False)
+                                  )
 
     actual_release_notes = builder.build()
 
     assert expected_release_notes == actual_release_notes
 
 
-def test_build_open_issue(custom_chapters_not_print_empty_chapters, record_with_issue_open_no_pull):
+def test_build_open_issue(
+        custom_chapters_not_print_empty_chapters, record_with_issue_open_no_pull, mocker
+):
     expected_release_notes = release_notes_no_data_no_warning_no_empty_chapters
     rec = record_with_issue_open_no_pull
+    mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
+
     builder = ReleaseNotesBuilder(records={rec.number: rec},
                                   changelog_url=default_changelog_url,
                                   formatter=default_formatter,
                                   custom_chapters=custom_chapters_not_print_empty_chapters,
-                                  print_empty_chapters=False)
+                                  )
 
     actual_release_notes = builder.build()
 
     assert expected_release_notes == actual_release_notes
 
 
-def test_build_closed_issue(custom_chapters_not_print_empty_chapters, record_with_issue_closed_no_pull):
+def test_build_closed_issue(
+        custom_chapters_not_print_empty_chapters, record_with_issue_closed_no_pull, mocker
+):
     expected_release_notes = release_notes_data_service_chapters_closed_issue_no_pr_no_user_labels
     rec = record_with_issue_closed_no_pull
+    mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
 
     builder = ReleaseNotesBuilder(records={rec.number: rec},
                                   changelog_url=default_changelog_url,
                                   formatter=default_formatter,
                                   custom_chapters=custom_chapters_not_print_empty_chapters,
-                                  print_empty_chapters=False)
+                                  )
 
     actual_release_notes = builder.build()
 
@@ -636,132 +660,150 @@ def test_build_closed_issue(custom_chapters_not_print_empty_chapters, record_wit
     assert expected_release_notes == actual_release_notes
 
 
-def test_build_reopened_issue(custom_chapters_not_print_empty_chapters, record_with_issue_open_no_pull):
+def test_build_reopened_issue(
+        custom_chapters_not_print_empty_chapters, record_with_issue_open_no_pull, mocker
+):
     expected_release_notes = release_notes_no_data_no_warning_no_empty_chapters
     rec = record_with_issue_open_no_pull
     rec.issue.state_reason = "reopened"
+    mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
 
     builder = ReleaseNotesBuilder(records={rec.number: rec},
                                   changelog_url=default_changelog_url,
                                   formatter=default_formatter,
                                   custom_chapters=custom_chapters_not_print_empty_chapters,
-                                  print_empty_chapters=False)
+                                  )
 
     actual_release_notes = builder.build()
 
     assert expected_release_notes == actual_release_notes
 
 
-def test_build_closed_not_planned_issue(custom_chapters_not_print_empty_chapters, record_with_issue_closed_no_pull):
+def test_build_closed_not_planned_issue(
+        custom_chapters_not_print_empty_chapters, record_with_issue_closed_no_pull, mocker
+):
     expected_release_notes = release_notes_data_service_chapters_closed_issue_no_pr_no_user_labels
     rec = record_with_issue_closed_no_pull
     rec.issue.state_reason = "not_planned"
+    mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
 
     builder = ReleaseNotesBuilder(records={rec.number: rec},
                                   changelog_url=default_changelog_url,
                                   formatter=default_formatter,
                                   custom_chapters=custom_chapters_not_print_empty_chapters,
-                                  print_empty_chapters=False)
+                                  )
 
     actual_release_notes = builder.build()
 
     assert expected_release_notes == actual_release_notes
 
 
-def test_build_closed_issue_with_user_labels_no_prs(custom_chapters_not_print_empty_chapters,
-                                                    record_with_issue_closed_no_pull):
+def test_build_closed_issue_with_user_labels_no_prs(
+        custom_chapters_not_print_empty_chapters, record_with_issue_closed_no_pull, mocker
+):
     expected_release_notes = release_notes_data_closed_issue_no_pr_with_user_labels
     rec = record_with_issue_closed_no_pull
     rec.issue.labels = [MockLabel("bug"), MockLabel("breaking-changes")]
+    mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
 
     builder = ReleaseNotesBuilder(records={rec.number: rec},
                                   changelog_url=default_changelog_url,
                                   formatter=default_formatter,
                                   custom_chapters=custom_chapters_not_print_empty_chapters,
-                                  print_empty_chapters=False)
+                                  )
 
     actual_release_notes = builder.build()
 
     assert expected_release_notes == actual_release_notes
 
 
-def test_build_closed_issue_with_prs_without_user_label(custom_chapters_not_print_empty_chapters,
-                                                        record_with_issue_closed_two_pulls):
+def test_build_closed_issue_with_prs_without_user_label(
+        custom_chapters_not_print_empty_chapters, record_with_issue_closed_two_pulls, mocker
+):
     expected_release_notes = release_notes_data_closed_issue_with_pr_without_user_labels
     rec = record_with_issue_closed_two_pulls
     rec.issue.labels = [MockLabel("label1"), MockLabel("label2")]
     rec.issue.title = "I1"
+    mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
 
     builder = ReleaseNotesBuilder(records={rec.number: rec},
                                   changelog_url=default_changelog_url,
                                   formatter=default_formatter,
                                   custom_chapters=custom_chapters_not_print_empty_chapters,
-                                  print_empty_chapters=False)
+                                  )
 
     actual_release_notes = builder.build()
 
     assert expected_release_notes == actual_release_notes
 
 
-def test_build_open_pr_without_issue(custom_chapters_not_print_empty_chapters,
-                                     record_with_no_issue_one_pull_open):
+def test_build_open_pr_without_issue(
+        custom_chapters_not_print_empty_chapters, record_with_no_issue_one_pull_open, mocker
+):
     expected_release_notes = release_notes_data_open_pr_without_issue
     rec = record_with_no_issue_one_pull_open
+    mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
 
     builder = ReleaseNotesBuilder(records={rec.number: rec},
                                   changelog_url=default_changelog_url,
                                   formatter=default_formatter,
                                   custom_chapters=custom_chapters_not_print_empty_chapters,
-                                  print_empty_chapters=False)
+                                  )
 
     actual_release_notes = builder.build()
 
     assert expected_release_notes == actual_release_notes
 
 
-def test_build_merged_pr_without_issue_ready_for_review(custom_chapters_not_print_empty_chapters,
-                                                        record_with_no_issue_one_pull_merged):
+def test_build_merged_pr_without_issue_ready_for_review(
+        custom_chapters_not_print_empty_chapters, record_with_no_issue_one_pull_merged, mocker
+):
     expected_release_notes = release_notes_data_service_chapters_merged_pr_no_issue_no_user_labels
     rec = record_with_no_issue_one_pull_merged
+    mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
 
     builder = ReleaseNotesBuilder(records={rec.number: rec},
                                   changelog_url=default_changelog_url,
                                   formatter=default_formatter,
                                   custom_chapters=custom_chapters_not_print_empty_chapters,
-                                  print_empty_chapters=False)
+                                  )
 
     actual_release_notes = builder.build()
 
     assert expected_release_notes == actual_release_notes
 
 
-def test_build_closed_pr_without_issue_ready_for_review(custom_chapters_not_print_empty_chapters,
-                                                        record_with_no_issue_one_pull_closed):
+def test_build_closed_pr_without_issue_ready_for_review(
+        custom_chapters_not_print_empty_chapters, record_with_no_issue_one_pull_closed, mocker
+):
     expected_release_notes = release_notes_data_service_chapters_closed_pr_no_issue_no_user_labels
     rec = record_with_no_issue_one_pull_closed
+    mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
 
     builder = ReleaseNotesBuilder(records={rec.number: rec},
                                   changelog_url=default_changelog_url,
                                   formatter=default_formatter,
                                   custom_chapters=custom_chapters_not_print_empty_chapters,
-                                  print_empty_chapters=False)
+                                  )
 
     actual_release_notes = builder.build()
 
     assert expected_release_notes == actual_release_notes
 
 
-def test_build_closed_pr_without_issue_draft(custom_chapters_not_print_empty_chapters,
-                                             record_with_no_issue_one_pull_closed):
+def test_build_closed_pr_without_issue_draft(
+        custom_chapters_not_print_empty_chapters, record_with_no_issue_one_pull_closed, mocker
+):
     expected_release_notes = release_notes_data_service_chapters_closed_pr_no_issue_no_user_labels
     rec = record_with_no_issue_one_pull_closed
     rec.pulls[0].draft = True
+    mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
 
     builder = ReleaseNotesBuilder(records={rec.number: rec},
                                   changelog_url=default_changelog_url,
                                   formatter=default_formatter,
                                   custom_chapters=custom_chapters_not_print_empty_chapters,
-                                  print_empty_chapters=False)
+                                  )
 
     actual_release_notes = builder.build()
 
@@ -769,17 +811,18 @@ def test_build_closed_pr_without_issue_draft(custom_chapters_not_print_empty_cha
 
 
 def test_merged_pr_without_issue_with_more_user_labels_duplicity_reduction_on(
-        custom_chapters_not_print_empty_chapters,
-        record_with_no_issue_one_pull_merged):
+        custom_chapters_not_print_empty_chapters, record_with_no_issue_one_pull_merged, mocker
+):
     expected_release_notes = release_notes_data_merged_pr_with_user_labels_duplicity_reduction_on
     rec = record_with_no_issue_one_pull_merged
     rec.pulls[0].labels = [MockLabel("bug"), MockLabel("enhancement")]
+    mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
 
     builder = ReleaseNotesBuilder(records={rec.number: rec},
                                   changelog_url=default_changelog_url,
                                   formatter=default_formatter,
                                   custom_chapters=custom_chapters_not_print_empty_chapters,
-                                  print_empty_chapters=False)
+                                  )
 
     actual_release_notes = builder.build()
 
@@ -787,15 +830,17 @@ def test_merged_pr_without_issue_with_more_user_labels_duplicity_reduction_on(
 
 
 def test_merged_pr_with_open_init_issue_mention(
-        custom_chapters_not_print_empty_chapters, record_with_two_issue_open_two_pulls_closed):
+        custom_chapters_not_print_empty_chapters, record_with_two_issue_open_two_pulls_closed, mocker
+):
     expected_release_notes = release_notes_data_merged_prs_with_open_issues
     records = record_with_two_issue_open_two_pulls_closed
+    mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
 
     builder = ReleaseNotesBuilder(records=records,
                                   changelog_url=default_changelog_url,
                                   formatter=default_formatter,
                                   custom_chapters=custom_chapters_not_print_empty_chapters,
-                                  print_empty_chapters=False)
+                                  )
 
     actual_release_notes = builder.build()
 
@@ -803,15 +848,17 @@ def test_merged_pr_with_open_init_issue_mention(
 
 
 def test_merged_pr_with_closed_issue_mention_without_user_labels(
-        custom_chapters_not_print_empty_chapters, record_with_issue_closed_one_pull):
+        custom_chapters_not_print_empty_chapters, record_with_issue_closed_one_pull, mocker
+):
     expected_release_notes = release_notes_data_closed_issue_with_merged_prs_without_user_labels
     rec = record_with_issue_closed_one_pull
+    mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
 
     builder = ReleaseNotesBuilder(records={rec.number: rec},
                                   changelog_url=default_changelog_url,
                                   formatter=default_formatter,
                                   custom_chapters=custom_chapters_not_print_empty_chapters,
-                                  print_empty_chapters=False)
+                                  )
 
     actual_release_notes = builder.build()
 
@@ -819,15 +866,17 @@ def test_merged_pr_with_closed_issue_mention_without_user_labels(
 
 
 def test_merged_pr_with_closed_issue_mention_with_user_labels(
-        custom_chapters_not_print_empty_chapters, record_with_issue_closed_one_pull_merged):
+        custom_chapters_not_print_empty_chapters, record_with_issue_closed_one_pull_merged, mocker
+):
     expected_release_notes = release_notes_data_closed_issue_with_merged_prs_with_user_labels
     rec = record_with_issue_closed_one_pull_merged
+    mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
 
     builder = ReleaseNotesBuilder(records={rec.number: rec},
                                   changelog_url=default_changelog_url,
                                   formatter=default_formatter,
                                   custom_chapters=custom_chapters_not_print_empty_chapters,
-                                  print_empty_chapters=False)
+                                  )
 
     actual_release_notes = builder.build()
 

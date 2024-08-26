@@ -43,11 +43,6 @@ Generate Release Notes action is dedicated to enhance the quality and organizati
 - **Description**: A JSON string defining chapters and corresponding labels for categorization. Each chapter should have a title and a label matching your GitHub issues and PRs.
 - **Required**: Yes
 
-### `warnings`
-- **Description**: Set to true to enable warnings in the release notes. These warnings identify issues without release notes, without user-defined labels, or without associated pull requests, and PRs without linked issues.
-- **Required**: No
-- **Default**: false
-
 ### `published-at`
 - **Description**: Set to true to enable the use of the `published-at` timestamp as the reference point for searching closed issues and PRs, instead of the `created-at` date of the latest release.
 - **Required**: No
@@ -58,21 +53,29 @@ Generate Release Notes action is dedicated to enhance the quality and organizati
 - **Required**: No
 - **Default**: `skip-release-notes`
 
-### `print-empty-chapters`
-- **Description**: Set to true to print chapters with no issues or PRs.
-- **Required**: No
-- **Default**: false
-
-### `chapters-to-pr-without-issue`
-- **Description**: Set to false to avoid application of custom chapters for PRs without linked issues.
-- **Required**: No
-- **Default**: true
-
 ### `verbose`
 - **Description**: Set to true to enable verbose logging for detailed output during the action's execution.
 - **Required**: No
 - **Default**: false
 - **Note**: If workflow run in debug regime, 'verbose' logging is activated.
+
+### Feature controls
+
+### `warnings`
+- **Description**: Set to true to print service chapters in the release notes. These warnings identify issues without release notes, without user-defined labels, or without associated pull requests, and PRs without linked issues.
+- **Required**: No
+- **Default**: true (Service chapters are printed.)
+
+### `print-empty-chapters`
+- **Description**: Set it to true to print chapters with no issues or PRs.
+- **Required**: No
+- **Default**: true (Empty chapters are printed.)
+
+### `chapters-to-pr-without-issue`
+- **Description**: Set it to false to avoid the application of custom chapters for PRs without linked issues.
+- **Required**: No
+- **Default**: true (Custom chapters are applied to PRs without linked issues.)
+
 
 ## Outputs
 The output of the action is a markdown string containing the release notes for the specified tag. This string can be used in subsequent steps to publish the release notes to a file, create a GitHub release, or send notifications.
@@ -120,12 +123,13 @@ Add the following step to your GitHub workflow (in example are used non-default 
       {"title": "New Features 🎉", "label": "feature"},
       {"title": "Bugfixes 🛠", "label": "bug"}
     ]'
-    warnings: false
     published-at: true
     skip-release-notes-label: 'ignore-in-release'     # changing default value of label
+    verbose: false
+
+    warnings: false
     print-empty-chapters: false
     chapters-to-pr-without-issue: false
-    verbose: false
 ```
 
 ## Features

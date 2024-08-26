@@ -25,9 +25,10 @@ a way that integrates with GitHub's action runner system.
 
 import os
 import sys
+from typing import Optional
 
 
-def get_action_input(name: str) -> str:
+def get_action_input(name: str, default: Optional[str] = None) -> str:
     """
     Retrieve the value of a specified input parameter from environment variables.
 
@@ -35,14 +36,12 @@ def get_action_input(name: str) -> str:
     underscores, converting the string to uppercase, and prefixing it with 'INPUT_'.
     It then retrieves the value of this environment variable.
 
-    Args:
-        name (str): The name of the input parameter.
+    @param name (str): The name of the input parameter.
+    @param default (str): The default value to return if the environment variable is not set.
 
-    Returns:
-        str: The value of the specified input parameter, or an empty string if the environment
-        variable is not set.
+    @return (str): The value of the specified input parameter, or an empty string if the environment
     """
-    return os.getenv(f'INPUT_{name.replace("-", "_").upper()}', '')
+    return os.getenv(f'INPUT_{name.replace("-", "_").upper()}', default=default)
 
 
 def set_action_output(name: str, value: str, default_output_path: str = "default_output.txt"):

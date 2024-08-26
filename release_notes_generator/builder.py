@@ -21,12 +21,12 @@ from release_notes_generator.record.record_formatter import RecordFormatter
 from release_notes_generator.model.custom_chapters import CustomChapters
 from release_notes_generator.model.record import Record
 from release_notes_generator.model.service_chapters import ServiceChapters
+from release_notes_generator.action_inputs import ActionInputs
 
 
 class ReleaseNotesBuilder:
     def __init__(self, records: dict[int, Record], changelog_url: str,
-                 formatter: RecordFormatter, custom_chapters: CustomChapters,
-                 warnings: bool = True, print_empty_chapters: bool = True):
+                 formatter: RecordFormatter, custom_chapters: CustomChapters):
         """
         Constructs all the necessary attributes for the ReleaseNotesBuilder object.
 
@@ -35,14 +35,14 @@ class ReleaseNotesBuilder:
         :param formatter: A RecordFormatter object used to format the records.
         :param custom_chapters: A CustomChapters object representing the custom chapters.
         :param warnings: A boolean indicating whether to show warnings.
-        :param print_empty_chapters: A boolean indicating whether to print empty chapters.
         """
         self.records = records
         self.changelog_url = changelog_url
         self.formatter = formatter
         self.custom_chapters = custom_chapters
-        self.warnings = warnings
-        self.print_empty_chapters = print_empty_chapters
+
+        self.warnings = ActionInputs.get_warnings()
+        self.print_empty_chapters = ActionInputs.get_print_empty_chapters()
 
     def build(self) -> str:
         """

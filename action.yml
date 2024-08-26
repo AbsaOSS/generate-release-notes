@@ -23,10 +23,6 @@ inputs:
   chapters:
     description: 'JSON string defining chapters and corresponding labels for categorization.'
     required: false
-  warnings:
-    description: 'Print warning chapters if true.'
-    required: false
-    default: 'true'
   published-at:
     description: 'Use `published-at` timestamp instead of `created-at` as the reference point.'
     required: false
@@ -35,6 +31,10 @@ inputs:
     description: 'Skip label used for detection of issues or pull requests to ignore in Release Notes generation process.'
     required: false
     default: 'skip-release-notes'
+  warnings:
+    description: 'Print service chapters if true.'
+    required: false
+    default: 'true'
   print-empty-chapters:
     description: 'Print chapters even if they are empty.'
     required: false

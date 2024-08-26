@@ -26,13 +26,15 @@ class ActionInputs:
     GITHUB_TOKEN = 'github-token'
     TAG_NAME = 'tag-name'
     CHAPTERS = 'chapters'
-    WARNINGS = 'warnings'
     PUBLISHED_AT = 'published-at'
     SKIP_RELEASE_NOTES_LABEL = 'skip-release-notes-label'
-    PRINT_EMPTY_CHAPTERS = 'print-empty-chapters'
-    CHAPTERS_TO_PR_WITHOUT_ISSUE = 'chapters-to-pr-without-issue'
     VERBOSE = 'verbose'
     RUNNER_DEBUG = 'RUNNER_DEBUG'
+
+    # Features
+    WARNINGS = 'warnings'
+    PRINT_EMPTY_CHAPTERS = 'print-empty-chapters'
+    CHAPTERS_TO_PR_WITHOUT_ISSUE = 'chapters-to-pr-without-issue'
 
     @staticmethod
     def get_github_repository() -> str:
@@ -51,28 +53,29 @@ class ActionInputs:
         return get_action_input(ActionInputs.CHAPTERS)
 
     @staticmethod
-    def get_warnings() -> bool:
-        return get_action_input(ActionInputs.WARNINGS).lower() == 'true'
-
-    @staticmethod
     def get_published_at() -> bool:
-        return get_action_input(ActionInputs.PUBLISHED_AT).lower() == 'true'
+        return get_action_input(ActionInputs.PUBLISHED_AT, "false").lower() == 'true'
 
     @staticmethod
     def get_skip_release_notes_label() -> str:
         return get_action_input(ActionInputs.SKIP_RELEASE_NOTES_LABEL) or 'skip-release-notes'
 
     @staticmethod
+    def get_verbose() -> bool:
+        return os.getenv('RUNNER_DEBUG', 0) == 1 or get_action_input(ActionInputs.VERBOSE).lower() == 'true'
+
+    # Features
+    @staticmethod
+    def get_warnings() -> bool:
+        return get_action_input(ActionInputs.WARNINGS, "true").lower() == 'true'
+
+    @staticmethod
     def get_print_empty_chapters() -> bool:
-        return get_action_input(ActionInputs.PRINT_EMPTY_CHAPTERS).lower() == 'true'
+        return get_action_input(ActionInputs.PRINT_EMPTY_CHAPTERS, "true").lower() == 'true'
 
     @staticmethod
     def get_chapters_to_pr_without_issue() -> bool:
-        return get_action_input(ActionInputs.CHAPTERS_TO_PR_WITHOUT_ISSUE).lower() == 'true'
-
-    @staticmethod
-    def get_verbose() -> bool:
-        return os.getenv('RUNNER_DEBUG', 0) == 1 or get_action_input(ActionInputs.VERBOSE).lower() == 'true'
+        return get_action_input(ActionInputs.CHAPTERS_TO_PR_WITHOUT_ISSUE, "true").lower() == 'true'
 
     @staticmethod
     def validate_inputs():
@@ -115,6 +118,11 @@ class ActionInputs:
         if not isinstance(skip_release_notes_label, str) or not skip_release_notes_label.strip():
             raise ValueError("Skip release notes label must be a non-empty string.")
 
+        verbose = ActionInputs.get_verbose()
+        if not isinstance(verbose, bool):
+            raise ValueError("Verbose logging must be a boolean.")
+
+        # Features
         print_empty_chapters = ActionInputs.get_print_empty_chapters()
         if not isinstance(print_empty_chapters, bool):
             raise ValueError("Print empty chapters must be a boolean.")
@@ -123,16 +131,12 @@ class ActionInputs:
         if not isinstance(chapters_to_pr_without_issue, bool):
             raise ValueError("Chapters to PR without issue must be a boolean.")
 
-        verbose = ActionInputs.get_verbose()
-        if not isinstance(verbose, bool):
-            raise ValueError("Verbose logging must be a boolean.")
-
         logging.debug(f'Repository: {owner}/{repo_name}')
         logging.debug(f'Tag name: {tag_name}')
         logging.debug(f'Chapters JSON: {chapters_json}')
-        logging.debug(f'Warnings: {warnings}')
         logging.debug(f'Published at: {published_at}')
         logging.debug(f'Skip release notes label: {skip_release_notes_label}')
+        logging.debug(f'Verbose logging: {verbose}')
+        logging.debug(f'Warnings: {warnings}')
         logging.debug(f'Print empty chapters: {print_empty_chapters}')
         logging.debug(f'Chapters to PR without issue: {chapters_to_pr_without_issue}')
-        logging.debug(f'Verbose logging: {verbose}')
