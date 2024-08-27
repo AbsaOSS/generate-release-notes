@@ -168,7 +168,7 @@ def mock_issue_closed(mocker):
     label2.name = 'label2'
     issue.labels = [label1, label2]
     issue.title = 'Fix the bug'
-    issue.number = 122
+    issue.number = 121
     return issue
 
 

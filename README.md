@@ -44,7 +44,7 @@ Generate Release Notes action is dedicated to enhance the quality and organizati
 - **Required**: Yes
 
 ### `published-at`
-- **Description**: Set to true to enable the use of the `published-at` timestamp as the reference point for searching closed issues and PRs, instead of the `created-at` date of the latest release.
+- **Description**: Set to true to enable the use of the `published-at` timestamp as the reference point for searching closed issues and PRs, instead of the `created-at` date of the latest release. If first release, repository creation date is used.
 - **Required**: No
 - **Default**: false
 

@@ -46,7 +46,7 @@ class ReleaseNotesGenerator:
         """
         Generates the release notes for a given repository.
 
-        :return: The generated release notes as a string, or None if the repository could not be found.
+        @return: The generated release notes as a string, or None if the repository could not be found.
         """
         repo = self.safe_call(self.github_instance.get_repo)(ActionInputs.get_github_repository())
         if repo is None:
@@ -56,10 +56,24 @@ class ReleaseNotesGenerator:
         if rls is None:
             logging.info(f"Latest release not found for {repo.full_name}. 1st release for repository!")
 
-        since = rls.published_at if rls else repo.created_at
+        # default is repository creation date if no releases OR created_at of latest release
+        since = rls.created_at if rls else repo.created_at
+        if rls and ActionInputs.get_published_at():
+            since = rls.published_at
+
         issues = self.safe_call(repo.get_issues)(state=Constants.ISSUE_STATE_ALL, since=since)
-        pulls = self.safe_call(repo.get_pulls)(state='closed')
-        commits = self.safe_call(repo.get_commits)()
+        pulls = pulls_all = self.safe_call(repo.get_pulls)(state='closed')
+        commits = commits_all = list(self.safe_call(repo.get_commits)())
+
+        if rls is not None:
+            logging.info(f"Count of issues: {len(list(issues))}")
+
+            # filter out merged PRs and commits before the since date
+            pulls = list(filter(lambda pull: pull.merged_at is not None and pull.merged_at > since, list(pulls_all)))
+            logging.debug(f"Count of pulls reduced from {len(list(pulls_all))} to {len(pulls)}")
+
+            commits = list(filter(lambda commit: commit.commit.author.date > since, list(commits_all)))
+            logging.debug(f"Count of commits reduced from {len(list(commits_all))} to {len(commits)}")
 
         changelog_url = get_change_url(tag_name=ActionInputs.get_tag_name(), repository=repo, git_release=rls)
 

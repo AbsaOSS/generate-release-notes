@@ -24,7 +24,7 @@ inputs:
     description: 'JSON string defining chapters and corresponding labels for categorization.'
     required: false
   published-at:
-    description: 'Use `published-at` timestamp instead of `created-at` as the reference point.'
+    description: 'Use `published-at` timestamp instead of `created-at` as the reference point of previous Release.'
     required: false
     default: 'false'
   skip-release-notes-label:
