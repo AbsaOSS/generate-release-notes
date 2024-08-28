@@ -172,10 +172,10 @@ http://example.com/changelog
 """
 
 release_notes_data_service_chapters_closed_issue_no_pr_no_user_labels = """### Closed Issues without Pull Request ⚠️
-- #122 _Fix the bug_
+- #121 _Fix the bug_
 
 ### Closed Issues without User Defined Labels ⚠️
-- #122 _Fix the bug_
+- #121 _Fix the bug_
 
 #### Full Changelog
 http://example.com/changelog
@@ -222,7 +222,7 @@ http://example.com/changelog
 """
 
 release_notes_data_closed_issue_no_pr_with_user_labels = """### Closed Issues without Pull Request ⚠️
-- #122 _Fix the bug_
+- #121 _Fix the bug_
 
 #### Full Changelog
 http://example.com/changelog
@@ -270,7 +270,7 @@ http://example.com/changelog
 """
 
 release_notes_data_closed_issue_with_merged_prs_without_user_labels = """### Closed Issues without User Defined Labels ⚠️
-- #122 _Fix the bug_ in [#123](https://github.com/org/repo/pull/123)
+- #121 _Fix the bug_ in [#123](https://github.com/org/repo/pull/123)
   - Fixed bug
   - Improved performance
 
