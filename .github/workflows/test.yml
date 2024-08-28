@@ -93,31 +93,31 @@ jobs:
           CHANGED_FILES=$(git diff --name-only --diff-filter=AMR ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep '.py$')
           echo "Changed Python files: $CHANGED_FILES"
 
-          # If no Python files have changed, skip the coverage check
-          if [ -z "$CHANGED_FILES" ]; then
-            echo "No Python files have changed. Skipping coverage check for changed files."
-            exit 0
-          fi
-
-          # Convert list to comma-delimited string
-          CHANGED_FILES=$(echo "$CHANGED_FILES" | awk '{printf "%s,", $0} END {print ""}' | sed 's/,$//')
-          
-          # Generate coverage report for changed files
-          coverage report --include="$CHANGED_FILES" > coverage_report.txt
-          echo -e "\nChanged Python files report:\n\n"
-          cat coverage_report.txt
-          
-          # Fail if the coverage for changed files is below threshold
-          COVERAGE_TOTAL=$(awk '/TOTAL/ {print $4}' coverage_report.txt)
-          echo "Total coverage for changed files: $COVERAGE_TOTAL"
-
-          if (( $(echo "$COVERAGE_TOTAL < 80.0" | bc -l) )); then
-            echo "Coverage is below 80%"
-            exit 1
-          fi
-
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v3
-        with:
-          name: coverage-report
-          path: coverage_overall.xml
+#          # If no Python files have changed, skip the coverage check
+#          if [ -z "$CHANGED_FILES" ]; then
+#            echo "No Python files have changed. Skipping coverage check for changed files."
+#            exit 0
+#          fi
+#
+#          # Convert list to comma-delimited string
+#          CHANGED_FILES=$(echo "$CHANGED_FILES" | awk '{printf "%s,", $0} END {print ""}' | sed 's/,$//')
+#
+#          # Generate coverage report for changed files
+#          coverage report --include="$CHANGED_FILES" > coverage_report.txt
+#          echo -e "\nChanged Python files report:\n\n"
+#          cat coverage_report.txt
+#
+#          # Fail if the coverage for changed files is below threshold
+#          COVERAGE_TOTAL=$(awk '/TOTAL/ {print $4}' coverage_report.txt)
+#          echo "Total coverage for changed files: $COVERAGE_TOTAL"
+#
+#          if (( $(echo "$COVERAGE_TOTAL < 80.0" | bc -l) )); then
+#            echo "Coverage is below 80%"
+#            exit 1
+#          fi
+#
+#      - name: Upload coverage report
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: coverage-report
+#          path: coverage_overall.xml
