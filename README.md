@@ -5,13 +5,17 @@
   - [Prerequisites](#prerequisites)
   - [Adding the Action to Your Workflow](#adding-the-action-to-your-workflow)
   - [Inputs](#inputs)
-- [Run locally](#run-action-locally)
-- [Run unit test](#running-unit-test)
+  - [Outputs](#outputs)
+- [Usage Example](#usage-example)
 - [Features](#features)
   - [Release Notes Extraction Process](#release-notes-extraction-process)
   - [Contributors Mention](#contributors-mention)
   - [Handling Multiple PRs](#handling-multiple-prs)
   - [Warnings](#warnings)
+- [Get Started](#get-started)
+- [Run Static Code Analysis](#running-static-code-analysis)
+- [Run Unit Test](#running-unit-test)
+- [Run Action Locally](#run-action-locally)
 - [Contribution Guidelines](#contribution-guidelines)
   - [How to Contribute](#how-to-contribute)
 - [License Information](#license-information)
@@ -215,7 +219,7 @@ pip install -r requirements.txt
 export PYTHONPATH=<your path>/generate-release-notes/src
 ```
 
-## Running statis code analysis
+## Running Static Code Analysis
 
 This project uses Pylint tool for static code analysis. Pylint analyses your code without actually running it. It checks for errors, enforces, coding standards, looks for code smells etc.
 
@@ -227,7 +231,7 @@ python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 
--- run your commands
+# run your commands
 
 deactivate
 ```
@@ -236,18 +240,18 @@ This command will also install a Pylint tool, since it is listed in the project 
 
 ### Run Pylint
 Run Pylint on all files that are currently tracked by Git in the project.
-```shell
+```
 pylint $(git ls-files '*.py')
 ```
 
 To run Pylint on a specific file, follow the pattern `pylint <path_to_file>/<name_of_file>.py`.
 
 Example:
-```shell
+```
 pylint release-notes-generator/generator.py
 ``` 
 
-## Running unit test
+## Running Unit Test
 
 Unit tests are written using pytest. To run the tests, use the following command:
 
@@ -300,31 +304,31 @@ export INPUT_GITHUB_TOKEN=$(printenv <your-env-token-var>)
 python3 ./<path-to-action-project-root>/main.py
 ```
 
-### Contribution Guidelines
+## Contribution Guidelines
 
 We welcome contributions to the Generate Release Notes Action! Whether you're fixing bugs, improving documentation, or proposing new features, your help is appreciated.
 
-#### How to Contribute
+### How to Contribute
 - **Submit Pull Requests**: Feel free to fork the repository, make changes, and submit a pull request. Please ensure your code adheres to the existing style and all tests pass.
 - **Report Issues**: If you encounter any bugs or issues, please report them via the repository's [Issues page](https://github.com/AbsaOSS/generate-release-notes/issues).
 - **Suggest Enhancements**: Have ideas on how to make this action better? Open an issue to suggest enhancements.
 
 Before contributing, please review our [contribution guidelines](https://github.com/AbsaOSS/generate-release-notes/blob/master/CONTRIBUTING.md) for more detailed information.
 
-### License Information
+## License Information
 
 This project is licensed under the Apache License 2.0. It is a liberal license that allows you great freedom in using, modifying, and distributing this software, while also providing an express grant of patent rights from contributors to users.
 
 For more details, see the [LICENSE](https://github.com/AbsaOSS/generate-release-notes/blob/master/LICENSE) file in the repository.
 
-### Contact or Support Information
+## Contact or Support Information
 
 If you need help with using or contributing to Generate Release Notes Action, or if you have any questions or feedback, don't hesitate to reach out:
 
 - **Issue Tracker**: For technical issues or feature requests, use the [GitHub Issues page](https://github.com/AbsaOSS/generate-release-notes/issues).
 - **Discussion Forum**: For general questions and discussions, join our [GitHub Discussions forum](https://github.com/AbsaOSS/generate-release-notes/discussions).
 
-### FAQs
+## FAQs
 #### Why is in generated Release Notes content mentioned co-author without link to his GitHub account?
 Co-authors can be added into a commit message by using the `Co-authored-by` trailer in the commit message. This trailer is used by GitHub to link the commit to the co-author's GitHub account. The co-author's name is mentioned in the generated Release Notes without a link to his GitHub account.
 ```
