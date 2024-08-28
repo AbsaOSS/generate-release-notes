@@ -5,8 +5,8 @@
   - [Prerequisites](#prerequisites)
   - [Adding the Action to Your Workflow](#adding-the-action-to-your-workflow)
   - [Inputs](#inputs)
-- [Run locally](#run-locally)
-- [Run unit test](#run-unit-test)
+- [Run locally](#run-action-locally)
+- [Run unit test](#running-unit-test)
 - [Features](#features)
   - [Release Notes Extraction Process](#release-notes-extraction-process)
   - [Contributors Mention](#contributors-mention)
@@ -215,12 +215,44 @@ pip install -r requirements.txt
 export PYTHONPATH=<your path>/generate-release-notes/src
 ```
 
+## Running statis code analysis
+
+This project uses Pylint tool for static code analysis. Pylint analyses your code without actually running it. It checks for errors, enforces, coding standards, looks for code smells etc.
+
+Pylint displays a global evaluation score for the code, rated out of a maximum score of 10.0. We are aiming to keep our code quality high above the score 9.5.
+
+### Set Up Python Environment
+```shell
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+-- run your commands
+
+deactivate
+```
+
+This command will also install a Pylint tool, since it is listed in the project requirements.
+
+### Run Pylint
+Run Pylint on all files that are currently tracked by Git in the project.
+```shell
+pylint $(git ls-files '*.py')
+```
+
+To run Pylint on a specific file, follow the pattern `pylint <path_to_file>/<name_of_file>.py`.
+
+Example:
+```shell
+pylint release-notes-generator/generator.py
+``` 
+
 ## Running unit test
 
 Unit tests are written using pytest. To run the tests, use the following command:
 
 ```
-pytest
+pytest tests/
 ```
 
 This will execute all tests located in the tests directory and generate a code coverage report.
