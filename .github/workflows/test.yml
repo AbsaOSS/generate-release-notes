@@ -90,7 +90,7 @@ jobs:
       - name: Check changed files coverage
         run: |
           # Get the list of changed Python files
-          git diff --name-only --diff-filter=AMR ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep '.py$'
+          git diff --name-only --diff-filter=AMR ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep '.py$' || true
 #          echo "Changed Python files: $CHANGED_FILES"
 #
 #          CHANGED_FILES=$(git diff --name-only --diff-filter=AMR ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep '.py$')
