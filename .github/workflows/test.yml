@@ -93,6 +93,12 @@ jobs:
           CHANGED_FILES=$(git diff --name-only --diff-filter=AMR ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep '.py$')
           echo "Changed Python files: $CHANGED_FILES"
 
+          # If no Python files have changed, skip the coverage check
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "No Python files have changed. Skipping coverage check for changed files."
+            exit 0
+          fi
+
           # Convert list to comma-delimited string
           CHANGED_FILES=$(echo "$CHANGED_FILES" | awk '{printf "%s,", $0} END {print ""}' | sed 's/,$//')
           
