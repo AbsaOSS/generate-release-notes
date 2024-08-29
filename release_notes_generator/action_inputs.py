@@ -63,7 +63,7 @@ class ActionInputs:
 
     @staticmethod
     def get_verbose() -> bool:
-        return os.getenv('RUNNER_DEBUG', 0) == 1 or get_action_input(ActionInputs.VERBOSE).lower() == 'true'
+        return os.getenv('RUNNER_DEBUG', '0') == '1' or get_action_input(ActionInputs.VERBOSE).lower() == 'true'
 
     # Features
     @staticmethod
@@ -78,6 +78,7 @@ class ActionInputs:
     def get_chapters_to_pr_without_issue() -> bool:
         return get_action_input(ActionInputs.CHAPTERS_TO_PR_WITHOUT_ISSUE, "true").lower() == 'true'
 
+    # pylint: disable=too-many-branches
     @staticmethod
     def validate_inputs():
         """
@@ -136,12 +137,12 @@ class ActionInputs:
                 logging.error(error)
             sys.exit(1)
 
-        logging.debug(f'Repository: {owner}/{repo_name}')
-        logging.debug(f'Tag name: {tag_name}')
-        logging.debug(f'Chapters JSON: {chapters_json}')
-        logging.debug(f'Published at: {published_at}')
-        logging.debug(f'Skip release notes label: {skip_release_notes_label}')
-        logging.debug(f'Verbose logging: {verbose}')
-        logging.debug(f'Warnings: {warnings}')
-        logging.debug(f'Print empty chapters: {print_empty_chapters}')
-        logging.debug(f'Chapters to PR without issue: {chapters_to_pr_without_issue}')
+        logging.debug('Repository: %s/%s', owner, repo_name)
+        logging.debug('Tag name: %s', tag_name)
+        logging.debug('Chapters JSON: %s', chapters_json)
+        logging.debug('Published at: %s', published_at)
+        logging.debug('Skip release notes label: %s', skip_release_notes_label)
+        logging.debug('Verbose logging: %s', verbose)
+        logging.debug('Warnings: %s', warnings)
+        logging.debug('Print empty chapters: %s', print_empty_chapters)
+        logging.debug('Chapters to PR without issue: %s', chapters_to_pr_without_issue)

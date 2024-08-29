@@ -33,11 +33,11 @@ class CustomChapters(BaseChapters):
         :param records: A dictionary of records where the key is an integer and the value is a Record object.
         """
         for nr in records:                                      # iterate all records
-            for ch_key in self.chapters:                        # iterate all chapters
+            for _, ch in self.chapters.items():                 # iterate all chapters
                 for record_label in records[nr].labels:         # iterate all labels of the record (issue, or 1st PR)
-                    if record_label in self.chapters[ch_key].labels and records[nr].pulls_count > 0:
+                    if record_label in ch.labels and records[nr].pulls_count > 0:
                         if not records[nr].is_present_in_chapters:
-                            self.chapters[ch_key].add_row(nr, records[nr].to_chapter_row())
+                            ch.add_row(nr, records[nr].to_chapter_row())
                             self.populated_record_numbers_list.append(nr)
 
     def from_json(self, json_string: str) -> 'CustomChapters':

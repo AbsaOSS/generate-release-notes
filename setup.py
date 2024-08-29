@@ -16,8 +16,10 @@
 
 import os
 
-from setuptools import setup, find_packages
+from setuptools import setup
 
+# add pylint exception for R1732
+# pylint: disable=consider-using-with,unspecified-encoding
 setup(
     name='release_notes_generator',
     version='0.1.0',

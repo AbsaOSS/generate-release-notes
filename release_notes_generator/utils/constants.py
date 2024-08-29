@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 
+# pylint: disable=too-few-public-methods
 class Constants:
 
     PR_STATE_CLOSED = "closed"

@@ -29,8 +29,8 @@ def test_debug_log_decorator(mocker):
     mock_log_debug = mocker.patch('logging.debug')
 
     decorated_function = debug_log_decorator(sample_function)
-    expected_call = [mocker.call(f"Calling method sample_function with args: (3, 4) and kwargs: {{}}"),
-                     mocker.call(f"Method sample_function returned 7")]
+    expected_call = [mocker.call("Calling method %s with args: %s and kwargs: %s", 'sample_function', (3, 4), {}),
+                     mocker.call("Method %s returned %s", 'sample_function', 7)]
 
     result = decorated_function(3, 4)
 
@@ -59,4 +59,5 @@ def test_safe_call_decorator_exception(rate_limiter, mocker):
     result = sample_method(2, 0)
     assert result is None
     mock_log_error.assert_called_once()
-    assert "Error calling sample_method:" in mock_log_error.call_args[0][0]
+    assert "Unexpected error calling %s:" in mock_log_error.call_args[0][0]
+    assert "sample_method" in mock_log_error.call_args[0][1]

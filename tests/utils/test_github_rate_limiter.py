@@ -14,22 +14,49 @@
 # limitations under the License.
 #
 
-def test_rate_limiter_extended_sleep(mocker, rate_limiter_calls, request):
-    # Access the current parameter set
-    params = request.getfixturevalue('mock_rate_limiter_calls').core
+import time
 
+
+def test_rate_limiter_extended_sleep_remaining_1(mocker, rate_limiter, mock_rate_limiter):
+    # Patch time.sleep to avoid actual delay and track call count
+    mock_sleep = mocker.patch('time.sleep', return_value=None)
+    mock_rate_limiter.core.remaining = 1
+
+    # Mock method to be wrapped
+    method_mock = mocker.Mock()
+    wrapped_method = rate_limiter(method_mock)
+
+    wrapped_method()
+
+    method_mock.assert_called_once()
+    mock_sleep.assert_called_once()
+
+
+def test_rate_limiter_extended_sleep_remaining_10(mocker, rate_limiter, mock_rate_limiter):
     # Patch time.sleep to avoid actual delay and track call count
     mock_sleep = mocker.patch('time.sleep', return_value=None)
 
     # Mock method to be wrapped
     method_mock = mocker.Mock()
-    wrapped_method = rate_limiter_calls(method_mock)
+    wrapped_method = rate_limiter(method_mock)
 
     wrapped_method()
 
     method_mock.assert_called_once()
+    mock_sleep.assert_not_called()
 
-    if params.remaining == 1:
-        mock_sleep.assert_called_once()
-    else:
-        mock_sleep.assert_not_called()
+
+def test_rate_limiter_extended_sleep_remaining_1_negative_reset_time(mocker, rate_limiter, mock_rate_limiter):
+    # Patch time.sleep to avoid actual delay and track call count
+    mock_sleep = mocker.patch('time.sleep', return_value=None)
+    mock_rate_limiter.core.remaining = 1
+    mock_rate_limiter.core.reset.timestamp = timestamp = mocker.Mock(return_value=time.time() - 1000)
+
+    # Mock method to be wrapped
+    method_mock = mocker.Mock()
+    wrapped_method = rate_limiter(method_mock)
+
+    wrapped_method()
+
+    method_mock.assert_called_once()
+    mock_sleep.assert_called_once()

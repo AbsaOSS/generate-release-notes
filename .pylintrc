@@ -290,7 +290,7 @@ exclude-too-few-public-methods=
 ignored-parents=
 
 # Maximum number of arguments for function / method.
-max-args=5
+max-args=10
 
 # Maximum number of attributes for a class (see R0902).
 max-attributes=7
@@ -427,7 +427,10 @@ confidence=HIGH,
 # no Warning level messages displayed, use "--disable=all --enable=classes
 # --disable=W".
 # TODO: Remove after this PR
-disable=raw-checker-failed,
+disable=C0116,
+        C0115,
+        C0114,
+        raw-checker-failed,
         bad-inline-option,
         locally-disabled,
         file-ignored,

@@ -14,14 +14,17 @@
 # limitations under the License.
 #
 
-import pytest
 import time
 
 from datetime import datetime
 
+import pytest
+
 from github import Github
 from github.Issue import Issue
 from github.PullRequest import PullRequest
+from github.Rate import Rate
+from github.RateLimit import RateLimit
 from github.Repository import Repository
 
 from release_notes_generator.model.service_chapters import ServiceChapters
@@ -34,6 +37,7 @@ from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
 
 # Test classes
 
+# pylint: disable=too-few-public-methods
 class MockLabel:
     def __init__(self, name):
         self.name = name
@@ -71,18 +75,12 @@ def service_chapters():
     )
 
 
-# Fixtures for GitHub Client
-@pytest.fixture
-def mock_github_client(mocker):
-    return mocker.Mock(spec=Github)
-
-
 # Fixtures for GitHub Repository
 @pytest.fixture
 def mock_repo(mocker):
-    mock_repo = mocker.Mock(spec=Repository)
-    mock_repo.full_name = 'org/repo'
-    return mock_repo
+    repo = mocker.Mock(spec=Repository)
+    repo.full_name = 'org/repo'
+    return repo
 
 
 # Fixtures for GitHub Release(s)
@@ -93,37 +91,25 @@ def mock_git_release(mocker):
     return release
 
 
-# Fixtures for GitHub Rate Limiter
 @pytest.fixture
-def rate_limiter_calls(mock_github_client, mock_rate_limiter_calls):
-    mock_github_client.get_rate_limit.return_value = mock_rate_limiter_calls
+def rate_limiter(mocker, request):
+    mock_github_client = mocker.Mock(spec=Github)
+    mock_github_client.get_rate_limit.return_value = request.getfixturevalue('mock_rate_limiter')
     return GithubRateLimiter(mock_github_client)
 
 
 @pytest.fixture
-def rate_limiter(mock_github_client, mock_rate_limiter):
-    mock_github_client.get_rate_limit.return_value = mock_rate_limiter
-    return GithubRateLimiter(mock_github_client)
+def mock_rate_limiter(mocker):
+    mock_rate = mocker.Mock(spec=Rate)
+    mock_rate.timestamp = mocker.Mock(return_value=time.time() + 3600)
 
+    mock_core = mocker.Mock(spec=RateLimit)
+    mock_core.reset = mock_rate
 
-@pytest.fixture(params=[
-    {'remaining': 1, 'reset_time': 3600},
-    {'remaining': 10, 'reset_time': 3600},
-    {'remaining': 1, 'reset_time': -1000},
-])
-def mock_rate_limiter_calls(mocker, request):
-    params = request.param
-    mock = mocker.Mock()
-    mock.core.remaining = params.get('remaining', 1)
-    mock.core.reset.timestamp.return_value = time.time() + params.get('reset_time', 3600)
-    return mock
-
-
-@pytest.fixture
-def mock_rate_limiter(mocker, request):
-    mock = mocker.Mock()
+    mock = mocker.Mock(spec=GithubRateLimiter)
+    mock.core = mock_core
     mock.core.remaining = 10
-    mock.core.reset.timestamp.return_value = time.time() + 3600
+
     return mock
 
 
@@ -344,73 +330,77 @@ def mock_commit(mocker):
 
 # Fixtures for Record(s)
 @pytest.fixture
-def record_with_issue_open_no_pull(mock_repo, mock_issue_open):
-    return Record(repo=mock_repo, issue=mock_issue_open)
+def record_with_issue_open_no_pull(request):
+    mock_repo_fixture = request.getfixturevalue('mock_repo')
+    return Record(repo=mock_repo_fixture,
+                  issue=request.getfixturevalue('mock_issue_open'))
 
 
 @pytest.fixture
-def record_with_issue_closed_no_pull(mock_repo, mock_issue_closed, mock_pull_closed):
-    rec = Record(repo=mock_repo, issue=mock_issue_closed)
-    mock_repo.full_name = 'org/repo'
+def record_with_issue_closed_no_pull(request):
+    rec = Record(repo=(mock_repo_fixture := request.getfixturevalue('mock_repo')),
+                 issue=request.getfixturevalue('mock_issue_closed'))
+    mock_repo_fixture.full_name = 'org/repo'
     return rec
 
 
 @pytest.fixture
-def record_with_issue_closed_one_pull(mock_repo, mock_issue_closed, mock_pull_closed):
-    rec = Record(repo=mock_repo, issue=mock_issue_closed)
-    rec.register_pull_request(mock_pull_closed)
-    mock_repo.full_name = 'org/repo'
+def record_with_issue_closed_one_pull(request):
+    rec = Record(repo=(mock_repo_fixture := request.getfixturevalue('mock_repo')),
+                 issue=request.getfixturevalue('mock_issue_closed'))
+    rec.register_pull_request(request.getfixturevalue('mock_pull_closed'))
+    mock_repo_fixture.full_name = 'org/repo'
     return rec
 
 
 @pytest.fixture
-def record_with_issue_closed_one_pull_merged(mock_repo, mock_issue_closed_i1_bug, mock_pull_merged):
-    rec = Record(repo=mock_repo, issue=mock_issue_closed_i1_bug)
-    rec.register_pull_request(mock_pull_merged)
-    mock_repo.full_name = 'org/repo'
+def record_with_issue_closed_one_pull_merged(request):
+    rec = Record(repo=(mock_repo_fixture := request.getfixturevalue('mock_repo')),
+                 issue=request.getfixturevalue('mock_issue_closed_i1_bug'))
+    rec.register_pull_request(request.getfixturevalue('mock_pull_merged'))
+    mock_repo_fixture.full_name = 'org/repo'
     return rec
 
 
 @pytest.fixture
-def record_with_issue_closed_two_pulls(mock_repo, mock_issue_closed_i1_bug, mock_pull_closed_with_rls_notes_101,
-                                       mock_pull_closed_with_rls_notes_102):
-    rec = Record(repo=mock_repo, issue=mock_issue_closed_i1_bug)
-    rec.register_pull_request(mock_pull_closed_with_rls_notes_101)
-    rec.register_pull_request(mock_pull_closed_with_rls_notes_102)
-    mock_repo.full_name = 'org/repo'
+def record_with_issue_closed_two_pulls(request):
+    rec = Record(repo=(mock_repo_fixture := request.getfixturevalue('mock_repo')),
+                 issue=request.getfixturevalue('mock_issue_closed_i1_bug'))
+    rec.register_pull_request(request.getfixturevalue('mock_pull_closed_with_rls_notes_101'))
+    rec.register_pull_request(request.getfixturevalue('mock_pull_closed_with_rls_notes_102'))
+    mock_repo_fixture.full_name = 'org/repo'
     return rec
 
 
 @pytest.fixture
-def record_with_issue_open_one_pull_closed(mock_repo, mock_issue_open, mock_pull_closed):
-    rec = Record(repo=mock_repo, issue=mock_issue_open)
-    rec.register_pull_request(mock_pull_closed)
-    mock_repo.full_name = 'org/repo'
+def record_with_issue_open_one_pull_closed(request):
+    rec = Record(repo=(mock_repo_fixture := request.getfixturevalue('mock_repo')),
+                 issue=request.getfixturevalue('mock_issue_open'))
+    rec.register_pull_request(request.getfixturevalue('mock_pull_closed'))
+    mock_repo_fixture.full_name = 'org/repo'
     return rec
 
 
 @pytest.fixture
-def record_with_issue_open_two_pulls_closed(mock_repo, mock_issue_open, mock_pull_closed_with_rls_notes_101,
-                                            mock_pull_closed_with_rls_notes_102):
-    rec = Record(repo=mock_repo, issue=mock_issue_open)
-    rec.register_pull_request(mock_pull_closed_with_rls_notes_101)
-    rec.register_pull_request(mock_pull_closed_with_rls_notes_102)
-    mock_repo.full_name = 'org/repo'
+def record_with_issue_open_two_pulls_closed(request):
+    rec = Record(repo=(mock_repo_fixture := request.getfixturevalue('mock_repo')),
+                 issue=request.getfixturevalue('mock_issue_open'))
+    rec.register_pull_request(request.getfixturevalue('mock_pull_closed_with_rls_notes_101'))
+    rec.register_pull_request(request.getfixturevalue('mock_pull_closed_with_rls_notes_102'))
+    mock_repo_fixture.full_name = 'org/repo'
     return rec
 
 
 @pytest.fixture
-def record_with_two_issue_open_two_pulls_closed(mock_repo, mock_issue_open, mock_issue_open_2,
-                                                mock_pull_merged_with_rls_notes_101,
-                                                mock_pull_merged_with_rls_notes_102):
-    rec1 = Record(repo=mock_repo)
-    rec1.register_pull_request(mock_pull_merged_with_rls_notes_101)
+def record_with_two_issue_open_two_pulls_closed(request):
+    rec1 = Record(repo=(mock_repo_fixture := request.getfixturevalue('mock_repo')))
+    rec1.register_pull_request(request.getfixturevalue('mock_pull_merged_with_rls_notes_101'))
 
-    rec2 = Record(repo=mock_repo)
-    rec2.register_pull_request(mock_pull_merged_with_rls_notes_102)
-    mock_repo.full_name = 'org/repo'
+    rec2 = Record(repo=mock_repo_fixture)
+    rec2.register_pull_request(request.getfixturevalue('mock_pull_merged_with_rls_notes_102'))
+    mock_repo_fixture.full_name = 'org/repo'
 
-    records = dict()
+    records = {}
     records[rec1.number] = rec1
     records[rec2.number] = rec2
 
@@ -418,54 +408,56 @@ def record_with_two_issue_open_two_pulls_closed(mock_repo, mock_issue_open, mock
 
 
 @pytest.fixture
-def record_with_issue_closed_one_pull_no_rls_notes(mock_repo, mock_issue_closed, mock_pull_closed):
-    rec = Record(repo=mock_repo, issue=mock_issue_closed)
-    rec.register_pull_request(mock_pull_closed)
-    mock_pull_closed.body = "Fixed bug"
-    mock_repo.full_name = 'org/repo'
+def record_with_issue_closed_one_pull_no_rls_notes(request):
+    rec = Record(repo=(mock_repo_fixture := request.getfixturevalue('mock_repo')),
+                 issue=request.getfixturevalue('mock_issue_closed'))
+    rec.register_pull_request(mock_pull_closed_fixture := request.getfixturevalue('mock_pull_no_rls_notes'))
+    mock_pull_closed_fixture.body = "Fixed bug"
+    mock_repo_fixture.full_name = 'org/repo'
     return rec
 
 
 @pytest.fixture
-def record_with_no_issue_one_pull_merged(mock_repo, mock_pull_merged, mock_commit):
-    record = Record(repo=mock_repo)
-    mock_repo.full_name = 'org/repo'
-    record.register_pull_request(mock_pull_merged)
-    record.register_commit(mock_commit)
+def record_with_no_issue_one_pull_merged(request):
+    record = Record(repo=(mock_repo_fixture := request.getfixturevalue('mock_repo')))
+    mock_repo_fixture.full_name = 'org/repo'
+    record.register_pull_request(request.getfixturevalue('mock_pull_merged'))
+    record.register_commit(request.getfixturevalue('mock_commit'))
     return record
 
 
 @pytest.fixture
-def record_with_no_issue_one_pull_open(mock_repo, mock_pull_open, mock_commit):
-    record = Record(repo=mock_repo)
-    mock_repo.full_name = 'org/repo'
-    record.register_pull_request(mock_pull_open)
-    record.register_commit(mock_commit)
+def record_with_no_issue_one_pull_open(request):
+    record = Record(repo=(mock_repo_fixture := request.getfixturevalue('mock_repo')))
+    mock_repo_fixture.full_name = 'org/repo'
+    record.register_pull_request(request.getfixturevalue('mock_pull_open'))
+    record.register_commit(request.getfixturevalue('mock_commit'))
     return record
 
 
 @pytest.fixture
-def record_with_no_issue_one_pull_merged_with_issue_mentioned(mock_repo, mock_pull_merged, mock_commit):
-    record = Record(repo=mock_repo)
-    mock_repo.full_name = 'org/repo'
-    mock_pull_merged.body = "Release notes:\n- Fixed bug\n- Improved performance\n\nFixes #123"
-    record.register_pull_request(mock_pull_merged)
-    record.register_commit(mock_commit)
+def record_with_no_issue_one_pull_merged_with_issue_mentioned(request):
+    record = Record(repo=(mock_repo_fixture := request.getfixturevalue('mock_repo')))
+    mock_repo_fixture.full_name = 'org/repo'
+    mock_pull_merged_fixture = request.getfixturevalue('mock_pull_merged')
+    mock_pull_merged_fixture.body = "Release notes:\n- Fixed bug\n- Improved performance\n\nFixes #123"
+    record.register_pull_request(mock_pull_merged_fixture)
+    record.register_commit(request.getfixturevalue('mock_commit'))
     return record
 
 
 @pytest.fixture
-def record_with_no_issue_one_pull_closed(mock_repo, mock_pull_closed, mock_commit):
-    record = Record(repo=mock_repo)
-    mock_repo.full_name = 'org/repo'
-    mock_repo.draft = False
-    record.register_pull_request(mock_pull_closed)
-    record.register_commit(mock_commit)
+def record_with_no_issue_one_pull_closed(request):
+    record = Record(repo=(mock_repo_fixture := request.getfixturevalue('mock_repo')))
+    mock_repo_fixture.full_name = 'org/repo'
+    mock_repo_fixture.draft = False
+    record.register_pull_request(request.getfixturevalue('mock_pull_closed'))
+    record.register_commit(request.getfixturevalue('mock_commit'))
     return record
 
 
 @pytest.fixture
-def record_with_no_issue_one_pull_closed_no_rls_notes(mock_repo, mock_pull_no_rls_notes):
-    record = Record(repo=mock_repo)
-    record.register_pull_request(mock_pull_no_rls_notes)
+def record_with_no_issue_one_pull_closed_no_rls_notes(request):
+    record = Record(repo=request.getfixturevalue('mock_repo'))
+    record.register_pull_request(request.getfixturevalue('mock_pull_no_rls_notes'))
     return record

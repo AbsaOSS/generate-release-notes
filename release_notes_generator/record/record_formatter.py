@@ -19,12 +19,14 @@ from github.PullRequest import PullRequest
 from release_notes_generator.model.record import Record
 
 
+# pylint: disable=too-few-public-methods
 class RecordFormatter:
     """
     A class used to format records for release notes.
     """
 
-    DEFAULT_ISSUE_PATTERN: str = "- #{number} _{title}_ implemented by {developers} in {pull_requests}\n{release_note_rows}"
+    DEFAULT_ISSUE_PATTERN: str = ("- #{number} _{title}_ implemented by {developers} in {pull_requests}\n"
+                                  "{release_note_rows}")
     DEFAULT_PULL_REQUESTS_PATTERN: str = "[#{number}]({url})"
 
     def __init__(self, issue_pattern: str = DEFAULT_ISSUE_PATTERN,

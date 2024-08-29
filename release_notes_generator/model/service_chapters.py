@@ -19,6 +19,7 @@ from release_notes_generator.model.chapter import Chapter
 from release_notes_generator.model.record import Record
 
 
+# pylint: disable=too-many-instance-attributes
 class ServiceChapters(BaseChapters):
     """
     A class used to represent the service chapters in the release notes.
@@ -144,7 +145,8 @@ class ServiceChapters(BaseChapters):
         if record.is_merged_pr:
             # check record properties if it fits to a chapter: MERGED_PRS_WITHOUT_ISSUE
             if not record.pr_contains_issue_mentions and not record.contains_min_one_label(self.user_defined_labels):
-                self.chapters[self.MERGED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS].add_row(nr, record.to_chapter_row())
+                self.chapters[self.MERGED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS].add_row(nr,
+                                                                                             record.to_chapter_row())
 
             # check record properties if it fits to a chapter: MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES
             if record.pr_contains_issue_mentions:
@@ -154,7 +156,8 @@ class ServiceChapters(BaseChapters):
                 self.chapters[self.OTHERS_NO_TOPIC].add_row(nr, record.to_chapter_row())
 
         # check record properties if it fits to a chapter: CLOSED_PRS_WITHOUT_ISSUE
-        elif record.is_closed and not record.pr_contains_issue_mentions and not record.contains_min_one_label(self.user_defined_labels):
+        elif record.is_closed and not record.pr_contains_issue_mentions and not record.contains_min_one_label(
+                self.user_defined_labels):
             self.chapters[self.CLOSED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS].add_row(nr, record.to_chapter_row())
 
         else:

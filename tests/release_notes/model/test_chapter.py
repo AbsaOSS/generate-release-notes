@@ -24,7 +24,7 @@ def test_chapter_init():
 
     assert chapter.title == "Test Title"
     assert chapter.labels == ["label1", "label2"]
-    assert chapter.rows == {}
+    assert not chapter.rows
 
 
 # add_row

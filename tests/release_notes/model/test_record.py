@@ -66,7 +66,7 @@ def test_record_properties_authors_contributors(record_with_no_issue_one_pull_cl
 
 def test_get_rls_notes(record_with_no_issue_one_pull_closed):
     expected_notes = "  - Fixed bug\n  - Improved performance"
-    assert record_with_no_issue_one_pull_closed.get_rls_notes == expected_notes
+    assert record_with_no_issue_one_pull_closed.get_rls_notes() == expected_notes
 
 
 # contains_release_notes
@@ -83,7 +83,8 @@ def test_contains_release_notes_fail(record_with_no_issue_one_pull_closed_no_rls
 # pr_contains_issue_mentions
 
 def test_pr_contains_issue_mentions(record_with_no_issue_one_pull_closed, mocker):
-    mock_extract_issue_numbers_from_body = mocker.patch('release_notes_generator.model.record.extract_issue_numbers_from_body')
+    mock_extract_issue_numbers_from_body = mocker.patch(
+        'release_notes_generator.model.record.extract_issue_numbers_from_body')
     mock_extract_issue_numbers_from_body.return_value = [123]
     assert record_with_no_issue_one_pull_closed.pr_contains_issue_mentions
 
@@ -114,7 +115,7 @@ def test_register_commit_success(record_with_no_issue_one_pull_closed, mocker):
     commit = mocker.Mock(spec=Commit)
     commit.sha = "merge_commit_sha"
     record_with_no_issue_one_pull_closed.register_commit(commit)
-    assert commit in record_with_no_issue_one_pull_closed._Record__pull_commits[123]
+    assert commit in record_with_no_issue_one_pull_closed.commits[123]
 
 
 def test_register_commit_failure(record_with_no_issue_one_pull_closed, caplog, mocker):
@@ -133,7 +134,8 @@ def test_to_chapter_row_with_pull(record_with_no_issue_one_pull_closed):
 
 
 def test_to_chapter_row_with_issue(record_with_issue_closed_one_pull):
-    expected_row = "#121 _Fix the bug_ in [#123](https://github.com/org/repo/pull/123)\n  - Fixed bug\n  - Improved performance"
+    expected_row = ("#121 _Fix the bug_ in [#123](https://github.com/org/repo/pull/123)\n  - Fixed bug\n  - "
+                    "Improved performance")
     assert expected_row == record_with_issue_closed_one_pull.to_chapter_row()
 
 
@@ -162,7 +164,7 @@ def test_contains_labels_with_issue(record_with_issue_open_no_pull):
     assert not record_with_issue_open_no_pull.contain_all_labels(['label1', 'label3'])
 
 
-def test_contains_labels_with_pull(mock_pull_closed, record_with_no_issue_one_pull_closed):
+def test_contains_labels_with_pull(record_with_no_issue_one_pull_closed):
     # Test with labels present in the pull request
     assert record_with_no_issue_one_pull_closed.contains_min_one_label(['label1'])
 
