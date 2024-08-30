@@ -49,19 +49,3 @@ def setup_logging() -> None:
         logging.debug("Debug mode enabled by CI runner")
     if is_verbose_logging:
         logging.debug("Verbose logging enabled")
-
-    logger = logging.getLogger(__name__)
-
-    logger.info("Setting up logging configuration 3")
-
-    if is_debug_mode:
-        logger.debug("Debug mode enabled by CI runner 3")
-    if is_verbose_logging:
-        logger.debug("Verbose logging enabled 3")
-
-    print("Setting up logging configuration 4")
-
-    if is_debug_mode:
-        print("Debug mode enabled by CI runner 4")
-    if is_verbose_logging:
-        print("Verbose logging enabled 4")
