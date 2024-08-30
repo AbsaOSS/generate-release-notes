@@ -73,7 +73,7 @@ def test_validate_inputs_failure(method, value, expected_error, mocker):
     case[method] = value
     patchers = apply_mocks(case, mocker)
     try:
-        mock_error = mocker.patch('logging.error')
+        mock_error = mocker.patch('release_notes_generator.action_inputs.logger.error')
         mock_exit = mocker.patch('sys.exit')
 
         ActionInputs.validate_inputs()

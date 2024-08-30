@@ -25,6 +25,8 @@ from github.Commit import Commit
 from release_notes_generator.utils.constants import Constants
 from release_notes_generator.utils.pull_reuqest_utils import extract_issue_numbers_from_body
 
+logger = logging.getLogger(__name__)
+
 
 # pylint: disable=too-many-instance-attributes, too-many-public-methods
 class Record:
@@ -329,7 +331,7 @@ class Record:
                 self.__pull_commits[pull.number].append(commit)
                 return
 
-        logging.error("Commit %s not registered in any PR of record %s", commit.sha, self.number)
+        logger.error("Commit %s not registered in any PR of record %s", commit.sha, self.number)
 
     # TODO in Issue named 'Chapter line formatting - default'
     def to_chapter_row(self, row_format="", increment_in_chapters=True) -> str:

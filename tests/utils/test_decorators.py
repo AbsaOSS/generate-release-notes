@@ -26,7 +26,7 @@ def sample_function(x, y):
 
 def test_debug_log_decorator(mocker):
     # Mock logging
-    mock_log_debug = mocker.patch('logging.debug')
+    mock_log_debug = mocker.patch('release_notes_generator.utils.decorators.logger.debug')
 
     decorated_function = debug_log_decorator(sample_function)
     expected_call = [mocker.call("Calling method %s with args: %s and kwargs: %s", 'sample_function', (3, 4), {}),
@@ -50,7 +50,7 @@ def test_safe_call_decorator_success(rate_limiter):
 
 
 def test_safe_call_decorator_exception(rate_limiter, mocker):
-    mock_log_error = mocker.patch('logging.error')
+    mock_log_error = mocker.patch('release_notes_generator.utils.decorators.logger.error')
 
     @safe_call_decorator(rate_limiter)
     def sample_method(x, y):

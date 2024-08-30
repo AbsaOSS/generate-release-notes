@@ -22,6 +22,8 @@ from github import GithubException
 from requests.exceptions import Timeout, RequestException, ConnectionError as RequestsConnectionError
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
 
+logger = logging.getLogger(__name__)
+
 
 def debug_log_decorator(method: Callable) -> Callable:
     """
@@ -29,9 +31,9 @@ def debug_log_decorator(method: Callable) -> Callable:
     """
     @wraps(method)
     def wrapped(*args, **kwargs) -> Optional[Any]:
-        logging.debug("Calling method %s with args: %s and kwargs: %s", method.__name__, args, kwargs)
+        logger.debug("Calling method %s with args: %s and kwargs: %s", method.__name__, args, kwargs)
         result = method(*args, **kwargs)
-        logging.debug("Method %s returned %s", method.__name__, result)
+        logger.debug("Method %s returned %s", method.__name__, result)
         return result
     return wrapped
 
@@ -50,16 +52,16 @@ def safe_call_decorator(rate_limiter: GithubRateLimiter):
             try:
                 return method(*args, **kwargs)
             except (RequestsConnectionError, Timeout) as e:
-                logging.error("Network error calling %s: %s", method.__name__, e, exc_info=True)
+                logger.error("Network error calling %s: %s", method.__name__, e, exc_info=True)
                 return None
             except GithubException as e:
-                logging.error("GitHub API error calling %s: %s", method.__name__, e, exc_info=True)
+                logger.error("GitHub API error calling %s: %s", method.__name__, e, exc_info=True)
                 return None
             except RequestException as e:
-                logging.error("HTTP error calling %s: %s", method.__name__, e, exc_info=True)
+                logger.error("HTTP error calling %s: %s", method.__name__, e, exc_info=True)
                 return None
             except Exception as e:
-                logging.error("Unexpected error calling %s: %s", method.__name__, e, exc_info=True)
+                logger.error("Unexpected error calling %s: %s", method.__name__, e, exc_info=True)
                 return None
         return wrapped
     return decorator

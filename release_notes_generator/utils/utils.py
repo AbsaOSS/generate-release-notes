@@ -20,6 +20,8 @@ from typing import Optional
 from github.GitRelease import GitRelease
 from github.Repository import Repository
 
+logger = logging.getLogger(__name__)
+
 
 def get_change_url(tag_name: str, repository: Optional[Repository] = None,
                    git_release: Optional[GitRelease] = None) -> Optional[str]:
@@ -32,7 +34,7 @@ def get_change_url(tag_name: str, repository: Optional[Repository] = None,
     :return: An optional string containing the URL to view the changes. Returns a None if the repository is not set.
     """
     if not repository:
-        logging.error("Get change url failed. Repository is not set.")
+        logger.error("Get change url failed. Repository is not set.")
         return ""
 
     repo = repository

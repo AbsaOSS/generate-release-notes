@@ -23,6 +23,8 @@ from release_notes_generator.model.record import Record
 from release_notes_generator.model.service_chapters import ServiceChapters
 from release_notes_generator.action_inputs import ActionInputs
 
+logger = logging.getLogger(__name__)
+
 
 # pylint: disable=too-few-public-methods
 class ReleaseNotesBuilder:
@@ -50,7 +52,7 @@ class ReleaseNotesBuilder:
 
         @return: The release notes as a string.
         """
-        logging.info("Building Release Notes")
+        logger.info("Building Release Notes")
         user_defined_chapters = self.custom_chapters
         user_defined_chapters.populate(self.records)
         user_defined_chapters_str = user_defined_chapters.to_string()
