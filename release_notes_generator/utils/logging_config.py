@@ -34,7 +34,12 @@ def setup_logging() -> None:
     is_debug_mode = os.getenv("RUNNER_DEBUG", "0") == "1"
     level = logging.DEBUG if is_verbose_logging or is_debug_mode else logging.INFO
 
-    logging.info("Logging configuration set up")
+    logging.info("Setting up logging configuration")
+
+    if is_debug_mode:
+        logging.debug("Debug mode enabled by CI runner")
+    if is_verbose_logging:
+        logging.debug("Verbose logging enabled")
 
     # Set up the logging configuration
     logging.basicConfig(
@@ -44,8 +49,3 @@ def setup_logging() -> None:
         handlers=[logging.StreamHandler(sys.stdout)],
     )
 
-
-    if is_debug_mode:
-        logging.debug("Debug mode enabled by CI runner")
-    if is_verbose_logging:
-        logging.info("Verbose logging enabled")
