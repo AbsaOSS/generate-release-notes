@@ -48,6 +48,7 @@ def setup_logging() -> None:
         datefmt="%Y-%m-%d %H:%M:%S",
         handlers=[logging.StreamHandler(sys.stdout)],
     )
+    sys.stdout.flush()
 
     logging.info("Setting up logging configuration 2")
 
@@ -64,3 +65,10 @@ def setup_logging() -> None:
         logger.debug("Debug mode enabled by CI runner 3")
     if is_verbose_logging:
         logger.debug("Verbose logging enabled 3")
+
+    print("Setting up logging configuration 4")
+
+    if is_debug_mode:
+        print("Debug mode enabled by CI runner 4")
+    if is_verbose_logging:
+        print("Verbose logging enabled 4")
