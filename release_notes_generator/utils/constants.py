@@ -30,8 +30,6 @@ WARNINGS = 'warnings'
 PRINT_EMPTY_CHAPTERS = 'print-empty-chapters'
 CHAPTERS_TO_PR_WITHOUT_ISSUE = 'chapters-to-pr-without-issue'
 
-
-
 # Pull Request states
 PR_STATE_CLOSED = "closed"
 PR_STATE_OPEN = "open"
