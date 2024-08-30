@@ -46,6 +46,7 @@ def setup_logging() -> None:
         level=level,
         format="%(asctime)s - %(levelname)s - %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
+        handlers=[logging.StreamHandler(sys.stdout)],
     )
 
     logging.info("Setting up logging configuration 2")
