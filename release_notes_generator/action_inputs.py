@@ -18,6 +18,7 @@ import json
 import logging
 import os
 import sys
+from typing import Optional
 
 from release_notes_generator.utils.constants import (GITHUB_REPOSITORY, GITHUB_TOKEN, TAG_NAME, CHAPTERS, PUBLISHED_AT,
                                                      SKIP_RELEASE_NOTES_LABEL, VERBOSE, WARNINGS, RUNNER_DEBUG,
@@ -67,7 +68,13 @@ class ActionInputs:
     def get_chapters_to_pr_without_issue() -> bool:
         return get_action_input(CHAPTERS_TO_PR_WITHOUT_ISSUE, "true").lower() == 'true'
 
-    # pylint: disable=too-many-branches
+    @staticmethod
+    def validate_input(input_value, expected_type: type, error_message: str, error_buffer: list) -> bool:
+        if not isinstance(input_value, expected_type):
+            error_buffer.append(error_message)
+            return False
+        return True
+
     @staticmethod
     def validate_inputs():
         """
@@ -96,29 +103,26 @@ class ActionInputs:
             errors.append("Chapters JSON must be a valid JSON string.")
 
         warnings = ActionInputs.get_warnings()
-        if not isinstance(warnings, bool):
-            errors.append("Warnings must be a boolean.")
+        ActionInputs.validate_input(warnings, bool, "Warnings must be a boolean.", errors)
 
         published_at = ActionInputs.get_published_at()
-        if not isinstance(published_at, bool):
-            errors.append("Published at must be a boolean.")
+        ActionInputs.validate_input(published_at, bool, "Published at must be a boolean.", errors)
 
         skip_release_notes_label = ActionInputs.get_skip_release_notes_label()
         if not isinstance(skip_release_notes_label, str) or not skip_release_notes_label.strip():
             errors.append("Skip release notes label must be a non-empty string.")
 
         verbose = ActionInputs.get_verbose()
-        if not isinstance(verbose, bool):
-            errors.append("Verbose logging must be a boolean.")
+        ActionInputs.validate_input(verbose, bool, "Verbose logging must be a boolean.", errors)
 
         # Features
         print_empty_chapters = ActionInputs.get_print_empty_chapters()
-        if not isinstance(print_empty_chapters, bool):
-            errors.append("Print empty chapters must be a boolean.")
+        ActionInputs.validate_input(print_empty_chapters, bool,
+                                    "Print empty chapters must be a boolean.", errors)
 
         chapters_to_pr_without_issue = ActionInputs.get_chapters_to_pr_without_issue()
-        if not isinstance(chapters_to_pr_without_issue, bool):
-            errors.append("Chapters to PR without issue must be a boolean.")
+        ActionInputs.validate_input(chapters_to_pr_without_issue, bool,
+                                    "Chapters to PR without issue must be a boolean.", errors)
 
         # Log errors if any
         if errors:
