@@ -42,6 +42,9 @@ def setup_logging() -> None:
         handlers=[logging.StreamHandler(sys.stdout)],
     )
 
+    logging.info("Test debug message")
+    logging.debug("Test debug message")
+
     logger = logging.getLogger(__name__)
 
     if is_debug_mode:
