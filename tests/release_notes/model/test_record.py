@@ -18,7 +18,7 @@ import logging
 
 from github.Commit import Commit
 
-from release_notes_generator.utils.constants import Constants
+from release_notes_generator.utils.constants import ISSUE_STATE_CLOSED, PR_STATE_CLOSED
 
 
 # cover property methods - simple ones
@@ -27,7 +27,7 @@ def test_record_properties_with_issue_open(mock_issue_open, record_with_issue_op
     assert record_with_issue_open_no_pull.is_issue
     assert not record_with_issue_open_no_pull.is_pr
     assert record_with_issue_open_no_pull.is_open_issue
-    mock_issue_open.state = Constants.ISSUE_STATE_CLOSED
+    mock_issue_open.state = ISSUE_STATE_CLOSED
     assert record_with_issue_open_no_pull.is_closed_issue
     assert record_with_issue_open_no_pull.is_closed
     assert not record_with_issue_open_no_pull.is_merged_pr
@@ -45,7 +45,7 @@ def test_record_properties_with_pull(mock_pull_closed, record_with_no_issue_one_
     assert record_with_no_issue_one_pull_closed.is_present_in_chapters
     assert record_with_no_issue_one_pull_closed.is_pr
     assert not record_with_no_issue_one_pull_closed.is_issue
-    mock_pull_closed.state = Constants.PR_STATE_CLOSED
+    mock_pull_closed.state = PR_STATE_CLOSED
     assert record_with_no_issue_one_pull_closed.is_closed
     mock_pull_closed.merged_at = mocker.Mock()
     mock_pull_closed.closed_at = mocker.Mock()

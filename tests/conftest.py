@@ -31,7 +31,7 @@ from release_notes_generator.model.service_chapters import ServiceChapters
 from release_notes_generator.model.record import Record
 from release_notes_generator.model.chapter import Chapter
 from release_notes_generator.model.custom_chapters import CustomChapters
-from release_notes_generator.utils.constants import Constants
+from release_notes_generator.utils.constants import ISSUE_STATE_OPEN, ISSUE_STATE_CLOSED, PR_STATE_CLOSED, PR_STATE_OPEN
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
 
 
@@ -117,7 +117,7 @@ def mock_rate_limiter(mocker):
 @pytest.fixture
 def mock_issue_open(mocker):
     issue = mocker.Mock(spec=Issue)
-    issue.state = Constants.ISSUE_STATE_OPEN
+    issue.state = ISSUE_STATE_OPEN
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = 'label1'
     label2 = mocker.Mock(spec=MockLabel)
@@ -132,7 +132,7 @@ def mock_issue_open(mocker):
 @pytest.fixture
 def mock_issue_open_2(mocker):
     issue = mocker.Mock(spec=Issue)
-    issue.state = Constants.ISSUE_STATE_OPEN
+    issue.state = ISSUE_STATE_OPEN
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = 'label1'
     label2 = mocker.Mock(spec=MockLabel)
@@ -147,7 +147,7 @@ def mock_issue_open_2(mocker):
 @pytest.fixture
 def mock_issue_closed(mocker):
     issue = mocker.Mock(spec=Issue)
-    issue.state = Constants.ISSUE_STATE_CLOSED
+    issue.state = ISSUE_STATE_CLOSED
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = 'label1'
     label2 = mocker.Mock(spec=MockLabel)
@@ -161,7 +161,7 @@ def mock_issue_closed(mocker):
 @pytest.fixture
 def mock_issue_closed_i1_bug(mocker):
     issue = mocker.Mock(spec=Issue)
-    issue.state = Constants.ISSUE_STATE_CLOSED
+    issue.state = ISSUE_STATE_CLOSED
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = 'label1'
     label2 = mocker.Mock(spec=MockLabel)
@@ -176,7 +176,7 @@ def mock_issue_closed_i1_bug(mocker):
 @pytest.fixture
 def mock_pull_closed(mocker):
     pull = mocker.Mock(spec=PullRequest)
-    pull.state = Constants.PR_STATE_CLOSED
+    pull.state = PR_STATE_CLOSED
     pull.body = "Release notes:\n- Fixed bug\n- Improved performance\n"
     pull.url = "http://example.com/pull/123"
     label1 = mocker.Mock(spec=MockLabel)
@@ -195,7 +195,7 @@ def mock_pull_closed(mocker):
 @pytest.fixture
 def mock_pull_closed_with_rls_notes_101(mocker):
     pull = mocker.Mock(spec=PullRequest)
-    pull.state = Constants.PR_STATE_CLOSED
+    pull.state = PR_STATE_CLOSED
     pull.body = "Release notes:\n- PR 101 1st release note\n- PR 101 2nd release note\n"
     pull.url = "http://example.com/pull/101"
     label1 = mocker.Mock(spec=MockLabel)
@@ -214,7 +214,7 @@ def mock_pull_closed_with_rls_notes_101(mocker):
 @pytest.fixture
 def mock_pull_closed_with_rls_notes_102(mocker):
     pull = mocker.Mock(spec=PullRequest)
-    pull.state = Constants.PR_STATE_CLOSED
+    pull.state = PR_STATE_CLOSED
     pull.body = "Release notes:\n- PR 102 1st release note\n- PR 102 2nd release note\n"
     pull.url = "http://example.com/pull/102"
     label1 = mocker.Mock(spec=MockLabel)
@@ -233,7 +233,7 @@ def mock_pull_closed_with_rls_notes_102(mocker):
 @pytest.fixture
 def mock_pull_merged_with_rls_notes_101(mocker):
     pull = mocker.Mock(spec=PullRequest)
-    pull.state = Constants.PR_STATE_CLOSED
+    pull.state = PR_STATE_CLOSED
     pull.body = "Closes #122\n\nRelease notes:\n- PR 101 1st release note\n- PR 101 2nd release note\n"
     pull.url = "http://example.com/pull/101"
     label1 = mocker.Mock(spec=MockLabel)
@@ -252,7 +252,7 @@ def mock_pull_merged_with_rls_notes_101(mocker):
 @pytest.fixture
 def mock_pull_merged_with_rls_notes_102(mocker):
     pull = mocker.Mock(spec=PullRequest)
-    pull.state = Constants.PR_STATE_CLOSED
+    pull.state = PR_STATE_CLOSED
     pull.body = "Closes #123\n\nRelease notes:\n- PR 102 1st release note\n- PR 102 2nd release note\n"
     pull.url = "http://example.com/pull/102"
     label1 = mocker.Mock(spec=MockLabel)
@@ -271,7 +271,7 @@ def mock_pull_merged_with_rls_notes_102(mocker):
 @pytest.fixture
 def mock_pull_merged(mocker):
     pull = mocker.Mock(spec=PullRequest)
-    pull.state = Constants.PR_STATE_CLOSED
+    pull.state = PR_STATE_CLOSED
     pull.body = "Release notes:\n- Fixed bug\n- Improved performance\n"
     pull.url = "http://example.com/pull/123"
     label1 = mocker.Mock(spec=MockLabel)
@@ -290,7 +290,7 @@ def mock_pull_merged(mocker):
 @pytest.fixture
 def mock_pull_open(mocker):
     pull = mocker.Mock(spec=PullRequest)
-    pull.state = Constants.PR_STATE_OPEN
+    pull.state = PR_STATE_OPEN
     pull.body = "Release notes:\n- Fixed bug\n- Improved performance\n"
     pull.url = "http://example.com/pull/123"
     label1 = mocker.Mock(spec=MockLabel)
@@ -309,7 +309,7 @@ def mock_pull_open(mocker):
 @pytest.fixture
 def mock_pull_no_rls_notes(mocker):
     pull = mocker.Mock(spec=PullRequest)
-    pull.state = Constants.PR_STATE_CLOSED
+    pull.state = PR_STATE_CLOSED
     pull.body = None
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = 'label1'

@@ -26,6 +26,7 @@ from release_notes_generator.action_inputs import ActionInputs
 logger = logging.getLogger(__name__)
 
 
+# TODO - reduce to function only after implementing the features. Will be supported more build ways?
 # pylint: disable=too-few-public-methods
 class ReleaseNotesBuilder:
     def __init__(self, records: dict[int, Record], changelog_url: str,

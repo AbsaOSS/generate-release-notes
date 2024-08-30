@@ -19,12 +19,12 @@ import os
 from setuptools import setup
 
 # add pylint exception for R1732
-# pylint: disable=consider-using-with,unspecified-encoding
+# pylint: disable=consider-using-with
 setup(
     name='release_notes_generator',
     version='0.1.0',
     description='A tool to generate release notes for GitHub projects.',
-    long_description=open('README.md').read() if os.path.exists('README.md') else '',
+    long_description=open('README.md', 'r', encoding='utf-8').read() if os.path.exists('README.md') else '',
     long_description_content_type='text/markdown',
     author='Miroslav Pojer',
     author_email='miroslav.pojer@absa.africa',
