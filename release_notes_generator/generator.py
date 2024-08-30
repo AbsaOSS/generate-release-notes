@@ -35,13 +35,24 @@ from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
-# pylint: disable=too-few-public-methods
 class ReleaseNotesGenerator:
     def __init__(self, github_instance: Github, custom_chapters: CustomChapters):
-        self.github_instance = github_instance
-        self.custom_chapters = custom_chapters
-        self.rate_limiter = GithubRateLimiter(self.github_instance)
-        self.safe_call = safe_call_decorator(self.rate_limiter)
+        self._github_instance = github_instance
+        self._custom_chapters = custom_chapters
+        self._rate_limiter = GithubRateLimiter(self.github_instance)
+        self._safe_call = safe_call_decorator(self._rate_limiter)
+
+    @property
+    def github_instance(self) -> Github:
+        return self._github_instance
+
+    @property
+    def custom_chapters(self) -> CustomChapters:
+        return self._custom_chapters
+
+    @property
+    def rate_limiter(self) -> GithubRateLimiter:
+        return self._rate_limiter
 
     def generate(self) -> Optional[str]:
         """
@@ -49,11 +60,11 @@ class ReleaseNotesGenerator:
 
         @return: The generated release notes as a string, or None if the repository could not be found.
         """
-        repo = self.safe_call(self.github_instance.get_repo)(ActionInputs.get_github_repository())
+        repo = self._safe_call(self.github_instance.get_repo)(ActionInputs.get_github_repository())
         if repo is None:
             return None
 
-        rls = self.safe_call(repo.get_latest_release)()
+        rls = self._safe_call(repo.get_latest_release)()
         if rls is None:
             logging.info("Latest release not found for %s. 1st release for repository!", repo.full_name)
 
@@ -62,9 +73,9 @@ class ReleaseNotesGenerator:
         if rls and ActionInputs.get_published_at():
             since = rls.published_at
 
-        issues = self.safe_call(repo.get_issues)(state=ISSUE_STATE_ALL, since=since)
-        pulls = pulls_all = self.safe_call(repo.get_pulls)(state='closed')
-        commits = commits_all = list(self.safe_call(repo.get_commits)())
+        issues = self._safe_call(repo.get_issues)(state=ISSUE_STATE_ALL, since=since)
+        pulls = pulls_all = self._safe_call(repo.get_pulls)(state='closed')
+        commits = commits_all = list(self._safe_call(repo.get_commits)())
 
         if rls is not None:
             logging.info("Count of issues: %d", len(list(issues)))
