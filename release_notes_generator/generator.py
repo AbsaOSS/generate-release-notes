@@ -25,7 +25,7 @@ from release_notes_generator.model.record import Record
 from release_notes_generator.builder import ReleaseNotesBuilder
 from release_notes_generator.record.record_factory import RecordFactory
 from release_notes_generator.action_inputs import ActionInputs
-from release_notes_generator.utils.constants import Constants
+from release_notes_generator.utils.constants import ISSUE_STATE_ALL
 
 from release_notes_generator.utils.decorators import safe_call_decorator
 from release_notes_generator.utils.utils import get_change_url
@@ -62,7 +62,7 @@ class ReleaseNotesGenerator:
         if rls and ActionInputs.get_published_at():
             since = rls.published_at
 
-        issues = self.safe_call(repo.get_issues)(state=Constants.ISSUE_STATE_ALL, since=since)
+        issues = self.safe_call(repo.get_issues)(state=ISSUE_STATE_ALL, since=since)
         pulls = pulls_all = self.safe_call(repo.get_pulls)(state='closed')
         commits = commits_all = list(self.safe_call(repo.get_commits)())
 

@@ -22,7 +22,8 @@ from github.PullRequest import PullRequest
 from github.Repository import Repository
 from github.Commit import Commit
 
-from release_notes_generator.utils.constants import Constants
+from release_notes_generator.utils.constants import (PR_STATE_CLOSED, ISSUE_STATE_CLOSED, ISSUE_STATE_OPEN,
+    RELEASE_NOTE_DETECTION_PATTERN, RELEASE_NOTE_LINE_MARK)
 from release_notes_generator.utils.pull_reuqest_utils import extract_issue_numbers_from_body
 
 
@@ -31,9 +32,6 @@ class Record:
     """
     A class used to represent a record in the release notes.
     """
-
-    RELEASE_NOTE_DETECTION_PATTERN = "Release notes:"
-    RELEASE_NOTE_LINE_MARK = "-"
 
     def __init__(self, repo: Repository, issue: Optional[Issue] = None):
         """
@@ -123,9 +121,9 @@ class Record:
         """
         if self.__gh_issue is None:
             # no issue ==> stand-alone PR
-            return self.__pulls[0].state == Constants.PR_STATE_CLOSED
+            return self.__pulls[0].state == PR_STATE_CLOSED
 
-        return self.__gh_issue.state == Constants.ISSUE_STATE_CLOSED
+        return self.__gh_issue.state == ISSUE_STATE_CLOSED
 
     @property
     def is_closed_issue(self) -> bool:
@@ -134,7 +132,7 @@ class Record:
 
         :return: A boolean indicating whether the record is a closed issue.
         """
-        return self.is_issue and self.__gh_issue.state == Constants.ISSUE_STATE_CLOSED
+        return self.is_issue and self.__gh_issue.state == ISSUE_STATE_CLOSED
 
     @property
     def is_open_issue(self) -> bool:
@@ -143,7 +141,7 @@ class Record:
 
         :return: A boolean indicating whether the record is a closed issue.
         """
-        return self.is_issue and self.__gh_issue.state == Constants.ISSUE_STATE_OPEN
+        return self.is_issue and self.__gh_issue.state == ISSUE_STATE_OPEN
 
     @property
     def is_merged_pr(self) -> bool:
@@ -210,7 +208,7 @@ class Record:
         if self.__is_release_note_detected:
             return self.__is_release_note_detected
 
-        if self.RELEASE_NOTE_LINE_MARK in self.get_rls_notes():
+        if RELEASE_NOTE_LINE_MARK in self.get_rls_notes():
             self.__is_release_note_detected = True
 
         return self.__is_release_note_detected
@@ -431,4 +429,4 @@ class Record:
 
     @staticmethod
     def is_pull_request_merged(pull: PullRequest) -> bool:
-        return pull.state == Constants.PR_STATE_CLOSED and pull.merged_at is not None and pull.closed_at is not None
+        return pull.state == PR_STATE_CLOSED and pull.merged_at is not None and pull.closed_at is not None

@@ -19,64 +19,53 @@ import logging
 import os
 import sys
 
+from release_notes_generator.utils.constants import (GITHUB_REPOSITORY, GITHUB_TOKEN, TAG_NAME, CHAPTERS, PUBLISHED_AT,
+                                                     SKIP_RELEASE_NOTES_LABEL, VERBOSE, WARNINGS, RUNNER_DEBUG,
+                                                     PRINT_EMPTY_CHAPTERS, CHAPTERS_TO_PR_WITHOUT_ISSUE)
 from release_notes_generator.utils.gh_action import get_action_input
 
 
 class ActionInputs:
-    GITHUB_REPOSITORY = 'GITHUB_REPOSITORY'
-    GITHUB_TOKEN = 'github-token'
-    TAG_NAME = 'tag-name'
-    CHAPTERS = 'chapters'
-    PUBLISHED_AT = 'published-at'
-    SKIP_RELEASE_NOTES_LABEL = 'skip-release-notes-label'
-    VERBOSE = 'verbose'
-    RUNNER_DEBUG = 'RUNNER_DEBUG'
-
-    # Features
-    WARNINGS = 'warnings'
-    PRINT_EMPTY_CHAPTERS = 'print-empty-chapters'
-    CHAPTERS_TO_PR_WITHOUT_ISSUE = 'chapters-to-pr-without-issue'
-
     @staticmethod
     def get_github_repository() -> str:
-        return get_action_input(ActionInputs.GITHUB_REPOSITORY)
+        return get_action_input(GITHUB_REPOSITORY)
 
     @staticmethod
     def get_github_token() -> str:
-        return get_action_input(ActionInputs.GITHUB_TOKEN)
+        return get_action_input(GITHUB_TOKEN)
 
     @staticmethod
     def get_tag_name() -> str:
-        return get_action_input(ActionInputs.TAG_NAME)
+        return get_action_input(TAG_NAME)
 
     @staticmethod
     def get_chapters_json() -> str:
-        return get_action_input(ActionInputs.CHAPTERS)
+        return get_action_input(CHAPTERS)
 
     @staticmethod
     def get_published_at() -> bool:
-        return get_action_input(ActionInputs.PUBLISHED_AT, "false").lower() == 'true'
+        return get_action_input(PUBLISHED_AT, "false").lower() == 'true'
 
     @staticmethod
     def get_skip_release_notes_label() -> str:
-        return get_action_input(ActionInputs.SKIP_RELEASE_NOTES_LABEL) or 'skip-release-notes'
+        return get_action_input(SKIP_RELEASE_NOTES_LABEL) or 'skip-release-notes'
 
     @staticmethod
     def get_verbose() -> bool:
-        return os.getenv('RUNNER_DEBUG', '0') == '1' or get_action_input(ActionInputs.VERBOSE).lower() == 'true'
+        return os.getenv(RUNNER_DEBUG, '0') == '1' or get_action_input(VERBOSE).lower() == 'true'
 
     # Features
     @staticmethod
     def get_warnings() -> bool:
-        return get_action_input(ActionInputs.WARNINGS, "true").lower() == 'true'
+        return get_action_input(WARNINGS, "true").lower() == 'true'
 
     @staticmethod
     def get_print_empty_chapters() -> bool:
-        return get_action_input(ActionInputs.PRINT_EMPTY_CHAPTERS, "true").lower() == 'true'
+        return get_action_input(PRINT_EMPTY_CHAPTERS, "true").lower() == 'true'
 
     @staticmethod
     def get_chapters_to_pr_without_issue() -> bool:
-        return get_action_input(ActionInputs.CHAPTERS_TO_PR_WITHOUT_ISSUE, "true").lower() == 'true'
+        return get_action_input(CHAPTERS_TO_PR_WITHOUT_ISSUE, "true").lower() == 'true'
 
     # pylint: disable=too-many-branches
     @staticmethod
