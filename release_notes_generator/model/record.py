@@ -27,6 +27,7 @@ from release_notes_generator.utils.constants import (PR_STATE_CLOSED, ISSUE_STAT
 from release_notes_generator.utils.pull_reuqest_utils import extract_issue_numbers_from_body
 
 
+# TODO - recheck the size of class, is there a way to reduce or split it?
 # pylint: disable=too-many-instance-attributes, too-many-public-methods
 class Record:
     """
