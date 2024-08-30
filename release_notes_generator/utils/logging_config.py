@@ -40,7 +40,9 @@ def setup_logging() -> None:
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 
+    logger = logging.getLogger(__name__)
+
     if is_debug_mode:
-        logging.debug("Debug mode enabled by CI runner")
+        logger.debug("Debug mode enabled by CI runner")
     if is_verbose_logging:
-        logging.info("Verbose logging enabled")
+        logger.info("Verbose logging enabled")
