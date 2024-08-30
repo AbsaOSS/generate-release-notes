@@ -49,3 +49,9 @@ def setup_logging() -> None:
         handlers=[logging.StreamHandler(sys.stdout)],
     )
 
+    logging.info("Setting up logging configuration 2")
+
+    if is_debug_mode:
+        logging.debug("Debug mode enabled by CI runner 2")
+    if is_verbose_logging:
+        logging.debug("Verbose logging enabled 2")
