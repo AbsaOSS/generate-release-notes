@@ -20,6 +20,8 @@ from datetime import datetime
 from typing import Optional, Callable
 from github import Github
 
+logger = logging.getLogger(__name__)
+
 
 # pylint: disable=too-few-public-methods
 class GithubRateLimiter:
@@ -33,7 +35,7 @@ class GithubRateLimiter:
             reset_time = self.github_client.get_rate_limit().core.reset.timestamp()
 
             if remaining_calls < 5:
-                logging.info("Rate limit almost reached. Sleeping until reset time.")
+                logger.info("Rate limit almost reached. Sleeping until reset time.")
                 sleep_time = reset_time - (now := time.time())
                 while sleep_time <= 0:
                     # Note: received values can be in the past, so the time shift to 1st positive value is needed
@@ -44,7 +46,7 @@ class GithubRateLimiter:
                 hours, remainder = divmod(total_sleep_time, 3600)
                 minutes, seconds = divmod(remainder, 60)
 
-                logging.info("Sleeping for %s hours, %s minutes, and %s seconds until %s.",
+                logger.info("Sleeping for %s hours, %s minutes, and %s seconds until %s.",
                              hours, minutes, seconds, datetime.fromtimestamp(reset_time).strftime('%Y-%m-%d %H:%M:%S'))
                 time.sleep(sleep_time + 5)  # Sleep for the calculated time plus 5 seconds
 

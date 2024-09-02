@@ -22,22 +22,16 @@ from release_notes_generator.generator import ReleaseNotesGenerator
 from release_notes_generator.model.custom_chapters import CustomChapters
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.utils.gh_action import set_action_output
-
-
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+from release_notes_generator.utils.logging_config import setup_logging
 
 
 def run():
     """
     Runs the 'Release Notes Generator' GitHub Action.
     """
-    logging.info("Starting 'Release Notes Generator' GitHub Action")
-
-    # Enable verbose logging if specified
-    if ActionInputs.get_verbose():
-        logging.info("Verbose logging enabled")
-        logging.getLogger().setLevel(logging.DEBUG)
+    setup_logging()
+    logger = logging.getLogger(__name__)
+    logger.info("Starting 'Release Notes Generator' GitHub Action")
 
     # Authenticate with GitHub
     py_github = Github(auth=Auth.Token(token=ActionInputs.get_github_token()), per_page=100)
@@ -48,12 +42,13 @@ def run():
     custom_chapters = (CustomChapters(print_empty_chapters=ActionInputs.get_print_empty_chapters())
                        .from_json(ActionInputs.get_chapters_json()))
 
-    rls_notes = ReleaseNotesGenerator(py_github, custom_chapters).generate()
-    logging.debug("Release notes: \n%s", rls_notes)
+    generator = ReleaseNotesGenerator(py_github, custom_chapters)
+    rls_notes = generator.generate()
+    logger.debug("Release notes: \n%s", rls_notes)
 
     # Set the output for the GitHub Action
     set_action_output('release-notes', rls_notes)
-    logging.info("GitHub Action 'Release Notes Generator' completed successfully")
+    logger.info("GitHub Action 'Release Notes Generator' completed successfully")
 
 
 if __name__ == '__main__':

@@ -28,6 +28,8 @@ from release_notes_generator.utils.decorators import safe_call_decorator
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
 from release_notes_generator.utils.pull_reuqest_utils import extract_issue_numbers_from_body
 
+logger = logging.getLogger(__name__)
+
 
 # pylint: disable=too-few-public-methods
 class RecordFactory:
@@ -54,12 +56,12 @@ class RecordFactory:
 
         def create_record_for_issue(r: Repository, i: Issue):
             records[i.number] = Record(r, i)
-            logging.debug("Created record for issue %d: %s", i.number, i.title)
+            logger.debug("Created record for issue %d: %s", i.number, i.title)
 
         def register_pull_request(pull: PullRequest):
             for parent_issue_number in extract_issue_numbers_from_body(pull):
                 if parent_issue_number not in records:
-                    logging.warning(
+                    logger.warning(
                         "Detected PR %d linked to issue %d which is not in the list of received issues. "
                         "Fetching ...",
                         pull.number, parent_issue_number
@@ -70,12 +72,12 @@ class RecordFactory:
 
                 if parent_issue_number in records:
                     records[parent_issue_number].register_pull_request(pull)
-                    logging.debug("Registering PR %d: %s to Issue %d",
+                    logger.debug("Registering PR %d: %s to Issue %d",
                                   pull.number, pull.title, parent_issue_number)
                 else:
                     records[pull.number] = Record(repo)
                     records[pull.number].register_pull_request(pull)
-                    logging.debug(
+                    logger.debug(
                         "Registering stand-alone PR %d: %s as mentioned Issue %d not found.",
                         pull.number, pull.title, parent_issue_number
                     )
@@ -98,12 +100,12 @@ class RecordFactory:
             if not extract_issue_numbers_from_body(pull):
                 records[pull.number] = Record(repo)
                 records[pull.number].register_pull_request(pull)
-                logging.debug("Created record for PR %d: %s", pull.number, pull.title)
+                logger.debug("Created record for PR %d: %s", pull.number, pull.title)
             else:
                 register_pull_request(pull)
 
         detected_prs_count = sum(register_commit_to_record(commit) for commit in commits)
 
-        logging.info("Generated %d records from %d issues and %d PRs, with %d commits detected.",
+        logger.info("Generated %d records from %d issues and %d PRs, with %d commits detected.",
                      len(records), len(issues), len(pulls), detected_prs_count)
         return records

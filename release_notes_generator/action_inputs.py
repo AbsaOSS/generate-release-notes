@@ -24,6 +24,8 @@ from release_notes_generator.utils.constants import (GITHUB_REPOSITORY, GITHUB_T
                                                      PRINT_EMPTY_CHAPTERS, CHAPTERS_TO_PR_WITHOUT_ISSUE)
 from release_notes_generator.utils.gh_action import get_action_input
 
+logger = logging.getLogger(__name__)
+
 
 class ActionInputs:
     @staticmethod
@@ -126,15 +128,14 @@ class ActionInputs:
         # Log errors if any
         if errors:
             for error in errors:
-                logging.error(error)
+                logger.error(error)
             sys.exit(1)
 
-        logging.debug('Repository: %s/%s', owner, repo_name)
-        logging.debug('Tag name: %s', tag_name)
-        logging.debug('Chapters JSON: %s', chapters_json)
-        logging.debug('Published at: %s', published_at)
-        logging.debug('Skip release notes label: %s', skip_release_notes_label)
-        logging.debug('Verbose logging: %s', verbose)
-        logging.debug('Warnings: %s', warnings)
-        logging.debug('Print empty chapters: %s', print_empty_chapters)
-        logging.debug('Chapters to PR without issue: %s', chapters_to_pr_without_issue)
+        logger.debug('Tag name: %s', tag_name)
+        logger.debug('Chapters JSON: %s', chapters_json)
+        logger.debug('Published at: %s', published_at)
+        logger.debug('Skip release notes label: %s', skip_release_notes_label)
+        logger.debug('Verbose logging: %s', verbose)
+        logger.debug('Warnings: %s', warnings)
+        logger.debug('Print empty chapters: %s', print_empty_chapters)
+        logger.debug('Chapters to PR without issue: %s', chapters_to_pr_without_issue)

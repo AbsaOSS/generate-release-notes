@@ -31,8 +31,7 @@ from release_notes_generator.utils.decorators import safe_call_decorator
 from release_notes_generator.utils.utils import get_change_url
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 
 class ReleaseNotesGenerator:
@@ -66,7 +65,7 @@ class ReleaseNotesGenerator:
 
         rls = self._safe_call(repo.get_latest_release)()
         if rls is None:
-            logging.info("Latest release not found for %s. 1st release for repository!", repo.full_name)
+            logger.info("Latest release not found for %s. 1st release for repository!", repo.full_name)
 
         # default is repository creation date if no releases OR created_at of latest release
         since = rls.created_at if rls else repo.created_at
@@ -78,14 +77,14 @@ class ReleaseNotesGenerator:
         commits = commits_all = list(self._safe_call(repo.get_commits)())
 
         if rls is not None:
-            logging.info("Count of issues: %d", len(list(issues)))
+            logger.info("Count of issues: %d", len(list(issues)))
 
             # filter out merged PRs and commits before the since date
             pulls = list(filter(lambda pull: pull.merged_at is not None and pull.merged_at > since, list(pulls_all)))
-            logging.debug("Count of pulls reduced from %d to %d", len(list(pulls_all)), len(pulls))
+            logger.debug("Count of pulls reduced from %d to %d", len(list(pulls_all)), len(pulls))
 
             commits = list(filter(lambda commit: commit.commit.author.date > since, list(commits_all)))
-            logging.debug("Count of commits reduced from %d to %d", len(list(commits_all)), len(commits))
+            logger.debug("Count of commits reduced from %d to %d", len(list(commits_all)), len(commits))
 
         changelog_url = get_change_url(tag_name=ActionInputs.get_tag_name(), repository=repo, git_release=rls)
 

@@ -26,6 +26,8 @@ from release_notes_generator.utils.constants import (PR_STATE_CLOSED, ISSUE_STAT
     RELEASE_NOTE_DETECTION_PATTERN, RELEASE_NOTE_LINE_MARK)
 from release_notes_generator.utils.pull_reuqest_utils import extract_issue_numbers_from_body
 
+logger = logging.getLogger(__name__)
+
 
 # TODO - recheck the size of class, is there a way to reduce or split it?
 # pylint: disable=too-many-instance-attributes, too-many-public-methods
@@ -328,7 +330,7 @@ class Record:
                 self.__pull_commits[pull.number].append(commit)
                 return
 
-        logging.error("Commit %s not registered in any PR of record %s", commit.sha, self.number)
+        logger.error("Commit %s not registered in any PR of record %s", commit.sha, self.number)
 
     # TODO in Issue named 'Chapter line formatting - default'
     def to_chapter_row(self, row_format="", increment_in_chapters=True) -> str:
