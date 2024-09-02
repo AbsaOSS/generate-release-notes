@@ -24,6 +24,7 @@ from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.utils.gh_action import set_action_output
 from release_notes_generator.utils.logging_config import setup_logging
 
+
 def run():
     """
     Runs the 'Release Notes Generator' GitHub Action.
