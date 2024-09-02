@@ -55,7 +55,7 @@ jobs:
           fi
 
   unit-test:
-    name: Unit tests
+    name: Unit Tests
     runs-on: ubuntu-latest
 
     defaults:

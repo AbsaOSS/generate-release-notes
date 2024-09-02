@@ -3,5 +3,5 @@ pytest==7.4.3
 pytest-cov==5.0.0
 pytest-mock==3.14.0
 PyGithub==1.59.0
-pylint~=3.2.6
-requests~=2.31.0
+pylint==3.2.6
+requests==2.31.0
