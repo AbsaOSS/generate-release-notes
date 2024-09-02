@@ -141,6 +141,7 @@ class ActionInputs:
                 logger.error(error)
             sys.exit(1)
 
+        logging.debug('Repository: %s/%s', owner, repo_name)
         logger.debug("Tag name: %s", tag_name)
         logger.debug("Chapters JSON: %s", chapters_json)
         logger.debug("Published at: %s", published_at)
