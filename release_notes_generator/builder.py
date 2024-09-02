@@ -24,6 +24,8 @@ from release_notes_generator.model.service_chapters import ServiceChapters
 from release_notes_generator.action_inputs import ActionInputs
 
 
+# TODO - reduce to function only after implementing the features. Will be supported more build ways?
+# pylint: disable=too-few-public-methods
 class ReleaseNotesBuilder:
     def __init__(self, records: dict[int, Record], changelog_url: str,
                  formatter: RecordFormatter, custom_chapters: CustomChapters):
@@ -54,7 +56,8 @@ class ReleaseNotesBuilder:
         user_defined_chapters.populate(self.records)
         user_defined_chapters_str = user_defined_chapters.to_string()
 
-        user_defined_labels_nested = [user_defined_chapters.chapters[key].labels for key in user_defined_chapters.chapters]
+        user_defined_labels_nested = [user_defined_chapters.chapters[key].labels
+                                      for key in user_defined_chapters.chapters]
         user_defined_labels = list(chain.from_iterable(user_defined_labels_nested))
 
         if self.warnings:
@@ -65,7 +68,8 @@ class ReleaseNotesBuilder:
 
             service_chapters_str = service_chapters.to_string()
             if len(service_chapters_str) > 0:
-                release_notes = f"""{user_defined_chapters_str}\n\n{service_chapters_str}\n\n#### Full Changelog\n{self.changelog_url}\n"""
+                release_notes = (f"""{user_defined_chapters_str}\n\n{service_chapters_str}\n\n"""
+                                 f"""#### Full Changelog\n{self.changelog_url}\n""")
             else:
                 release_notes = f"""{user_defined_chapters_str}\n\n#### Full Changelog\n{self.changelog_url}\n"""
         else:

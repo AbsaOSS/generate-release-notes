@@ -22,7 +22,7 @@ from release_notes_generator.model.record import Record
 # __init__
 
 def test_chapters_init(custom_chapters):
-    assert custom_chapters.sort_ascending == True
+    assert custom_chapters.sort_ascending
     assert custom_chapters.chapters['Chapter 1'].labels == ['bug', 'enhancement']
     assert custom_chapters.chapters['Chapter 2'].labels == ['feature']
 

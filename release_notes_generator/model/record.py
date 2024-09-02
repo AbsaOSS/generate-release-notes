@@ -22,17 +22,17 @@ from github.PullRequest import PullRequest
 from github.Repository import Repository
 from github.Commit import Commit
 
-from release_notes_generator.utils.constants import Constants
+from release_notes_generator.utils.constants import (PR_STATE_CLOSED, ISSUE_STATE_CLOSED, ISSUE_STATE_OPEN,
+    RELEASE_NOTE_DETECTION_PATTERN, RELEASE_NOTE_LINE_MARK)
 from release_notes_generator.utils.pull_reuqest_utils import extract_issue_numbers_from_body
 
 
+# TODO - recheck the size of class, is there a way to reduce or split it?
+# pylint: disable=too-many-instance-attributes, too-many-public-methods
 class Record:
     """
     A class used to represent a record in the release notes.
     """
-
-    RELEASE_NOTE_DETECTION_PATTERN = "Release notes:"
-    RELEASE_NOTE_LINE_MARK = "-"
 
     def __init__(self, repo: Repository, issue: Optional[Issue] = None):
         """
@@ -78,6 +78,15 @@ class Record:
         return self.__pulls
 
     @property
+    def commits(self) -> dict:
+        """
+        Gets the commits associated with the record.
+
+        :return: The commits associated with the record.
+        """
+        return self.__pull_commits
+
+    @property
     def is_present_in_chapters(self) -> bool:
         """
         Checks if the record is present in any chapters.
@@ -113,9 +122,9 @@ class Record:
         """
         if self.__gh_issue is None:
             # no issue ==> stand-alone PR
-            return self.__pulls[0].state == Constants.PR_STATE_CLOSED
-        else:
-            return self.__gh_issue.state == Constants.ISSUE_STATE_CLOSED
+            return self.__pulls[0].state == PR_STATE_CLOSED
+
+        return self.__gh_issue.state == ISSUE_STATE_CLOSED
 
     @property
     def is_closed_issue(self) -> bool:
@@ -124,7 +133,7 @@ class Record:
 
         :return: A boolean indicating whether the record is a closed issue.
         """
-        return self.is_issue and self.__gh_issue.state == Constants.ISSUE_STATE_CLOSED
+        return self.is_issue and self.__gh_issue.state == ISSUE_STATE_CLOSED
 
     @property
     def is_open_issue(self) -> bool:
@@ -133,7 +142,7 @@ class Record:
 
         :return: A boolean indicating whether the record is a closed issue.
         """
-        return self.is_issue and self.__gh_issue.state == Constants.ISSUE_STATE_OPEN
+        return self.is_issue and self.__gh_issue.state == ISSUE_STATE_OPEN
 
     @property
     def is_merged_pr(self) -> bool:
@@ -155,13 +164,12 @@ class Record:
         """
         if self.__gh_issue is None:
             return [label.name for label in self.__pulls[0].labels]
-        else:
-            return [label.name for label in self.__gh_issue.labels]
+
+        return [label.name for label in self.__gh_issue.labels]
 
     # TODO in Issue named 'Configurable regex-based Release note detection in the PR body'
     #   - 'Release notest:' as detection pattern default - can be defined by user
     #   - '-' as leading line mark for each release note to be used
-    @property
     def get_rls_notes(self, detection_pattern=RELEASE_NOTE_DETECTION_PATTERN, line_mark=RELEASE_NOTE_LINE_MARK) -> str:
         """
         Gets the release notes of the record.
@@ -201,7 +209,7 @@ class Record:
         if self.__is_release_note_detected:
             return self.__is_release_note_detected
 
-        if self.RELEASE_NOTE_LINE_MARK in self.get_rls_notes:
+        if RELEASE_NOTE_LINE_MARK in self.get_rls_notes():
             self.__is_release_note_detected = True
 
         return self.__is_release_note_detected
@@ -283,8 +291,8 @@ class Record:
             if pull.number == pull_number:
                 if pull.number in self.__pull_commits:
                     return len(self.__pull_commits.get(pull.number))
-                else:
-                    return 0
+
+                return 0
 
         return 0
 
@@ -320,7 +328,7 @@ class Record:
                 self.__pull_commits[pull.number].append(commit)
                 return
 
-        logging.error(f"Commit {commit.sha} not registered in any PR of record {self.number}")
+        logging.error("Commit %s not registered in any PR of record %s", commit.sha, self.number)
 
     # TODO in Issue named 'Chapter line formatting - default'
     def to_chapter_row(self, row_format="", increment_in_chapters=True) -> str:
@@ -347,9 +355,8 @@ class Record:
                 row = f"{row}, contributed by {self.contributors}"
 
             if self.contains_release_notes:
-                return f"{row}\n{self.get_rls_notes}"
+                return f"{row}\n{self.get_rls_notes()}"
 
-            return row
         else:
             row = f"#{self.__gh_issue.number} _{self.__gh_issue.title}_"
 
@@ -363,9 +370,9 @@ class Record:
                 row = f"{row} in {self.pr_links}"
 
             if self.contains_release_notes:
-                return f"{row}\n{self.get_rls_notes}"
+                row = f"{row}\n{self.get_rls_notes()}"
 
-            return row
+        return row
 
     def contains_min_one_label(self, labels: list[str]) -> bool:
         """
@@ -423,4 +430,4 @@ class Record:
 
     @staticmethod
     def is_pull_request_merged(pull: PullRequest) -> bool:
-        return pull.state == Constants.PR_STATE_CLOSED and pull.merged_at is not None and pull.closed_at is not None
+        return pull.state == PR_STATE_CLOSED and pull.merged_at is not None and pull.closed_at is not None

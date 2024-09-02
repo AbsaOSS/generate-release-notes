@@ -14,12 +14,11 @@
 # limitations under the License.
 #
 
-import pytest
-
 from release_notes_generator.model.base_chapters import BaseChapters
 
 
 # Local Record class for testing
+# pylint: disable=too-few-public-methods
 class Record:
     pass
 
@@ -30,20 +29,16 @@ class Chapters(BaseChapters):
         pass  # Implement a minimal populate method for testing
 
 
-# Local Test Fixtures
-@pytest.fixture
-def chapters():
-    return Chapters()
-
-
-def test_add_row(chapters):
+def test_add_row():
+    chapters = Chapters()
     chapters.add_row('Chapter 1', 1, 'Row 1')
 
     assert 'Chapter 1' in chapters.chapters
     assert chapters.chapters['Chapter 1'].rows[1] == 'Row 1'
 
 
-def test_to_string(chapters):
+def test_to_string():
+    chapters = Chapters()
     chapters.add_row('Chapter 1', 1, 'Row 1')
     chapters.add_row('Chapter 1', 2, 'Row 2')
 
@@ -53,7 +48,8 @@ def test_to_string(chapters):
     assert 'Row 2' in result
 
 
-def test_titles(chapters):
+def test_titles():
+    chapters = Chapters()
     chapters.add_row('Chapter 1', 1, 'Row 1')
     chapters.add_row('Chapter 2', 2, 'Row 2')
 
@@ -63,7 +59,8 @@ def test_titles(chapters):
     assert 'Chapter 2' in titles
 
 
-def test_sort_ascending(chapters):
+def test_sort_ascending():
+    chapters = Chapters()
     chapters.sort_ascending = False
     chapters.add_row('Chapter 1', 1, 'Row 1')
     chapters.add_row('Chapter 1', 2, 'Row 2')
@@ -75,7 +72,8 @@ def test_sort_ascending(chapters):
     assert '- Row 1' == result.split("\n")[2]
 
 
-def test_print_empty_chapters(chapters):
+def test_print_empty_chapters():
+    chapters = Chapters()
     chapters.print_empty_chapters = False
     chapters.add_row('Chapter 1', 1, 'Row 1')
 

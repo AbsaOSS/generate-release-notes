@@ -1,17 +1,23 @@
 # Generate Release Notes Action
 
 - [Motivation](#motivation)
-- [Usage](#usage)
-  - [Prerequisites](#prerequisites)
-  - [Adding the Action to Your Workflow](#adding-the-action-to-your-workflow)
-  - [Inputs](#inputs)
-- [Run locally](#run-locally)
-- [Run unit test](#run-unit-test)
+- [Requirements](#requirements)
+- [Inputs](#inputs)
+- [Outputs](#outputs)
+- [Usage Example](#usage-example)
 - [Features](#features)
-  - [Release Notes Extraction Process](#release-notes-extraction-process)
-  - [Contributors Mention](#contributors-mention)
-  - [Handling Multiple PRs](#handling-multiple-prs)
-  - [Warnings](#warnings)
+  - [Built-in](#built-in)
+    - [Release Notes Extraction Process](#release-notes-extraction-process)
+    - [Contributors Mention](#contributors-mention)
+    - [Handling Multiple PRs](#handling-multiple-prs)
+    - [No Release Notes Found](#no-release-notes-found)
+  - [Select start date for closed issues and PRs](#select-start-date-for-closed-issues-and-prs)
+  - [Enable skipping of release notes for specific issues using label](#enable-skipping-of-release-notes-for-specific-issues-using-label)
+  - [Enable Service Chapters](#enable-service-chapters)
+- [Get Started](#get-started)
+- [Run Static Code Analysis](#running-static-code-analysis)
+- [Run Unit Test](#running-unit-test)
+- [Run Action Locally](#run-action-locally)
 - [Contribution Guidelines](#contribution-guidelines)
   - [How to Contribute](#how-to-contribute)
 - [License Information](#license-information)
@@ -133,37 +139,41 @@ Add the following step to your GitHub workflow (in example are used non-default 
 ```
 
 ## Features
-### Release Notes Extraction Process
+### Built-in
+#### Release Notes Extraction Process
 
 This action requires that your GitHub issues include comments with specific release notes. Here's how it works:
 
-#### Extraction Method
-The action scans through comments on each closed issue since the last release. It identifies comments that follow the specified format and extracts the content as part of the release notes.
+**Extraction Method**:
+- The action scans through comments on each closed issue since the last release. It identifies comments that follow the specified format and extracts the content as part of the release notes.
+- The time considered for the previous release is based on its creation time. This means that the action will look for issues closed after the creation time of the most recent release to ensure that all relevant updates since that release are included.
 
-**Note**: The time considered for the previous release is based on its creation time. This means that the action will look for issues closed after the creation time of the most recent release to ensure that all relevant updates since that release are included.
-
-#### Comment Format
-For an issue's contributions to be included in the release notes, it must contain a comment starting with "Release Notes" followed by the note content. This comment is typically added by the contributors.
-
-Here is an example of the content for a 'Release Notes' string, which is not case-sensitive:
+**Comment Format**
+- For an issue's contributions to be included in the release notes, it must contain a comment starting with "Release Notes" followed by the note content. This comment is typically added by the contributors.
+- Here is an example of the content for a 'Release Notes' string, which is not case-sensitive:
 ```
 Release Notes
 - This update introduces a new caching mechanism that improves performance by 20%.
 ```
-Using `-` as a bullet point for each note is the best practice. The Markdown parser will automatically convert it to a list.
+- Using `-` as a bullet point for each note is the best practice. The Markdown parser will automatically convert it to a list.
+- These comments are not required for action functionality. If an issue does not contain a "Release Notes" comment, it will be marked accordingly in the release notes. This helps maintainers quickly identify which issues need attention for documentation.
 
-These comments are not required for action functionality. If an issue does not contain a "Release Notes" comment, it will be marked accordingly in the release notes. This helps maintainers quickly identify which issues need attention for documentation.
-
-### Contributors Mention
+#### Contributors Mention
 Along with the release note content, the action also gathers a list of contributors for each issue. This includes issue assignees and authors of linked pull requests' commits, providing acknowledgment for their contributions in the release notes.
 
-### Handling Multiple PRs
+#### Handling Multiple PRs
 If an issue is linked to multiple PRs, the action fetches and aggregates contributions from all linked PRs.
 
 #### No Release Notes Found
 If no valid "Release Notes" comment is found in an issue, it will be marked accordingly. This helps maintainers quickly identify which issues need attention for documentation.
 
-#### Warnings
+### Select start date for closed issues and PRs
+By set **published-at** to true the action will use the `published-at` timestamp of the latest release as the reference point for searching closed issues and PRs, instead of the `created-at` date. If first release, repository creation date is used. 
+
+### Enable skipping of release notes for specific issues using label
+By set **skip-release-notes-label** to true the action will skip all issues and related PRs if they contain a label defined in configuration. This is useful for issues that are not relevant for release notes.
+
+### Enable Service Chapters
 If the `warnings` option is enabled in the action's configuration, the release notes will include sections that highlight possible issues.
 
 The action includes four specific warning chapters to highlight potential areas of improvement in release documentation. Each chapter serves a distinct purpose:
@@ -215,12 +225,44 @@ pip install -r requirements.txt
 export PYTHONPATH=<your path>/generate-release-notes/src
 ```
 
-## Running unit test
+## Running Static Code Analysis
+
+This project uses Pylint tool for static code analysis. Pylint analyses your code without actually running it. It checks for errors, enforces, coding standards, looks for code smells etc.
+
+Pylint displays a global evaluation score for the code, rated out of a maximum score of 10.0. We are aiming to keep our code quality high above the score 9.5.
+
+### Set Up Python Environment
+```shell
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+# run your commands
+
+deactivate
+```
+
+This command will also install a Pylint tool, since it is listed in the project requirements.
+
+### Run Pylint
+Run Pylint on all files that are currently tracked by Git in the project.
+```
+pylint $(git ls-files '*.py')
+```
+
+To run Pylint on a specific file, follow the pattern `pylint <path_to_file>/<name_of_file>.py`.
+
+Example:
+```
+pylint release-notes-generator/generator.py
+``` 
+
+## Running Unit Test
 
 Unit tests are written using pytest. To run the tests, use the following command:
 
 ```
-pytest
+pytest tests/
 ```
 
 This will execute all tests located in the tests directory and generate a code coverage report.
@@ -268,32 +310,32 @@ export INPUT_GITHUB_TOKEN=$(printenv <your-env-token-var>)
 python3 ./<path-to-action-project-root>/main.py
 ```
 
-### Contribution Guidelines
+## Contribution Guidelines
 
 We welcome contributions to the Generate Release Notes Action! Whether you're fixing bugs, improving documentation, or proposing new features, your help is appreciated.
 
-#### How to Contribute
+### How to Contribute
 - **Submit Pull Requests**: Feel free to fork the repository, make changes, and submit a pull request. Please ensure your code adheres to the existing style and all tests pass.
 - **Report Issues**: If you encounter any bugs or issues, please report them via the repository's [Issues page](https://github.com/AbsaOSS/generate-release-notes/issues).
 - **Suggest Enhancements**: Have ideas on how to make this action better? Open an issue to suggest enhancements.
 
 Before contributing, please review our [contribution guidelines](https://github.com/AbsaOSS/generate-release-notes/blob/master/CONTRIBUTING.md) for more detailed information.
 
-### License Information
+## License Information
 
 This project is licensed under the Apache License 2.0. It is a liberal license that allows you great freedom in using, modifying, and distributing this software, while also providing an express grant of patent rights from contributors to users.
 
 For more details, see the [LICENSE](https://github.com/AbsaOSS/generate-release-notes/blob/master/LICENSE) file in the repository.
 
-### Contact or Support Information
+## Contact or Support Information
 
 If you need help with using or contributing to Generate Release Notes Action, or if you have any questions or feedback, don't hesitate to reach out:
 
 - **Issue Tracker**: For technical issues or feature requests, use the [GitHub Issues page](https://github.com/AbsaOSS/generate-release-notes/issues).
 - **Discussion Forum**: For general questions and discussions, join our [GitHub Discussions forum](https://github.com/AbsaOSS/generate-release-notes/discussions).
 
-### FAQs
-#### Why is in generated Release Notes content mentioned co-author without link to his GitHub account?
+## FAQs
+### Why is in generated Release Notes content mentioned co-author without link to his GitHub account?
 Co-authors can be added into a commit message by using the `Co-authored-by` trailer in the commit message. This trailer is used by GitHub to link the commit to the co-author's GitHub account. The co-author's name is mentioned in the generated Release Notes without a link to his GitHub account.
 ```
 Co-authored-by: NAME <NAME@EXAMPLE.COM>
@@ -301,7 +343,7 @@ Co-authored-by: NAME <NAME@EXAMPLE.COM>
 The Release Notes generator is trying to get Github user by call GitHub API with the co-author's email address. If the user is found, the generator will use the user's name and link to his GitHub account. If the user is not found, the generator will use the co-author's name without a link to his GitHub account.
 This leads to the situation when the co-author's name is mentioned in the generated Release Notes without a link to his GitHub account.
 
-#### Will the action provide duplicate line in chapters if the issue contains multiple labels?
+### Will the action provide duplicate line in chapters if the issue contains multiple labels?
 Let's imagine that we have an issue which has three labels: `enhancement`, `feature`, `bug`.
 We defined chapters for our GH actions this way:
 ```
@@ -315,8 +357,8 @@ We defined chapters for our GH actions this way:
 Then in chapters `New Features 🎉` and `Bugfixes 🛠` will be duplicated lines for this issue. When mentioned second+ times then **[Duplicate]** prefix will be visible.
 In the `New Features 🎉` chapter will be mentioned this issue once only.
 
-#### What will happen when the issue contains multiple "Release Notes" comments?
+### What will happen when the issue contains multiple "Release Notes" comments?
 All issue comments are checked for presence of `Release Notes` string. All detected release notes are collected printed under issue.
 
-#### What will happen when Merged PR is linked to open issues?
+### What will happen when Merged PR is linked to open issues?
 The PR will be mentioned in warning chapter **Merged PRs Linked to Open Issue**.

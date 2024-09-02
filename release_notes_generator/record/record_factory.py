@@ -29,13 +29,15 @@ from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
 from release_notes_generator.utils.pull_reuqest_utils import extract_issue_numbers_from_body
 
 
+# pylint: disable=too-few-public-methods
 class RecordFactory:
     """
     A class used to generate records for release notes.
     """
 
     @staticmethod
-    def generate(github: Github, repo: Repository, issues: list[Issue], pulls: list[PullRequest], commits: list[Commit]) -> dict[int, Record]:
+    def generate(github: Github, repo: Repository, issues: list[Issue], pulls: list[PullRequest],
+                 commits: list[Commit]) -> dict[int, Record]:
         """
         Generates a dictionary of ReleaseNotesRecord instances.
         The key is the issue or pr number.
@@ -52,13 +54,15 @@ class RecordFactory:
 
         def create_record_for_issue(r: Repository, i: Issue):
             records[i.number] = Record(r, i)
-            logging.debug(f"Created record for issue {i.number}: {i.title}")
+            logging.debug("Created record for issue %d: %s", i.number, i.title)
 
         def register_pull_request(pull: PullRequest):
             for parent_issue_number in extract_issue_numbers_from_body(pull):
                 if parent_issue_number not in records:
                     logging.warning(
-                        f"Detected PR {pull.number} linked to issue {parent_issue_number} which is not in the list of received issues. Fetching ..."
+                        "Detected PR %d linked to issue %d which is not in the list of received issues. "
+                        "Fetching ...",
+                        pull.number, parent_issue_number
                     )
                     parent_issue = safe_call(repo.get_issue)(parent_issue_number)
                     if parent_issue is not None:
@@ -66,14 +70,14 @@ class RecordFactory:
 
                 if parent_issue_number in records:
                     records[parent_issue_number].register_pull_request(pull)
-                    logging.debug(
-                        f"Registering PR {pull.number}: {pull.title} to Issue {parent_issue_number}"
-                    )
+                    logging.debug("Registering PR %d: %s to Issue %d",
+                                  pull.number, pull.title, parent_issue_number)
                 else:
                     records[pull.number] = Record(repo)
                     records[pull.number].register_pull_request(pull)
                     logging.debug(
-                        f"Registering stand-alone PR {pull.number}: {pull.title} as mentioned Issue {parent_issue_number} not found."
+                        "Registering stand-alone PR %d: %s as mentioned Issue %d not found.",
+                        pull.number, pull.title, parent_issue_number
                     )
 
         def register_commit_to_record(commit: Commit):
@@ -94,11 +98,12 @@ class RecordFactory:
             if not extract_issue_numbers_from_body(pull):
                 records[pull.number] = Record(repo)
                 records[pull.number].register_pull_request(pull)
-                logging.debug(f"Created record for PR {pull.number}: {pull.title}")
+                logging.debug("Created record for PR %d: %s", pull.number, pull.title)
             else:
                 register_pull_request(pull)
 
         detected_prs_count = sum(register_commit_to_record(commit) for commit in commits)
 
-        logging.info(f"Generated {len(records)} records from {len(issues)} issues and {len(pulls)} PRs, with {detected_prs_count} commits detected.")
+        logging.info("Generated %d records from %d issues and %d PRs, with %d commits detected.",
+                     len(records), len(issues), len(pulls), detected_prs_count)
         return records

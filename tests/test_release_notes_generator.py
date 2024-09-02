@@ -42,7 +42,7 @@ def test_generate_release_notes_repository_not_found(mocker):
 
 
 def test_generate_release_notes_latest_release_not_found(
-        mocker, mock_repo, mock_git_release, mock_issue_closed, mock_issue_closed_i1_bug,
+        mocker, mock_repo, mock_issue_closed, mock_issue_closed_i1_bug,
         mock_pull_closed_with_rls_notes_101, mock_pull_closed_with_rls_notes_102, mock_commit
 ):
     github_mock = mocker.Mock(spec=Github)

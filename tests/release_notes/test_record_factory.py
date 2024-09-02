@@ -18,6 +18,7 @@ import time
 
 from datetime import datetime
 
+from github import Github
 from github.Issue import Issue
 from github.PullRequest import PullRequest
 from github.Commit import Commit
@@ -148,7 +149,8 @@ def setup_issues_pulls_commits(mocker):
     return mock_git_issue1, mock_git_issue2, mock_git_pr1, mock_git_pr2, mock_git_commit1, mock_git_commit2
 
 
-def test_generate_with_issues_and_pulls_and_commits(mock_github_client, mock_repo, mocker):
+def test_generate_with_issues_and_pulls_and_commits(mocker, mock_repo):
+    mock_github_client = mocker.Mock(spec=Github)
     issue1, issue2, pr1, pr2, commit1, commit2 = setup_issues_pulls_commits(mocker)
     issues = [issue1, issue2]
     pulls = [pr1, pr2]
@@ -178,7 +180,9 @@ def test_generate_with_issues_and_pulls_and_commits(mock_github_client, mock_rep
     assert 1 == records[2].pull_request_commit_count(102)
 
 
-def test_generate_with_no_commits(mock_github_client, mock_repo, mocker):
+def test_generate_with_no_commits(mocker, mock_repo):
+    mock_github_client = mocker.Mock(spec=Github)
+    # pylint: disable=unused-variable
     issue1, issue2, pr1, pr2, commit1, commit2 = setup_issues_pulls_commits(mocker)
     issues = [issue1]
     pulls = [pr1, pr2]  # PR linked to a non-fetched issues (due to since condition)
@@ -207,12 +211,18 @@ def test_generate_with_no_commits(mock_github_client, mock_repo, mocker):
     assert 0 == records[2].pull_request_commit_count(2)
 
 
-def test_generate_with_no_issues(mock_github_client, mock_repo, mocker):
+def test_generate_with_no_issues(mocker, request):
+    mock_github_client = mocker.Mock(spec=Github)
     pr1, pr2, commit1, commit2 = setup_no_issues_pulls_commits(mocker)
     pulls = [pr1, pr2]
     commits = [commit1, commit2]
 
-    records = RecordFactory.generate(mock_github_client, mock_repo, [], pulls, commits)
+    records = RecordFactory.generate(
+        mock_github_client,
+        request.getfixturevalue("mock_repo"),
+        [],
+        pulls,
+        commits)
 
     # Verify the record creation
     assert isinstance(records[101], Record)
@@ -230,7 +240,8 @@ def test_generate_with_no_issues(mock_github_client, mock_repo, mocker):
     assert 1 == records[102].pull_request_commit_count(102)
 
 
-def test_generate_with_no_pulls(mock_github_client, mock_repo, mocker):
+def test_generate_with_no_pulls(mocker, mock_repo):
+    mock_github_client = mocker.Mock(spec=Github)
     issue1, issue2 = setup_issues_no_pulls_no_commits(mocker)
     issues = [issue1, issue2]
 
@@ -245,7 +256,8 @@ def test_generate_with_no_pulls(mock_github_client, mock_repo, mocker):
     assert 0 == records[2].pulls_count
 
 
-def test_generate_with_wrong_issue_number_in_pull_body_mention(mock_github_client, mock_repo, mocker):
+def test_generate_with_wrong_issue_number_in_pull_body_mention(mocker, mock_repo):
+    mock_github_client = mocker.Mock(spec=Github)
     issue1, issue2, pr1, pr2, commit1, commit2 = setup_issues_pulls_commits(mocker)
     pr1.body = "Closes #100"
     issues = [issue1, issue2]

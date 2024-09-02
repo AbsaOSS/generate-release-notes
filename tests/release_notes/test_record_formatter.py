@@ -20,7 +20,8 @@ from release_notes_generator.record.record_formatter import RecordFormatter
 def test_format_record_with_issue(record_with_issue_closed_one_pull):
     formatter = RecordFormatter()
     formatted = formatter.format(record_with_issue_closed_one_pull)
-    expected_output = "- #121 _Fix the bug_ implemented by developers in [#123](http://example.com/pull/123)\n  - release notes 1\n  - release notes 2"
+    expected_output = ("- #121 _Fix the bug_ implemented by developers in "
+                       "[#123](http://example.com/pull/123)\n  - release notes 1\n  - release notes 2")
 
     assert expected_output == formatted
 
@@ -29,13 +30,15 @@ def test_format_record_with_issue(record_with_issue_closed_one_pull):
 # def test_format_record_without_issue(record_without_issue):
 #     formatter = RecordFormatter()
 #     formatted = formatter.format(record_without_issue)
-#     expected_output = "- #1 _Pull Request Title_ implemented by developers in [#1](http://example.com/pull/1), [#2](http://example.com/pull/2)\n  - release notes 1\n  - release notes 2"
+#     expected_output = "- #1 _Pull Request Title_ implemented by developers in [#1](http://example.com/pull/1),
+#                       [#2](http://example.com/pull/2)\n  - release notes 1\n  - release notes 2"
 #     assert formatted == expected_output
 #
 #
 # def test_format_pulls():
 #     formatter = RecordFormatter()
-#     pulls = [PullRequest(number=1, url="http://example.com/pull/1"), PullRequest(number=2, url="http://example.com/pull/2")]
+#     pulls = [PullRequest(number=1, url="http://example.com/pull/1"),
+#              PullRequest(number=2, url="http://example.com/pull/2")]
 #     formatted_pulls = formatter._format_pulls(pulls)
 #     expected_output = "[#1](http://example.com/pull/1), [#2](http://example.com/pull/2)"
 #     assert formatted_pulls == expected_output

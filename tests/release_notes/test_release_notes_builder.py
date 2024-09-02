@@ -72,13 +72,14 @@ from release_notes_generator.builder import ReleaseNotesBuilder
 """
 
 
+# pylint: disable=too-few-public-methods
 class MockLabel:
     def __init__(self, name):
         self.name = name
 
 
 default_formatter = RecordFormatter()
-default_changelog_url = "http://example.com/changelog"
+DEFAULT_CHANGELOG_URL = "http://example.com/changelog"
 default_chapters_json = json.dumps([
     {"title": "Breaking Changes 💥", "label": "breaking-change"},
     {"title": "New Features 🎉", "label": "feature"},
@@ -86,7 +87,7 @@ default_chapters_json = json.dumps([
     {"title": "Bugfixes 🛠", "label": "bug"}
 ])
 
-release_notes_no_data = """### Breaking Changes 💥
+RELEASE_NOTES_NO_DATA = """### Breaking Changes 💥
 No entries detected.
 
 ### New Features 🎉
@@ -117,7 +118,7 @@ Previous filters caught all Issues or Pull Requests.
 http://example.com/changelog
 """
 
-release_notes_no_data_no_warning = """### Breaking Changes 💥
+RELEASE_NOTES_NO_DATA_NO_WARNING = """### Breaking Changes 💥
 No entries detected.
 
 ### New Features 🎉
@@ -130,13 +131,13 @@ No entries detected.
 http://example.com/changelog
 """
 
-release_notes_no_data_no_warning_no_empty_chapters = """#### Full Changelog
+RELEASE_NOTES_NO_DATA_NO_WARNING_NO_EMPTY_CHAPTERS = """#### Full Changelog
 http://example.com/changelog
 """
 
-release_notes_no_data_no_empty_chapters = release_notes_no_data_no_warning_no_empty_chapters
+RELEASE_NOTES_NO_DATA_NO_EMPTY_CHAPTERS = RELEASE_NOTES_NO_DATA_NO_WARNING_NO_EMPTY_CHAPTERS
 
-release_notes_data_custom_chapters_one_label = """### Chapter 1 🛠
+RELEASE_NOTES_DATA_CUSTOM_CHAPTERS_ONE_LABEL = """### Chapter 1 🛠
 - #122 _I1+bug_ in [#101](https://github.com/org/repo/pull/101), [#102](https://github.com/org/repo/pull/102)
   - PR 101 1st release note
   - PR 101 2nd release note
@@ -147,7 +148,7 @@ release_notes_data_custom_chapters_one_label = """### Chapter 1 🛠
 http://example.com/changelog
 """
 
-release_notes_data_custom_chapters_more_labels_duplicity_reduction_on = """### Chapter 1 🛠
+RELEASE_NOTES_DATA_CUSTOM_CHAPTERS_MORE_LABELS_DUPLICITY_REDUCTION_ON = """### Chapter 1 🛠
 - #122 _I1+bug-enhancement_ in [#101](https://github.com/org/repo/pull/101), [#102](https://github.com/org/repo/pull/102)
   - PR 101 1st release note
   - PR 101 2nd release note
@@ -158,7 +159,7 @@ release_notes_data_custom_chapters_more_labels_duplicity_reduction_on = """### C
 http://example.com/changelog
 """
 
-release_notes_data_custom_chapters_more_labels_duplicity_reduction_off = """### New Features 🎉
+RELEASE_NOTES_DATA_CUSTOM_CHAPTERS_MORE_LABELS_DUPLICITY_REDUCTION_OFF = """### New Features 🎉
 - #1 _I1+0PR+2L-bug-enhancement_ in [#101](https://github.com/org/repo/pull/101), [#102](https://github.com/org/repo/pull/102)
   - PR 101 1st release note
   - PR 101 2nd release note
@@ -171,7 +172,7 @@ TODO - add bug chapter
 http://example.com/changelog
 """
 
-release_notes_data_service_chapters_closed_issue_no_pr_no_user_labels = """### Closed Issues without Pull Request ⚠️
+RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_ISSUE_NO_PR_NO_USER_LABELS = """### Closed Issues without Pull Request ⚠️
 - #121 _Fix the bug_
 
 ### Closed Issues without User Defined Labels ⚠️
@@ -181,7 +182,8 @@ release_notes_data_service_chapters_closed_issue_no_pr_no_user_labels = """### C
 http://example.com/changelog
 """
 
-release_notes_data_service_chapters_merged_pr_no_issue_no_user_labels = """### Merged PRs without Issue and User Defined Labels ⚠️
+RELEASE_NOTES_DATA_SERVICE_CHAPTERS_MERGED_PR_NO_ISSUE_NO_USER_LABELS = \
+"""### Merged PRs without Issue and User Defined Labels ⚠️
 - PR: #123 _Fixed bug_
   - Fixed bug
   - Improved performance
@@ -190,7 +192,8 @@ release_notes_data_service_chapters_merged_pr_no_issue_no_user_labels = """### M
 http://example.com/changelog
 """
 
-release_notes_data_service_chapters_closed_pr_no_issue_no_user_labels = """### Closed PRs without Issue and User Defined Labels ⚠️
+RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_PR_NO_ISSUE_NO_USER_LABELS = \
+"""### Closed PRs without Issue and User Defined Labels ⚠️
 - PR: #123 _Fixed bug_
   - Fixed bug
   - Improved performance
@@ -199,7 +202,8 @@ release_notes_data_service_chapters_closed_pr_no_issue_no_user_labels = """### C
 http://example.com/changelog
 """
 
-release_notes_data_service_chapters_open_issue_and_merged_pr_no_user_labels = """### Merged PRs Linked to 'Not Closed' Issue ⚠️
+RELEASE_NOTES_DATA_SERVICE_CHAPTERS_OPEN_ISSUE_AND_MERGED_PR_NO_USER_LABELS = \
+"""### Merged PRs Linked to 'Not Closed' Issue ⚠️
 - #122 _I1 open_ in [#101](https://github.com/org/repo/pull/101), [#102](https://github.com/org/repo/pull/102)
   - PR 101 1st release note
   - PR 101 2nd release note
@@ -210,7 +214,8 @@ release_notes_data_service_chapters_open_issue_and_merged_pr_no_user_labels = ""
 http://example.com/changelog
 """
 
-release_notes_data_service_chapters_open_issue_and_merged_pr_no_user_labels_issue_not_part_of_record = """### Others - No Topic ⚠️
+RELEASE_NOTES_DATA_SERVICE_CHAPTERS_OPEN_ISSUE_AND_MERGED_PR_NO_USER_LABELS_ISSUE_NOT_PART_OF_RECORD = \
+"""### Others - No Topic ⚠️
 - PR: #101 _PR 101_
   - PR 101 1st release note
   - PR 101 2nd release note
@@ -221,14 +226,14 @@ release_notes_data_service_chapters_open_issue_and_merged_pr_no_user_labels_issu
 http://example.com/changelog
 """
 
-release_notes_data_closed_issue_no_pr_with_user_labels = """### Closed Issues without Pull Request ⚠️
+RELEASE_NOTES_DATA_CLOSED_ISSUE_NO_PR_WITH_USER_LABELS = """### Closed Issues without Pull Request ⚠️
 - #121 _Fix the bug_
 
 #### Full Changelog
 http://example.com/changelog
 """
 
-release_notes_data_closed_issue_with_pr_without_user_labels = """### Closed Issues without User Defined Labels ⚠️
+RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_PR_WITHOUT_USER_LABELS = """### Closed Issues without User Defined Labels ⚠️
 - #122 _I1_ in [#101](https://github.com/org/repo/pull/101), [#102](https://github.com/org/repo/pull/102)
   - PR 101 1st release note
   - PR 101 2nd release note
@@ -239,7 +244,7 @@ release_notes_data_closed_issue_with_pr_without_user_labels = """### Closed Issu
 http://example.com/changelog
 """
 
-release_notes_data_open_pr_without_issue = """### Others - No Topic ⚠️
+RELEASE_NOTES_DATA_OPEN_PR_WITHOUT_ISSUE = """### Others - No Topic ⚠️
 - PR: #123 _Fix bug_
   - Fixed bug
   - Improved performance
@@ -248,7 +253,7 @@ release_notes_data_open_pr_without_issue = """### Others - No Topic ⚠️
 http://example.com/changelog
 """
 
-release_notes_data_merged_pr_with_user_labels_duplicity_reduction_on = """### Chapter 1 🛠
+RELEASE_NOTES_DATA_MERGED_PR_WITH_USER_LABELS_DUPLICITY_REDUCTION_ON = """### Chapter 1 🛠
 - PR: #123 _Fixed bug_
   - Fixed bug
   - Improved performance
@@ -257,7 +262,7 @@ release_notes_data_merged_pr_with_user_labels_duplicity_reduction_on = """### Ch
 http://example.com/changelog
 """
 
-release_notes_data_merged_prs_with_open_issues = """### Merged PRs Linked to 'Not Closed' Issue ⚠️
+RELEASE_NOTES_DATA_MERGED_PRS_WITH_OPEN_ISSUES = """### Merged PRs Linked to 'Not Closed' Issue ⚠️
 - PR: #101 _Fixed bug_
   - PR 101 1st release note
   - PR 101 2nd release note
@@ -269,7 +274,8 @@ release_notes_data_merged_prs_with_open_issues = """### Merged PRs Linked to 'No
 http://example.com/changelog
 """
 
-release_notes_data_closed_issue_with_merged_prs_without_user_labels = """### Closed Issues without User Defined Labels ⚠️
+RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_MERGED_PRS_WITHOUT_USER_LABELS = \
+"""### Closed Issues without User Defined Labels ⚠️
 - #121 _Fix the bug_ in [#123](https://github.com/org/repo/pull/123)
   - Fixed bug
   - Improved performance
@@ -278,7 +284,7 @@ release_notes_data_closed_issue_with_merged_prs_without_user_labels = """### Clo
 http://example.com/changelog
 """
 
-release_notes_data_closed_issue_with_merged_prs_with_user_labels = """### Chapter 1 🛠
+RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_MERGED_PRS_WITH_USER_LABELS = """### Chapter 1 🛠
 - #122 _I1+bug_ in [#123](https://github.com/org/repo/pull/123)
   - Fixed bug
   - Improved performance
@@ -294,11 +300,11 @@ def test_build_no_data():
     custom_chapters = CustomChapters()
     custom_chapters.from_json(default_chapters_json)
 
-    expected_release_notes = release_notes_no_data
+    expected_release_notes = RELEASE_NOTES_NO_DATA
 
     builder = ReleaseNotesBuilder(
         records={},                         # empty record data set
-        changelog_url=default_changelog_url,
+        changelog_url=DEFAULT_CHANGELOG_URL,
         formatter=default_formatter,
         custom_chapters=custom_chapters)
 
@@ -311,11 +317,11 @@ def test_build_no_data_no_warnings(mocker):
     custom_chapters.from_json(default_chapters_json)
     mocker.patch('release_notes_generator.builder.ActionInputs.get_warnings', return_value=False)
 
-    expected_release_notes = release_notes_no_data_no_warning
+    expected_release_notes = RELEASE_NOTES_NO_DATA_NO_WARNING
 
     builder = ReleaseNotesBuilder(
         records={},                         # empty record data set
-        changelog_url=default_changelog_url,
+        changelog_url=DEFAULT_CHANGELOG_URL,
         formatter=default_formatter,
         custom_chapters=custom_chapters,
         )
@@ -331,11 +337,11 @@ def test_build_no_data_no_warnings_no_empty_chapters(mocker):
     mocker.patch('release_notes_generator.builder.ActionInputs.get_warnings', return_value=False)
     mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
 
-    expected_release_notes = release_notes_no_data_no_warning_no_empty_chapters
+    expected_release_notes = RELEASE_NOTES_NO_DATA_NO_WARNING_NO_EMPTY_CHAPTERS
 
     builder = ReleaseNotesBuilder(
         records={},
-        changelog_url=default_changelog_url,
+        changelog_url=DEFAULT_CHANGELOG_URL,
         formatter=default_formatter,
         custom_chapters=custom_chapters_no_empty_chapters,
         )
@@ -350,11 +356,11 @@ def test_build_no_data_no_empty_chapters(mocker):
     custom_chapters_no_empty_chapters.print_empty_chapters = False
     mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
 
-    expected_release_notes = release_notes_no_data_no_empty_chapters
+    expected_release_notes = RELEASE_NOTES_NO_DATA_NO_EMPTY_CHAPTERS
 
     builder = ReleaseNotesBuilder(
         records={},
-        changelog_url=default_changelog_url,
+        changelog_url=DEFAULT_CHANGELOG_URL,
         formatter=default_formatter,
         custom_chapters=custom_chapters_no_empty_chapters,
         )
@@ -388,7 +394,7 @@ def test_build_no_data_no_empty_chapters(mocker):
 #   from service chapters point of view
 # ---------------------------------------------------------------------------------------------
 # Happy paths - see closed issue in services chapters
-    # Test: issue in Closed (1st) - visible in service chapters - without pull requests and user defined labels - no labels
+    # Test: issue in Closed (1st) - visible in service chapters - without pr and user defined labels - no labels
         # "test_name": "test_build_closed_issue_service_chapter_without_pull_request_and_user_defined_label",
         # "expected_release_notes": release_notes_data_service_chapters_closed_issue_no_pr_no_user_labels,
         # "records": {0: Record(repo=mock_repo(), issue=__get_default_issue_mock(number=1, state="closed"))}
@@ -432,7 +438,8 @@ def test_build_no_data_no_empty_chapters(mocker):
     # Test: issue in Closed (not_planned) state is visible in the release notes - no labels
         # "test_name": "test_build_closed_not_planned_issue",
         # "expected_release_notes": release_notes_data_service_chapters_closed_issue_no_pr_no_user_labels,
-        # "records": {0: Record(mock_repo(), __get_default_issue_mock(number=1, state="closed", state_reason="not_planned"))}
+        # "records": {0: Record(mock_repo(),
+        #  __get_default_issue_mock(number=1, state="closed", state_reason="not_planned"))}
 
 
 # ---------------------------------------------------------------------------------------------
@@ -440,7 +447,8 @@ def test_build_no_data_no_empty_chapters(mocker):
     # Test: Closed Issue without linked PR with user labels ==> not part of custom chapters as there is no merged change
         # "test_name": "test_build_closed_issue_with_user_labels_no_prs",
         # "expected_release_notes": release_notes_data_closed_issue_no_pr_with_user_labels,
-        # "records": {0: Record(mock_repo(), __get_default_issue_mock(number=1, state="closed", labels=['bug', 'breaking-changes']))}
+        # "records": {0: Record(mock_repo(),
+        # __get_default_issue_mock(number=1, state="closed", labels=['bug', 'breaking-changes']))}
 
     # Test: Closed Issue without linked PR without user labels
         #   - covered in 'test_build_merged_pr_service_chapter_without_issue_and_user_labels'
@@ -519,12 +527,12 @@ def test_build_no_data_no_empty_chapters(mocker):
 def test_build_closed_issue_with_one_custom_label(
         custom_chapters_not_print_empty_chapters, record_with_issue_closed_two_pulls, mocker
 ):
-    expected_release_notes = release_notes_data_custom_chapters_one_label
+    expected_release_notes = RELEASE_NOTES_DATA_CUSTOM_CHAPTERS_ONE_LABEL
     rec = record_with_issue_closed_two_pulls
     mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
 
     builder = ReleaseNotesBuilder(records={rec.number: rec},
-                                  changelog_url=default_changelog_url,
+                                  changelog_url=DEFAULT_CHANGELOG_URL,
                                   formatter=default_formatter,
                                   custom_chapters=custom_chapters_not_print_empty_chapters,
                                   )
@@ -537,14 +545,14 @@ def test_build_closed_issue_with_one_custom_label(
 def test_build_closed_issue_with_more_custom_labels_duplicity_reduction_on(
         custom_chapters_not_print_empty_chapters, record_with_issue_closed_two_pulls, mocker
 ):
-    expected_release_notes = release_notes_data_custom_chapters_more_labels_duplicity_reduction_on
+    expected_release_notes = RELEASE_NOTES_DATA_CUSTOM_CHAPTERS_MORE_LABELS_DUPLICITY_REDUCTION_ON
     rec = record_with_issue_closed_two_pulls
     rec.issue.labels.append(MockLabel("enhancement"))
     rec.issue.title = 'I1+bug-enhancement'
     mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
 
     builder = ReleaseNotesBuilder(records={rec.number: rec},
-                                  changelog_url=default_changelog_url,
+                                  changelog_url=DEFAULT_CHANGELOG_URL,
                                   formatter=default_formatter,
                                   custom_chapters=custom_chapters_not_print_empty_chapters,
                                   )
@@ -557,12 +565,12 @@ def test_build_closed_issue_with_more_custom_labels_duplicity_reduction_on(
 def test_build_closed_issue_service_chapter_without_pull_request_and_user_defined_label(
         custom_chapters_not_print_empty_chapters, record_with_issue_closed_no_pull, mocker
 ):
-    expected_release_notes = release_notes_data_service_chapters_closed_issue_no_pr_no_user_labels
+    expected_release_notes = RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_ISSUE_NO_PR_NO_USER_LABELS
     rec = record_with_issue_closed_no_pull
     mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
 
     builder = ReleaseNotesBuilder(records={rec.number: rec},
-                                  changelog_url=default_changelog_url,
+                                  changelog_url=DEFAULT_CHANGELOG_URL,
                                   formatter=default_formatter,
                                   custom_chapters=custom_chapters_not_print_empty_chapters,
                                   )
@@ -575,12 +583,12 @@ def test_build_closed_issue_service_chapter_without_pull_request_and_user_define
 def test_build_merged_pr_service_chapter_without_issue_and_user_labels(
         custom_chapters_not_print_empty_chapters, record_with_no_issue_one_pull_merged, mocker
 ):
-    expected_release_notes = release_notes_data_service_chapters_merged_pr_no_issue_no_user_labels
+    expected_release_notes = RELEASE_NOTES_DATA_SERVICE_CHAPTERS_MERGED_PR_NO_ISSUE_NO_USER_LABELS
     rec = record_with_no_issue_one_pull_merged
     mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
 
     builder = ReleaseNotesBuilder(records={rec.number: rec},
-                                  changelog_url=default_changelog_url,
+                                  changelog_url=DEFAULT_CHANGELOG_URL,
                                   formatter=default_formatter,
                                   custom_chapters=custom_chapters_not_print_empty_chapters,
                                   )
@@ -593,12 +601,12 @@ def test_build_merged_pr_service_chapter_without_issue_and_user_labels(
 def test_build_closed_pr_service_chapter_without_issue_and_user_labels(
         custom_chapters_not_print_empty_chapters, record_with_no_issue_one_pull_closed, mocker
 ):
-    expected_release_notes = release_notes_data_service_chapters_closed_pr_no_issue_no_user_labels
+    expected_release_notes = RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_PR_NO_ISSUE_NO_USER_LABELS
     rec = record_with_no_issue_one_pull_closed
     mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
 
     builder = ReleaseNotesBuilder(records={rec.number: rec},
-                                  changelog_url=default_changelog_url,
+                                  changelog_url=DEFAULT_CHANGELOG_URL,
                                   formatter=default_formatter,
                                   custom_chapters=custom_chapters_not_print_empty_chapters,
                                   )
@@ -611,12 +619,12 @@ def test_build_closed_pr_service_chapter_without_issue_and_user_labels(
 def test_build_open_issue_with_merged_pr_service_chapter_linked_to_not_closed_issue(
         custom_chapters_not_print_empty_chapters, record_with_issue_open_two_pulls_closed, mocker
 ):
-    expected_release_notes = release_notes_data_service_chapters_open_issue_and_merged_pr_no_user_labels
+    expected_release_notes = RELEASE_NOTES_DATA_SERVICE_CHAPTERS_OPEN_ISSUE_AND_MERGED_PR_NO_USER_LABELS
     rec = record_with_issue_open_two_pulls_closed
     mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
 
     builder = ReleaseNotesBuilder(records={rec.number: rec},
-                                  changelog_url=default_changelog_url,
+                                  changelog_url=DEFAULT_CHANGELOG_URL,
                                   formatter=default_formatter,
                                   custom_chapters=custom_chapters_not_print_empty_chapters,
                                   )
@@ -629,12 +637,12 @@ def test_build_open_issue_with_merged_pr_service_chapter_linked_to_not_closed_is
 def test_build_open_issue(
         custom_chapters_not_print_empty_chapters, record_with_issue_open_no_pull, mocker
 ):
-    expected_release_notes = release_notes_no_data_no_warning_no_empty_chapters
+    expected_release_notes = RELEASE_NOTES_NO_DATA_NO_WARNING_NO_EMPTY_CHAPTERS
     rec = record_with_issue_open_no_pull
     mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
 
     builder = ReleaseNotesBuilder(records={rec.number: rec},
-                                  changelog_url=default_changelog_url,
+                                  changelog_url=DEFAULT_CHANGELOG_URL,
                                   formatter=default_formatter,
                                   custom_chapters=custom_chapters_not_print_empty_chapters,
                                   )
@@ -647,33 +655,33 @@ def test_build_open_issue(
 def test_build_closed_issue(
         custom_chapters_not_print_empty_chapters, record_with_issue_closed_no_pull, mocker
 ):
-    expected_release_notes = release_notes_data_service_chapters_closed_issue_no_pr_no_user_labels
+    expected_release_notes = RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_ISSUE_NO_PR_NO_USER_LABELS
     rec = record_with_issue_closed_no_pull
     mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
 
     builder = ReleaseNotesBuilder(records={rec.number: rec},
-                                  changelog_url=default_changelog_url,
+                                  changelog_url=DEFAULT_CHANGELOG_URL,
                                   formatter=default_formatter,
                                   custom_chapters=custom_chapters_not_print_empty_chapters,
                                   )
 
     actual_release_notes = builder.build()
 
-    print(f"Actual:\n" + actual_release_notes)
-    print(f"Expected:\n" + expected_release_notes)
+    print("Actual:\n%s", actual_release_notes)
+    print("Expected:\n%s", expected_release_notes)
     assert expected_release_notes == actual_release_notes
 
 
 def test_build_reopened_issue(
         custom_chapters_not_print_empty_chapters, record_with_issue_open_no_pull, mocker
 ):
-    expected_release_notes = release_notes_no_data_no_warning_no_empty_chapters
+    expected_release_notes = RELEASE_NOTES_NO_DATA_NO_WARNING_NO_EMPTY_CHAPTERS
     rec = record_with_issue_open_no_pull
     rec.issue.state_reason = "reopened"
     mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
 
     builder = ReleaseNotesBuilder(records={rec.number: rec},
-                                  changelog_url=default_changelog_url,
+                                  changelog_url=DEFAULT_CHANGELOG_URL,
                                   formatter=default_formatter,
                                   custom_chapters=custom_chapters_not_print_empty_chapters,
                                   )
@@ -686,13 +694,13 @@ def test_build_reopened_issue(
 def test_build_closed_not_planned_issue(
         custom_chapters_not_print_empty_chapters, record_with_issue_closed_no_pull, mocker
 ):
-    expected_release_notes = release_notes_data_service_chapters_closed_issue_no_pr_no_user_labels
+    expected_release_notes = RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_ISSUE_NO_PR_NO_USER_LABELS
     rec = record_with_issue_closed_no_pull
     rec.issue.state_reason = "not_planned"
     mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
 
     builder = ReleaseNotesBuilder(records={rec.number: rec},
-                                  changelog_url=default_changelog_url,
+                                  changelog_url=DEFAULT_CHANGELOG_URL,
                                   formatter=default_formatter,
                                   custom_chapters=custom_chapters_not_print_empty_chapters,
                                   )
@@ -705,13 +713,13 @@ def test_build_closed_not_planned_issue(
 def test_build_closed_issue_with_user_labels_no_prs(
         custom_chapters_not_print_empty_chapters, record_with_issue_closed_no_pull, mocker
 ):
-    expected_release_notes = release_notes_data_closed_issue_no_pr_with_user_labels
+    expected_release_notes = RELEASE_NOTES_DATA_CLOSED_ISSUE_NO_PR_WITH_USER_LABELS
     rec = record_with_issue_closed_no_pull
     rec.issue.labels = [MockLabel("bug"), MockLabel("breaking-changes")]
     mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
 
     builder = ReleaseNotesBuilder(records={rec.number: rec},
-                                  changelog_url=default_changelog_url,
+                                  changelog_url=DEFAULT_CHANGELOG_URL,
                                   formatter=default_formatter,
                                   custom_chapters=custom_chapters_not_print_empty_chapters,
                                   )
@@ -724,14 +732,14 @@ def test_build_closed_issue_with_user_labels_no_prs(
 def test_build_closed_issue_with_prs_without_user_label(
         custom_chapters_not_print_empty_chapters, record_with_issue_closed_two_pulls, mocker
 ):
-    expected_release_notes = release_notes_data_closed_issue_with_pr_without_user_labels
+    expected_release_notes = RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_PR_WITHOUT_USER_LABELS
     rec = record_with_issue_closed_two_pulls
     rec.issue.labels = [MockLabel("label1"), MockLabel("label2")]
     rec.issue.title = "I1"
     mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
 
     builder = ReleaseNotesBuilder(records={rec.number: rec},
-                                  changelog_url=default_changelog_url,
+                                  changelog_url=DEFAULT_CHANGELOG_URL,
                                   formatter=default_formatter,
                                   custom_chapters=custom_chapters_not_print_empty_chapters,
                                   )
@@ -744,12 +752,12 @@ def test_build_closed_issue_with_prs_without_user_label(
 def test_build_open_pr_without_issue(
         custom_chapters_not_print_empty_chapters, record_with_no_issue_one_pull_open, mocker
 ):
-    expected_release_notes = release_notes_data_open_pr_without_issue
+    expected_release_notes = RELEASE_NOTES_DATA_OPEN_PR_WITHOUT_ISSUE
     rec = record_with_no_issue_one_pull_open
     mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
 
     builder = ReleaseNotesBuilder(records={rec.number: rec},
-                                  changelog_url=default_changelog_url,
+                                  changelog_url=DEFAULT_CHANGELOG_URL,
                                   formatter=default_formatter,
                                   custom_chapters=custom_chapters_not_print_empty_chapters,
                                   )
@@ -762,12 +770,12 @@ def test_build_open_pr_without_issue(
 def test_build_merged_pr_without_issue_ready_for_review(
         custom_chapters_not_print_empty_chapters, record_with_no_issue_one_pull_merged, mocker
 ):
-    expected_release_notes = release_notes_data_service_chapters_merged_pr_no_issue_no_user_labels
+    expected_release_notes = RELEASE_NOTES_DATA_SERVICE_CHAPTERS_MERGED_PR_NO_ISSUE_NO_USER_LABELS
     rec = record_with_no_issue_one_pull_merged
     mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
 
     builder = ReleaseNotesBuilder(records={rec.number: rec},
-                                  changelog_url=default_changelog_url,
+                                  changelog_url=DEFAULT_CHANGELOG_URL,
                                   formatter=default_formatter,
                                   custom_chapters=custom_chapters_not_print_empty_chapters,
                                   )
@@ -780,12 +788,12 @@ def test_build_merged_pr_without_issue_ready_for_review(
 def test_build_closed_pr_without_issue_ready_for_review(
         custom_chapters_not_print_empty_chapters, record_with_no_issue_one_pull_closed, mocker
 ):
-    expected_release_notes = release_notes_data_service_chapters_closed_pr_no_issue_no_user_labels
+    expected_release_notes = RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_PR_NO_ISSUE_NO_USER_LABELS
     rec = record_with_no_issue_one_pull_closed
     mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
 
     builder = ReleaseNotesBuilder(records={rec.number: rec},
-                                  changelog_url=default_changelog_url,
+                                  changelog_url=DEFAULT_CHANGELOG_URL,
                                   formatter=default_formatter,
                                   custom_chapters=custom_chapters_not_print_empty_chapters,
                                   )
@@ -798,13 +806,13 @@ def test_build_closed_pr_without_issue_ready_for_review(
 def test_build_closed_pr_without_issue_draft(
         custom_chapters_not_print_empty_chapters, record_with_no_issue_one_pull_closed, mocker
 ):
-    expected_release_notes = release_notes_data_service_chapters_closed_pr_no_issue_no_user_labels
+    expected_release_notes = RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_PR_NO_ISSUE_NO_USER_LABELS
     rec = record_with_no_issue_one_pull_closed
     rec.pulls[0].draft = True
     mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
 
     builder = ReleaseNotesBuilder(records={rec.number: rec},
-                                  changelog_url=default_changelog_url,
+                                  changelog_url=DEFAULT_CHANGELOG_URL,
                                   formatter=default_formatter,
                                   custom_chapters=custom_chapters_not_print_empty_chapters,
                                   )
@@ -817,13 +825,13 @@ def test_build_closed_pr_without_issue_draft(
 def test_merged_pr_without_issue_with_more_user_labels_duplicity_reduction_on(
         custom_chapters_not_print_empty_chapters, record_with_no_issue_one_pull_merged, mocker
 ):
-    expected_release_notes = release_notes_data_merged_pr_with_user_labels_duplicity_reduction_on
+    expected_release_notes = RELEASE_NOTES_DATA_MERGED_PR_WITH_USER_LABELS_DUPLICITY_REDUCTION_ON
     rec = record_with_no_issue_one_pull_merged
     rec.pulls[0].labels = [MockLabel("bug"), MockLabel("enhancement")]
     mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
 
     builder = ReleaseNotesBuilder(records={rec.number: rec},
-                                  changelog_url=default_changelog_url,
+                                  changelog_url=DEFAULT_CHANGELOG_URL,
                                   formatter=default_formatter,
                                   custom_chapters=custom_chapters_not_print_empty_chapters,
                                   )
@@ -836,12 +844,12 @@ def test_merged_pr_without_issue_with_more_user_labels_duplicity_reduction_on(
 def test_merged_pr_with_open_init_issue_mention(
         custom_chapters_not_print_empty_chapters, record_with_two_issue_open_two_pulls_closed, mocker
 ):
-    expected_release_notes = release_notes_data_merged_prs_with_open_issues
+    expected_release_notes = RELEASE_NOTES_DATA_MERGED_PRS_WITH_OPEN_ISSUES
     records = record_with_two_issue_open_two_pulls_closed
     mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
 
     builder = ReleaseNotesBuilder(records=records,
-                                  changelog_url=default_changelog_url,
+                                  changelog_url=DEFAULT_CHANGELOG_URL,
                                   formatter=default_formatter,
                                   custom_chapters=custom_chapters_not_print_empty_chapters,
                                   )
@@ -854,12 +862,12 @@ def test_merged_pr_with_open_init_issue_mention(
 def test_merged_pr_with_closed_issue_mention_without_user_labels(
         custom_chapters_not_print_empty_chapters, record_with_issue_closed_one_pull, mocker
 ):
-    expected_release_notes = release_notes_data_closed_issue_with_merged_prs_without_user_labels
+    expected_release_notes = RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_MERGED_PRS_WITHOUT_USER_LABELS
     rec = record_with_issue_closed_one_pull
     mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
 
     builder = ReleaseNotesBuilder(records={rec.number: rec},
-                                  changelog_url=default_changelog_url,
+                                  changelog_url=DEFAULT_CHANGELOG_URL,
                                   formatter=default_formatter,
                                   custom_chapters=custom_chapters_not_print_empty_chapters,
                                   )
@@ -872,12 +880,12 @@ def test_merged_pr_with_closed_issue_mention_without_user_labels(
 def test_merged_pr_with_closed_issue_mention_with_user_labels(
         custom_chapters_not_print_empty_chapters, record_with_issue_closed_one_pull_merged, mocker
 ):
-    expected_release_notes = release_notes_data_closed_issue_with_merged_prs_with_user_labels
+    expected_release_notes = RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_MERGED_PRS_WITH_USER_LABELS
     rec = record_with_issue_closed_one_pull_merged
     mocker.patch('release_notes_generator.builder.ActionInputs.get_print_empty_chapters', return_value=False)
 
     builder = ReleaseNotesBuilder(records={rec.number: rec},
-                                  changelog_url=default_changelog_url,
+                                  changelog_url=DEFAULT_CHANGELOG_URL,
                                   formatter=default_formatter,
                                   custom_chapters=custom_chapters_not_print_empty_chapters,
                                   )

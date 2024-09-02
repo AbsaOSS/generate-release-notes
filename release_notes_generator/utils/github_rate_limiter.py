@@ -21,15 +21,16 @@ from typing import Optional, Callable
 from github import Github
 
 
+# pylint: disable=too-few-public-methods
 class GithubRateLimiter:
     def __init__(self, github_client: Github):
         self.github_client = github_client
 
     def __call__(self, method: Callable) -> Callable:
         def wrapped_method(*args, **kwargs) -> Optional:
-            rate_limit = self.github_client.get_rate_limit().core
-            remaining_calls = rate_limit.remaining
-            reset_time = rate_limit.reset.timestamp()
+            # rate_limit = self.github_client.get_rate_limit().core
+            remaining_calls = self.github_client.get_rate_limit().core.remaining
+            reset_time = self.github_client.get_rate_limit().core.reset.timestamp()
 
             if remaining_calls < 5:
                 logging.info("Rate limit almost reached. Sleeping until reset time.")
@@ -43,7 +44,8 @@ class GithubRateLimiter:
                 hours, remainder = divmod(total_sleep_time, 3600)
                 minutes, seconds = divmod(remainder, 60)
 
-                logging.info(f"Sleeping for {int(hours)} hours, {int(minutes)} minutes, and {int(seconds)} seconds until {datetime.fromtimestamp(reset_time).strftime('%Y-%m-%d %H:%M:%S')}.")
+                logging.info("Sleeping for %s hours, %s minutes, and %s seconds until %s.",
+                             hours, minutes, seconds, datetime.fromtimestamp(reset_time).strftime('%Y-%m-%d %H:%M:%S'))
                 time.sleep(sleep_time + 5)  # Sleep for the calculated time plus 5 seconds
 
             return method(*args, **kwargs)

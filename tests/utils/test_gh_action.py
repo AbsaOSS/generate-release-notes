@@ -40,7 +40,7 @@ def test_get_input_without_hyphen(mocker):
 # set_output
 
 def test_set_output_default(mocker):
-    mock_getenv = mocker.patch('os.getenv', return_value='default_output.txt')
+    mocker.patch('os.getenv', return_value='default_output.txt')
     mock_open = mocker.patch('builtins.open', new_callable=mocker.mock_open)
 
     set_action_output('test-output', 'test_value')
@@ -53,7 +53,7 @@ def test_set_output_default(mocker):
 
 
 def test_set_output_custom_path(mocker):
-    mock_getenv = mocker.patch('os.getenv', return_value='custom_output.txt')
+    mocker.patch('os.getenv', return_value='custom_output.txt')
     mock_open = mocker.patch('builtins.open', new_callable=mocker.mock_open)
 
     set_action_output('custom-output', 'custom_value', 'default_output.txt')

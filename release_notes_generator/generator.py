@@ -25,7 +25,7 @@ from release_notes_generator.model.record import Record
 from release_notes_generator.builder import ReleaseNotesBuilder
 from release_notes_generator.record.record_factory import RecordFactory
 from release_notes_generator.action_inputs import ActionInputs
-from release_notes_generator.utils.constants import Constants
+from release_notes_generator.utils.constants import ISSUE_STATE_ALL
 
 from release_notes_generator.utils.decorators import safe_call_decorator
 from release_notes_generator.utils.utils import get_change_url
@@ -37,10 +37,22 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 class ReleaseNotesGenerator:
     def __init__(self, github_instance: Github, custom_chapters: CustomChapters):
-        self.github_instance = github_instance
-        self.custom_chapters = custom_chapters
-        self.rate_limiter = GithubRateLimiter(self.github_instance)
-        self.safe_call = safe_call_decorator(self.rate_limiter)
+        self._github_instance = github_instance
+        self._custom_chapters = custom_chapters
+        self._rate_limiter = GithubRateLimiter(self.github_instance)
+        self._safe_call = safe_call_decorator(self._rate_limiter)
+
+    @property
+    def github_instance(self) -> Github:
+        return self._github_instance
+
+    @property
+    def custom_chapters(self) -> CustomChapters:
+        return self._custom_chapters
+
+    @property
+    def rate_limiter(self) -> GithubRateLimiter:
+        return self._rate_limiter
 
     def generate(self) -> Optional[str]:
         """
@@ -48,32 +60,32 @@ class ReleaseNotesGenerator:
 
         @return: The generated release notes as a string, or None if the repository could not be found.
         """
-        repo = self.safe_call(self.github_instance.get_repo)(ActionInputs.get_github_repository())
+        repo = self._safe_call(self.github_instance.get_repo)(ActionInputs.get_github_repository())
         if repo is None:
             return None
 
-        rls = self.safe_call(repo.get_latest_release)()
+        rls = self._safe_call(repo.get_latest_release)()
         if rls is None:
-            logging.info(f"Latest release not found for {repo.full_name}. 1st release for repository!")
+            logging.info("Latest release not found for %s. 1st release for repository!", repo.full_name)
 
         # default is repository creation date if no releases OR created_at of latest release
         since = rls.created_at if rls else repo.created_at
         if rls and ActionInputs.get_published_at():
             since = rls.published_at
 
-        issues = self.safe_call(repo.get_issues)(state=Constants.ISSUE_STATE_ALL, since=since)
-        pulls = pulls_all = self.safe_call(repo.get_pulls)(state='closed')
-        commits = commits_all = list(self.safe_call(repo.get_commits)())
+        issues = self._safe_call(repo.get_issues)(state=ISSUE_STATE_ALL, since=since)
+        pulls = pulls_all = self._safe_call(repo.get_pulls)(state='closed')
+        commits = commits_all = list(self._safe_call(repo.get_commits)())
 
         if rls is not None:
-            logging.info(f"Count of issues: {len(list(issues))}")
+            logging.info("Count of issues: %d", len(list(issues)))
 
             # filter out merged PRs and commits before the since date
             pulls = list(filter(lambda pull: pull.merged_at is not None and pull.merged_at > since, list(pulls_all)))
-            logging.debug(f"Count of pulls reduced from {len(list(pulls_all))} to {len(pulls)}")
+            logging.debug("Count of pulls reduced from %d to %d", len(list(pulls_all)), len(pulls))
 
             commits = list(filter(lambda commit: commit.commit.author.date > since, list(commits_all)))
-            logging.debug(f"Count of commits reduced from {len(list(commits_all))} to {len(commits)}")
+            logging.debug("Count of commits reduced from %d to %d", len(list(commits_all)), len(commits))
 
         changelog_url = get_change_url(tag_name=ActionInputs.get_tag_name(), repository=repo, git_release=rls)
 

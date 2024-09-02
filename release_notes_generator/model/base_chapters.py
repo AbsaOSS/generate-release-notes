@@ -88,4 +88,3 @@ class BaseChapters(ABC):
 
         :param records: A dictionary of records where the key is an integer and the value is a Record object.
         """
-        pass

@@ -79,7 +79,6 @@ def test_validate_inputs_failure(method, value, expected_error, mocker):
         ActionInputs.validate_inputs()
 
         mock_error.assert_called_with(expected_error)
-        mock_error.assert_called
         mock_exit.assert_called_once_with(1)
 
     finally:
@@ -140,7 +139,7 @@ def test_get_verbose_verbose_by_action_input(mocker):
 
 def test_get_verbose_verbose_by_workflow_debug(mocker):
     mocker.patch('release_notes_generator.action_inputs.get_action_input', return_value='false')
-    mocker.patch('os.getenv', return_value=1)
+    mocker.patch('os.getenv', return_value='1')
     assert ActionInputs.get_verbose() is True
 
 

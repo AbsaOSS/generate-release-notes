@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-name: Build and Test
+name: Test
 on:
   pull_request:
     branches:
@@ -22,8 +22,40 @@ on:
     types: [ opened, synchronize, reopened ]
 
 jobs:
-  test:
-    name: Test
+  static-code-analysis:
+    runs-on: ubuntu-latest
+    name: Pylint Static Code Analysis
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Analyze code with Pylint
+        id: analyze-code
+        run: |
+          pylint_score=$(pylint $(git ls-files '*.py')| grep 'rated at' | awk '{print $7}' | cut -d'/' -f1)
+          echo "PYLINT_SCORE=$pylint_score" >> $GITHUB_ENV
+
+      - name: Check Pylint score
+        run: |
+          if (( $(echo "$PYLINT_SCORE < 9.5" | bc -l) )); then
+            echo "Failure: Pylint score is below 9.5 (project score: $PYLINT_SCORE)."
+            exit 1
+          else
+            echo "Success: Pylint score is above 9.5 (project score: $PYLINT_SCORE)."
+          fi
+
+  unit-test:
+    name: Unit Tests
     runs-on: ubuntu-latest
 
     defaults:
@@ -35,7 +67,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-python@v5.1.1
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
@@ -58,17 +90,23 @@ jobs:
       - name: Check changed files coverage
         run: |
           # Get the list of changed Python files
-          CHANGED_FILES=$(git diff --name-only --diff-filter=AMR ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep '.py$')
+          CHANGED_FILES=$(git diff --name-only --diff-filter=AMR ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep '.py$' || true)
           echo "Changed Python files: $CHANGED_FILES"
+
+          # If no Python files have changed, skip the coverage check
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "No Python files have changed. Skipping coverage check for changed files."
+            exit 0
+          fi
 
           # Convert list to comma-delimited string
           CHANGED_FILES=$(echo "$CHANGED_FILES" | awk '{printf "%s,", $0} END {print ""}' | sed 's/,$//')
-          
+
           # Generate coverage report for changed files
           coverage report --include="$CHANGED_FILES" > coverage_report.txt
           echo -e "\nChanged Python files report:\n\n"
           cat coverage_report.txt
-          
+
           # Fail if the coverage for changed files is below threshold
           COVERAGE_TOTAL=$(awk '/TOTAL/ {print $4}' coverage_report.txt)
           echo "Total coverage for changed files: $COVERAGE_TOTAL"
