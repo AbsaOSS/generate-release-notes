@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-name: Test
+name: Build and Test
 on:
   pull_request:
     branches:
@@ -55,7 +55,7 @@ jobs:
           fi
 
   unit-test:
-    name: Unit tests
+    name: Unit Tests
     runs-on: ubuntu-latest
 
     defaults:

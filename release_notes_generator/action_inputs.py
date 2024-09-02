@@ -18,7 +18,6 @@ import json
 import logging
 import os
 import sys
-from typing import Optional
 
 from release_notes_generator.utils.constants import (GITHUB_REPOSITORY, GITHUB_TOKEN, TAG_NAME, CHAPTERS, PUBLISHED_AT,
                                                      SKIP_RELEASE_NOTES_LABEL, VERBOSE, WARNINGS, RUNNER_DEBUG,
@@ -132,7 +131,6 @@ class ActionInputs:
                 logger.error(error)
             sys.exit(1)
 
-        logger.debug('Repository: %s/%s', owner, repo_name)
         logger.debug('Tag name: %s', tag_name)
         logger.debug('Chapters JSON: %s', chapters_json)
         logger.debug('Published at: %s', published_at)
