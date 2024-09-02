@@ -16,6 +16,7 @@
   - [Enable Service Chapters](#enable-service-chapters)
 - [Get Started](#get-started)
 - [Run Static Code Analysis](#running-static-code-analysis)
+- [Run Black Tool Locally](#run-black-tool-locally)
 - [Run Unit Test](#running-unit-test)
 - [Run Action Locally](#run-action-locally)
 - [Contribution Guidelines](#contribution-guidelines)
@@ -256,6 +257,48 @@ Example:
 ```
 pylint release-notes-generator/generator.py
 ``` 
+
+## Run Black Tool Locally
+This project uses the [Black](https://github.com/psf/black) tool for code formatting.
+Black aims for consistency, generality, readability and reducing git diffs.
+The coding style used can be viewed as a strict subset of PEP 8.
+
+The project root file `pyproject.toml` defines the Black tool configuration.
+In this project we are accepting the line length of 120 characters.
+
+Follow these steps to format your code with Black locally:
+
+### Set Up Python Environment
+From terminal in the root of the project, run the following command:
+
+```shell
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+This command will also install a Black tool, since it is listed in the project requirements.
+
+### Run Black
+Run Black on all files that are currently tracked by Git in the project.
+```shell
+black $(git ls-files '*.py')
+```
+
+To run Black on a specific file, follow the pattern `black <path_to_file>/<name_of_file>.py`.
+
+Example:
+```shell
+black release_notes_generator/generator.py
+``` 
+
+### Expected Output
+This is the console expected output example after running the tool:
+```
+All done! ✨ 🍰 ✨
+1 file reformatted.
+```
+
 
 ## Running Unit Test
 

@@ -54,6 +54,28 @@ jobs:
             echo "Success: Pylint score is above 9.5 (project score: $PYLINT_SCORE)."
           fi
 
+  code-format-check:
+    runs-on: ubuntu-latest
+    name: Black Format Check
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.1.5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5.1.0
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Check code format with Black
+        id: check-format
+        run: |
+          black --check $(git ls-files '*.py')
+
   unit-test:
     name: Unit Tests
     runs-on: ubuntu-latest
