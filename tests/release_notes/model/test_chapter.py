@@ -19,6 +19,7 @@ from release_notes_generator.model.chapter import Chapter
 
 # __init__
 
+
 def test_chapter_init():
     chapter = Chapter("Test Title", ["label1", "label2"])
 
@@ -29,6 +30,7 @@ def test_chapter_init():
 
 # add_row
 
+
 def test_add_row():
     chapter = Chapter("Test Title", ["label1", "label2"])
     chapter.add_row(1, "Test Row")
@@ -37,6 +39,7 @@ def test_add_row():
 
 
 # to_string
+
 
 def test_to_string_ascending():
     chapter = Chapter("Test Title", ["label1", "label2"])

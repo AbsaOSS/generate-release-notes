@@ -17,7 +17,7 @@
 from github.PullRequest import PullRequest
 
 from release_notes_generator.model.record import Record
-from release_notes_generator.utils.constants import (DEFAULT_ISSUE_PATTERN, DEFAULT_PULL_REQUESTS_PATTERN)
+from release_notes_generator.utils.constants import DEFAULT_ISSUE_PATTERN, DEFAULT_PULL_REQUESTS_PATTERN
 
 
 # pylint: disable=too-few-public-methods
@@ -26,8 +26,9 @@ class RecordFormatter:
     A class used to format records for release notes.
     """
 
-    def __init__(self, issue_pattern: str = DEFAULT_ISSUE_PATTERN,
-                 pull_requests_pattern: str = DEFAULT_PULL_REQUESTS_PATTERN):
+    def __init__(
+        self, issue_pattern: str = DEFAULT_ISSUE_PATTERN, pull_requests_pattern: str = DEFAULT_PULL_REQUESTS_PATTERN
+    ):
         """
         Constructs all the necessary attributes for the RecordFormatter object.
 
@@ -54,13 +55,13 @@ class RecordFormatter:
             "is_issue": record.is_issue,
             "developers": self._format_developers(record),
             "release_note_rows": self._format_release_note_rows(record),
-            "pull_requests": self._format_pulls(record.pulls)
+            "pull_requests": self._format_pulls(record.pulls),
         }
 
         # apply to pattern
         return self.issue_pattern.format(**params)
 
-    def _format_pulls(self, pulls: list['PullRequest']) -> str:
+    def _format_pulls(self, pulls: list["PullRequest"]) -> str:
         """
         Formats a list of pull requests.
 
@@ -69,7 +70,7 @@ class RecordFormatter:
         """
         return ", ".join([self.pull_requests_pattern.format(number=pr.number, url=pr.url) for pr in pulls])
 
-    def _format_developers(self, record: 'Record') -> str:
+    def _format_developers(self, record: "Record") -> str:
         """
         Formats the developers of a record.
 
@@ -82,9 +83,9 @@ class RecordFormatter:
         # for pr in record.pulls:
         #     if pr.assignees:
         #         developers.extend(pr.assignees)
-        return ', '.join(developers) if developers else "developers"
+        return ", ".join(developers) if developers else "developers"
 
-    def _format_release_note_rows(self, record: 'Record') -> str:
+    def _format_release_note_rows(self, record: "Record") -> str:
         """
         Formats the release note rows of a record.
 

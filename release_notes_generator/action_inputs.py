@@ -19,9 +19,19 @@ import logging
 import os
 import sys
 
-from release_notes_generator.utils.constants import (GITHUB_REPOSITORY, GITHUB_TOKEN, TAG_NAME, CHAPTERS, PUBLISHED_AT,
-                                                     SKIP_RELEASE_NOTES_LABEL, VERBOSE, WARNINGS, RUNNER_DEBUG,
-                                                     PRINT_EMPTY_CHAPTERS, CHAPTERS_TO_PR_WITHOUT_ISSUE)
+from release_notes_generator.utils.constants import (
+    GITHUB_REPOSITORY,
+    GITHUB_TOKEN,
+    TAG_NAME,
+    CHAPTERS,
+    PUBLISHED_AT,
+    SKIP_RELEASE_NOTES_LABEL,
+    VERBOSE,
+    WARNINGS,
+    RUNNER_DEBUG,
+    PRINT_EMPTY_CHAPTERS,
+    CHAPTERS_TO_PR_WITHOUT_ISSUE,
+)
 from release_notes_generator.utils.gh_action import get_action_input
 
 logger = logging.getLogger(__name__)
@@ -46,28 +56,28 @@ class ActionInputs:
 
     @staticmethod
     def get_published_at() -> bool:
-        return get_action_input(PUBLISHED_AT, "false").lower() == 'true'
+        return get_action_input(PUBLISHED_AT, "false").lower() == "true"
 
     @staticmethod
     def get_skip_release_notes_label() -> str:
-        return get_action_input(SKIP_RELEASE_NOTES_LABEL) or 'skip-release-notes'
+        return get_action_input(SKIP_RELEASE_NOTES_LABEL) or "skip-release-notes"
 
     @staticmethod
     def get_verbose() -> bool:
-        return os.getenv(RUNNER_DEBUG, '0') == '1' or get_action_input(VERBOSE).lower() == 'true'
+        return os.getenv(RUNNER_DEBUG, "0") == "1" or get_action_input(VERBOSE).lower() == "true"
 
     # Features
     @staticmethod
     def get_warnings() -> bool:
-        return get_action_input(WARNINGS, "true").lower() == 'true'
+        return get_action_input(WARNINGS, "true").lower() == "true"
 
     @staticmethod
     def get_print_empty_chapters() -> bool:
-        return get_action_input(PRINT_EMPTY_CHAPTERS, "true").lower() == 'true'
+        return get_action_input(PRINT_EMPTY_CHAPTERS, "true").lower() == "true"
 
     @staticmethod
     def get_chapters_to_pr_without_issue() -> bool:
-        return get_action_input(CHAPTERS_TO_PR_WITHOUT_ISSUE, "true").lower() == 'true'
+        return get_action_input(CHAPTERS_TO_PR_WITHOUT_ISSUE, "true").lower() == "true"
 
     @staticmethod
     def validate_input(input_value, expected_type: type, error_message: str, error_buffer: list) -> bool:
@@ -85,8 +95,8 @@ class ActionInputs:
         errors = []
 
         repository_id = ActionInputs.get_github_repository()
-        if '/' in repository_id:
-            owner, repo_name = ActionInputs.get_github_repository().split('/')
+        if "/" in repository_id:
+            owner, repo_name = ActionInputs.get_github_repository().split("/")
         else:
             owner = repo_name = ""
 
@@ -118,12 +128,12 @@ class ActionInputs:
 
         # Features
         print_empty_chapters = ActionInputs.get_print_empty_chapters()
-        ActionInputs.validate_input(print_empty_chapters, bool,
-                                    "Print empty chapters must be a boolean.", errors)
+        ActionInputs.validate_input(print_empty_chapters, bool, "Print empty chapters must be a boolean.", errors)
 
         chapters_to_pr_without_issue = ActionInputs.get_chapters_to_pr_without_issue()
-        ActionInputs.validate_input(chapters_to_pr_without_issue, bool,
-                                    "Chapters to PR without issue must be a boolean.", errors)
+        ActionInputs.validate_input(
+            chapters_to_pr_without_issue, bool, "Chapters to PR without issue must be a boolean.", errors
+        )
 
         # Log errors if any
         if errors:
@@ -131,11 +141,11 @@ class ActionInputs:
                 logger.error(error)
             sys.exit(1)
 
-        logger.debug('Tag name: %s', tag_name)
-        logger.debug('Chapters JSON: %s', chapters_json)
-        logger.debug('Published at: %s', published_at)
-        logger.debug('Skip release notes label: %s', skip_release_notes_label)
-        logger.debug('Verbose logging: %s', verbose)
-        logger.debug('Warnings: %s', warnings)
-        logger.debug('Print empty chapters: %s', print_empty_chapters)
-        logger.debug('Chapters to PR without issue: %s', chapters_to_pr_without_issue)
+        logger.debug("Tag name: %s", tag_name)
+        logger.debug("Chapters JSON: %s", chapters_json)
+        logger.debug("Published at: %s", published_at)
+        logger.debug("Skip release notes label: %s", skip_release_notes_label)
+        logger.debug("Verbose logging: %s", verbose)
+        logger.debug("Warnings: %s", warnings)
+        logger.debug("Print empty chapters: %s", print_empty_chapters)
+        logger.debug("Chapters to PR without issue: %s", chapters_to_pr_without_issue)

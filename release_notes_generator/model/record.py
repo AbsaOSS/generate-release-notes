@@ -22,8 +22,13 @@ from github.PullRequest import PullRequest
 from github.Repository import Repository
 from github.Commit import Commit
 
-from release_notes_generator.utils.constants import (PR_STATE_CLOSED, ISSUE_STATE_CLOSED, ISSUE_STATE_OPEN,
-    RELEASE_NOTE_DETECTION_PATTERN, RELEASE_NOTE_LINE_MARK)
+from release_notes_generator.utils.constants import (
+    PR_STATE_CLOSED,
+    ISSUE_STATE_CLOSED,
+    ISSUE_STATE_OPEN,
+    RELEASE_NOTE_DETECTION_PATTERN,
+    RELEASE_NOTE_LINE_MARK,
+)
 from release_notes_generator.utils.pull_reuqest_utils import extract_issue_numbers_from_body
 
 logger = logging.getLogger(__name__)
@@ -184,7 +189,7 @@ class Record:
 
         # Iterate over all PRs
         for pull in self.__pulls:
-            body_lines = pull.body.split('\n') if pull.body is not None else []
+            body_lines = pull.body.split("\n") if pull.body is not None else []
             inside_release_notes = False
 
             for line in body_lines:
@@ -275,10 +280,7 @@ class Record:
             return None
 
         template = "[#{number}](https://github.com/{full_name}/pull/{number})"
-        res = [
-            template.format(number=pull.number, full_name=self.__repo.full_name)
-            for pull in self.__pulls
-        ]
+        res = [template.format(number=pull.number, full_name=self.__repo.full_name) for pull in self.__pulls]
 
         return ", ".join(res)
 

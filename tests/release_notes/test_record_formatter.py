@@ -20,8 +20,10 @@ from release_notes_generator.record.record_formatter import RecordFormatter
 def test_format_record_with_issue(record_with_issue_closed_one_pull):
     formatter = RecordFormatter()
     formatted = formatter.format(record_with_issue_closed_one_pull)
-    expected_output = ("- #121 _Fix the bug_ implemented by developers in "
-                       "[#123](http://example.com/pull/123)\n  - release notes 1\n  - release notes 2")
+    expected_output = (
+        "- #121 _Fix the bug_ implemented by developers in "
+        "[#123](http://example.com/pull/123)\n  - release notes 1\n  - release notes 2"
+    )
 
     assert expected_output == formatted
 

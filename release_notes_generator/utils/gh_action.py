@@ -56,8 +56,8 @@ def set_action_output(name: str, value: str, default_output_path: str = "default
     @param default_output_path: The default file path to which the output is written if the
     'GITHUB_OUTPUT' environment variable is not set. Defaults to "default_output.txt".
     """
-    output_file = os.getenv('GITHUB_OUTPUT', default_output_path)
-    with open(output_file, 'a', encoding="utf-8") as f:
+    output_file = os.getenv("GITHUB_OUTPUT", default_output_path)
+    with open(output_file, "a", encoding="utf-8") as f:
         f.write(f"{name}<<EOF\n")
         f.write(f"{value}")
         f.write("EOF\n")
@@ -72,5 +72,5 @@ def set_action_failed(message: str):
 
     @param message: The error message to be displayed.
     """
-    print(f'::error::{message}')
+    print(f"::error::{message}")
     sys.exit(1)

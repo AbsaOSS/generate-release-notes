@@ -21,6 +21,7 @@ from release_notes_generator.utils.pull_reuqest_utils import extract_issue_numbe
 
 # extract_issue_numbers_from_body
 
+
 def test_extract_issue_numbers_from_body_no_issues(mocker):
     mock_pr = mocker.Mock(spec=PullRequest)
     mock_pr.body = "This PR does not fix any issues."
