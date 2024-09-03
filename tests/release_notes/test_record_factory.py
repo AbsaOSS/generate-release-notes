@@ -217,12 +217,7 @@ def test_generate_with_no_issues(mocker, request):
     pulls = [pr1, pr2]
     commits = [commit1, commit2]
 
-    records = RecordFactory.generate(
-        mock_github_client,
-        request.getfixturevalue("mock_repo"),
-        [],
-        pulls,
-        commits)
+    records = RecordFactory.generate(mock_github_client, request.getfixturevalue("mock_repo"), [], pulls, commits)
 
     # Verify the record creation
     assert isinstance(records[101], Record)

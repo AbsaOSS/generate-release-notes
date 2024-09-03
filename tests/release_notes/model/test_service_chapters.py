@@ -15,23 +15,28 @@
 #
 
 from release_notes_generator.model.chapter import Chapter
-from release_notes_generator.utils.constants import (MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES,
-                                                     CLOSED_ISSUES_WITHOUT_PULL_REQUESTS,
-                                                     CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS,
-                                                     MERGED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS,
-                                                     CLOSED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS, OTHERS_NO_TOPIC)
+from release_notes_generator.utils.constants import (
+    MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES,
+    CLOSED_ISSUES_WITHOUT_PULL_REQUESTS,
+    CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS,
+    MERGED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS,
+    CLOSED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS,
+    OTHERS_NO_TOPIC,
+)
 
 
 # __init__
 
+
 def test_initialization(service_chapters):
     assert service_chapters.sort_ascending is True
     assert service_chapters.print_empty_chapters is True
-    assert service_chapters.user_defined_labels == ['bug', 'enhancement']
+    assert service_chapters.user_defined_labels == ["bug", "enhancement"]
     assert isinstance(service_chapters.chapters[CLOSED_ISSUES_WITHOUT_PULL_REQUESTS], Chapter)
 
 
 # populate
+
 
 def test_populate_closed_issue(service_chapters, record_with_issue_closed_no_pull):
     service_chapters.populate({1: record_with_issue_closed_no_pull})

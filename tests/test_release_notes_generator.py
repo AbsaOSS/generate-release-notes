@@ -25,6 +25,7 @@ from release_notes_generator.model.custom_chapters import CustomChapters
 
 # generate_release_notes tests
 
+
 def test_generate_release_notes_repository_not_found(mocker):
     github_mock = mocker.Mock(spec=Github)
     github_mock.get_repo.return_value = None
@@ -42,8 +43,13 @@ def test_generate_release_notes_repository_not_found(mocker):
 
 
 def test_generate_release_notes_latest_release_not_found(
-        mocker, mock_repo, mock_issue_closed, mock_issue_closed_i1_bug,
-        mock_pull_closed_with_rls_notes_101, mock_pull_closed_with_rls_notes_102, mock_commit
+    mocker,
+    mock_repo,
+    mock_issue_closed,
+    mock_issue_closed_i1_bug,
+    mock_pull_closed_with_rls_notes_101,
+    mock_pull_closed_with_rls_notes_102,
+    mock_commit,
 ):
     github_mock = mocker.Mock(spec=Github)
     github_mock.get_repo.return_value = mock_repo
@@ -76,8 +82,13 @@ def test_generate_release_notes_latest_release_not_found(
 
 
 def test_generate_release_notes_latest_release_found_by_created_at(
-        mocker, mock_repo, mock_git_release, mock_issue_closed_i1_bug,
-        mock_pull_closed_with_rls_notes_101, mock_pull_closed_with_rls_notes_102, mock_commit
+    mocker,
+    mock_repo,
+    mock_git_release,
+    mock_issue_closed_i1_bug,
+    mock_pull_closed_with_rls_notes_101,
+    mock_pull_closed_with_rls_notes_102,
+    mock_commit,
 ):
     github_mock = mocker.Mock(spec=Github)
     github_mock.get_repo.return_value = mock_repo
@@ -111,15 +122,19 @@ def test_generate_release_notes_latest_release_found_by_created_at(
 
 
 def test_generate_release_notes_latest_release_found_by_published_at(
-        mocker, mock_repo, mock_git_release, mock_issue_closed_i1_bug,
-        mock_pull_closed_with_rls_notes_101, mock_pull_closed_with_rls_notes_102, mock_commit
+    mocker,
+    mock_repo,
+    mock_git_release,
+    mock_issue_closed_i1_bug,
+    mock_pull_closed_with_rls_notes_101,
+    mock_pull_closed_with_rls_notes_102,
+    mock_commit,
 ):
     github_mock = mocker.Mock(spec=Github)
     github_mock.get_repo.return_value = mock_repo
     mock_repo.created_at = datetime.now() - timedelta(days=10)
 
-    mocker.patch('release_notes_generator.action_inputs.ActionInputs.get_published_at',
-                 return_value='true')
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_published_at", return_value="true")
 
     mock_repo.get_issues.return_value = [mock_issue_closed_i1_bug]
     mock_repo.get_pulls.return_value = [mock_pull_closed_with_rls_notes_101, mock_pull_closed_with_rls_notes_102]

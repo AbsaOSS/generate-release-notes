@@ -38,8 +38,9 @@ class RecordFactory:
     """
 
     @staticmethod
-    def generate(github: Github, repo: Repository, issues: list[Issue], pulls: list[PullRequest],
-                 commits: list[Commit]) -> dict[int, Record]:
+    def generate(
+        github: Github, repo: Repository, issues: list[Issue], pulls: list[PullRequest], commits: list[Commit]
+    ) -> dict[int, Record]:
         """
         Generates a dictionary of ReleaseNotesRecord instances.
         The key is the issue or pr number.
@@ -64,7 +65,8 @@ class RecordFactory:
                     logger.warning(
                         "Detected PR %d linked to issue %d which is not in the list of received issues. "
                         "Fetching ...",
-                        pull.number, parent_issue_number
+                        pull.number,
+                        parent_issue_number,
                     )
                     parent_issue = safe_call(repo.get_issue)(parent_issue_number)
                     if parent_issue is not None:
@@ -72,14 +74,15 @@ class RecordFactory:
 
                 if parent_issue_number in records:
                     records[parent_issue_number].register_pull_request(pull)
-                    logger.debug("Registering PR %d: %s to Issue %d",
-                                  pull.number, pull.title, parent_issue_number)
+                    logger.debug("Registering PR %d: %s to Issue %d", pull.number, pull.title, parent_issue_number)
                 else:
                     records[pull.number] = Record(repo)
                     records[pull.number].register_pull_request(pull)
                     logger.debug(
                         "Registering stand-alone PR %d: %s as mentioned Issue %d not found.",
-                        pull.number, pull.title, parent_issue_number
+                        pull.number,
+                        pull.title,
+                        parent_issue_number,
                     )
 
         def register_commit_to_record(commit: Commit):
@@ -106,6 +109,11 @@ class RecordFactory:
 
         detected_prs_count = sum(register_commit_to_record(commit) for commit in commits)
 
-        logger.info("Generated %d records from %d issues and %d PRs, with %d commits detected.",
-                     len(records), len(issues), len(pulls), detected_prs_count)
+        logger.info(
+            "Generated %d records from %d issues and %d PRs, with %d commits detected.",
+            len(records),
+            len(issues),
+            len(pulls),
+            detected_prs_count,
+        )
         return records

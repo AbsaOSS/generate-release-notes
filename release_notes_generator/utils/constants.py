@@ -16,19 +16,19 @@
 
 
 # Action inputs environment variables
-GITHUB_REPOSITORY = 'GITHUB_REPOSITORY'
-GITHUB_TOKEN = 'github-token'
-TAG_NAME = 'tag-name'
-CHAPTERS = 'chapters'
-PUBLISHED_AT = 'published-at'
-SKIP_RELEASE_NOTES_LABEL = 'skip-release-notes-label'
-VERBOSE = 'verbose'
-RUNNER_DEBUG = 'RUNNER_DEBUG'
+GITHUB_REPOSITORY = "GITHUB_REPOSITORY"
+GITHUB_TOKEN = "github-token"
+TAG_NAME = "tag-name"
+CHAPTERS = "chapters"
+PUBLISHED_AT = "published-at"
+SKIP_RELEASE_NOTES_LABEL = "skip-release-notes-label"
+VERBOSE = "verbose"
+RUNNER_DEBUG = "RUNNER_DEBUG"
 
 # Features
-WARNINGS = 'warnings'
-PRINT_EMPTY_CHAPTERS = 'print-empty-chapters'
-CHAPTERS_TO_PR_WITHOUT_ISSUE = 'chapters-to-pr-without-issue'
+WARNINGS = "warnings"
+PRINT_EMPTY_CHAPTERS = "print-empty-chapters"
+CHAPTERS_TO_PR_WITHOUT_ISSUE = "chapters-to-pr-without-issue"
 
 # Pull Request states
 PR_STATE_CLOSED = "closed"
@@ -55,6 +55,7 @@ MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES: str = "Merged PRs Linked to 'Not Closed'
 OTHERS_NO_TOPIC: str = "Others - No Topic ⚠️"
 
 # Record formatter patterns
-DEFAULT_ISSUE_PATTERN: str = ("- #{number} _{title}_ implemented by {developers} in {pull_requests}\n"
-                              "{release_note_rows}")
+DEFAULT_ISSUE_PATTERN: str = (
+    "- #{number} _{title}_ implemented by {developers} in {pull_requests}\n" "{release_note_rows}"
+)
 DEFAULT_PULL_REQUESTS_PATTERN: str = "[#{number}]({url})"

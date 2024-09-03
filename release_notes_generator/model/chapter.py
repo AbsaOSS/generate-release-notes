@@ -14,12 +14,13 @@
 # limitations under the License.
 #
 
+
 class Chapter:
     """
     A class used to represent a chapter in the release notes.
     """
 
-    def __init__(self, title: str = "", labels: list[str] = None, empty_message: str="No entries detected."):
+    def __init__(self, title: str = "", labels: list[str] = None, empty_message: str = "No entries detected."):
         """
         Constructs all the necessary attributes for the Chapter object.
 

@@ -5,3 +5,4 @@ pytest-mock==3.14.0
 PyGithub==1.59.0
 pylint==3.2.6
 requests==2.31.0
+black==24.8.0

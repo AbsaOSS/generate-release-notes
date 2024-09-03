@@ -39,17 +39,18 @@ def run():
     ActionInputs.validate_inputs()
 
     # Load custom chapters configuration
-    custom_chapters = (CustomChapters(print_empty_chapters=ActionInputs.get_print_empty_chapters())
-                       .from_json(ActionInputs.get_chapters_json()))
+    custom_chapters = CustomChapters(print_empty_chapters=ActionInputs.get_print_empty_chapters()).from_json(
+        ActionInputs.get_chapters_json()
+    )
 
     generator = ReleaseNotesGenerator(py_github, custom_chapters)
     rls_notes = generator.generate()
     logger.debug("Release notes: \n%s", rls_notes)
 
     # Set the output for the GitHub Action
-    set_action_output('release-notes', rls_notes)
+    set_action_output("release-notes", rls_notes)
     logger.info("GitHub Action 'Release Notes Generator' completed successfully")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     run()

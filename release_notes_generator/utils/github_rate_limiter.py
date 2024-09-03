@@ -46,8 +46,13 @@ class GithubRateLimiter:
                 hours, remainder = divmod(total_sleep_time, 3600)
                 minutes, seconds = divmod(remainder, 60)
 
-                logger.info("Sleeping for %s hours, %s minutes, and %s seconds until %s.",
-                             hours, minutes, seconds, datetime.fromtimestamp(reset_time).strftime('%Y-%m-%d %H:%M:%S'))
+                logger.info(
+                    "Sleeping for %s hours, %s minutes, and %s seconds until %s.",
+                    hours,
+                    minutes,
+                    seconds,
+                    datetime.fromtimestamp(reset_time).strftime("%Y-%m-%d %H:%M:%S"),
+                )
                 time.sleep(sleep_time + 5)  # Sleep for the calculated time plus 5 seconds
 
             return method(*args, **kwargs)

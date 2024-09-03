@@ -31,52 +31,52 @@ class Chapters(BaseChapters):
 
 def test_add_row():
     chapters = Chapters()
-    chapters.add_row('Chapter 1', 1, 'Row 1')
+    chapters.add_row("Chapter 1", 1, "Row 1")
 
-    assert 'Chapter 1' in chapters.chapters
-    assert chapters.chapters['Chapter 1'].rows[1] == 'Row 1'
+    assert "Chapter 1" in chapters.chapters
+    assert chapters.chapters["Chapter 1"].rows[1] == "Row 1"
 
 
 def test_to_string():
     chapters = Chapters()
-    chapters.add_row('Chapter 1', 1, 'Row 1')
-    chapters.add_row('Chapter 1', 2, 'Row 2')
+    chapters.add_row("Chapter 1", 1, "Row 1")
+    chapters.add_row("Chapter 1", 2, "Row 2")
 
     result = chapters.to_string()
 
-    assert 'Row 1' in result
-    assert 'Row 2' in result
+    assert "Row 1" in result
+    assert "Row 2" in result
 
 
 def test_titles():
     chapters = Chapters()
-    chapters.add_row('Chapter 1', 1, 'Row 1')
-    chapters.add_row('Chapter 2', 2, 'Row 2')
+    chapters.add_row("Chapter 1", 1, "Row 1")
+    chapters.add_row("Chapter 2", 2, "Row 2")
 
     titles = chapters.titles
 
-    assert 'Chapter 1' in titles
-    assert 'Chapter 2' in titles
+    assert "Chapter 1" in titles
+    assert "Chapter 2" in titles
 
 
 def test_sort_ascending():
     chapters = Chapters()
     chapters.sort_ascending = False
-    chapters.add_row('Chapter 1', 1, 'Row 1')
-    chapters.add_row('Chapter 1', 2, 'Row 2')
+    chapters.add_row("Chapter 1", 1, "Row 1")
+    chapters.add_row("Chapter 1", 2, "Row 2")
 
     result = chapters.to_string()
     print(result)
 
-    assert '- Row 2' == result.split("\n")[1]
-    assert '- Row 1' == result.split("\n")[2]
+    assert "- Row 2" == result.split("\n")[1]
+    assert "- Row 1" == result.split("\n")[2]
 
 
 def test_print_empty_chapters():
     chapters = Chapters()
     chapters.print_empty_chapters = False
-    chapters.add_row('Chapter 1', 1, 'Row 1')
+    chapters.add_row("Chapter 1", 1, "Row 1")
 
     result = chapters.to_string()
 
-    assert 'Chapter 1' in result
+    assert "Chapter 1" in result

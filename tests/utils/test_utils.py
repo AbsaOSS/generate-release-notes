@@ -19,6 +19,7 @@ from release_notes_generator.utils.utils import get_change_url
 
 # get_change_url
 
+
 def test_get_change_url_no_repository():
     url = get_change_url(tag_name="v2.0.0")
     assert url == ""

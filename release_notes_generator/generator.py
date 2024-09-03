@@ -73,7 +73,7 @@ class ReleaseNotesGenerator:
             since = rls.published_at
 
         issues = self._safe_call(repo.get_issues)(state=ISSUE_STATE_ALL, since=since)
-        pulls = pulls_all = self._safe_call(repo.get_pulls)(state='closed')
+        pulls = pulls_all = self._safe_call(repo.get_pulls)(state="closed")
         commits = commits_all = list(self._safe_call(repo.get_commits)())
 
         if rls is not None:
@@ -91,16 +91,16 @@ class ReleaseNotesGenerator:
         rls_notes_records: dict[int, Record] = RecordFactory.generate(
             github=self.github_instance,
             repo=repo,
-            issues=list(issues),        # PaginatedList --> list
-            pulls=list(pulls),          # PaginatedList --> list
-            commits=list(commits)       # PaginatedList --> list
+            issues=list(issues),  # PaginatedList --> list
+            pulls=list(pulls),  # PaginatedList --> list
+            commits=list(commits),  # PaginatedList --> list
         )
 
         release_notes_builder = ReleaseNotesBuilder(
             records=rls_notes_records,
             custom_chapters=self.custom_chapters,
             formatter=RecordFormatter(),
-            changelog_url=changelog_url
+            changelog_url=changelog_url,
         )
 
         return release_notes_builder.build()
