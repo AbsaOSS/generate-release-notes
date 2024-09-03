@@ -14,6 +14,10 @@
 # limitations under the License.
 #
 
+"""
+This module contains the ServiceChapters class which is responsible for representing the service chapters in the release notes.
+"""
+
 from release_notes_generator.model.base_chapters import BaseChapters
 from release_notes_generator.model.chapter import Chapter
 from release_notes_generator.model.record import Record
@@ -30,7 +34,8 @@ from release_notes_generator.utils.constants import (
 # pylint: disable=too-many-instance-attributes
 class ServiceChapters(BaseChapters):
     """
-    A class used to represent the service chapters in the release notes.
+    A class representing the Service Chapters.
+    The class is responsible for representing the service chapters in the release notes.
     """
 
     def __init__(
@@ -40,14 +45,6 @@ class ServiceChapters(BaseChapters):
         user_defined_labels: list[str] = None,
         used_record_numbers: list[int] = None,
     ):
-        """
-        Constructs all the necessary attributes for the ServiceChapters object.
-
-        :param sort_ascending: A boolean indicating whether to sort the chapters in ascending order.
-        :param print_empty_chapters: A boolean indicating whether to print empty chapters.
-        :param user_defined_labels: A list of user-defined labels.
-        """
-
         super().__init__(sort_ascending, print_empty_chapters)
 
         self.user_defined_labels = user_defined_labels if user_defined_labels is not None else []
@@ -89,11 +86,12 @@ class ServiceChapters(BaseChapters):
 
         self.show_chapter_merged_prs_linked_to_open_issues = True
 
-    def populate(self, records: dict[int, Record]):
+    def populate(self, records: dict[int, Record]) -> None:
         """
         Populates the service chapters with records.
 
-        :param records: A dictionary of records where the key is an integer and the value is a Record object.
+        @param records: A dictionary of records.
+        @return: None
         """
         for nr in records:
             if nr in self.used_record_numbers:
@@ -115,12 +113,13 @@ class ServiceChapters(BaseChapters):
                 else:
                     self.chapters[OTHERS_NO_TOPIC].add_row(nr, records[nr].to_chapter_row())
 
-    def __populate_closed_issues(self, record: Record, nr: int):
+    def __populate_closed_issues(self, record: Record, nr: int) -> None:
         """
         Populates the service chapters with closed issues.
 
-        :param record: The Record object representing the closed issue.
-        :param nr: The number of the record.
+        @param record: The Record object representing the closed issue.
+        @param nr: The number of the record.
+        @return: None
         """
         # check record properties if it fits to a chapter: CLOSED_ISSUES_WITHOUT_PULL_REQUESTS
         populated = False
@@ -136,12 +135,13 @@ class ServiceChapters(BaseChapters):
         if not populated:
             self.chapters[OTHERS_NO_TOPIC].add_row(nr, record.to_chapter_row())
 
-    def __populate_pr(self, record: Record, nr: int):
+    def __populate_pr(self, record: Record, nr: int) -> None:
         """
         Populates the service chapters with pull requests.
 
-        :param record: The Record object representing the pull request.
-        :param nr: The number of the record.
+        @param record: The Record object representing the pull request.
+        @param nr: The number of the record.
+        @return: None
         """
         if record.is_merged_pr:
             # check record properties if it fits to a chapter: MERGED_PRS_WITHOUT_ISSUE

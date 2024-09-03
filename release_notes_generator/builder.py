@@ -14,6 +14,10 @@
 # limitations under the License.
 #
 
+"""
+This module contains the ReleaseNotesBuilder class which is responsible for building of the release notes.
+"""
+
 import logging
 from itertools import chain
 
@@ -29,6 +33,12 @@ logger = logging.getLogger(__name__)
 # TODO - reduce to function only after implementing the features. Will be supported more build ways?
 # pylint: disable=too-few-public-methods
 class ReleaseNotesBuilder:
+    """
+    A class representing the Release Notes Builder.
+    The class is responsible for building the release notes based on the records, changelog URL, formatter, and custom
+    chapters.
+    """
+
     def __init__(
         self,
         records: dict[int, Record],
@@ -36,14 +46,6 @@ class ReleaseNotesBuilder:
         formatter: RecordFormatter,
         custom_chapters: CustomChapters,
     ):
-        """
-        Init all the necessary attributes for the ReleaseNotesBuilder object.
-
-        @param records: A dictionary of records where the key is an integer and the value is a Record object.
-        @param changelog_url: The URL of the changelog.
-        @param formatter: A RecordFormatter object used to format the records.
-        @param custom_chapters: A CustomChapters object representing the custom chapters.
-        """
         self.records = records
         self.changelog_url = changelog_url
         self.formatter = formatter
@@ -54,7 +56,7 @@ class ReleaseNotesBuilder:
 
     def build(self) -> str:
         """
-        Builds the release notes.
+        Build the release notes based on the records, changelog URL, formatter, and custom chapters.
 
         @return: The release notes as a string.
         """

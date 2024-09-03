@@ -14,6 +14,10 @@
 # limitations under the License.
 #
 
+"""
+This module contains the BaseChapters class which is responsible for representing the base chapters.
+"""
+
 import logging
 from typing import Optional
 
@@ -42,11 +46,6 @@ class Record:
     """
 
     def __init__(self, repo: Repository, issue: Optional[Issue] = None):
-        """
-        Constructs all the necessary attributes for the Record object.
-
-        :param issue: An optional Issue object associated with the record.
-        """
         self.__repo: Repository = repo
         self.__gh_issue: Issue = issue
         self.__pulls: list[PullRequest] = []
@@ -57,76 +56,44 @@ class Record:
 
     @property
     def number(self) -> int:
-        """
-        Gets the number of the record.
-
-        :return: The number of the record as an integer.
-        """
+        """Getter for the number of the record."""
         if self.__gh_issue is None:
             return self.__pulls[0].number
         return self.__gh_issue.number
 
     @property
     def issue(self) -> Optional[Issue]:
-        """
-        Gets the issue associated with the record.
-
-        :return: The Issue object associated with the record, or None if there is no issue.
-        """
+        """Getter for the issue of the record."""
         return self.__gh_issue
 
     @property
     def pulls(self) -> list[PullRequest]:
-        """
-        Gets the pull requests associated with the record.
-
-        :return: The list of PullRequest objects associated with the record.
-        """
+        """Getter for the pull requests of the record."""
         return self.__pulls
 
     @property
     def commits(self) -> dict:
-        """
-        Gets the commits associated with the record.
-
-        :return: The commits associated with the record.
-        """
+        """Getter for the commits of the record."""
         return self.__pull_commits
 
     @property
     def is_present_in_chapters(self) -> bool:
-        """
-        Checks if the record is present in any chapters.
-
-        :return: A boolean indicating whether the record is present in any chapters.
-        """
+        """Check if the record is present in chapters."""
         return self.__present_in_chapters > 0
 
     @property
     def is_pr(self) -> bool:
-        """
-        Checks if the record is a pull request.
-
-        :return: A boolean indicating whether the record is a pull request.
-        """
+        """Check if the record is a pull request."""
         return self.__gh_issue is None and len(self.__pulls) == 1
 
     @property
     def is_issue(self) -> bool:
-        """
-        Checks if the record is an issue.
-
-        :return: A boolean indicating whether the record is an issue.
-        """
+        """Check if the record is an issue."""
         return self.__gh_issue is not None
 
     @property
     def is_closed(self) -> bool:
-        """
-        Checks if the record is closed.
-
-        :return: A boolean indicating whether the record is closed.
-        """
+        """Check if the record is closed."""
         if self.__gh_issue is None:
             # no issue ==> stand-alone PR
             return self.__pulls[0].state == PR_STATE_CLOSED
@@ -135,40 +102,24 @@ class Record:
 
     @property
     def is_closed_issue(self) -> bool:
-        """
-        Checks if the record is a closed issue.
-
-        :return: A boolean indicating whether the record is a closed issue.
-        """
+        """Check if the record is a closed issue."""
         return self.is_issue and self.__gh_issue.state == ISSUE_STATE_CLOSED
 
     @property
     def is_open_issue(self) -> bool:
-        """
-        Checks if the record is a open issue.
-
-        :return: A boolean indicating whether the record is a closed issue.
-        """
+        """Check if the record is an open issue."""
         return self.is_issue and self.__gh_issue.state == ISSUE_STATE_OPEN
 
     @property
     def is_merged_pr(self) -> bool:
-        """
-        Checks if the record is a merged pull request.
-
-        :return: A boolean indicating whether the record is a merged pull request.
-        """
+        """Check if the record is a merged pull request."""
         if self.__gh_issue is None:
             return self.is_pull_request_merged(self.__pulls[0])
         return False
 
     @property
     def labels(self) -> list[str]:
-        """
-        Gets the labels of the record.
-
-        :return: A list of the labels of the record.
-        """
+        """Getter for the labels of the record."""
         if self.__gh_issue is None:
             return [label.name for label in self.__pulls[0].labels]
 
@@ -181,9 +132,9 @@ class Record:
         """
         Gets the release notes of the record.
 
-        :param detection_pattern: The pattern to detect the start of the release notes.
-        :param line_mark: The mark to detect the start of a line in the release notes.
-        :return: The release notes as a string.
+        @param detection_pattern: The detection pattern to use.
+        @param line_mark: The line mark to use.
+        @return: The release notes of the record as a string.
         """
         release_notes = ""
 
@@ -208,11 +159,7 @@ class Record:
 
     @property
     def contains_release_notes(self) -> bool:
-        """
-        Checks if the record contains release notes.
-
-        :return: A boolean indicating whether the record contains release notes.
-        """
+        """Checks if the record contains release notes."""
         if self.__is_release_note_detected:
             return self.__is_release_note_detected
 
@@ -223,29 +170,17 @@ class Record:
 
     @property
     def pulls_count(self) -> int:
-        """
-        Gets the number of pull requests associated with the record.
-
-        :return: The number of pull requests associated with the record.
-        """
+        """Getter for the count of pull requests of the record."""
         return len(self.__pulls)
 
     @property
     def pr_contains_issue_mentions(self) -> bool:
-        """
-        Checks if the pull request mentions an issue. The logic checks only first pr in record.
-
-        :return: A boolean indicating whether the pull request mentions an issue.
-        """
+        """Checks if the pull request contains issue mentions."""
         return len(extract_issue_numbers_from_body(self.__pulls[0])) > 0
 
     @property
     def authors(self) -> Optional[str]:
-        """
-        Gets the authors of the record.
-
-        :return: The authors of the record as a string, or None if there are no authors.
-        """
+        """Getter for the authors of the record."""
         return None
         # TODO in Issue named 'Chapter line formatting - authors'
         # authors: list[str] = []
@@ -262,20 +197,12 @@ class Record:
 
     @property
     def contributors(self) -> Optional[str]:
-        """
-        Gets the contributors of the record.
-
-        :return: The contributors of the record as a string, or None if there are no contributors.
-        """
+        """Getter for the contributors of the record."""
         return None
 
     @property
     def pr_links(self) -> Optional[str]:
-        """
-        Gets the links to the pull requests associated with the record.
-
-        :return: The links to the pull requests as a string, or None if there are no pull requests.
-        """
+        """Getter for the pull request links of the record."""
         if len(self.__pulls) == 0:
             return None
 
@@ -286,10 +213,10 @@ class Record:
 
     def pull_request_commit_count(self, pull_number: int = 0) -> int:
         """
-        Gets the count of commits associated with the pull request.
+        Get count of commits in all record pull requests.
 
-        :param pull_number: The number of the pull request.
-        :return: The count of commits associated with the pull request.
+        @param pull_number: The number of the pull request.
+        @return: The count of commits in the pull request.
         """
         for pull in self.__pulls:
             if pull.number == pull_number:
@@ -304,26 +231,28 @@ class Record:
         """
         Gets a pull request associated with the record.
 
-        :param index: The index of the pull request.
-        :return: The PullRequest object.
+        @param index: The index of the pull request.
+        @return: The PullRequest instance.
         """
         if index < 0 or index >= len(self.__pulls):
             return None
         return self.__pulls[index]
 
-    def register_pull_request(self, pull):
+    def register_pull_request(self, pull) -> None:
         """
         Registers a pull request with the record.
 
-        :param pull: The PullRequest object to register.
+        @param pull: The PullRequest object to register.
+        @return: None
         """
         self.__pulls.append(pull)
 
-    def register_commit(self, commit: Commit):
+    def register_commit(self, commit: Commit) -> None:
         """
         Registers a commit with the record.
 
-        :param commit: The Commit object to register.
+        @param commit: The Commit object to register.
+        @return: None
         """
         for pull in self.__pulls:
             if commit.sha == pull.merge_commit_sha:
@@ -339,9 +268,9 @@ class Record:
         """
         Converts the record to a row in a chapter.
 
-        :param row_format: The format of the row.
-        :param increment_in_chapters: A boolean indicating whether to increment the count of chapters.
-        :return: The record as a row in a chapter.
+        @param row_format: The format of the row.
+        @param increment_in_chapters: A boolean indicating whether to increment the count of chapters.
+        @return: The record as a row in a chapter.
         """
         if increment_in_chapters:
             self.increment_present_in_chapters()
@@ -380,10 +309,10 @@ class Record:
 
     def contains_min_one_label(self, labels: list[str]) -> bool:
         """
-        Checks if the record contains at least one of the received labels.
+        Check if the record contains at least one of the specified labels.
 
-        :param labels: A list of labels to check for.
-        :return: A boolean indicating whether the record contains any of the specified labels.
+        @param labels: A list of labels to check for.
+        @return: A boolean indicating whether the record contains any of the specified labels.
         """
         for lbl in self.labels:
             if lbl in labels:
@@ -392,10 +321,10 @@ class Record:
 
     def contain_all_labels(self, labels: list[str]) -> bool:
         """
-        Checks if the record contains all of received labels.
+        Check if the record contains all of the specified labels.
 
-        :param labels: A list of labels to check for.
-        :return: A boolean indicating whether the record contains any of the specified labels.
+        @param labels: A list of labels to check for.
+        @return: A boolean indicating whether the record contains all of the specified
         """
         if len(self.labels) != len(labels):
             return False
@@ -405,9 +334,11 @@ class Record:
                 return False
         return True
 
-    def increment_present_in_chapters(self):
+    def increment_present_in_chapters(self) -> None:
         """
         Increments the count of chapters in which the record is present.
+
+        @return: None
         """
         self.__present_in_chapters += 1
 
@@ -415,7 +346,7 @@ class Record:
         """
         Gets the count of chapters in which the record is present.
 
-        :return: The count of chapters in which the record is present.
+        @return: The count of chapters in which the record is present.
         """
         return self.__present_in_chapters
 
@@ -423,8 +354,8 @@ class Record:
         """
         Checks if the specified commit SHA is present in the record.
 
-        :param sha: The commit SHA to check for.
-        :return: A boolean indicating whether the specified commit SHA is present in the record.
+        @param sha: The commit SHA to check for.
+        @return: A boolean indicating whether the specified commit SHA is present in the record.
         """
         for pull in self.__pulls:
             if pull.merge_commit_sha == sha:
@@ -434,4 +365,10 @@ class Record:
 
     @staticmethod
     def is_pull_request_merged(pull: PullRequest) -> bool:
+        """
+        Checks if the pull request is merged.
+
+        @param pull: The pull request to check.
+        @return: A boolean indicating whether the pull request is merged.
+        """
         return pull.state == PR_STATE_CLOSED and pull.merged_at is not None and pull.closed_at is not None

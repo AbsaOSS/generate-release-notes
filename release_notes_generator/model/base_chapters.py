@@ -14,6 +14,10 @@
 # limitations under the License.
 #
 
+"""
+This module contains the BaseChapters class which is responsible for representing the base chapters.
+"""
+
 from abc import ABC, abstractmethod
 from release_notes_generator.model.chapter import Chapter
 from release_notes_generator.model.record import Record
@@ -25,12 +29,6 @@ class BaseChapters(ABC):
     """
 
     def __init__(self, sort_ascending: bool = True, print_empty_chapters: bool = True):
-        """
-        Constructs all the necessary attributes for the BaseChapters object.
-
-        :param sort_ascending: A boolean indicating whether to sort the chapters in ascending order.
-        :param print_empty_chapters: A boolean indicating whether to print empty chapters.
-        """
         self.sort_ascending = sort_ascending
         self.print_empty_chapters = print_empty_chapters
         self.chapters: dict[str, Chapter] = {}
@@ -41,17 +39,18 @@ class BaseChapters(ABC):
         """
         Gets the list of populated record numbers.
 
-        :return: A list of populated record numbers.
+        @return: A list of populated record numbers.
         """
         return self.populated_record_numbers
 
-    def add_row(self, chapter_key: str, number: int, row: str):
+    def add_row(self, chapter_key: str, number: int, row: str) -> None:
         """
         Adds a row to a chapter.
 
-        :param chapter_key: The key of the chapter.
-        :param number: The number of the row.
-        :param row: The row to add.
+        @param chapter_key: The key of the chapter.
+        @param number: The number of the row.
+        @param row: The row to add.
+        @return: None
         """
         if chapter_key not in self.chapters:
             self.chapters[chapter_key] = Chapter(title=chapter_key)
@@ -61,7 +60,7 @@ class BaseChapters(ABC):
         """
         Converts the chapters to a string.
 
-        :return: The chapters as a string.
+        @return: The chapters as a string.
         """
         result = ""
         for chapter in self.chapters.values():
@@ -78,7 +77,7 @@ class BaseChapters(ABC):
         """
         Gets the titles of the chapters.
 
-        :return: A list of the titles of the chapters.
+        @return: A list of the titles of the chapters.
         """
         return [chapter.title for chapter in self.chapters.values()]
 
@@ -87,5 +86,5 @@ class BaseChapters(ABC):
         """
         Populates the chapters with records.
 
-        :param records: A dictionary of records where the key is an integer and the value is a Record object.
+        @param records: A dictionary of records where the key is an integer and the value is a Record object.
         """

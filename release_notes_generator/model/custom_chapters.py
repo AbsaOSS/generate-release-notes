@@ -14,6 +14,10 @@
 # limitations under the License.
 #
 
+"""
+This module contains the CustomChapters class which is responsible for representing the custom chapters in the release notes.
+"""
+
 import json
 
 from release_notes_generator.model.base_chapters import BaseChapters
@@ -26,11 +30,12 @@ class CustomChapters(BaseChapters):
     A class used to represent the custom chapters in the release notes.
     """
 
-    def populate(self, records: dict[int, Record]):
+    def populate(self, records: dict[int, Record]) -> None:
         """
         Populates the custom chapters with records.
 
-        :param records: A dictionary of records where the key is an integer and the value is a Record object.
+        @param records: A dictionary of records where the key is an integer and the value is a Record object.
+        @return: None
         """
         for nr in records:  # iterate all records
             for ch in self.chapters.values():  # iterate all chapters
@@ -44,7 +49,8 @@ class CustomChapters(BaseChapters):
         """
         Populates the custom chapters from a JSON string.
 
-        :param json_string: The JSON string containing the custom chapters.
+        @param json_string: The JSON string containing the custom chapters.
+        @return: The instance of the CustomChapters class.
         """
         data = json.loads(json_string)
         for item in data:
