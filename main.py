@@ -31,9 +31,11 @@ from release_notes_generator.utils.gh_action import set_action_output
 from release_notes_generator.utils.logging_config import setup_logging
 
 
-def run():
+def run() -> None:
     """
     The main function to run the Release Notes Generator.
+
+    @return: None
     """
     setup_logging()
     logger = logging.getLogger(__name__)
