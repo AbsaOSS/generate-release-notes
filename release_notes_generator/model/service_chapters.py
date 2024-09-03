@@ -34,8 +34,7 @@ from release_notes_generator.utils.constants import (
 # pylint: disable=too-many-instance-attributes
 class ServiceChapters(BaseChapters):
     """
-    A class representing the Service Chapters.
-    The class is responsible for representing the service chapters in the release notes.
+    A class representing the Service Chapters in the release notes.
     """
 
     def __init__(

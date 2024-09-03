@@ -45,6 +45,16 @@ class RecordFactory:
     def generate(
         github: Github, repo: Repository, issues: list[Issue], pulls: list[PullRequest], commits: list[Commit]
     ) -> dict[int, Record]:
+        """
+        Generate records for release notes.
+
+        @param github: The GitHub instance.
+        @param repo: The repository.
+        @param issues: The list of issues.
+        @param pulls: The list of pull requests.
+        @param commits: The list of commits.
+        @return: A dictionary of records.
+        """
         records = {}
         pull_numbers = [pull.number for pull in pulls]
 

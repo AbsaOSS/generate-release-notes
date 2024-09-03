@@ -44,15 +44,12 @@ logger = logging.getLogger(__name__)
 class ActionInputs:
     """
     A class representing the inputs provided to the GH action.
-    The class is responsible for handling the inputs provided to the GH action.
     """
 
     @staticmethod
     def get_github_repository() -> str:
         """
         Get the GitHub repository from the action inputs.
-
-        @return: The GitHub repository.
         """
         return get_action_input(GITHUB_REPOSITORY)
 
@@ -60,8 +57,6 @@ class ActionInputs:
     def get_github_token() -> str:
         """
         Get the GitHub token from the action inputs.
-
-        @return: The GitHub token.
         """
         return get_action_input(GITHUB_TOKEN)
 
@@ -69,8 +64,6 @@ class ActionInputs:
     def get_tag_name() -> str:
         """
         Get the tag name from the action inputs.
-
-        @return: The tag name.
         """
         return get_action_input(TAG_NAME)
 
@@ -78,8 +71,6 @@ class ActionInputs:
     def get_chapters_json() -> str:
         """
         Get the chapters JSON from the action inputs.
-
-        @return: The chapters JSON.
         """
         return get_action_input(CHAPTERS)
 
@@ -87,8 +78,6 @@ class ActionInputs:
     def get_published_at() -> bool:
         """
         Get the published at parameter value from the action inputs.
-
-        @return: The true/false value of the published at parameter.
         """
         return get_action_input(PUBLISHED_AT, "false").lower() == "true"
 
@@ -96,8 +85,6 @@ class ActionInputs:
     def get_skip_release_notes_label() -> str:
         """
         Get the skip release notes label from the action inputs.
-
-        @return: The skip release notes label.
         """
         return get_action_input(SKIP_RELEASE_NOTES_LABEL) or "skip-release-notes"
 
@@ -105,8 +92,6 @@ class ActionInputs:
     def get_verbose() -> bool:
         """
         Get the verbose parameter value from the action inputs.
-
-        @return: The true/false value of the verbose parameter.
         """
         return os.getenv(RUNNER_DEBUG, "0") == "1" or get_action_input(VERBOSE).lower() == "true"
 
@@ -115,8 +100,6 @@ class ActionInputs:
     def get_warnings() -> bool:
         """
         Get the warnings parameter value from the action inputs.
-
-        @return: The true/false value of the warnings parameter.
         """
         return get_action_input(WARNINGS, "true").lower() == "true"
 
@@ -124,8 +107,6 @@ class ActionInputs:
     def get_print_empty_chapters() -> bool:
         """
         Get the print empty chapters parameter value from the action inputs.
-
-        @return: The true/false value of the print empty chapters parameter.
         """
         return get_action_input(PRINT_EMPTY_CHAPTERS, "true").lower() == "true"
 
@@ -133,8 +114,6 @@ class ActionInputs:
     def get_chapters_to_pr_without_issue() -> bool:
         """
         Get the chapters to PR without issue parameter value from the action inputs.
-
-        @return: The true/false value of the chapters to PR without issue parameter.
         """
         return get_action_input(CHAPTERS_TO_PR_WITHOUT_ISSUE, "true").lower() == "true"
 
