@@ -14,6 +14,10 @@
 # limitations under the License.
 #
 
+"""
+This module contains the GithubRateLimiter class which is responsible for rate limiting the GitHub API calls.
+"""
+
 import logging
 import time
 from datetime import datetime
@@ -25,10 +29,21 @@ logger = logging.getLogger(__name__)
 
 # pylint: disable=too-few-public-methods
 class GithubRateLimiter:
+    """
+    A class used to rate limit the GitHub API calls.
+    """
+
     def __init__(self, github_client: Github):
         self.github_client = github_client
 
     def __call__(self, method: Callable) -> Callable:
+        """
+        Decorator to rate limit the GitHub API calls.
+
+        @param method: The method to decorate.
+        @return: The decorated method.
+        """
+
         def wrapped_method(*args, **kwargs) -> Optional:
             # rate_limit = self.github_client.get_rate_limit().core
             remaining_calls = self.github_client.get_rate_limit().core.remaining

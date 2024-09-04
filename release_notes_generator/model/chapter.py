@@ -14,20 +14,17 @@
 # limitations under the License.
 #
 
+"""
+This module contains the Chapter class which is responsible for representing a chapter in the release notes.
+"""
+
 
 class Chapter:
     """
-    A class used to represent a chapter in the release notes.
+    A class representing a chapter in the release notes.
     """
 
     def __init__(self, title: str = "", labels: list[str] = None, empty_message: str = "No entries detected."):
-        """
-        Constructs all the necessary attributes for the Chapter object.
-
-        :param title: The title of the chapter.
-        :param labels: A list of labels associated with the chapter.
-        :param empty_message: The message to display when the chapter is empty.
-        """
         self.title: str = title
         if labels is None:
             self.labels = []
@@ -36,12 +33,13 @@ class Chapter:
         self.rows: dict[int, str] = {}
         self.empty_message = empty_message
 
-    def add_row(self, number: int, row: str):
+    def add_row(self, number: int, row: str) -> None:
         """
         Adds a row to the chapter.
 
-        :param number: The number of the row.
-        :param row: The row to add.
+        @param number: The number of the row.
+        @param row: The row to add.
+        @return: None
         """
         self.rows[number] = row
 
@@ -49,9 +47,9 @@ class Chapter:
         """
         Converts the chapter to a string.
 
-        :param sort_ascending: A boolean indicating whether to sort the rows in ascending order.
-        :param print_empty_chapters: A boolean indicating whether to print empty chapters.
-        :return: The chapter as a string.
+        @param sort_ascending: A boolean indicating whether to sort the rows in ascending order.
+        @param print_empty_chapters: A boolean indicating whether to print empty chapters.
+        @return: The chapter as a string.
         """
         sorted_items = sorted(self.rows.items(), key=lambda item: item[0], reverse=not sort_ascending)
 

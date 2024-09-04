@@ -14,6 +14,9 @@
 # limitations under the License.
 #
 
+"""
+This module contains the constants used in the release notes generator.
+"""
 
 # Action inputs environment variables
 GITHUB_REPOSITORY = "GITHUB_REPOSITORY"

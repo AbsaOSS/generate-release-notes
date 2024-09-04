@@ -14,6 +14,10 @@
 # limitations under the License.
 #
 
+"""
+This module contains the BaseChapters class which is responsible for representing the base chapters.
+"""
+
 import logging
 
 from functools import wraps
@@ -28,6 +32,9 @@ logger = logging.getLogger(__name__)
 def debug_log_decorator(method: Callable) -> Callable:
     """
     Decorator to add debug logging for a method call.
+
+    @param method: The method to decorate.
+    @return: The decorated method.
     """
 
     @wraps(method)
@@ -41,9 +48,12 @@ def debug_log_decorator(method: Callable) -> Callable:
 
 
 # pylint: disable=broad-except
-def safe_call_decorator(rate_limiter: GithubRateLimiter):
+def safe_call_decorator(rate_limiter: GithubRateLimiter) -> Callable:
     """
     Decorator factory to create a rate-limited safe call function.
+
+    @param rate_limiter: The rate limiter to use.
+    @return: The decorator.
     """
 
     def decorator(method: Callable) -> Callable:

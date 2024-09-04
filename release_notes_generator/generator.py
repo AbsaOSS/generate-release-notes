@@ -14,6 +14,11 @@
 # limitations under the License.
 #
 
+"""
+This module contains the ReleaseNotesGenerator class which is responsible for generating
+the Release Notes output.
+"""
+
 import logging
 
 from typing import Optional
@@ -35,6 +40,12 @@ logger = logging.getLogger(__name__)
 
 
 class ReleaseNotesGenerator:
+    """
+    A class representing the Release Notes Generator.
+    The class uses several helper methods to fetch required data from GitHub, and generate the markdown pages
+    as the output of GH action.
+    """
+
     def __init__(self, github_instance: Github, custom_chapters: CustomChapters):
         self._github_instance = github_instance
         self._custom_chapters = custom_chapters
@@ -43,19 +54,22 @@ class ReleaseNotesGenerator:
 
     @property
     def github_instance(self) -> Github:
+        """Getter for the GitHub instance."""
         return self._github_instance
 
     @property
     def custom_chapters(self) -> CustomChapters:
+        """Getter for the CustomChapters instance."""
         return self._custom_chapters
 
     @property
     def rate_limiter(self) -> GithubRateLimiter:
+        """Getter for the GithubRateLimiter instance."""
         return self._rate_limiter
 
     def generate(self) -> Optional[str]:
         """
-        Generates the release notes for a given repository.
+        Generates the Release Notes for a given repository.
 
         @return: The generated release notes as a string, or None if the repository could not be found.
         """

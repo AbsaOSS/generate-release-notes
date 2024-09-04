@@ -14,6 +14,12 @@
 # limitations under the License.
 #
 
+"""
+This module contains the main script for the Release Notes Generator GH Action.
+It sets up logging, loads action inputs, generates the release notes and sets the output
+for the GH Action.
+"""
+
 import logging
 
 from github import Github, Auth
@@ -25,9 +31,11 @@ from release_notes_generator.utils.gh_action import set_action_output
 from release_notes_generator.utils.logging_config import setup_logging
 
 
-def run():
+def run() -> None:
     """
-    Runs the 'Release Notes Generator' GitHub Action.
+    The main function to run the Release Notes Generator.
+
+    @return: None
     """
     setup_logging()
     logger = logging.getLogger(__name__)

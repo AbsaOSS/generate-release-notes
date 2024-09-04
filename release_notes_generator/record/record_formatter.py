@@ -14,6 +14,10 @@
 # limitations under the License.
 #
 
+"""
+This module contains the BaseChapters class which is responsible for representing the base chapters.
+"""
+
 from github.PullRequest import PullRequest
 
 from release_notes_generator.model.record import Record
@@ -29,12 +33,6 @@ class RecordFormatter:
     def __init__(
         self, issue_pattern: str = DEFAULT_ISSUE_PATTERN, pull_requests_pattern: str = DEFAULT_PULL_REQUESTS_PATTERN
     ):
-        """
-        Constructs all the necessary attributes for the RecordFormatter object.
-
-        :param issue_pattern: A string pattern for formatting issues.
-        :param pull_requests_pattern: A string pattern for formatting pull requests.
-        """
         self.issue_pattern = issue_pattern
         self.pull_requests_pattern = pull_requests_pattern
 
@@ -42,8 +40,8 @@ class RecordFormatter:
         """
         Formats a record.
 
-        :param record: The Record object to format.
-        :return: The formatted record as a string.
+        @param record: The Record object to format.
+        @return: The formatted record as a string.
         """
         # create a dict of supported keys and values - from record
         params = {
@@ -65,8 +63,8 @@ class RecordFormatter:
         """
         Formats a list of pull requests.
 
-        :param pulls: The list of PullRequest objects to format.
-        :return: The formatted pull requests as a string.
+        @param pulls: The list of PullRequest objects to format.
+        @return: The formatted pull requests as a string.
         """
         return ", ".join([self.pull_requests_pattern.format(number=pr.number, url=pr.url) for pr in pulls])
 
@@ -74,8 +72,8 @@ class RecordFormatter:
         """
         Formats the developers of a record.
 
-        :param record: The Record object whose developers to format.
-        :return: The formatted developers as a string.
+        @param record: The Record object whose developers to format.
+        @return: The formatted developers as a string.
         """
         developers = []
         # if record.gh_issue and record.gh_issue.assignees:
@@ -89,8 +87,8 @@ class RecordFormatter:
         """
         Formats the release note rows of a record.
 
-        :param record: The Record object whose release note rows to format.
-        :return: The formatted release note rows as a string.
+        @param record: The Record object whose release note rows to format.
+        @return: The formatted release note rows as a string.
         """
         return "  - release notes 1\n  - release notes 2"
         # return "\n  - ".join(record.release_note_rows()) if record.release_note_rows() else "  - No release notes"

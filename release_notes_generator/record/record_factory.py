@@ -14,6 +14,10 @@
 # limitations under the License.
 #
 
+"""
+This module contains the RecordFactory class which is responsible for generating records for release notes.
+"""
+
 import logging
 
 from github import Github
@@ -42,15 +46,14 @@ class RecordFactory:
         github: Github, repo: Repository, issues: list[Issue], pulls: list[PullRequest], commits: list[Commit]
     ) -> dict[int, Record]:
         """
-        Generates a dictionary of ReleaseNotesRecord instances.
-        The key is the issue or pr number.
+        Generate records for release notes.
 
-        :param github: The Github instance.
-        :param repo: The Repository instance.
-        :param issues: The list of Issue instances.
-        :param pulls: The list of PullRequest instances.
-        :param commits: The list of Commit instances.
-        :return: The dictionary of ReleaseNotesRecord instances.
+        @param github: The GitHub instance.
+        @param repo: The repository.
+        @param issues: The list of issues.
+        @param pulls: The list of pull requests.
+        @param commits: The list of commits.
+        @return: A dictionary of records.
         """
         records = {}
         pull_numbers = [pull.number for pull in pulls]
@@ -85,7 +88,13 @@ class RecordFactory:
                         parent_issue_number,
                     )
 
-        def register_commit_to_record(commit: Commit):
+        def register_commit_to_record(commit: Commit) -> bool:
+            """
+            Register a commit to a record if the commit is linked to an issue or a PR.
+
+            @param commit: The commit to register.
+            @return: True if the commit was registered to a record, False otherwise
+            """
             for record in records.values():
                 if record.is_commit_sha_present(commit.sha):
                     record.register_commit(commit)

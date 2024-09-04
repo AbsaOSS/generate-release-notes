@@ -14,6 +14,10 @@
 # limitations under the License.
 #
 
+"""
+This module contains utility functions for generating release notes.
+"""
+
 import logging
 from typing import Optional
 
@@ -29,10 +33,10 @@ def get_change_url(
     """
     Generates a URL for viewing changes associated with a given tag name in a GitHub repository.
 
-    :param tag_name: The tag name for which the change URL is to be generated.
-    :param repository: An optional Repository. If given, this repository is used instead current one.
-    :param git_release: An Optional GitRelease. If given, URL compares this release with the tag name.
-    :return: An optional string containing the URL to view the changes. Returns a None if the repository is not set.
+    @param tag_name: The tag name for which the change URL is to be generated.
+    @param repository: An optional Repository. If given, this repository is used instead current one.
+    @param git_release: An Optional GitRelease. If given, URL compares this release with the tag name.
+    @return: An optional string containing the URL to view the changes. Returns a None if the repository is not set.
     """
     if not repository:
         logger.error("Get change url failed. Repository is not set.")

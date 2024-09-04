@@ -14,6 +14,10 @@
 # limitations under the License.
 #
 
+"""
+This module contains the ActionInputs class which is responsible for handling the inputs provided to the GH action.
+"""
+
 import json
 import logging
 import os
@@ -38,49 +42,93 @@ logger = logging.getLogger(__name__)
 
 
 class ActionInputs:
+    """
+    A class representing the inputs provided to the GH action.
+    """
+
     @staticmethod
     def get_github_repository() -> str:
+        """
+        Get the GitHub repository from the action inputs.
+        """
         return get_action_input(GITHUB_REPOSITORY)
 
     @staticmethod
     def get_github_token() -> str:
+        """
+        Get the GitHub token from the action inputs.
+        """
         return get_action_input(GITHUB_TOKEN)
 
     @staticmethod
     def get_tag_name() -> str:
+        """
+        Get the tag name from the action inputs.
+        """
         return get_action_input(TAG_NAME)
 
     @staticmethod
     def get_chapters_json() -> str:
+        """
+        Get the chapters JSON from the action inputs.
+        """
         return get_action_input(CHAPTERS)
 
     @staticmethod
     def get_published_at() -> bool:
+        """
+        Get the published at parameter value from the action inputs.
+        """
         return get_action_input(PUBLISHED_AT, "false").lower() == "true"
 
     @staticmethod
     def get_skip_release_notes_label() -> str:
+        """
+        Get the skip release notes label from the action inputs.
+        """
         return get_action_input(SKIP_RELEASE_NOTES_LABEL) or "skip-release-notes"
 
     @staticmethod
     def get_verbose() -> bool:
+        """
+        Get the verbose parameter value from the action inputs.
+        """
         return os.getenv(RUNNER_DEBUG, "0") == "1" or get_action_input(VERBOSE).lower() == "true"
 
     # Features
     @staticmethod
     def get_warnings() -> bool:
+        """
+        Get the warnings parameter value from the action inputs.
+        """
         return get_action_input(WARNINGS, "true").lower() == "true"
 
     @staticmethod
     def get_print_empty_chapters() -> bool:
+        """
+        Get the print empty chapters parameter value from the action inputs.
+        """
         return get_action_input(PRINT_EMPTY_CHAPTERS, "true").lower() == "true"
 
     @staticmethod
     def get_chapters_to_pr_without_issue() -> bool:
+        """
+        Get the chapters to PR without issue parameter value from the action inputs.
+        """
         return get_action_input(CHAPTERS_TO_PR_WITHOUT_ISSUE, "true").lower() == "true"
 
     @staticmethod
     def validate_input(input_value, expected_type: type, error_message: str, error_buffer: list) -> bool:
+        """
+        Validates the input value against the expected type.
+
+        @param input_value: The input value to validate.
+        @param expected_type: The expected type of the input value.
+        @param error_message: The error message to log if the validation fails.
+        @param error_buffer: The buffer to store the error messages.
+        @return: The boolean result of the validation.
+        """
+
         if not isinstance(input_value, expected_type):
             error_buffer.append(error_message)
             return False
