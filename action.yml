@@ -23,6 +23,14 @@ inputs:
   chapters:
     description: 'JSON string defining chapters and corresponding labels for categorization.'
     required: false
+  duplicity-scope:
+    description: 'Allow duplicity of issues in chapters. Scopes: CUSTOM, SERVICE, BOTH, NONE'.
+    required: false
+    default: 'BOTH'
+  duplicity-icon:
+    description: 'Icon to be used for duplicity warning. Icon is placed before the record line.'
+    required: false
+    default: '🔔'
   published-at:
     description: 'Use `published-at` timestamp instead of `created-at` as the reference point of previous Release.'
     required: false
@@ -91,6 +99,8 @@ runs:
         INPUT_GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
         INPUT_TAG_NAME: ${{ inputs.tag-name }}
         INPUT_CHAPTERS: ${{ inputs.chapters }}
+        INPUT_DUPLICITY: ${{ inputs.duplicity }}
+        INPUT_DUPLICITY_ICON: ${{ inputs.duplicity-icon }}
         INPUT_WARNINGS: ${{ inputs.warnings }}
         INPUT_PUBLISHED_AT: ${{ inputs.published-at }}
         INPUT_SKIP_RELEASE_NOTES_LABEL: ${{ inputs.skip-release-notes-label }}

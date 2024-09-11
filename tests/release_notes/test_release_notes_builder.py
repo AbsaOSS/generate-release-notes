@@ -20,7 +20,7 @@ from release_notes_generator.record.record_formatter import RecordFormatter
 from release_notes_generator.model.custom_chapters import CustomChapters
 from release_notes_generator.builder import ReleaseNotesBuilder
 
-
+# pylint: disable=pointless-string-statement
 """
     Issue can be in 2 states (each in 2 'sub' states):
         - Open
@@ -184,7 +184,8 @@ RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_ISSUE_NO_PR_NO_USER_LABELS = """### C
 http://example.com/changelog
 """
 
-RELEASE_NOTES_DATA_SERVICE_CHAPTERS_MERGED_PR_NO_ISSUE_NO_USER_LABELS = """### Merged PRs without Issue and User Defined Labels ⚠️
+RELEASE_NOTES_DATA_SERVICE_CHAPTERS_MERGED_PR_NO_ISSUE_NO_USER_LABELS = \
+"""### Merged PRs without Issue and User Defined Labels ⚠️
 - PR: #123 _Fixed bug_
   - Fixed bug
   - Improved performance
@@ -193,7 +194,8 @@ RELEASE_NOTES_DATA_SERVICE_CHAPTERS_MERGED_PR_NO_ISSUE_NO_USER_LABELS = """### M
 http://example.com/changelog
 """
 
-RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_PR_NO_ISSUE_NO_USER_LABELS = """### Closed PRs without Issue and User Defined Labels ⚠️
+RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_PR_NO_ISSUE_NO_USER_LABELS = \
+"""### Closed PRs without Issue and User Defined Labels ⚠️
 - PR: #123 _Fixed bug_
   - Fixed bug
   - Improved performance
@@ -202,7 +204,8 @@ RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_PR_NO_ISSUE_NO_USER_LABELS = """### C
 http://example.com/changelog
 """
 
-RELEASE_NOTES_DATA_SERVICE_CHAPTERS_OPEN_ISSUE_AND_MERGED_PR_NO_USER_LABELS = """### Merged PRs Linked to 'Not Closed' Issue ⚠️
+RELEASE_NOTES_DATA_SERVICE_CHAPTERS_OPEN_ISSUE_AND_MERGED_PR_NO_USER_LABELS = \
+"""### Merged PRs Linked to 'Not Closed' Issue ⚠️
 - #122 _I1 open_ in [#101](https://github.com/org/repo/pull/101), [#102](https://github.com/org/repo/pull/102)
   - PR 101 1st release note
   - PR 101 2nd release note
@@ -213,7 +216,8 @@ RELEASE_NOTES_DATA_SERVICE_CHAPTERS_OPEN_ISSUE_AND_MERGED_PR_NO_USER_LABELS = ""
 http://example.com/changelog
 """
 
-RELEASE_NOTES_DATA_SERVICE_CHAPTERS_OPEN_ISSUE_AND_MERGED_PR_NO_USER_LABELS_ISSUE_NOT_PART_OF_RECORD = """### Others - No Topic ⚠️
+RELEASE_NOTES_DATA_SERVICE_CHAPTERS_OPEN_ISSUE_AND_MERGED_PR_NO_USER_LABELS_ISSUE_NOT_PART_OF_RECORD = \
+"""### Others - No Topic ⚠️
 - PR: #101 _PR 101_
   - PR 101 1st release note
   - PR 101 2nd release note
@@ -272,7 +276,8 @@ RELEASE_NOTES_DATA_MERGED_PRS_WITH_OPEN_ISSUES = """### Merged PRs Linked to 'No
 http://example.com/changelog
 """
 
-RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_MERGED_PRS_WITHOUT_USER_LABELS = """### Closed Issues without User Defined Labels ⚠️
+RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_MERGED_PRS_WITHOUT_USER_LABELS = \
+"""### Closed Issues without User Defined Labels ⚠️
 - #121 _Fix the bug_ in [#123](https://github.com/org/repo/pull/123)
   - Fixed bug
   - Improved performance

@@ -15,7 +15,8 @@
 #
 
 """
-This module contains the ServiceChapters class which is responsible for representing the service chapters in the release notes.
+This module contains the ServiceChapters class which is responsible for representing the service chapters in the release
+ notes.
 """
 
 from release_notes_generator.model.base_chapters import BaseChapters

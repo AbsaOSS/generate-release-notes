@@ -23,6 +23,8 @@ success_case = {
     "get_github_repository": "owner/repo_name",
     "get_tag_name": "tag_name",
     "get_chapters_json": '{"chapter": "content"}',
+    "get_duplicity_scope": "custom",
+    "get_duplicity_icon": "🔁",
     "get_warnings": True,
     "get_published_at": False,
     "get_skip_release_notes_label": "skip",
@@ -42,6 +44,8 @@ failure_cases = [
     ("get_print_empty_chapters", "not_bool", "Print empty chapters must be a boolean."),
     ("get_chapters_to_pr_without_issue", "not_bool", "Chapters to PR without issue must be a boolean."),
     ("get_verbose", "not_bool", "Verbose logging must be a boolean."),
+    ("get_duplicity_icon", "", "Duplicity icon must be a non-empty string and have a length of 1."),
+    ("get_duplicity_icon", "Oj", "Duplicity icon must be a non-empty string and have a length of 1."),
 ]
 
 

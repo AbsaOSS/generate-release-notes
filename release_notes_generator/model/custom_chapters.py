@@ -15,7 +15,8 @@
 #
 
 """
-This module contains the CustomChapters class which is responsible for representing the custom chapters in the release notes.
+This module contains the CustomChapters class which is responsible for representing the custom chapters in the release
+notes.
 """
 
 import json
