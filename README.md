@@ -14,6 +14,7 @@
   - [Select start date for closed issues and PRs](#select-start-date-for-closed-issues-and-prs)
   - [Enable skipping of release notes for specific issues using label](#enable-skipping-of-release-notes-for-specific-issues-using-label)
   - [Enable Service Chapters](#enable-service-chapters)
+  - [Showing Duplicity Lines In Chapters](#showing-duplicity-lines-in-chapters)
 - [Get Started](#get-started)
 - [Run Static Code Analysis](#running-static-code-analysis)
 - [Run Black Tool Locally](#run-black-tool-locally)
@@ -49,6 +50,16 @@ Generate Release Notes action is dedicated to enhance the quality and organizati
 ### `chapters`
 - **Description**: A JSON string defining chapters and corresponding labels for categorization. Each chapter should have a title and a label matching your GitHub issues and PRs.
 - **Required**: Yes
+
+### `duplicity-scope`
+- **Description**: Set to `custom` to allow duplicity issue lines to be shown only in custom chapters. Options: `custom,` `service,` `both,` `none.`
+- **Required**: No
+- **Default**: `both`
+
+### `duplicity-icon`
+- **Description**: The icon used to indicate duplicity issue lines in the release notes. Icon will be placed at the beginning of the line.
+- **Required**: No
+- **Default**: `🔔`
 
 ### `published-at`
 - **Description**: Set to true to enable the use of the `published-at` timestamp as the reference point for searching closed issues and PRs, instead of the `created-at` date of the latest release. If first release, repository creation date is used.
@@ -86,7 +97,8 @@ Generate Release Notes action is dedicated to enhance the quality and organizati
 
 ## Outputs
 The output of the action is a markdown string containing the release notes for the specified tag. This string can be used in subsequent steps to publish the release notes to a file, create a GitHub release, or send notifications.
-TODO - review
+
+See the [example of output](./examples/output_example.md).
 
 ## Usage Example
 
@@ -130,6 +142,8 @@ Add the following step to your GitHub workflow (in example are used non-default 
       {"title": "New Features 🎉", "label": "feature"},
       {"title": "Bugfixes 🛠", "label": "bug"}
     ]'
+    duplicity-scope: 'service'
+    duplicity-icon: '🔁'
     published-at: true
     skip-release-notes-label: 'ignore-in-release'     # changing default value of label
     verbose: false
@@ -209,6 +223,17 @@ The action includes four specific warning chapters to highlight potential areas 
 
 Each warning chapter acts as a quality check, ensuring that the release notes are comprehensive, well-organized, and meaningful. By addressing these warnings, project maintainers can significantly improve the clarity and effectiveness of their release documentation.
 
+
+### Showing Duplicity Lines In Chapters
+By setting the `duplicity-scope` with one of the options, the action will show whether the duplicity issue lines are correct.
+- `custom`: will show duplicity lines only in custom chapters.
+- `service`: will show duplicity lines only in service chapters.
+- `both`: will show duplicity lines in both custom and service chapters.
+- `none`: will hide duplicity lines in all chapters.
+
+Duplicity lines in `custom` chapters can point to potential issues with wrong labeling. In contrast, duplicity lines in `service` chapters can help maintainers identify areas with the most significant problems to address.
+
+By setting `duplicity-icon` you can customize the icon used to indicate duplicity issue lines in the release notes. Icon will be placed at the beginning of the line. The duplicity icon is visible from **second** occurrence of the issue in the selected scope.
 
 ## Get Started
 

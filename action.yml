@@ -24,7 +24,7 @@ inputs:
     description: 'JSON string defining chapters and corresponding labels for categorization.'
     required: false
   duplicity-scope:
-    description: 'Allow duplicity of issues in chapters. Scopes: CUSTOM, SERVICE, BOTH, NONE'.
+    description: 'Allow duplicity of issue lines in chapters. Scopes: CUSTOM, SERVICE, BOTH, NONE'.
     required: false
     default: 'BOTH'
   duplicity-icon:
