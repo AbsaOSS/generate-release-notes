@@ -23,6 +23,7 @@ from release_notes_generator.utils.constants import (
     CLOSED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS,
     OTHERS_NO_TOPIC,
 )
+from release_notes_generator.utils.enums import DuplicityScopeEnum
 
 
 # __init__
@@ -81,3 +82,22 @@ def test_populate_no_issue_with_pull(service_chapters, record_with_no_issue_one_
     print(service_chapters.to_string())
 
     assert 1 == len(service_chapters.chapters[MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES].rows)
+
+
+def test_populate_closed_issue_scope_custom(service_chapters, record_with_issue_closed_no_pull, mocker):
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_duplicity_scope", return_value=DuplicityScopeEnum.CUSTOM)
+
+    service_chapters.populate({1: record_with_issue_closed_no_pull})
+
+    assert 1 == len(service_chapters.chapters[CLOSED_ISSUES_WITHOUT_PULL_REQUESTS].rows)
+    assert 0 == len(service_chapters.chapters[CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS].rows)
+
+
+def test_populate_closed_issue_duplicity(service_chapters, record_with_issue_closed_no_pull, mocker):
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_duplicity_scope", return_value=DuplicityScopeEnum.NONE)
+
+    service_chapters.used_record_numbers.append(1)
+    service_chapters.populate({1: record_with_issue_closed_no_pull})
+
+    assert 0 == len(service_chapters.chapters[CLOSED_ISSUES_WITHOUT_PULL_REQUESTS].rows)
+    assert 0 == len(service_chapters.chapters[CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS].rows)

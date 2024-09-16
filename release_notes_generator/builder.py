@@ -61,12 +61,11 @@ class ReleaseNotesBuilder:
         @return: The release notes as a string.
         """
         logger.info("Building Release Notes")
-        user_defined_chapters = self.custom_chapters
-        user_defined_chapters.populate(self.records)
-        user_defined_chapters_str = user_defined_chapters.to_string()
+        self.custom_chapters.populate(self.records)
+        user_defined_chapters_str = self.custom_chapters.to_string()
 
         user_defined_labels_nested = [
-            user_defined_chapters.chapters[key].labels for key in user_defined_chapters.chapters
+            self.custom_chapters.chapters[key].labels for key in self.custom_chapters.chapters
         ]
         user_defined_labels = list(chain.from_iterable(user_defined_labels_nested))
 
@@ -74,7 +73,7 @@ class ReleaseNotesBuilder:
             service_chapters = ServiceChapters(
                 print_empty_chapters=self.print_empty_chapters,
                 user_defined_labels=user_defined_labels,
-                used_record_numbers=user_defined_chapters.populated_record_numbers,
+                used_record_numbers=self.custom_chapters.populated_record_numbers,
             )
             service_chapters.populate(self.records)
 

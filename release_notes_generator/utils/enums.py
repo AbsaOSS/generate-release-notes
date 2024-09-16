@@ -26,7 +26,7 @@ class DuplicityScopeEnum(StrEnum):
     A class representing the scope where are duplicates allowed.
     """
 
-    NONE = "none"
-    CUSTOM = "custom"
-    SERVICE = "service"
-    BOTH = "both"
+    NONE = "NONE"
+    CUSTOM = "CUSTOM"
+    SERVICE = "SERVICE"
+    BOTH = "BOTH"

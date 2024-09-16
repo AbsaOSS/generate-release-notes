@@ -178,7 +178,7 @@ RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_ISSUE_NO_PR_NO_USER_LABELS = """### C
 - #121 _Fix the bug_
 
 ### Closed Issues without User Defined Labels ⚠️
-- #121 _Fix the bug_
+- 🔔 #121 _Fix the bug_
 
 #### Full Changelog
 http://example.com/changelog

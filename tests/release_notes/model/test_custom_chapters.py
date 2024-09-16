@@ -17,6 +17,7 @@
 from release_notes_generator.model.chapter import Chapter
 from release_notes_generator.model.custom_chapters import CustomChapters
 from release_notes_generator.model.record import Record
+from release_notes_generator.utils.enums import DuplicityScopeEnum
 
 
 # __init__
@@ -92,6 +93,46 @@ def test_populate_no_matching_labels(custom_chapters, mocker):
 
     custom_chapters.populate(records)
     assert 1 not in custom_chapters.chapters["Chapter 1"].rows
+    assert 1 not in custom_chapters.chapters["Chapter 2"].rows
+
+
+def test_populate_service_duplicity_scope(custom_chapters, mocker):
+    record1 = mocker.Mock(spec=Record)
+    record1.labels = ["bug", "feature"]
+    record1.pulls_count = 1
+    record1.is_present_in_chapters = False
+    record1.to_chapter_row.return_value = "Record 1 Chapter Row"
+
+    records = {
+        1: record1,
+    }
+
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_duplicity_scope", return_value=DuplicityScopeEnum.SERVICE)
+
+    custom_chapters.populate(records)
+
+    assert 1 in custom_chapters.chapters["Chapter 1"].rows
+    assert custom_chapters.chapters["Chapter 1"].rows[1] == "Record 1 Chapter Row"
+    assert 1 not in custom_chapters.chapters["Chapter 2"].rows
+
+
+def test_populate_none_duplicity_scope(custom_chapters, mocker):
+    record1 = mocker.Mock(spec=Record)
+    record1.labels = ["bug", "feature"]
+    record1.pulls_count = 1
+    record1.is_present_in_chapters = False
+    record1.to_chapter_row.return_value = "Record 1 Chapter Row"
+
+    records = {
+        1: record1,
+    }
+
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_duplicity_scope", return_value=DuplicityScopeEnum.NONE)
+
+    custom_chapters.populate(records)
+
+    assert 1 in custom_chapters.chapters["Chapter 1"].rows
+    assert custom_chapters.chapters["Chapter 1"].rows[1] == "Record 1 Chapter Row"
     assert 1 not in custom_chapters.chapters["Chapter 2"].rows
 
 

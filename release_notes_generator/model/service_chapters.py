@@ -18,7 +18,7 @@
 This module contains the ServiceChapters class which is responsible for representing the service chapters in the release
  notes.
 """
-
+from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.base_chapters import BaseChapters
 from release_notes_generator.model.chapter import Chapter
 from release_notes_generator.model.record import Record
@@ -30,6 +30,7 @@ from release_notes_generator.utils.constants import (
     MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES,
     OTHERS_NO_TOPIC,
 )
+from release_notes_generator.utils.enums import DuplicityScopeEnum
 
 
 # pylint: disable=too-many-instance-attributes
@@ -93,12 +94,12 @@ class ServiceChapters(BaseChapters):
         @param records: A dictionary of records.
         @return: None
         """
+        # iterate all records
         for nr in records:
-            if nr in self.used_record_numbers:
-                # TODO - duplicities not allowed in this version in default
+            # skip the record when used in used and not allowed to be duplicated in Service chapters
+            if self._is_row_present(nr) and not self.duplicity_allowed():
                 continue
 
-            # iterate all records
             if records[nr].is_closed_issue:
                 self.__populate_closed_issues(records[nr], nr)
 
@@ -110,8 +111,10 @@ class ServiceChapters(BaseChapters):
                     pass
                 elif records[nr].is_open_issue and records[nr].pulls_count > 0:
                     self.chapters[MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES].add_row(nr, records[nr].to_chapter_row())
+                    self.used_record_numbers.append(nr)
                 else:
                     self.chapters[OTHERS_NO_TOPIC].add_row(nr, records[nr].to_chapter_row())
+                    self.used_record_numbers.append(nr)
 
     def __populate_closed_issues(self, record: Record, nr: int) -> None:
         """
@@ -125,15 +128,29 @@ class ServiceChapters(BaseChapters):
         populated = False
         if record.pulls_count == 0:
             self.chapters[CLOSED_ISSUES_WITHOUT_PULL_REQUESTS].add_row(nr, record.to_chapter_row())
+            self.used_record_numbers.append(nr)
             populated = True
 
         # check record properties if it fits to a chapter: CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS
         if not record.contains_min_one_label(self.user_defined_labels):
+            # check if the record is already present among the chapters
+            if self._is_row_present(nr) and not self.duplicity_allowed():
+                return
+
             self.chapters[CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS].add_row(nr, record.to_chapter_row())
+            self.used_record_numbers.append(nr)
             populated = True
 
+        if record.pulls_count > 0:
+            # the record looks to be valid closed issue with 1+ pull requests
+            return
+
         if not populated:
+            if self._is_row_present(nr) and not self.duplicity_allowed():
+                return
+
             self.chapters[OTHERS_NO_TOPIC].add_row(nr, record.to_chapter_row())
+            self.used_record_numbers.append(nr)
 
     def __populate_pr(self, record: Record, nr: int) -> None:
         """
@@ -146,14 +163,26 @@ class ServiceChapters(BaseChapters):
         if record.is_merged_pr:
             # check record properties if it fits to a chapter: MERGED_PRS_WITHOUT_ISSUE
             if not record.pr_contains_issue_mentions and not record.contains_min_one_label(self.user_defined_labels):
+                if self._is_row_present(nr) and not self.duplicity_allowed():
+                    return
+
                 self.chapters[MERGED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS].add_row(nr, record.to_chapter_row())
+                self.used_record_numbers.append(nr)
 
             # check record properties if it fits to a chapter: MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES
             if record.pr_contains_issue_mentions:
+                if self._is_row_present(nr) and not self.duplicity_allowed():
+                    return
+
                 self.chapters[MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES].add_row(nr, record.to_chapter_row())
+                self.used_record_numbers.append(nr)
 
             if not record.is_present_in_chapters:
+                if self._is_row_present(nr) and not self.duplicity_allowed():
+                    return
+
                 self.chapters[OTHERS_NO_TOPIC].add_row(nr, record.to_chapter_row())
+                self.used_record_numbers.append(nr)
 
         # check record properties if it fits to a chapter: CLOSED_PRS_WITHOUT_ISSUE
         elif (
@@ -161,8 +190,23 @@ class ServiceChapters(BaseChapters):
             and not record.pr_contains_issue_mentions
             and not record.contains_min_one_label(self.user_defined_labels)
         ):
+            if self._is_row_present(nr) and not self.duplicity_allowed():
+                return
+
             self.chapters[CLOSED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS].add_row(nr, record.to_chapter_row())
+            self.used_record_numbers.append(nr)
 
         else:
+            if self._is_row_present(nr) and not self.duplicity_allowed():
+                return
+
             # not record.is_present_in_chapters:
             self.chapters[OTHERS_NO_TOPIC].add_row(nr, record.to_chapter_row())
+            self.used_record_numbers.append(nr)
+
+    def _is_row_present(self, nr: int) -> bool:
+        return nr in self.used_record_numbers
+
+    @staticmethod
+    def duplicity_allowed() -> bool:
+        return ActionInputs.get_duplicity_scope() in (DuplicityScopeEnum.SERVICE, DuplicityScopeEnum.BOTH)
