@@ -63,6 +63,9 @@ No entries detected.
 
 ### Merged PRs Linked to 'Not Closed' Issue ⚠️
 - #20 _REQ: Search by Keywords_ in [#44](https://github.com/company/test-project/pull/44)
+- 🔔 #33 _Example bugfix_ in [#44](https://github.com/company/test-project/pull/44), [#36](https://github.com/company/test-project/pull/36), [#35](https://github.com/company/test-project/pull/35), [#34](https://github.com/company/test-project/pull/34)
+  - Another solved typos. Hello from second RLS notes comment.
+  - Solved some typos.
 - PR: #80 _Feature/multiline excludes_
 - #81 _Test multiline excludes in filename inspector related yml_ in [#79](https://github.com/company/test-project/pull/79), [#78](https://github.com/company/test-project/pull/78), [#77](https://github.com/company/test-project/pull/77), [#76](https://github.com/company/test-project/pull/76), [#75](https://github.com/company/test-project/pull/75), [#74](https://github.com/company/test-project/pull/74), [#73](https://github.com/company/test-project/pull/73), [#72](https://github.com/company/test-project/pull/72), [#71](https://github.com/company/test-project/pull/71), [#70](https://github.com/company/test-project/pull/70), [#69](https://github.com/company/test-project/pull/69), [#68](https://github.com/company/test-project/pull/68), [#67](https://github.com/company/test-project/pull/67)
 
