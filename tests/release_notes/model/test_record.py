@@ -142,8 +142,7 @@ def test_to_chapter_row_with_pull(record_with_no_issue_one_pull_closed):
 
 
 def test_to_chapter_row_with_issue(record_with_issue_closed_one_pull):
-    expected_row = \
-    """#121 _Fix the bug_ in [#123](https://github.com/org/repo/pull/123)
+    expected_row = """#121 _Fix the bug_ in [#123](https://github.com/org/repo/pull/123)
   - Fixed bug
   - Improved performance"""
     assert expected_row == record_with_issue_closed_one_pull.to_chapter_row()

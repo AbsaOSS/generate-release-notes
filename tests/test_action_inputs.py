@@ -157,9 +157,10 @@ def test_get_verbose_not_verbose(mocker):
     mocker.patch("os.getenv", return_value=0)
     assert ActionInputs.get_verbose() is False
 
+
 def test_get_duplicity_scope_wrong_value(mocker):
     mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="huh")
     mock_error = mocker.patch("release_notes_generator.action_inputs.logger.error")
 
     assert ActionInputs.get_duplicity_scope() == "BOTH"
-    mock_error.assert_called_with("Error: '%s' is not a valid DuplicityType.", 'HUH')
+    mock_error.assert_called_with("Error: '%s' is not a valid DuplicityType.", "HUH")

@@ -85,7 +85,9 @@ def test_populate_no_issue_with_pull(service_chapters, record_with_no_issue_one_
 
 
 def test_populate_closed_issue_scope_custom(service_chapters, record_with_issue_closed_no_pull, mocker):
-    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_duplicity_scope", return_value=DuplicityScopeEnum.CUSTOM)
+    mocker.patch(
+        "release_notes_generator.action_inputs.ActionInputs.get_duplicity_scope", return_value=DuplicityScopeEnum.CUSTOM
+    )
 
     service_chapters.populate({1: record_with_issue_closed_no_pull})
 
@@ -94,7 +96,9 @@ def test_populate_closed_issue_scope_custom(service_chapters, record_with_issue_
 
 
 def test_populate_closed_issue_duplicity(service_chapters, record_with_issue_closed_no_pull, mocker):
-    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_duplicity_scope", return_value=DuplicityScopeEnum.NONE)
+    mocker.patch(
+        "release_notes_generator.action_inputs.ActionInputs.get_duplicity_scope", return_value=DuplicityScopeEnum.NONE
+    )
 
     service_chapters.used_record_numbers.append(1)
     service_chapters.populate({1: record_with_issue_closed_no_pull})

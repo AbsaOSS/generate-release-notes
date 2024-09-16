@@ -107,7 +107,10 @@ def test_populate_service_duplicity_scope(custom_chapters, mocker):
         1: record1,
     }
 
-    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_duplicity_scope", return_value=DuplicityScopeEnum.SERVICE)
+    mocker.patch(
+        "release_notes_generator.action_inputs.ActionInputs.get_duplicity_scope",
+        return_value=DuplicityScopeEnum.SERVICE,
+    )
 
     custom_chapters.populate(records)
 
@@ -127,7 +130,9 @@ def test_populate_none_duplicity_scope(custom_chapters, mocker):
         1: record1,
     }
 
-    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_duplicity_scope", return_value=DuplicityScopeEnum.NONE)
+    mocker.patch(
+        "release_notes_generator.action_inputs.ActionInputs.get_duplicity_scope", return_value=DuplicityScopeEnum.NONE
+    )
 
     custom_chapters.populate(records)
 

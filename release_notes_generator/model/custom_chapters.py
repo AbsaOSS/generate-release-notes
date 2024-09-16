@@ -44,7 +44,10 @@ class CustomChapters(BaseChapters):
             for ch in self.chapters.values():  # iterate all chapters
                 print("DEBUG: ", ActionInputs.get_duplicity_scope())
                 print("DEBUG: ", self.populated_record_numbers_list)
-                if nr in self.populated_record_numbers_list and ActionInputs.get_duplicity_scope() not in (DuplicityScopeEnum.CUSTOM, DuplicityScopeEnum.BOTH):
+                if nr in self.populated_record_numbers_list and ActionInputs.get_duplicity_scope() not in (
+                    DuplicityScopeEnum.CUSTOM,
+                    DuplicityScopeEnum.BOTH,
+                ):
                     continue
 
                 for record_label in records[nr].labels:  # iterate all labels of the record (issue, or 1st PR)
