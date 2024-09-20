@@ -97,7 +97,7 @@ class ServiceChapters(BaseChapters):
         # iterate all records
         for nr in records:
             # skip the record when used in used and not allowed to be duplicated in Service chapters
-            if self._is_row_present(nr) and not self.duplicity_allowed():
+            if self.__is_row_present(nr) and not self.duplicity_allowed():
                 continue
 
             if records[nr].is_closed_issue:
@@ -134,7 +134,7 @@ class ServiceChapters(BaseChapters):
         # check record properties if it fits to a chapter: CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS
         if not record.contains_min_one_label(self.user_defined_labels):
             # check if the record is already present among the chapters
-            if self._is_row_present(nr) and not self.duplicity_allowed():
+            if self.__is_row_present(nr) and not self.duplicity_allowed():
                 return
 
             self.chapters[CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS].add_row(nr, record.to_chapter_row())
@@ -146,7 +146,7 @@ class ServiceChapters(BaseChapters):
             return
 
         if not populated:
-            if self._is_row_present(nr) and not self.duplicity_allowed():
+            if self.__is_row_present(nr) and not self.duplicity_allowed():
                 return
 
             self.chapters[OTHERS_NO_TOPIC].add_row(nr, record.to_chapter_row())
@@ -163,7 +163,7 @@ class ServiceChapters(BaseChapters):
         if record.is_merged_pr:
             # check record properties if it fits to a chapter: MERGED_PRS_WITHOUT_ISSUE
             if not record.pr_contains_issue_mentions and not record.contains_min_one_label(self.user_defined_labels):
-                if self._is_row_present(nr) and not self.duplicity_allowed():
+                if self.__is_row_present(nr) and not self.duplicity_allowed():
                     return
 
                 self.chapters[MERGED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS].add_row(nr, record.to_chapter_row())
@@ -171,14 +171,14 @@ class ServiceChapters(BaseChapters):
 
             # check record properties if it fits to a chapter: MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES
             if record.pr_contains_issue_mentions:
-                if self._is_row_present(nr) and not self.duplicity_allowed():
+                if self.__is_row_present(nr) and not self.duplicity_allowed():
                     return
 
                 self.chapters[MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES].add_row(nr, record.to_chapter_row())
                 self.used_record_numbers.append(nr)
 
             if not record.is_present_in_chapters:
-                if self._is_row_present(nr) and not self.duplicity_allowed():
+                if self.__is_row_present(nr) and not self.duplicity_allowed():
                     return
 
                 self.chapters[OTHERS_NO_TOPIC].add_row(nr, record.to_chapter_row())
@@ -190,21 +190,21 @@ class ServiceChapters(BaseChapters):
             and not record.pr_contains_issue_mentions
             and not record.contains_min_one_label(self.user_defined_labels)
         ):
-            if self._is_row_present(nr) and not self.duplicity_allowed():
+            if self.__is_row_present(nr) and not self.duplicity_allowed():
                 return
 
             self.chapters[CLOSED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS].add_row(nr, record.to_chapter_row())
             self.used_record_numbers.append(nr)
 
         else:
-            if self._is_row_present(nr) and not self.duplicity_allowed():
+            if self.__is_row_present(nr) and not self.duplicity_allowed():
                 return
 
             # not record.is_present_in_chapters:
             self.chapters[OTHERS_NO_TOPIC].add_row(nr, record.to_chapter_row())
             self.used_record_numbers.append(nr)
 
-    def _is_row_present(self, nr: int) -> bool:
+    def __is_row_present(self, nr: int) -> bool:
         return nr in self.used_record_numbers
 
     @staticmethod

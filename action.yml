@@ -99,7 +99,7 @@ runs:
         INPUT_GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
         INPUT_TAG_NAME: ${{ inputs.tag-name }}
         INPUT_CHAPTERS: ${{ inputs.chapters }}
-        INPUT_DUPLICITY: ${{ inputs.duplicity }}
+        INPUT_DUPLICITY_SCOPE: ${{ inputs.duplicity-scope }}
         INPUT_DUPLICITY_ICON: ${{ inputs.duplicity-icon }}
         INPUT_WARNINGS: ${{ inputs.warnings }}
         INPUT_PUBLISHED_AT: ${{ inputs.published-at }}
