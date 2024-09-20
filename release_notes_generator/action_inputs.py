@@ -82,7 +82,7 @@ class ActionInputs:
         """
         Get the duplicity scope parameter value from the action inputs.
         """
-        duplicity_scope = get_action_input(DUPLICITY_SCOPE, "BOTH").upper()
+        duplicity_scope = get_action_input(DUPLICITY_SCOPE, "both").upper()
 
         try:
             return DuplicityScopeEnum(duplicity_scope)

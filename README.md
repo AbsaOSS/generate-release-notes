@@ -52,7 +52,7 @@ Generate Release Notes action is dedicated to enhance the quality and organizati
 - **Required**: Yes
 
 ### `duplicity-scope`
-- **Description**: Set to `custom` to allow duplicity issue lines to be shown only in custom chapters. Options: `custom,` `service,` `both,` `none.`
+- **Description**: Set to `custom` to allow duplicity issue lines to be shown only in custom chapters. Options: `custom`, `service`, `both`, `none`.
 - **Required**: No
 - **Default**: `both`
 

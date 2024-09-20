@@ -42,8 +42,6 @@ class CustomChapters(BaseChapters):
         """
         for nr in records:  # iterate all records
             for ch in self.chapters.values():  # iterate all chapters
-                print("DEBUG: ", ActionInputs.get_duplicity_scope())
-                print("DEBUG: ", self.populated_record_numbers_list)
                 if nr in self.populated_record_numbers_list and ActionInputs.get_duplicity_scope() not in (
                     DuplicityScopeEnum.CUSTOM,
                     DuplicityScopeEnum.BOTH,
