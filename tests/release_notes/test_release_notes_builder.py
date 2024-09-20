@@ -20,7 +20,7 @@ from release_notes_generator.record.record_formatter import RecordFormatter
 from release_notes_generator.model.custom_chapters import CustomChapters
 from release_notes_generator.builder import ReleaseNotesBuilder
 
-
+# pylint: disable=pointless-string-statement
 """
     Issue can be in 2 states (each in 2 'sub' states):
         - Open
@@ -178,7 +178,7 @@ RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_ISSUE_NO_PR_NO_USER_LABELS = """### C
 - #121 _Fix the bug_
 
 ### Closed Issues without User Defined Labels ⚠️
-- #121 _Fix the bug_
+- 🔔 #121 _Fix the bug_
 
 #### Full Changelog
 http://example.com/changelog

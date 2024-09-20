@@ -15,14 +15,17 @@
 #
 
 """
-This module contains the CustomChapters class which is responsible for representing the custom chapters in the release notes.
+This module contains the CustomChapters class which is responsible for representing the custom chapters in the release
+notes.
 """
 
 import json
 
+from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.base_chapters import BaseChapters
 from release_notes_generator.model.chapter import Chapter
 from release_notes_generator.model.record import Record
+from release_notes_generator.utils.enums import DuplicityScopeEnum
 
 
 class CustomChapters(BaseChapters):
@@ -39,6 +42,12 @@ class CustomChapters(BaseChapters):
         """
         for nr in records:  # iterate all records
             for ch in self.chapters.values():  # iterate all chapters
+                if nr in self.populated_record_numbers_list and ActionInputs.get_duplicity_scope() not in (
+                    DuplicityScopeEnum.CUSTOM,
+                    DuplicityScopeEnum.BOTH,
+                ):
+                    continue
+
                 for record_label in records[nr].labels:  # iterate all labels of the record (issue, or 1st PR)
                     if record_label in ch.labels and records[nr].pulls_count > 0:
                         if not records[nr].is_present_in_chapters:

@@ -35,7 +35,10 @@ from release_notes_generator.utils.constants import (
     RUNNER_DEBUG,
     PRINT_EMPTY_CHAPTERS,
     CHAPTERS_TO_PR_WITHOUT_ISSUE,
+    DUPLICITY_SCOPE,
+    DUPLICITY_ICON,
 )
+from release_notes_generator.utils.enums import DuplicityScopeEnum
 from release_notes_generator.utils.gh_action import get_action_input
 
 logger = logging.getLogger(__name__)
@@ -73,6 +76,26 @@ class ActionInputs:
         Get the chapters JSON from the action inputs.
         """
         return get_action_input(CHAPTERS)
+
+    @staticmethod
+    def get_duplicity_scope() -> DuplicityScopeEnum:
+        """
+        Get the duplicity scope parameter value from the action inputs.
+        """
+        duplicity_scope = get_action_input(DUPLICITY_SCOPE, "both").upper()
+
+        try:
+            return DuplicityScopeEnum(duplicity_scope)
+        except ValueError:
+            logger.error("Error: '%s' is not a valid DuplicityType.", duplicity_scope)
+            return DuplicityScopeEnum.BOTH
+
+    @staticmethod
+    def get_duplicity_icon() -> str:
+        """
+        Get the duplicity icon from the action inputs.
+        """
+        return get_action_input(DUPLICITY_ICON, "🔔")
 
     @staticmethod
     def get_published_at() -> bool:
@@ -160,6 +183,10 @@ class ActionInputs:
             json.loads(chapters_json)
         except json.JSONDecodeError:
             errors.append("Chapters JSON must be a valid JSON string.")
+
+        duplicity_icon = ActionInputs.get_duplicity_icon()
+        if not isinstance(duplicity_icon, str) or not duplicity_icon.strip() or len(duplicity_icon) != 1:
+            errors.append("Duplicity icon must be a non-empty string and have a length of 1.")
 
         warnings = ActionInputs.get_warnings()
         ActionInputs.validate_input(warnings, bool, "Warnings must be a boolean.", errors)

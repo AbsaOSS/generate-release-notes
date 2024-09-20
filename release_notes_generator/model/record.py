@@ -26,6 +26,7 @@ from github.PullRequest import PullRequest
 from github.Repository import Repository
 from github.Commit import Commit
 
+from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.utils.constants import (
     PR_STATE_CLOSED,
     ISSUE_STATE_CLOSED,
@@ -264,7 +265,7 @@ class Record:
         logger.error("Commit %s not registered in any PR of record %s", commit.sha, self.number)
 
     # TODO in Issue named 'Chapter line formatting - default'
-    def to_chapter_row(self, row_format="", increment_in_chapters=True) -> str:
+    def to_chapter_row(self, row_format="") -> str:
         """
         Converts the record to a row in a chapter.
 
@@ -272,13 +273,13 @@ class Record:
         @param increment_in_chapters: A boolean indicating whether to increment the count of chapters.
         @return: The record as a row in a chapter.
         """
-        if increment_in_chapters:
-            self.increment_present_in_chapters()
+        self.increment_present_in_chapters()
+        row_prefix = f"{ActionInputs.get_duplicity_icon()} " if self.present_in_chapters() > 1 else ""
 
         if self.__gh_issue is None:
             p = self.__pulls[0]
 
-            row = f"PR: #{p.number} _{p.title}_"
+            row = f"{row_prefix}PR: #{p.number} _{p.title}_"
 
             # Issue can have more authors (as multiple PRs can be present)
             if self.authors is not None:
@@ -291,7 +292,7 @@ class Record:
                 return f"{row}\n{self.get_rls_notes()}"
 
         else:
-            row = f"#{self.__gh_issue.number} _{self.__gh_issue.title}_"
+            row = f"{row_prefix}#{self.__gh_issue.number} _{self.__gh_issue.title}_"
 
             if self.authors is not None:
                 row = f"{row}, implemented by {self.authors}"
