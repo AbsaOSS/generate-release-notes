@@ -288,7 +288,7 @@ This command will also install a Pylint tool, since it is listed in the project 
 ### Run Pylint
 Run Pylint on all files that are currently tracked by Git in the project.
 ```
-pylint $(git ls-files './release_notes_generator/*.py')
+pylint $(git ls-files '*.py')
 ```
 
 To run Pylint on a specific file, follow the pattern `pylint <path_to_file>/<name_of_file>.py`.
@@ -322,7 +322,7 @@ This command will also install a Black tool, since it is listed in the project r
 ### Run Black
 Run Black on all files that are currently tracked by Git in the project.
 ```shell
-black $(git ls-files './release_notes_generator/*.py')
+black $(git ls-files '*.py')
 ```
 
 To run Black on a specific file, follow the pattern `black <path_to_file>/<name_of_file>.py`.

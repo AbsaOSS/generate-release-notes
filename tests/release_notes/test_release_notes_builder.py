@@ -182,6 +182,7 @@ RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_ISSUE_NO_PR_NO_USER_LABELS = """### C
 http://example.com/changelog
 """
 
+# pylint: disable=line-too-long
 RELEASE_NOTES_DATA_SERVICE_CHAPTERS_MERGED_PR_NO_ISSUE_NO_USER_LABELS = """### Merged PRs without Issue and User Defined Labels ⚠️
 - PR: #123 _Fixed bug_
   - Fixed bug

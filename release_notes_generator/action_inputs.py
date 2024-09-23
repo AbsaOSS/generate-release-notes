@@ -22,8 +22,6 @@ import json
 import logging
 import os
 import sys
-import re
-from dbm import error
 
 from release_notes_generator.utils.constants import (
     GITHUB_REPOSITORY,
@@ -40,7 +38,6 @@ from release_notes_generator.utils.constants import (
     DUPLICITY_SCOPE,
     DUPLICITY_ICON,
     ROW_FORMAT_LINK_PR,
-    SUPPORTED_ROW_FORMAT_KEYS,
     ROW_FORMAT_ISSUE,
     ROW_FORMAT_PR,
 )

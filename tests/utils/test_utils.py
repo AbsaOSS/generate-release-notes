@@ -42,7 +42,7 @@ def test_valid_row_format():
     """Test when all keywords in the row format are valid."""
     row_format = "{number} - {title} in {pull-requests}"
     errors = detect_row_format_invalid_keywords(row_format)
-    assert errors == [], "Expected no errors for valid keywords"
+    assert not errors, "Expected no errors for valid keywords"
 
 
 def test_multiple_invalid_keywords():
