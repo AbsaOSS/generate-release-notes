@@ -23,6 +23,7 @@ import logging
 import os
 import sys
 import re
+from dbm import error
 
 from release_notes_generator.utils.constants import (
     GITHUB_REPOSITORY,
@@ -45,6 +46,7 @@ from release_notes_generator.utils.constants import (
 )
 from release_notes_generator.utils.enums import DuplicityScopeEnum
 from release_notes_generator.utils.gh_action import get_action_input
+from release_notes_generator.utils.utils import detect_row_format_invalid_keywords
 
 logger = logging.getLogger(__name__)
 
@@ -231,18 +233,14 @@ class ActionInputs:
         row_format_issue = ActionInputs.get_row_format_issue()
         if not isinstance(row_format_issue, str) or not row_format_issue.strip():
             errors.append("Issue row format must be a non-empty string.")
-        keywords_in_braces = re.findall(r"\{(.*?)\}", row_format_issue)
-        invalid_keywords = [keyword for keyword in keywords_in_braces if keyword not in SUPPORTED_ROW_FORMAT_KEYS]
-        if invalid_keywords:
-            errors.append(f"Invalid Issue row format keyword(s) found: {', '.join(invalid_keywords)}")
+
+        errors.extend(detect_row_format_invalid_keywords(row_format_issue))
 
         row_format_pr = ActionInputs.get_row_format_pr()
         if not isinstance(row_format_pr, str) or not row_format_pr.strip():
             errors.append("PR Row format must be a non-empty string.")
-        keywords_in_braces = re.findall(r"\{(.*?)\}", row_format_pr)
-        invalid_keywords = [keyword for keyword in keywords_in_braces if keyword not in SUPPORTED_ROW_FORMAT_KEYS]
-        if invalid_keywords:
-            errors.append(f"Invalid PR row format keyword(s) found: {', '.join(invalid_keywords)}")
+
+        errors.extend(detect_row_format_invalid_keywords(row_format_pr, row_type="PR"))
 
         row_format_link_pr = ActionInputs.get_row_format_link_pr()
         ActionInputs.validate_input(row_format_link_pr, bool, "'row-format-link-pr' value must be a boolean.", errors)
