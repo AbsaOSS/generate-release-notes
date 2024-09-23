@@ -264,47 +264,37 @@ class Record:
 
         logger.error("Commit %s not registered in any PR of record %s", commit.sha, self.number)
 
-    # TODO in Issue named 'Chapter line formatting - default'
-    def to_chapter_row(self, row_format="") -> str:
+    def to_chapter_row(self) -> str:
         """
-        Converts the record to a row in a chapter.
+        Converts the record to a string row in a chapter.
 
-        @param row_format: The format of the row.
-        @param increment_in_chapters: A boolean indicating whether to increment the count of chapters.
-        @return: The record as a row in a chapter.
+        @return: The record as a row string.
         """
         self.increment_present_in_chapters()
         row_prefix = f"{ActionInputs.get_duplicity_icon()} " if self.present_in_chapters() > 1 else ""
+        format_values = {}
 
         if self.__gh_issue is None:
             p = self.__pulls[0]
+            format_values["number"] = p.number
+            format_values["title"] = p.title
+            format_values["authors"] = self.authors if self.authors is not None else ""
+            format_values["contributors"] = self.contributors if self.contributors is not None else ""
 
-            row = f"{row_prefix}PR: #{p.number} _{p.title}_"
-
-            # Issue can have more authors (as multiple PRs can be present)
-            if self.authors is not None:
-                row = f"{row}, implemented by {self.authors}"
-
-            if self.contributors is not None:
-                row = f"{row}, contributed by {self.contributors}"
-
-            if self.contains_release_notes:
-                return f"{row}\n{self.get_rls_notes()}"
+            pr_prefix = "PR: " if ActionInputs.get_row_format_link_pr() else ""
+            row = f"{row_prefix}{pr_prefix}" + ActionInputs.get_row_format_pr().format(**format_values)
 
         else:
-            row = f"{row_prefix}#{self.__gh_issue.number} _{self.__gh_issue.title}_"
+            format_values["number"] = self.__gh_issue.number
+            format_values["title"] = self.__gh_issue.title
+            format_values["pull-requests"] = self.pr_links if len(self.__pulls) > 0 else ""
+            format_values["authors"] = self.authors if self.authors is not None else ""
+            format_values["contributors"] = self.contributors if self.contributors is not None else ""
 
-            if self.authors is not None:
-                row = f"{row}, implemented by {self.authors}"
+            row = f"{row_prefix}" + ActionInputs.get_row_format_issue().format(**format_values)
 
-            if self.contributors is not None:
-                row = f"{row}, contributed by {self.contributors}"
-
-            if len(self.__pulls) > 0:
-                row = f"{row} in {self.pr_links}"
-
-            if self.contains_release_notes:
-                row = f"{row}\n{self.get_rls_notes()}"
+        if self.contains_release_notes:
+            row = f"{row}\n{self.get_rls_notes()}"
 
         return row
 

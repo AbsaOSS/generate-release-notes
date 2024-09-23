@@ -29,6 +29,10 @@ PUBLISHED_AT = "published-at"
 SKIP_RELEASE_NOTES_LABEL = "skip-release-notes-label"
 VERBOSE = "verbose"
 RUNNER_DEBUG = "RUNNER_DEBUG"
+ROW_FORMAT_ISSUE = "row-format-issue"
+ROW_FORMAT_PR = "row-format-pr"
+ROW_FORMAT_LINK_PR = "row-format-link-pr"
+SUPPORTED_ROW_FORMAT_KEYS = ["number", "title", "pull-requests"]
 
 # Features
 WARNINGS = "warnings"
@@ -58,9 +62,3 @@ CLOSED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS: str = "Closed PRs without Issu
 MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES: str = "Merged PRs Linked to 'Not Closed' Issue ⚠️"
 
 OTHERS_NO_TOPIC: str = "Others - No Topic ⚠️"
-
-# Record formatter patterns
-DEFAULT_ISSUE_PATTERN: str = (
-    "- #{number} _{title}_ implemented by {developers} in {pull_requests}\n" "{release_note_rows}"
-)
-DEFAULT_PULL_REQUESTS_PATTERN: str = "[#{number}]({url})"

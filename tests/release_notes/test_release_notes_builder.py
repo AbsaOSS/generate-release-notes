@@ -16,7 +16,6 @@
 
 import json
 
-from release_notes_generator.record.record_formatter import RecordFormatter
 from release_notes_generator.model.custom_chapters import CustomChapters
 from release_notes_generator.builder import ReleaseNotesBuilder
 
@@ -78,7 +77,6 @@ class MockLabel:
         self.name = name
 
 
-default_formatter = RecordFormatter()
 DEFAULT_CHANGELOG_URL = "http://example.com/changelog"
 default_chapters_json = json.dumps(
     [
@@ -175,10 +173,10 @@ http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_ISSUE_NO_PR_NO_USER_LABELS = """### Closed Issues without Pull Request ⚠️
-- #121 _Fix the bug_
+- #121 _Fix the bug_ in
 
 ### Closed Issues without User Defined Labels ⚠️
-- 🔔 #121 _Fix the bug_
+- 🔔 #121 _Fix the bug_ in
 
 #### Full Changelog
 http://example.com/changelog
@@ -225,7 +223,7 @@ http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_CLOSED_ISSUE_NO_PR_WITH_USER_LABELS = """### Closed Issues without Pull Request ⚠️
-- #121 _Fix the bug_
+- #121 _Fix the bug_ in
 
 #### Full Changelog
 http://example.com/changelog
@@ -302,7 +300,6 @@ def test_build_no_data():
     builder = ReleaseNotesBuilder(
         records={},  # empty record data set
         changelog_url=DEFAULT_CHANGELOG_URL,
-        formatter=default_formatter,
         custom_chapters=custom_chapters,
     )
 
@@ -320,7 +317,6 @@ def test_build_no_data_no_warnings(mocker):
     builder = ReleaseNotesBuilder(
         records={},  # empty record data set
         changelog_url=DEFAULT_CHANGELOG_URL,
-        formatter=default_formatter,
         custom_chapters=custom_chapters,
     )
 
@@ -340,7 +336,6 @@ def test_build_no_data_no_warnings_no_empty_chapters(mocker):
     builder = ReleaseNotesBuilder(
         records={},
         changelog_url=DEFAULT_CHANGELOG_URL,
-        formatter=default_formatter,
         custom_chapters=custom_chapters_no_empty_chapters,
     )
 
@@ -359,7 +354,6 @@ def test_build_no_data_no_empty_chapters(mocker):
     builder = ReleaseNotesBuilder(
         records={},
         changelog_url=DEFAULT_CHANGELOG_URL,
-        formatter=default_formatter,
         custom_chapters=custom_chapters_no_empty_chapters,
     )
 
@@ -532,7 +526,6 @@ def test_build_closed_issue_with_one_custom_label(
     builder = ReleaseNotesBuilder(
         records={rec.number: rec},
         changelog_url=DEFAULT_CHANGELOG_URL,
-        formatter=default_formatter,
         custom_chapters=custom_chapters_not_print_empty_chapters,
     )
 
@@ -553,7 +546,6 @@ def test_build_closed_issue_with_more_custom_labels_duplicity_reduction_on(
     builder = ReleaseNotesBuilder(
         records={rec.number: rec},
         changelog_url=DEFAULT_CHANGELOG_URL,
-        formatter=default_formatter,
         custom_chapters=custom_chapters_not_print_empty_chapters,
     )
 
@@ -572,7 +564,6 @@ def test_build_closed_issue_service_chapter_without_pull_request_and_user_define
     builder = ReleaseNotesBuilder(
         records={rec.number: rec},
         changelog_url=DEFAULT_CHANGELOG_URL,
-        formatter=default_formatter,
         custom_chapters=custom_chapters_not_print_empty_chapters,
     )
 
@@ -591,7 +582,6 @@ def test_build_merged_pr_service_chapter_without_issue_and_user_labels(
     builder = ReleaseNotesBuilder(
         records={rec.number: rec},
         changelog_url=DEFAULT_CHANGELOG_URL,
-        formatter=default_formatter,
         custom_chapters=custom_chapters_not_print_empty_chapters,
     )
 
@@ -610,7 +600,6 @@ def test_build_closed_pr_service_chapter_without_issue_and_user_labels(
     builder = ReleaseNotesBuilder(
         records={rec.number: rec},
         changelog_url=DEFAULT_CHANGELOG_URL,
-        formatter=default_formatter,
         custom_chapters=custom_chapters_not_print_empty_chapters,
     )
 
@@ -629,7 +618,6 @@ def test_build_open_issue_with_merged_pr_service_chapter_linked_to_not_closed_is
     builder = ReleaseNotesBuilder(
         records={rec.number: rec},
         changelog_url=DEFAULT_CHANGELOG_URL,
-        formatter=default_formatter,
         custom_chapters=custom_chapters_not_print_empty_chapters,
     )
 
@@ -646,7 +634,6 @@ def test_build_open_issue(custom_chapters_not_print_empty_chapters, record_with_
     builder = ReleaseNotesBuilder(
         records={rec.number: rec},
         changelog_url=DEFAULT_CHANGELOG_URL,
-        formatter=default_formatter,
         custom_chapters=custom_chapters_not_print_empty_chapters,
     )
 
@@ -663,7 +650,6 @@ def test_build_closed_issue(custom_chapters_not_print_empty_chapters, record_wit
     builder = ReleaseNotesBuilder(
         records={rec.number: rec},
         changelog_url=DEFAULT_CHANGELOG_URL,
-        formatter=default_formatter,
         custom_chapters=custom_chapters_not_print_empty_chapters,
     )
 
@@ -683,7 +669,6 @@ def test_build_reopened_issue(custom_chapters_not_print_empty_chapters, record_w
     builder = ReleaseNotesBuilder(
         records={rec.number: rec},
         changelog_url=DEFAULT_CHANGELOG_URL,
-        formatter=default_formatter,
         custom_chapters=custom_chapters_not_print_empty_chapters,
     )
 
@@ -703,7 +688,6 @@ def test_build_closed_not_planned_issue(
     builder = ReleaseNotesBuilder(
         records={rec.number: rec},
         changelog_url=DEFAULT_CHANGELOG_URL,
-        formatter=default_formatter,
         custom_chapters=custom_chapters_not_print_empty_chapters,
     )
 
@@ -723,7 +707,6 @@ def test_build_closed_issue_with_user_labels_no_prs(
     builder = ReleaseNotesBuilder(
         records={rec.number: rec},
         changelog_url=DEFAULT_CHANGELOG_URL,
-        formatter=default_formatter,
         custom_chapters=custom_chapters_not_print_empty_chapters,
     )
 
@@ -744,7 +727,6 @@ def test_build_closed_issue_with_prs_without_user_label(
     builder = ReleaseNotesBuilder(
         records={rec.number: rec},
         changelog_url=DEFAULT_CHANGELOG_URL,
-        formatter=default_formatter,
         custom_chapters=custom_chapters_not_print_empty_chapters,
     )
 
@@ -763,7 +745,6 @@ def test_build_open_pr_without_issue(
     builder = ReleaseNotesBuilder(
         records={rec.number: rec},
         changelog_url=DEFAULT_CHANGELOG_URL,
-        formatter=default_formatter,
         custom_chapters=custom_chapters_not_print_empty_chapters,
     )
 
@@ -782,7 +763,6 @@ def test_build_merged_pr_without_issue_ready_for_review(
     builder = ReleaseNotesBuilder(
         records={rec.number: rec},
         changelog_url=DEFAULT_CHANGELOG_URL,
-        formatter=default_formatter,
         custom_chapters=custom_chapters_not_print_empty_chapters,
     )
 
@@ -801,7 +781,6 @@ def test_build_closed_pr_without_issue_ready_for_review(
     builder = ReleaseNotesBuilder(
         records={rec.number: rec},
         changelog_url=DEFAULT_CHANGELOG_URL,
-        formatter=default_formatter,
         custom_chapters=custom_chapters_not_print_empty_chapters,
     )
 
@@ -821,7 +800,6 @@ def test_build_closed_pr_without_issue_draft(
     builder = ReleaseNotesBuilder(
         records={rec.number: rec},
         changelog_url=DEFAULT_CHANGELOG_URL,
-        formatter=default_formatter,
         custom_chapters=custom_chapters_not_print_empty_chapters,
     )
 
@@ -841,7 +819,6 @@ def test_merged_pr_without_issue_with_more_user_labels_duplicity_reduction_on(
     builder = ReleaseNotesBuilder(
         records={rec.number: rec},
         changelog_url=DEFAULT_CHANGELOG_URL,
-        formatter=default_formatter,
         custom_chapters=custom_chapters_not_print_empty_chapters,
     )
 
@@ -860,7 +837,6 @@ def test_merged_pr_with_open_init_issue_mention(
     builder = ReleaseNotesBuilder(
         records=records,
         changelog_url=DEFAULT_CHANGELOG_URL,
-        formatter=default_formatter,
         custom_chapters=custom_chapters_not_print_empty_chapters,
     )
 
@@ -879,7 +855,6 @@ def test_merged_pr_with_closed_issue_mention_without_user_labels(
     builder = ReleaseNotesBuilder(
         records={rec.number: rec},
         changelog_url=DEFAULT_CHANGELOG_URL,
-        formatter=default_formatter,
         custom_chapters=custom_chapters_not_print_empty_chapters,
     )
 
@@ -898,7 +873,6 @@ def test_merged_pr_with_closed_issue_mention_with_user_labels(
     builder = ReleaseNotesBuilder(
         records={rec.number: rec},
         changelog_url=DEFAULT_CHANGELOG_URL,
-        formatter=default_formatter,
         custom_chapters=custom_chapters_not_print_empty_chapters,
     )
 

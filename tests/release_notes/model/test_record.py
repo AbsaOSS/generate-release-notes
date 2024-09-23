@@ -141,6 +141,12 @@ def test_to_chapter_row_with_pull(record_with_no_issue_one_pull_closed):
     assert expected_row == record_with_no_issue_one_pull_closed.to_chapter_row()
 
 
+def test_to_chapter_row_with_pull_no_pr_prefix(record_with_no_issue_one_pull_closed, mocker):
+    mocker.patch("release_notes_generator.builder.ActionInputs.get_row_format_link_pr", return_value=False)
+    expected_row = "#123 _Fixed bug_\n  - Fixed bug\n  - Improved performance"
+    assert expected_row == record_with_no_issue_one_pull_closed.to_chapter_row()
+
+
 def test_to_chapter_row_with_issue(record_with_issue_closed_one_pull):
     expected_row = """#121 _Fix the bug_ in [#123](https://github.com/org/repo/pull/123)
   - Fixed bug

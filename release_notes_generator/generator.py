@@ -24,7 +24,6 @@ import logging
 from typing import Optional
 from github import Github
 
-from release_notes_generator.record.record_formatter import RecordFormatter
 from release_notes_generator.model.custom_chapters import CustomChapters
 from release_notes_generator.model.record import Record
 from release_notes_generator.builder import ReleaseNotesBuilder
@@ -113,7 +112,6 @@ class ReleaseNotesGenerator:
         release_notes_builder = ReleaseNotesBuilder(
             records=rls_notes_records,
             custom_chapters=self.custom_chapters,
-            formatter=RecordFormatter(),
             changelog_url=changelog_url,
         )
 

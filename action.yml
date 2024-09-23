@@ -55,6 +55,19 @@ inputs:
     description: 'Print verbose logs.'
     required: false
     default: 'false'
+  row-format-issue:
+    description: 'Format of the issue row in the release notes. Available placeholders: {link}, {title}, {pull-requests}. Placeholders are case-insensitive.'
+    required: false
+    default: '#{number} _{title}_ in {pull-requests}'
+  row-format-pr:
+    description: 'Format of the pr row in the release notes. Available placeholders: {link}, {title}, {pull-requests}. Placeholders are case-insensitive.'
+    required: false
+    default: '#{number} _{title}_'
+  row-format-link-pr:
+    description: 'Add prefix "PR:" before link to PR when not linked an Issue.'
+    required: false
+    default: 'true'
+
 outputs:
   release-notes:
     description: 'Generated release notes.'
@@ -108,6 +121,9 @@ runs:
         INPUT_CHAPTERS_TO_PR_WITHOUT_ISSUE: ${{ inputs.chapters-to-pr-without-issue }}
         INPUT_VERBOSE: ${{ inputs.verbose }}
         INPUT_GITHUB_REPOSITORY: ${{ github.repository }}
+        INPUT_ROW_FORMAT_ISSUE: ${{ inputs.row-format-issue }}
+        INPUT_ROW_FORMAT_PR: ${{ inputs.row-format-pr }}
+        INPUT_ROW_FORMAT_LINK_PR: ${{ inputs.row-format-link-pr }}
       run: |
         python ${{ github.action_path }}/main.py
       shell: bash

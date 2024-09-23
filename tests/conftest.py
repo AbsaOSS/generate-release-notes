@@ -471,3 +471,10 @@ def record_with_no_issue_one_pull_closed_no_rls_notes(request):
     record = Record(repo=request.getfixturevalue("mock_repo"))
     record.register_pull_request(request.getfixturevalue("mock_pull_no_rls_notes"))
     return record
+
+
+@pytest.fixture
+def mock_logging_setup(mocker):
+    """Fixture to mock the basic logging setup using pytest-mock."""
+    mock_log_config = mocker.patch("logging.basicConfig")
+    yield mock_log_config

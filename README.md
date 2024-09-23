@@ -51,6 +51,21 @@ Generate Release Notes action is dedicated to enhance the quality and organizati
 - **Description**: A JSON string defining chapters and corresponding labels for categorization. Each chapter should have a title and a label matching your GitHub issues and PRs.
 - **Required**: Yes
 
+### `row-format-issue`
+- **Description**: The format of the row for the issue in the release notes. The format can contain placeholders for the issue `number`, `title`, and issues `pull-requests`. The placeholders are case-sensitive.
+- **Required**: No
+- **Default**: `#{number} _{title}_ in {pull-requests}"`
+
+### `row-format-pr`
+- **Description**: The format of the row for the PR in the release notes. The format can contain placeholders for the PR `number`, `title`, and PR `pull-requests`. The placeholders are case-sensitive.
+- **Required**: No
+- **Default**: `#{number} _{title}_"`
+
+### `row-format-link-pr`
+- **Description**: If defined `true`, the PR row will begin with a `"PR: "` string. Otherwise, no prefix will be added.
+- **Required**: No
+- **Default**: true
+
 ### `duplicity-scope`
 - **Description**: Set to `custom` to allow duplicity issue lines to be shown only in custom chapters. Options: `custom`, `service`, `both`, `none`.
 - **Required**: No
@@ -273,7 +288,7 @@ This command will also install a Pylint tool, since it is listed in the project 
 ### Run Pylint
 Run Pylint on all files that are currently tracked by Git in the project.
 ```
-pylint $(git ls-files '*.py')
+pylint $(git ls-files './release_notes_generator/*.py')
 ```
 
 To run Pylint on a specific file, follow the pattern `pylint <path_to_file>/<name_of_file>.py`.
@@ -307,7 +322,7 @@ This command will also install a Black tool, since it is listed in the project r
 ### Run Black
 Run Black on all files that are currently tracked by Git in the project.
 ```shell
-black $(git ls-files '*.py')
+black $(git ls-files './release_notes_generator/*.py')
 ```
 
 To run Black on a specific file, follow the pattern `black <path_to_file>/<name_of_file>.py`.
