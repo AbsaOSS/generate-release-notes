@@ -39,14 +39,12 @@ def test_get_change_url_with_git_release(mock_repo, mock_git_release):
 
 
 def test_valid_row_format():
-    """Test when all keywords in the row format are valid."""
     row_format = "{number} - {title} in {pull-requests}"
     errors = detect_row_format_invalid_keywords(row_format)
     assert not errors, "Expected no errors for valid keywords"
 
 
 def test_multiple_invalid_keywords():
-    """Test when there are multiple invalid keywords in the row format."""
     row_format = "{number} - {link} - {Title} and {Pull-requests}"
     errors = detect_row_format_invalid_keywords(row_format)
     assert len(errors) == 1

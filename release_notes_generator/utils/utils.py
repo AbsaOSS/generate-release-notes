@@ -60,6 +60,13 @@ def get_change_url(
 
 
 def detect_row_format_invalid_keywords(row_format: str, row_type: str = "Issue") -> list[str]:
+    """
+    Detects invalid keywords in the row format.
+
+    @param row_format: The row format to be checked for invalid keywords.
+    @param row_type: The type of row format. Default is "Issue".
+    @return: A list of errors if invalid keywords are found, otherwise an empty list.
+    """
     errors = []
     keywords_in_braces = re.findall(r"\{(.*?)\}", row_format)
     invalid_keywords = [keyword for keyword in keywords_in_braces if keyword not in SUPPORTED_ROW_FORMAT_KEYS]
