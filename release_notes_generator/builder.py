@@ -21,7 +21,6 @@ This module contains the ReleaseNotesBuilder class which is responsible for buil
 import logging
 from itertools import chain
 
-from release_notes_generator.record.record_formatter import RecordFormatter
 from release_notes_generator.model.custom_chapters import CustomChapters
 from release_notes_generator.model.record import Record
 from release_notes_generator.model.service_chapters import ServiceChapters
@@ -43,12 +42,10 @@ class ReleaseNotesBuilder:
         self,
         records: dict[int, Record],
         changelog_url: str,
-        formatter: RecordFormatter,
         custom_chapters: CustomChapters,
     ):
         self.records = records
         self.changelog_url = changelog_url
-        self.formatter = formatter
         self.custom_chapters = custom_chapters
 
         self.warnings = ActionInputs.get_warnings()

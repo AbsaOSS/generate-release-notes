@@ -51,6 +51,21 @@ Generate Release Notes action is dedicated to enhance the quality and organizati
 - **Description**: A JSON string defining chapters and corresponding labels for categorization. Each chapter should have a title and a label matching your GitHub issues and PRs.
 - **Required**: Yes
 
+### `row-format-issue`
+- **Description**: The format of the row for the issue in the release notes. The format can contain placeholders for the issue `number`, `title`, and issues `pull-requests`. The placeholders are case-sensitive.
+- **Required**: No
+- **Default**: `#{number} _{title}_ in {pull-requests}"`
+
+### `row-format-pr`
+- **Description**: The format of the row for the PR in the release notes. The format can contain placeholders for the PR `number`, `title`, and PR `pull-requests`. The placeholders are case-sensitive.
+- **Required**: No
+- **Default**: `#{number} _{title}_"`
+
+### `row-format-link-pr`
+- **Description**: If defined `true`, the PR row will begin with a `"PR: "` string. Otherwise, no prefix will be added.
+- **Required**: No
+- **Default**: true
+
 ### `duplicity-scope`
 - **Description**: Set to `custom` to allow duplicity issue lines to be shown only in custom chapters. Options: `custom`, `service`, `both`, `none`.
 - **Required**: No

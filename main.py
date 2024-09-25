@@ -45,7 +45,6 @@ def run() -> None:
     py_github = Github(auth=Auth.Token(token=ActionInputs.get_github_token()), per_page=100)
 
     ActionInputs.validate_inputs()
-
     # Load custom chapters configuration
     custom_chapters = CustomChapters(print_empty_chapters=ActionInputs.get_print_empty_chapters()).from_json(
         ActionInputs.get_chapters_json()

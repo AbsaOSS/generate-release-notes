@@ -37,13 +37,18 @@ from release_notes_generator.utils.constants import (
     CHAPTERS_TO_PR_WITHOUT_ISSUE,
     DUPLICITY_SCOPE,
     DUPLICITY_ICON,
+    ROW_FORMAT_LINK_PR,
+    ROW_FORMAT_ISSUE,
+    ROW_FORMAT_PR,
 )
 from release_notes_generator.utils.enums import DuplicityScopeEnum
 from release_notes_generator.utils.gh_action import get_action_input
+from release_notes_generator.utils.utils import detect_row_format_invalid_keywords
 
 logger = logging.getLogger(__name__)
 
 
+# pylint: disable=too-many-branches, too-many-statements, too-many-locals
 class ActionInputs:
     """
     A class representing the inputs provided to the GH action.
@@ -158,6 +163,27 @@ class ActionInputs:
         return True
 
     @staticmethod
+    def get_row_format_issue() -> str:
+        """
+        Get the issue row format for the release notes.
+        """
+        return get_action_input(ROW_FORMAT_ISSUE, "#{number} _{title}_ in {pull-requests}").strip()
+
+    @staticmethod
+    def get_row_format_pr() -> str:
+        """
+        Get the pr row format for the release notes.
+        """
+        return get_action_input(ROW_FORMAT_PR, "#{number} _{title}_").strip()
+
+    @staticmethod
+    def get_row_format_link_pr() -> bool:
+        """
+        Get the value controlling whether the row format should include a 'PR:' prefix when linking to PRs.
+        """
+        return get_action_input(ROW_FORMAT_LINK_PR, "true").lower() == "true"
+
+    @staticmethod
     def validate_inputs():
         """
         Validates the inputs provided for the release notes generator.
@@ -200,6 +226,21 @@ class ActionInputs:
 
         verbose = ActionInputs.get_verbose()
         ActionInputs.validate_input(verbose, bool, "Verbose logging must be a boolean.", errors)
+
+        row_format_issue = ActionInputs.get_row_format_issue()
+        if not isinstance(row_format_issue, str) or not row_format_issue.strip():
+            errors.append("Issue row format must be a non-empty string.")
+
+        errors.extend(detect_row_format_invalid_keywords(row_format_issue))
+
+        row_format_pr = ActionInputs.get_row_format_pr()
+        if not isinstance(row_format_pr, str) or not row_format_pr.strip():
+            errors.append("PR Row format must be a non-empty string.")
+
+        errors.extend(detect_row_format_invalid_keywords(row_format_pr, row_type="PR"))
+
+        row_format_link_pr = ActionInputs.get_row_format_link_pr()
+        ActionInputs.validate_input(row_format_link_pr, bool, "'row-format-link-pr' value must be a boolean.", errors)
 
         # Features
         print_empty_chapters = ActionInputs.get_print_empty_chapters()
