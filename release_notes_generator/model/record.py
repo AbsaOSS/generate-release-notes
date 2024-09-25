@@ -287,7 +287,7 @@ class Record:
         else:
             format_values["number"] = self.__gh_issue.number
             format_values["title"] = self.__gh_issue.title
-            format_values["pull-requests"] = self.pr_links if len(self.__pulls) > 0 else ""
+            format_values["pull-requests"] = f"in {self.pr_links}" if len(self.__pulls) > 0 else ""
             format_values["authors"] = self.authors if self.authors is not None else ""
             format_values["contributors"] = self.contributors if self.contributors is not None else ""
 

@@ -58,11 +58,11 @@ inputs:
   row-format-issue:
     description: 'Format of the issue row in the release notes. Available placeholders: {link}, {title}, {pull-requests}. Placeholders are case-insensitive.'
     required: false
-    default: '#{number} _{title}_ in {pull-requests}'
+    default: '#{number} _{title}_ {pull-requests} {authors}'
   row-format-pr:
     description: 'Format of the pr row in the release notes. Available placeholders: {link}, {title}, {pull-requests}. Placeholders are case-insensitive.'
     required: false
-    default: '#{number} _{title}_'
+    default: '#{number} _{title}_ {authors}'
   row-format-link-pr:
     description: 'Add prefix "PR:" before link to PR when not linked an Issue.'
     required: false

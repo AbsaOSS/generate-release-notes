@@ -54,7 +54,7 @@ Generate Release Notes action is dedicated to enhance the quality and organizati
 ### `row-format-issue`
 - **Description**: The format of the row for the issue in the release notes. The format can contain placeholders for the issue `number`, `title`, and issues `pull-requests`. The placeholders are case-sensitive.
 - **Required**: No
-- **Default**: `#{number} _{title}_ in {pull-requests}"`
+- **Default**: `#{number} _{title}_ {pull-requests}"`
 
 ### `row-format-pr`
 - **Description**: The format of the row for the PR in the release notes. The format can contain placeholders for the PR `number`, `title`, and PR `pull-requests`. The placeholders are case-sensitive.
@@ -166,6 +166,9 @@ Add the following step to your GitHub workflow (in example are used non-default 
     warnings: false
     print-empty-chapters: false
     chapters-to-pr-without-issue: false
+    row-format-issue: '#{number} _{title}_ {pull-requests}"'
+    row-format-pr: '#{number} _{title}_"'
+    row-format-link-pr: true
 ```
 
 ## Features
@@ -196,6 +199,16 @@ If an issue is linked to multiple PRs, the action fetches and aggregates contrib
 
 #### No Release Notes Found
 If no valid "Release Notes" comment is found in an issue, it will be marked accordingly. This helps maintainers quickly identify which issues need attention for documentation.
+
+#### Row formatting
+Format of the row for the issue and PR in the release notes can be customized. The placeholders are case-sensitive.
+
+**Supported row format keywords:**
+- `{number}`: Issue or PR number.
+- `{title}`: Issue or PR title.
+- `{pull-requests}`: List of PRs linked to the issue. Adds a list of PRs linked to the issue in the row with `in` prefix:
+  - `#{number} _{title}_ {pull-requests}` => "[#43]() _title_ in [#PR1](), [#PR2](), [#PR3]()"
+  - Not used in PR row format. See default value. 
 
 ### Select start date for closed issues and PRs
 By set **published-at** to true the action will use the `published-at` timestamp of the latest release as the reference point for searching closed issues and PRs, instead of the `created-at` date. If first release, repository creation date is used. 
