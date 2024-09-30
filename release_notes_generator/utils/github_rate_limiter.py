@@ -49,6 +49,8 @@ class GithubRateLimiter:
             remaining_calls = self.github_client.get_rate_limit().core.remaining
             reset_time = self.github_client.get_rate_limit().core.reset.timestamp()
 
+            logger.debug("Remaining calls: %s", remaining_calls)
+
             if remaining_calls < 5:
                 logger.info("Rate limit almost reached. Sleeping until reset time.")
                 sleep_time = reset_time - (now := time.time())

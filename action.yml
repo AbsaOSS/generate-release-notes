@@ -56,13 +56,13 @@ inputs:
     required: false
     default: 'false'
   row-format-issue:
-    description: 'Format of the issue row in the release notes. Available placeholders: {link}, {title}, {pull-requests}. Placeholders are case-insensitive.'
+    description: 'Format of the issue row in the release notes. Available placeholders: {link}, {title}, {pull-requests}, {assignee}, {assignees}, {developed-by}, {co-authored-by}. Placeholders are case-insensitive.'
     required: false
-    default: '#{number} _{title}_ {pull-requests} {authors}'
+    default: '#{number} _{title}_ {pull-requests} {assignee} {developed-by} {co-authored-by}'
   row-format-pr:
-    description: 'Format of the pr row in the release notes. Available placeholders: {link}, {title}, {pull-requests}. Placeholders are case-insensitive.'
+    description: 'Format of the pr row in the release notes. Available placeholders: {link}, {title}, {pull-requests}, {assignee}, {assignees}, {developed-by}, {co-authored-by}. Placeholders are case-insensitive.'
     required: false
-    default: '#{number} _{title}_ {authors}'
+    default: '#{number} _{title}_ {assignee} {developed-by} {co-authored-by}'
   row-format-link-pr:
     description: 'Add prefix "PR:" before link to PR when not linked an Issue.'
     required: false

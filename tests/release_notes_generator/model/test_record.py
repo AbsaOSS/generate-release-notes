@@ -58,7 +58,7 @@ def test_record_properties_with_pull(mock_pull_closed, record_with_no_issue_one_
 
 # authors & contributors - not supported now by code
 def test_record_properties_authors_contributors(record_with_no_issue_one_pull_closed):
-    assert record_with_no_issue_one_pull_closed.authors is None
+    assert record_with_no_issue_one_pull_closed.assignee is None
     assert record_with_no_issue_one_pull_closed.contributors is None
 
 

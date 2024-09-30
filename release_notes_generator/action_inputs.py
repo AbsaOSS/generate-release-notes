@@ -167,14 +167,14 @@ class ActionInputs:
         """
         Get the issue row format for the release notes.
         """
-        return get_action_input(ROW_FORMAT_ISSUE, "#{number} _{title}_ {pull-requests}").strip()
+        return get_action_input(ROW_FORMAT_ISSUE, "#{number} _{title}_ {pull-requests} {assignee} {developed-by} {contributed-by}").strip()
 
     @staticmethod
     def get_row_format_pr() -> str:
         """
         Get the pr row format for the release notes.
         """
-        return get_action_input(ROW_FORMAT_PR, "#{number} _{title}_").strip()
+        return get_action_input(ROW_FORMAT_PR, "#{number} _{title}_ {assignee} {developed-by} {contributed-by}").strip()
 
     @staticmethod
     def get_row_format_link_pr() -> bool:
@@ -227,18 +227,6 @@ class ActionInputs:
         verbose = ActionInputs.get_verbose()
         ActionInputs.validate_input(verbose, bool, "Verbose logging must be a boolean.", errors)
 
-        row_format_issue = ActionInputs.get_row_format_issue()
-        if not isinstance(row_format_issue, str) or not row_format_issue.strip():
-            errors.append("Issue row format must be a non-empty string.")
-
-        errors.extend(detect_row_format_invalid_keywords(row_format_issue))
-
-        row_format_pr = ActionInputs.get_row_format_pr()
-        if not isinstance(row_format_pr, str) or not row_format_pr.strip():
-            errors.append("PR Row format must be a non-empty string.")
-
-        errors.extend(detect_row_format_invalid_keywords(row_format_pr, row_type="PR"))
-
         row_format_link_pr = ActionInputs.get_row_format_link_pr()
         ActionInputs.validate_input(row_format_link_pr, bool, "'row-format-link-pr' value must be a boolean.", errors)
 
@@ -250,6 +238,18 @@ class ActionInputs:
         ActionInputs.validate_input(
             chapters_to_pr_without_issue, bool, "Chapters to PR without issue must be a boolean.", errors
         )
+
+        row_format_issue = ActionInputs.get_row_format_issue()
+        if not isinstance(row_format_issue, str) or not row_format_issue.strip():
+            errors.append("Issue row format must be a non-empty string.")
+
+        errors.extend(detect_row_format_invalid_keywords(row_format_issue))
+
+        row_format_pr = ActionInputs.get_row_format_pr()
+        if not isinstance(row_format_pr, str) or not row_format_pr.strip():
+            errors.append("PR Row format must be a non-empty string.")
+
+        errors.extend(detect_row_format_invalid_keywords(row_format_pr, row_type="PR"))
 
         # Log errors if any
         if errors:

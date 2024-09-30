@@ -54,12 +54,12 @@ Generate Release Notes action is dedicated to enhance the quality and organizati
 ### `row-format-issue`
 - **Description**: The format of the row for the issue in the release notes. The format can contain placeholders for the issue `number`, `title`, and issues `pull-requests`. The placeholders are case-sensitive.
 - **Required**: No
-- **Default**: `#{number} _{title}_ {pull-requests}"`
+- **Default**: `#{number} _{title}_ {pull-requests} {assignee} {implemented-by} {contributed-by}"`
 
 ### `row-format-pr`
 - **Description**: The format of the row for the PR in the release notes. The format can contain placeholders for the PR `number`, `title`, and PR `pull-requests`. The placeholders are case-sensitive.
 - **Required**: No
-- **Default**: `#{number} _{title}_"`
+- **Default**: `#{number} _{title}_ {assignee} {implemented-by} {contributed-by}`
 
 ### `row-format-link-pr`
 - **Description**: If defined `true`, the PR row will begin with a `"PR: "` string. Otherwise, no prefix will be added.
@@ -166,8 +166,8 @@ Add the following step to your GitHub workflow (in example are used non-default 
     warnings: false
     print-empty-chapters: false
     chapters-to-pr-without-issue: false
-    row-format-issue: '#{number} _{title}_ {pull-requests}"'
-    row-format-pr: '#{number} _{title}_"'
+    row-format-issue: '#{number} _{title}_ {pull-requests} {assignee} {developed-by} {co-authored-by}'
+    row-format-pr: '#{number} _{title}_ {assignee} {developed-by} {co-authored-by}'
     row-format-link-pr: true
 ```
 
@@ -181,8 +181,8 @@ This action requires that your GitHub issues include comments with specific rele
 - The action scans through comments on each closed issue since the last release. It identifies comments that follow the specified format and extracts the content as part of the release notes.
 - The time considered for the previous release is based on its creation time. This means that the action will look for issues closed after the creation time of the most recent release to ensure that all relevant updates since that release are included.
 
-**Comment Format**
-- For an issue's contributions to be included in the release notes, it must contain a comment starting with "Release Notes" followed by the note content. This comment is typically added by the contributors.
+**Release Notes Comment Format**
+- It must contain a comment starting with "Release Notes" followed by the note content. This comment is typically added by the contributors.
 - Here is an example of the content for a 'Release Notes' string, which is not case-sensitive:
 ```
 Release Notes
@@ -191,16 +191,13 @@ Release Notes
 - Using `-` as a bullet point for each note is the best practice. The Markdown parser will automatically convert it to a list.
 - These comments are not required for action functionality. If an issue does not contain a "Release Notes" comment, it will be marked accordingly in the release notes. This helps maintainers quickly identify which issues need attention for documentation.
 
-#### Contributors Mention
-Along with the release note content, the action also gathers a list of contributors for each issue. This includes issue assignees and authors of linked pull requests' commits, providing acknowledgment for their contributions in the release notes.
-
 #### Handling Multiple PRs
 If an issue is linked to multiple PRs, the action fetches and aggregates contributions from all linked PRs.
 
 #### No Release Notes Found
 If no valid "Release Notes" comment is found in an issue, it will be marked accordingly. This helps maintainers quickly identify which issues need attention for documentation.
 
-#### Row formatting
+#### Issue or PR Row formatting
 Format of the row for the issue and PR in the release notes can be customized. The placeholders are case-sensitive.
 
 **Supported row format keywords:**
@@ -208,7 +205,20 @@ Format of the row for the issue and PR in the release notes can be customized. T
 - `{title}`: Issue or PR title.
 - `{pull-requests}`: List of PRs linked to the issue. Adds a list of PRs linked to the issue in the row with `in` prefix:
   - `#{number} _{title}_ {pull-requests}` => "[#43]() _title_ in [#PR1](), [#PR2](), [#PR3]()"
-  - Not used in PR row format. See default value. 
+  - Not used in PR row format. See default value.
+- `{assingee}`: Issue or PR assignee. Adds a login of assignees in the row with `assigned to` prefix:
+  - `#{number} _{title}_ {assignee}` => "[#43]() _title_ implemented by @login1"
+  - TODO - mention problem with public and private email
+- `{assignees}`: Issue or PR assignees. Adds a list of assignees logins in the row with `assigned to` prefix:
+  - `#{number} _{title}_ {assignees}` => "[#43]() _title_ implemented by @login1, @login2"
+  - This is alternative representation of multiple assignees provided by GitHub.
+- `{developed-by}`: List of PR developer(s) login(s). Adds a login of commit authors for PR(s) in the row with `developed by` prefix:
+  - `#{number} _{title}_ {developed-by}` => "[#43]() _title_ developed by @login1"
+  - TODO - mention problem with public and private email
+- `{co-authored-by}`: List of PR contributors. Adds a login of contributors in the row with `co-authored by` prefix:
+  - `#{number} _{title}_ {co-authored-by}` => "[#43]() _title_ co-authored by @login1 @login2"
+  - Contribution is detected in PR commit messages by detection of GitHub supported trailer `Co-authored-by`. 
+  - TODO - mention problem with public and private email
 
 ### Select start date for closed issues and PRs
 By set **published-at** to true the action will use the `published-at` timestamp of the latest release as the reference point for searching closed issues and PRs, instead of the `created-at` date. If first release, repository creation date is used. 

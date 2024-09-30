@@ -32,7 +32,7 @@ RUNNER_DEBUG = "RUNNER_DEBUG"
 ROW_FORMAT_ISSUE = "row-format-issue"
 ROW_FORMAT_PR = "row-format-pr"
 ROW_FORMAT_LINK_PR = "row-format-link-pr"
-SUPPORTED_ROW_FORMAT_KEYS = ["number", "title", "pull-requests"]
+SUPPORTED_ROW_FORMAT_KEYS = ["number", "title", "pull-requests", "assignee", "assignees", "developed-by", "contributed-by"]
 
 # Features
 WARNINGS = "warnings"

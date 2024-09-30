@@ -25,6 +25,7 @@ from github.Issue import Issue
 from github.PullRequest import PullRequest
 from github.Repository import Repository
 from github.Commit import Commit
+from torch.nn.functional import selu_
 
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.utils.constants import (
@@ -179,26 +180,42 @@ class Record:
         """Checks if the pull request contains issue mentions."""
         return len(extract_issue_numbers_from_body(self.__pulls[0])) > 0
 
+    # Note: assignee & assignees are related to this GitHub Docs - https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/assigning-issues-and-pull-requests-to-other-github-users#about-issue-and-pull-request-assignees
     @property
-    def authors(self) -> Optional[str]:
+    def assignee(self) -> Optional[str]:
         """Getter for the authors of the record."""
+        if self.__gh_issue is None:
+            return self.pulls[0].assignee.login if self.pulls[0].assignee is not None else None
+
+        else:
+            return self.issue.assignee.login if self.issue.assignee is not None else None
+
+    @property
+    def assignees(self) -> Optional[str]:
+        """Getter for the assignees of the record."""
+        if self.__gh_issue is None:
+            logins = [a.login for a in self.pulls[0].assignees]
+            return ", ".join(logins) if len(logins) > 0 else None
+
+        else:
+            logins = [a.login for a in self.issue.assignees]
+            return ", ".join(logins) if len(logins) > 0 else None
+
+    @property
+    def developers(self) -> Optional[str]:
+        """Getter for the developers of the record."""
+        # TODO - cycle across record commits and collect PR "authors"
+        # Commit.author - by mel byt ten, kdo ten PR pripravil, commiter je ten kdo s nim naposledy pracoval
+
         return None
-        # TODO in Issue named 'Chapter line formatting - authors'
-        # authors: list[str] = []
-        #
-        # for pull in self.__pulls:
-        #     if pull.author is not None:
-        #         authors.append(f"@{pull.author}")
-        #
-        # if len(authors) > 0:
-        #     return None
-        #
-        # res = ", ".join(authors)
-        # return res
 
     @property
     def contributors(self) -> Optional[str]:
         """Getter for the contributors of the record."""
+        # TODO - cycle across record commits and check if contribution string is present in commit message
+        #
+        #   Co-authored-by
+        # check if extra API calls are here - 100% jsou tam - udelat test na generovani s spoptrebe API + varovani do README
         return None
 
     @property
@@ -272,14 +289,15 @@ class Record:
         """
         self.increment_present_in_chapters()
         row_prefix = f"{ActionInputs.get_duplicity_icon()} " if self.present_in_chapters() > 1 else ""
-        format_values = {}
+        format_values = {"assignee": f"assigned to @{self.assignee}" if self.assignee is not None else "",
+                         "assignees": f"assigned to @{self.assignees}" if self.assignees is not None else "",
+                         "developers": f"developed by {self.developers}" if self.developers is not None else "",
+                         "contributors": f"co-authored by {self.contributors}" if self.contributors is not None else ""}
 
         if self.__gh_issue is None:
             p = self.__pulls[0]
             format_values["number"] = p.number
             format_values["title"] = p.title
-            format_values["authors"] = self.authors if self.authors is not None else ""
-            format_values["contributors"] = self.contributors if self.contributors is not None else ""
 
             pr_prefix = "PR: " if ActionInputs.get_row_format_link_pr() else ""
             row = f"{row_prefix}{pr_prefix}" + ActionInputs.get_row_format_pr().format(**format_values)
@@ -288,8 +306,6 @@ class Record:
             format_values["number"] = self.__gh_issue.number
             format_values["title"] = self.__gh_issue.title
             format_values["pull-requests"] = f"in {self.pr_links}" if len(self.__pulls) > 0 else ""
-            format_values["authors"] = self.authors if self.authors is not None else ""
-            format_values["contributors"] = self.contributors if self.contributors is not None else ""
 
             row = f"{row_prefix}" + ActionInputs.get_row_format_issue().format(**format_values)
 
