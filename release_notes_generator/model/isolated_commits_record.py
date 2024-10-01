@@ -52,6 +52,10 @@ class IsolatedCommitsRecord(Record):
         return sys.maxsize
 
     @property
+    def commits(self) -> dict:
+        return self.__commits
+
+    @property
     def is_pr(self) -> bool:
         """Check if the record is a pull request."""
         return False
