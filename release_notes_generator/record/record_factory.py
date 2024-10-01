@@ -25,8 +25,6 @@ from github.Issue import Issue
 from github.PullRequest import PullRequest
 from github.Repository import Repository
 from github.Commit import Commit
-from jsonschema.benchmarks.issue232 import issue232
-from sympy.strategies.branch import debug
 
 from release_notes_generator.model.record import Record
 
