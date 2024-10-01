@@ -20,6 +20,8 @@ This module contains the RecordFactory class which is responsible for generating
 
 import logging
 
+from typing import Optional
+
 from github import Github
 from github.Issue import Issue
 from github.PullRequest import PullRequest
@@ -79,7 +81,9 @@ class RecordFactory:
 
         for commit in commits:
             logger.debug("DEBUG count of records is '%s'", len(records))
-            records = RecordFactory.__register_commit_to_record(records, repo, commit)
+            isolated_r = RecordFactory.__register_commit_to_record(records, repo, commit)
+            if isolated_r is not None:
+                records[commit.sha] = isolated_r
             logger.debug("DEBUG count of records is '%s'", len(records))
 
         logger.info(
@@ -128,7 +132,7 @@ class RecordFactory:
                 )
 
     @staticmethod
-    def __register_commit_to_record(records: dict[int|str, Record], repo: Repository, c: Commit) -> dict[int|str, Record]:
+    def __register_commit_to_record(records: dict[int|str, Record], repo: Repository, c: Commit) -> Optional[IsolatedCommitsRecord]:
         """
         Register a commit to a record if the commit is linked to an issue or a PR.
 
@@ -137,12 +141,9 @@ class RecordFactory:
         """
         for record in records.values():
             if record.register_commit(c):
-                return records
+                return None
 
-        if c.sha in records.keys():
-            logger.debug("DEBUG - do we have a problem?")
+        iso_record = IsolatedCommitsRecord(repo)
+        iso_record.register_commit(c)
 
-        records[c.sha] = IsolatedCommitsRecord(repo)
-        records[c.sha].register_commit(c)
-
-        return records
+        return iso_record
