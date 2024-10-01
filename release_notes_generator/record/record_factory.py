@@ -113,8 +113,8 @@ class RecordFactory:
                 register_pull_request(pull)
 
         for commit in commits:
-            logger.debug("DEBUG - Before - count of records is '%s', keys %s", len(records), records.keys())
-            logger.debug("DEBUG - checking commit with sha: %s", commit.sha)
+            logger.debug("DEBUG 1 - Before - count of records is '%s', keys %s", len(records), records.keys())
+            logger.debug("DEBUG 2 - checking commit with sha: %s", commit.sha)
 
             normal_record_detected = False
             for record in records.values():
@@ -124,22 +124,25 @@ class RecordFactory:
 
             isolated_r = None
             if not normal_record_detected:
+                logger.debug("DEBUG 3")
                 isolated_r = IsolatedCommitsRecord(repo)
+                logger.debug("DEBUG 4")
                 isolated_r.register_commit(commit)
+                logger.debug("DEBUG 5")
 
-            logger.debug("DEBUG - isolated record is '%s'", isolated_r)
+            logger.debug("DEBUG 6 - isolated record is '%s'", isolated_r)
             if isolated_r is not None:
-                logger.debug("DEBUG - Adding new isolated record to records dict")
+                logger.debug("DEBUG 7.1 - Adding new isolated record to records dict")
                 records[commit.sha] = isolated_r
 
                 if commit.sha in records.keys():
-                    logger.debug("DEBUG - found in keys")
+                    logger.debug("DEBUG 8.1 - found in keys")
                 else:
-                    logger.debug("DEBUG - not found in keys")
+                    logger.debug("DEBUG 8.2 - not found in keys")
             else:
-                logger.debug("DEBUG - Adding normal record to records dict")
+                logger.debug("DEBUG 7.2 - Adding normal record to records dict")
 
-            logger.debug("DEBUG - After - count of records is '%s', keys %s", len(records), records.keys())
+            logger.debug("DEBUG 9 - After - count of records is '%s', keys %s", len(records), records.keys())
 
         logger.info(
             "Generated %d records from %d issues and %d PRs, with %d commits detected. %d of commits are isolated",
