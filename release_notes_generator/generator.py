@@ -89,15 +89,17 @@ class ReleaseNotesGenerator:
         pulls = pulls_all = self._safe_call(repo.get_pulls)(state="closed")
         commits = commits_all = list(self._safe_call(repo.get_commits)())
 
+        logger.info("Count of issues: %d", len(list(issues)))
         if rls is not None:
-            logger.info("Count of issues: %d", len(list(issues)))
-
             # filter out merged PRs and commits before the since date
             pulls = list(filter(lambda pull: pull.merged_at is not None and pull.merged_at > since, list(pulls_all)))
             logger.debug("Count of pulls reduced from %d to %d", len(list(pulls_all)), len(pulls))
 
             commits = list(filter(lambda commit: commit.commit.author.date > since, list(commits_all)))
             logger.debug("Count of commits reduced from %d to %d", len(list(commits_all)), len(commits))
+        else:
+            logger.info("Count of pulls: %d", len(list(pulls)))
+            logger.info("Count of commits: %d", len(list(commits)))
 
         changelog_url = get_change_url(tag_name=ActionInputs.get_tag_name(), repository=repo, git_release=rls)
 
