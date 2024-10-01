@@ -26,6 +26,7 @@ from github.PullRequest import PullRequest
 from github.Repository import Repository
 from github.Commit import Commit
 from jsonschema.benchmarks.issue232 import issue232
+from sympy.strategies.branch import debug
 
 from release_notes_generator.model.record import Record
 
@@ -111,7 +112,9 @@ class RecordFactory:
             if issue.number not in pull_numbers:
                 create_record_for_issue(repo, issue)
             else:
+                logger.debug("Detected issue number among pulls one %s", issue.number)
                 real_issue_counts -= 1
+                logger.debug("New count of issues is %s", real_issue_counts)
 
         for pull in pulls:
             if not extract_issue_numbers_from_body(pull):

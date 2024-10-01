@@ -89,7 +89,7 @@ class ReleaseNotesGenerator:
         pulls = pulls_all = self._safe_call(repo.get_pulls)(state="closed")
         commits = commits_all = list(self._safe_call(repo.get_commits)())
 
-        logger.info("Count of issues: %d", len(list(issues)))
+        logger.info("Count of issues: %d. (Note: Mixture of Issues and PRs from API :-(.)", len(list(issues)))
         if rls is not None:
             # filter out merged PRs and commits before the since date
             pulls = list(filter(lambda pull: pull.merged_at is not None and pull.merged_at > since, list(pulls_all)))
