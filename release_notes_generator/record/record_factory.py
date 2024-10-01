@@ -91,30 +91,6 @@ class RecordFactory:
                         parent_issue_number,
                     )
 
-        def register_commit_to_record(c: Commit) -> Optional[IsolatedCommitsRecord]:
-            """
-            Register a commit to a record if the commit is linked to an issue or a PR.
-
-            @param c: The commit to register.
-            @return: TODO
-            """
-            # try to register normal commit to existing records
-            for record in records.values():
-                if record.register_commit(c):
-                    return None
-
-            # if not registered, create a new isolated record
-            iso_record = IsolatedCommitsRecord(repo)
-            try:
-                logger.debug("Before call iso_record.register_commit(c)")
-                iso_record.register_commit(c)
-                logger.debug("After call iso_record.register_commit(c)")
-            except Exception as e:
-                logger.error("Failed to add record for commit %s: %s", c.sha, str(e))
-
-            logger.debug("DEBUG - Returning isolated record %s", iso_record)
-            return iso_record
-
         records: dict[int|str, Record] = {}
         pull_numbers = [pull.number for pull in pulls]
 
@@ -140,7 +116,17 @@ class RecordFactory:
             logger.debug("DEBUG - Before - count of records is '%s', keys %s", len(records), records.keys())
             logger.debug("DEBUG - checking commit with sha: %s", commit.sha)
 
-            isolated_r = register_commit_to_record(commit)
+            normal_record_detected = False
+            for record in records.values():
+                if record.register_commit(commit):
+                    normal_record_detected = True
+                    break
+
+            isolated_r = None
+            if not normal_record_detected:
+                isolated_r = IsolatedCommitsRecord(repo)
+                isolated_r.register_commit(commit)
+
             logger.debug("DEBUG - isolated record is '%s'", isolated_r)
             if isolated_r is not None:
                 logger.debug("DEBUG - Adding new isolated record to records dict")
