@@ -19,11 +19,9 @@ This module contains the BaseChapters class which is responsible for representin
 """
 
 import logging
-import re
 import sys
 from typing import Optional
 
-from github.Issue import Issue
 from github.PullRequest import PullRequest
 from github.Repository import Repository
 from github.Commit import Commit
@@ -46,6 +44,7 @@ class IsolatedCommitsRecord(Record):
 
     def __init__(self, repo: Repository):
         super().__init__(repo)
+        self.__commits: dict = {}
 
     @property
     def number(self) -> int:
@@ -121,7 +120,7 @@ class IsolatedCommitsRecord(Record):
         @param commit: The Commit object to register.
         @return: Always return True.
         """
-        self.__pull_commits[0] = commit
+        self.__commits[0] = commit
         return True
 
     def to_chapter_row(self) -> str:
