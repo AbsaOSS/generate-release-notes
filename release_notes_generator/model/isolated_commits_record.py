@@ -125,7 +125,7 @@ class IsolatedCommitsRecord(Record):
         @return: Always return True.
         """
         self.__commits[0] = commit
-        logger.debug("Commit 'type: Isolated' %s registered", commit.sha)
+        logger.debug("Registering commit 'type: Isolated' %s registered", commit.sha)
         return True
 
     def to_chapter_row(self) -> str:

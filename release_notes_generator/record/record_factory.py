@@ -78,7 +78,9 @@ class RecordFactory:
                 RecordFactory.__register_pull_request(github, records, repo, pull)
 
         for commit in commits:
+            logger.debug("DEBUG count of records is '%s'", len(records))
             RecordFactory.__register_commit_to_record(records, repo, commit)
+            logger.debug("DEBUG count of records is '%s'", len(records))
 
         logger.info(
             "Generated %d records from %d issues and %d PRs, with %d commits detected. %d of commits are isolated",
@@ -137,5 +139,6 @@ class RecordFactory:
             if record.register_commit(c):
                 return
 
-        records[c.sha] = IsolatedCommitsRecord(repo)
-        records[c.sha].register_commit(c)
+        iso_record = IsolatedCommitsRecord(repo)
+        iso_record.register_commit(c)
+        records[c.sha] = iso_record
