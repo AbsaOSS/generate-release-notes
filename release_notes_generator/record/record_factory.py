@@ -19,15 +19,12 @@ This module contains the RecordFactory class which is responsible for generating
 """
 
 import logging
-import sys
 
-from astroid.brain.brain_unittest import IsolatedAsyncioTestCaseImport
 from github import Github
 from github.Issue import Issue
 from github.PullRequest import PullRequest
 from github.Repository import Repository
 from github.Commit import Commit
-from numpy.core.records import record
 
 from release_notes_generator.model.isolated_commits_record import IsolatedCommitsRecord
 from release_notes_generator.model.record import Record
