@@ -264,21 +264,27 @@ class Record:
         """
         self.__pulls.append(pull)
 
-    def register_commit(self, commit: Commit) -> None:
+    def register_commit(self, commit: Commit) -> bool:
         """
         Registers a commit with the record.
 
         @param commit: The Commit object to register.
         @return: None
         """
+        if self.is_commit_sha_present(commit.sha):
+            logger.debug("Record does not contains commit sha. Skipping for commit registration check.")
+            return False
+
         for pull in self.__pulls:
             if commit.sha == pull.merge_commit_sha:
                 if self.__pull_commits.get(pull.number) is None:
                     self.__pull_commits[pull.number] = []
                 self.__pull_commits[pull.number].append(commit)
-                return
+                logger.debug("Commit %s registered in PR %s of record %s", commit.sha, pull.number, self.number)
+                return True
 
-        logger.error("Commit %s not registered in any PR of record %s", commit.sha, self.number)
+        logger.error("Commit %s registered in any PR of record %s", commit.sha, self.number)
+        return False
 
     def to_chapter_row(self) -> str:
         """

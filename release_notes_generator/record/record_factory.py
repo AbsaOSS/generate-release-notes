@@ -96,11 +96,10 @@ class RecordFactory:
             @return: True if the commit was registered to a record, False otherwise
             """
             for record in records.values():
-                if record.is_commit_sha_present(commit.sha):
-                    record.register_commit(commit)
+                if record.register_commit(commit):
                     return True
 
-            logger.warning(f"Commit '{commit.url}' not registered to record.")
+            logger.warning(f"Commit '{commit.url}' registered to any record.")
             return False
 
         rate_limiter = GithubRateLimiter(github)
