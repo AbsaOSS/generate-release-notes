@@ -151,11 +151,13 @@ class RecordFactory:
         @param c: The commit to register.
         @return: TODO
         """
+        # try to register normal commit to existing records
         for record in records.values():
             if record.register_commit(c):
                 return None
 
+        # if not registered, create a new isolated record
         iso_record = IsolatedCommitsRecord(repo)
         iso_record.register_commit(c)
-
+        logger.debug("DEBUG - Returning isolated record %s", iso_record)
         return iso_record
