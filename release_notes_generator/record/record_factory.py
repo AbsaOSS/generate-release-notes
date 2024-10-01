@@ -92,6 +92,7 @@ class RecordFactory:
                     )
 
         records: dict[int|str, Record] = {}
+        records_for_isolated_commits: dict[int|str, Record] = {}
         pull_numbers = [pull.number for pull in pulls]
 
         real_issue_counts = len(issues)     # issues could contain PRs too - known behaviour from API
@@ -129,11 +130,13 @@ class RecordFactory:
                 logger.debug("DEBUG 4")
                 isolated_r.register_commit(commit)
                 logger.debug("DEBUG 5")
+            else:
+                logger.debug("DEBUG 5.5")
 
             logger.debug("DEBUG 6 - isolated record is '%s'", isolated_r)
             if isolated_r is not None:
                 logger.debug("DEBUG 7.1 - Adding new isolated record to records dict")
-                records[commit.sha] = isolated_r
+                records_for_isolated_commits[commit.sha] = isolated_r
 
                 if commit.sha in records.keys():
                     logger.debug("DEBUG 8.1 - found in keys")
@@ -144,6 +147,7 @@ class RecordFactory:
 
             logger.debug("DEBUG 9 - After - count of records is '%s', keys %s", len(records), records.keys())
 
+        records.update(records_for_isolated_commits)
         logger.info(
             "Generated %d records from %d issues and %d PRs, with %d commits detected. %d of commits are isolated",
             len(records),
