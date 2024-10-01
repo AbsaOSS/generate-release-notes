@@ -85,7 +85,13 @@ class RecordFactory:
 
             isolated_r = RecordFactory.__register_commit_to_record(records, repo, commit)
             if isolated_r is not None:
+                logger.debug("DEBUG - Adding new isolated record to records dict")
                 records[commit.sha] = isolated_r
+
+                if commit.sha in records.keys():
+                    logger.debug("DEBUG - found in keys")
+                else:
+                    logger.debug("DEBUG - not found in keys")
 
             logger.debug("DEBUG count of records is '%s', keys %s", len(records), records.keys())
 
