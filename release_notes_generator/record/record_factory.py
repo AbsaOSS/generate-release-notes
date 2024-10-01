@@ -133,11 +133,14 @@ class RecordFactory:
         Register a commit to a record if the commit is linked to an issue or a PR.
 
         @param c: The commit to register.
-        @return: None
+        @return: TODO
         """
         for record in records.values():
             if record.register_commit(c):
                 return records
+
+        if c.sha in records.keys():
+            logger.debug("DEBUG - do we have a problem?")
 
         records[c.sha] = IsolatedCommitsRecord(repo)
         records[c.sha].register_commit(c)
