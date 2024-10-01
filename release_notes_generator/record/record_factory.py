@@ -80,11 +80,12 @@ class RecordFactory:
                 RecordFactory.__register_pull_request(github, records, repo, pull)
 
         for commit in commits:
-            logger.debug("DEBUG count of records is '%s'", len(records))
+            logger.debug("DEBUG count of records is '%s', keys %s", len(records), records.keys())
+
             isolated_r = RecordFactory.__register_commit_to_record(records, repo, commit)
             if isolated_r is not None:
                 records[commit.sha] = isolated_r
-            logger.debug("DEBUG count of records is '%s'", len(records))
+            logger.debug("DEBUG count of records is '%s', keys %s", len(records), records.keys())
 
         logger.info(
             "Generated %d records from %d issues and %d PRs, with %d commits detected. %d of commits are isolated",
