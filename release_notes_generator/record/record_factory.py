@@ -110,6 +110,7 @@ class RecordFactory:
         real_issue_counts = len(issues)     # issues could contain PRs too - known behaviour from API
         for issue in issues:
             if issue.number not in pull_numbers:
+                logger.debug("Calling create issue for number %s", issue.number)
                 create_record_for_issue(repo, issue)
             else:
                 logger.debug("Detected issue number among pulls one %s", issue.number)
