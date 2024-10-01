@@ -58,6 +58,61 @@ class RecordFactory:
         @param commits: The list of commits.
         @return: A dictionary of records.
         """
+        def create_record_for_issue(i: Issue):
+            records[i.number] = Record(repo, i)
+            logger.debug("Created record for issue %d: %s", i.number, i.title)
+
+        def register_pull_request(pull: PullRequest):
+            rate_limiter = GithubRateLimiter(github)
+            safe_call = safe_call_decorator(rate_limiter)
+
+            for parent_issue_number in extract_issue_numbers_from_body(pull):
+                if parent_issue_number not in records:
+                    logger.warning(
+                        "Detected PR %d linked to issue %d which is not in the list of received issues. "
+                        "Fetching ...",
+                        pull.number,
+                        parent_issue_number,
+                    )
+                    parent_issue = safe_call(repo.get_issue)(parent_issue_number)
+                    if parent_issue is not None:
+                        create_record_for_issue(parent_issue)
+
+                if parent_issue_number in records:
+                    records[parent_issue_number].register_pull_request(pull)
+                    logger.debug("Registering PR %d: %s to Issue %d", pull.number, pull.title, parent_issue_number)
+                else:
+                    records[pull.number] = Record(repo)
+                    records[pull.number].register_pull_request(pull)
+                    logger.debug(
+                        "Registering stand-alone PR %d: %s as mentioned Issue %d not found.",
+                        pull.number,
+                        pull.title,
+                        parent_issue_number,
+                    )
+
+        def register_commit_to_record(c: Commit) -> Optional[IsolatedCommitsRecord]:
+            """
+            Register a commit to a record if the commit is linked to an issue or a PR.
+
+            @param c: The commit to register.
+            @return: TODO
+            """
+            # try to register normal commit to existing records
+            for record in records.values():
+                if record.register_commit(c):
+                    return None
+
+            # if not registered, create a new isolated record
+            iso_record = IsolatedCommitsRecord(repo)
+            try:
+                iso_record.register_commit(c)
+            except Exception as e:
+                logger.error("Failed to add record for commit %s: %s", c.sha, str(e))
+
+            logger.debug("DEBUG - Returning isolated record %s", iso_record)
+            return iso_record
+
         records: dict[int|str, Record] = {}
         pull_numbers = [pull.number for pull in pulls]
 
@@ -66,7 +121,7 @@ class RecordFactory:
             logger.debug("Hello for issue %s", issue)
             if issue.number not in pull_numbers:
                 logger.debug("Calling create issue for number %s", issue.number)
-                RecordFactory.__create_record_for_issue(records, repo, issue)
+                create_record_for_issue(issue)
             else:
                 logger.debug("Detected pr number %s among issues", issue.number)
                 real_issue_counts -= 1
@@ -77,13 +132,13 @@ class RecordFactory:
                 records[pull.number].register_pull_request(pull)
                 logger.debug("Created record for PR %d: %s", pull.number, pull.title)
             else:
-                RecordFactory.__register_pull_request(github, records, repo, pull)
+                register_pull_request(pull)
 
         for commit in commits:
             logger.debug("DEBUG - Before - count of records is '%s', keys %s", len(records), records.keys())
             logger.debug("DEBUG - checking commit with sha: %s", commit.sha)
 
-            isolated_r = RecordFactory.__register_commit_to_record(records, repo, commit)
+            isolated_r = register_commit_to_record(commit)
             logger.debug("DEBUG - isolated record is '%s'", isolated_r)
             if isolated_r is not None:
                 logger.debug("DEBUG - Adding new isolated record to records dict")
@@ -107,61 +162,3 @@ class RecordFactory:
             sum(isinstance(r, IsolatedCommitsRecord) for r in records)
         )
         return records
-
-    @staticmethod
-    def __create_record_for_issue(records: dict[int|str, Record], r: Repository, i: Issue):
-        records[i.number] = Record(r, i)
-        logger.debug("Created record for issue %d: %s", i.number, i.title)
-
-    @staticmethod
-    def __register_pull_request(github: Github, records: dict[int|str, Record], repo: Repository, pull: PullRequest):
-        rate_limiter = GithubRateLimiter(github)
-        safe_call = safe_call_decorator(rate_limiter)
-
-        for parent_issue_number in extract_issue_numbers_from_body(pull):
-            if parent_issue_number not in records:
-                logger.warning(
-                    "Detected PR %d linked to issue %d which is not in the list of received issues. "
-                    "Fetching ...",
-                    pull.number,
-                    parent_issue_number,
-                )
-                parent_issue = safe_call(repo.get_issue)(parent_issue_number)
-                if parent_issue is not None:
-                    RecordFactory.__create_record_for_issue(records, repo, parent_issue)
-
-            if parent_issue_number in records:
-                records[parent_issue_number].register_pull_request(pull)
-                logger.debug("Registering PR %d: %s to Issue %d", pull.number, pull.title, parent_issue_number)
-            else:
-                records[pull.number] = Record(repo)
-                records[pull.number].register_pull_request(pull)
-                logger.debug(
-                    "Registering stand-alone PR %d: %s as mentioned Issue %d not found.",
-                    pull.number,
-                    pull.title,
-                    parent_issue_number,
-                )
-
-    @staticmethod
-    def __register_commit_to_record(records: dict[int|str, Record], repo: Repository, c: Commit) -> Optional[IsolatedCommitsRecord]:
-        """
-        Register a commit to a record if the commit is linked to an issue or a PR.
-
-        @param c: The commit to register.
-        @return: TODO
-        """
-        # try to register normal commit to existing records
-        for record in records.values():
-            if record.register_commit(c):
-                return None
-
-        # if not registered, create a new isolated record
-        iso_record = IsolatedCommitsRecord(repo)
-        try:
-            iso_record.register_commit(c)
-        except Exception as e:
-            logger.error("Failed to add record for commit %s: %s", c.sha, str(e))
-
-        logger.debug("DEBUG - Returning isolated record %s", iso_record)
-        return iso_record
