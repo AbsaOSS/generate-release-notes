@@ -326,10 +326,10 @@ class Record:
             format_values["assignee"] = f"assigned to @{self.assignee}" if self.assignee is not None else ""
         if "{assignees}" in row_format:
             format_values["assignees"] = f"assigned to @{self.assignees}" if self.assignees is not None else ""
-        if "{developers}" in row_format:
-            format_values["developers"] = f"developed by {self.developers}" if self.developers is not None else ""
-        if "{contributors}" in row_format:
-            format_values["contributors"] = f"co-authored by {self.contributors}" if self.contributors is not None else ""
+        if "{developed-by}" in row_format:
+            format_values["developed-by"] = f"developed by {self.developers}" if self.developers is not None else ""
+        if "{co-authored-by}" in row_format:
+            format_values["co-authored-by"] = f"co-authored by {self.contributors}" if self.contributors is not None else ""
 
         return format_values
 
