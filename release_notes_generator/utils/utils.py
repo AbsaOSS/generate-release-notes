@@ -71,5 +71,5 @@ def detect_row_format_invalid_keywords(row_format: str, row_type: str = "Issue")
     keywords_in_braces = re.findall(r"\{(.*?)\}", row_format)
     invalid_keywords = [keyword for keyword in keywords_in_braces if keyword not in SUPPORTED_ROW_FORMAT_KEYS]
     if invalid_keywords:
-        errors.append(f"Invalid {row_type} row format keyword(s) found: {', '.join(invalid_keywords)}")
+        errors.append(f"Invalid {row_type} row format '{row_format}'. Invalid keyword(s) found: {', '.join(invalid_keywords)}")
     return errors

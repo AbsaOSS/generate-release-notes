@@ -289,15 +289,13 @@ class Record:
         """
         self.increment_present_in_chapters()
         row_prefix = f"{ActionInputs.get_duplicity_icon()} " if self.present_in_chapters() > 1 else ""
-        format_values = {"assignee": f"assigned to @{self.assignee}" if self.assignee is not None else "",
-                         "assignees": f"assigned to @{self.assignees}" if self.assignees is not None else "",
-                         "developers": f"developed by {self.developers}" if self.developers is not None else "",
-                         "contributors": f"co-authored by {self.contributors}" if self.contributors is not None else ""}
+        format_values = {}
 
         if self.__gh_issue is None:
             p = self.__pulls[0]
             format_values["number"] = p.number
             format_values["title"] = p.title
+            format_values.update(self.__get_row_format_values(ActionInputs.get_row_format_pr()))
 
             pr_prefix = "PR: " if ActionInputs.get_row_format_link_pr() else ""
             row = f"{row_prefix}{pr_prefix}" + ActionInputs.get_row_format_pr().format(**format_values)
@@ -306,6 +304,7 @@ class Record:
             format_values["number"] = self.__gh_issue.number
             format_values["title"] = self.__gh_issue.title
             format_values["pull-requests"] = f"in {self.pr_links}" if len(self.__pulls) > 0 else ""
+            format_values.update(self.__get_row_format_values(ActionInputs.get_row_format_issue()))
 
             row = f"{row_prefix}" + ActionInputs.get_row_format_issue().format(**format_values)
 
@@ -313,6 +312,28 @@ class Record:
             row = f"{row}\n{self.get_rls_notes()}"
 
         return row
+
+    def __get_row_format_values(self, row_format: str) -> dict:
+        """
+        Create dictionary and fill by user row format defined values.
+        NoteL some values are API call intensive.
+
+        @param row_format: User defined row format.
+        @return: The dictionary with supported values required by user row format.
+        """
+        format_values = {}
+
+        if "{assignee}" in row_format:
+            format_values["assignee"] = f"assigned to @{self.assignee}" if self.assignee is not None else ""
+        if "{assignees}" in row_format:
+            format_values["assignees"] = f"assigned to @{self.assignees}" if self.assignees is not None else ""
+        if "{developers}" in row_format:
+            format_values["developers"] = f"developed by {self.developers}" if self.developers is not None else ""
+        if "{contributors}" in row_format:
+            format_values["contributors"] = f"co-authored by {self.contributors}" if self.contributors is not None else ""
+
+        return format_values
+
 
     def contains_min_one_label(self, labels: list[str]) -> bool:
         """

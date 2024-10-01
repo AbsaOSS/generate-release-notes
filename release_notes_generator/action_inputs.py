@@ -167,14 +167,14 @@ class ActionInputs:
         """
         Get the issue row format for the release notes.
         """
-        return get_action_input(ROW_FORMAT_ISSUE, "#{number} _{title}_ {pull-requests} {assignee} {developed-by} {contributed-by}").strip()
+        return get_action_input(ROW_FORMAT_ISSUE, "#{number} _{title}_ {pull-requests} {assignee} {developed-by} {co-authored-by}").strip()
 
     @staticmethod
     def get_row_format_pr() -> str:
         """
         Get the pr row format for the release notes.
         """
-        return get_action_input(ROW_FORMAT_PR, "#{number} _{title}_ {assignee} {developed-by} {contributed-by}").strip()
+        return get_action_input(ROW_FORMAT_PR, "#{number} _{title}_ {assignee} {developed-by} {co-authored-by}").strip()
 
     @staticmethod
     def get_row_format_link_pr() -> bool:
