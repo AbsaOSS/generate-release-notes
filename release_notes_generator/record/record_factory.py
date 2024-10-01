@@ -106,7 +106,9 @@ class RecordFactory:
             # if not registered, create a new isolated record
             iso_record = IsolatedCommitsRecord(repo)
             try:
+                logger.debug("Before call iso_record.register_commit(c)")
                 iso_record.register_commit(c)
+                logger.debug("After call iso_record.register_commit(c)")
             except Exception as e:
                 logger.error("Failed to add record for commit %s: %s", c.sha, str(e))
 
