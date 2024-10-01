@@ -272,9 +272,9 @@ class Record:
         @param commit: The Commit object to register.
         @return: None
         """
-        if self.is_commit_sha_present(commit.sha):
-            logger.debug("Record '%s' does not contains commit sha. Skipping for commit registration check.", self.number)
-            return False
+        # if self.is_commit_sha_present(commit.sha):
+        #     logger.debug("Record '%s' does not contain commit sha. Skipping for commit registration check.", self.number)
+        #     return False
 
         for pull in self.__pulls:
             sha = commit.sha
