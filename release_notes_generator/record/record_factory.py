@@ -27,6 +27,7 @@ from github.Issue import Issue
 from github.PullRequest import PullRequest
 from github.Repository import Repository
 from github.Commit import Commit
+from numpy.core.records import record
 
 from release_notes_generator.model.isolated_commits_record import IsolatedCommitsRecord
 from release_notes_generator.model.record import Record
@@ -135,6 +136,6 @@ class RecordFactory:
             real_issue_counts,
             len(pulls),
             len(commits),
-            len(records[sys.maxsize].commits)
+            sum(isinstance(nr, str) for nr in records.keys())
         )
         return records
