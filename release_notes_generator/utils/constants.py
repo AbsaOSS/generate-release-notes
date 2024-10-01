@@ -53,7 +53,7 @@ RELEASE_NOTE_DETECTION_PATTERN = "Release notes:"
 RELEASE_NOTE_LINE_MARK = "-"
 
 # Service chapters titles
-ISOLATED_COMMITS: str = "Isolated commits without Issue ot PR ⚠️"
+ISOLATED_COMMITS: str = "Isolated commits without Issue or PR ⚠️"
 
 CLOSED_ISSUES_WITHOUT_PULL_REQUESTS: str = "Closed Issues without Pull Request ⚠️"
 CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS: str = "Closed Issues without User Defined Labels ⚠️"

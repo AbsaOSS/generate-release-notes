@@ -59,9 +59,6 @@ class ServiceChapters(BaseChapters):
             self.used_record_numbers = used_record_numbers
 
         self.chapters = {
-            ISOLATED_COMMITS: Chapter(
-                title=ISOLATED_COMMITS, empty_message="All commits are linked to an Issues or a Pull Request."
-            ),
             CLOSED_ISSUES_WITHOUT_PULL_REQUESTS: Chapter(
                 title=CLOSED_ISSUES_WITHOUT_PULL_REQUESTS, empty_message="All closed issues linked to a Pull Request."
             ),
@@ -80,6 +77,9 @@ class ServiceChapters(BaseChapters):
             MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES: Chapter(
                 title=MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES,
                 empty_message="All merged PRs are linked to Closed issues.",
+            ),
+            ISOLATED_COMMITS: Chapter(
+                title=ISOLATED_COMMITS, empty_message="All commits are linked to an Issues or a Pull Request."
             ),
             OTHERS_NO_TOPIC: Chapter(
                 title=OTHERS_NO_TOPIC, empty_message="Previous filters caught all Issues or Pull Requests."

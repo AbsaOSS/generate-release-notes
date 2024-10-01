@@ -97,7 +97,6 @@ class RecordFactory:
 
         real_issue_counts = len(issues)     # issues could contain PRs too - known behaviour from API
         for issue in issues:
-            logger.debug("Hello for issue %s", issue)
             if issue.number not in pull_numbers:
                 logger.debug("Calling create issue for number %s", issue.number)
                 create_record_for_issue(issue)
@@ -114,9 +113,6 @@ class RecordFactory:
                 register_pull_request(pull)
 
         for commit in commits:
-            logger.debug("DEBUG 1 - Before - count of records is '%s', keys %s", len(records), records.keys())
-            logger.debug("DEBUG 2 - checking commit with sha: %s", commit.sha)
-
             normal_record_detected = False
             for record in records.values():
                 if record.register_commit(commit):
@@ -125,35 +121,19 @@ class RecordFactory:
 
             isolated_r = None
             if not normal_record_detected:
-                logger.debug("DEBUG 3")
                 isolated_r = IsolatedCommitsRecord(repo)
-                logger.debug("DEBUG 4")
                 isolated_r.register_commit(commit)
-                logger.debug("DEBUG 5")
-            else:
-                logger.debug("DEBUG 5.5")
 
-            logger.debug("DEBUG 6 - isolated record is '%s'", isolated_r)
             if isolated_r is not None:
-                logger.debug("DEBUG 7.1 - Adding new isolated record to records dict")
                 records_for_isolated_commits[commit.sha] = isolated_r
-
-                if commit.sha in records.keys():
-                    logger.debug("DEBUG 8.1 - found in keys")
-                else:
-                    logger.debug("DEBUG 8.2 - not found in keys")
-            else:
-                logger.debug("DEBUG 7.2 - Adding normal record to records dict")
-
-            logger.debug("DEBUG 9 - After - count of records is '%s', keys %s", len(records), records.keys())
 
         records.update(records_for_isolated_commits)
         logger.info(
-            "Generated %d records from %d issues and %d PRs, with %d commits detected. %d of commits are isolated",
+            "Generated %d records from %d issues and %d PRs, with %d commits detected. %d of commits are isolated.",
             len(records),
             real_issue_counts,
             len(pulls),
             len(commits),
-            sum(isinstance(r, IsolatedCommitsRecord) for r in records)
+            len(records_for_isolated_commits)
         )
         return records
