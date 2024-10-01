@@ -133,6 +133,6 @@ class RecordFactory:
             real_issue_counts,
             len(pulls),
             len(commits),
-            sum(isinstance(nr, str) for nr in records.keys())
+            sum(isinstance(r, IsolatedCommitsRecord) for r in records)
         )
         return records
