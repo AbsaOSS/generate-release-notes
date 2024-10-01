@@ -19,6 +19,7 @@ This module contains the RecordFactory class which is responsible for generating
 """
 
 import logging
+import sys
 
 from github import Github
 from github.Issue import Issue
@@ -55,7 +56,7 @@ class RecordFactory:
         @param commits: The list of commits.
         @return: A dictionary of records.
         """
-        records = {}
+        records = {sys.maxsize: Record(repo)}
         pull_numbers = [pull.number for pull in pulls]
 
         def create_record_for_issue(r: Repository, i: Issue):
@@ -88,19 +89,18 @@ class RecordFactory:
                         parent_issue_number,
                     )
 
-        def register_commit_to_record(commit: Commit) -> bool:
+        def register_commit_to_record(commit: Commit) -> None:
             """
             Register a commit to a record if the commit is linked to an issue or a PR.
 
             @param commit: The commit to register.
-            @return: True if the commit was registered to a record, False otherwise
+            @return: None
             """
             for record in records.values():
                 if record.register_commit(commit):
-                    return True
+                    return
 
-            logger.warning(f"Commit '{commit.url}' registered to any record.")
-            return False
+            records[sys.maxsize].register_commit(commit)
 
         rate_limiter = GithubRateLimiter(github)
         safe_call = safe_call_decorator(rate_limiter)
@@ -124,13 +124,15 @@ class RecordFactory:
             else:
                 register_pull_request(pull)
 
-        detected_prs_count = sum(register_commit_to_record(commit) for commit in commits)
+        for commit in commits:
+            register_commit_to_record(commit)
 
         logger.info(
-            "Generated %d records from %d issues and %d PRs, with %d commits detected.",
+            "Generated %d records from %d issues and %d PRs, with %d commits detected. %d of commits are isolated",
             len(records),
             real_issue_counts,
             len(pulls),
-            detected_prs_count,
+            len(commits),
+            len(records[sys.maxsize].commits)
         )
         return records
