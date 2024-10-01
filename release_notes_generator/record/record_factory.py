@@ -79,7 +79,7 @@ class RecordFactory:
 
         for commit in commits:
             logger.debug("DEBUG count of records is '%s'", len(records))
-            RecordFactory.__register_commit_to_record(records, repo, commit)
+            records = RecordFactory.__register_commit_to_record(records, repo, commit)
             logger.debug("DEBUG count of records is '%s'", len(records))
 
         logger.info(
@@ -128,7 +128,7 @@ class RecordFactory:
                 )
 
     @staticmethod
-    def __register_commit_to_record(records: dict[int|str, Record], repo: Repository, c: Commit) -> None:
+    def __register_commit_to_record(records: dict[int|str, Record], repo: Repository, c: Commit) -> dict[int|str, Record]:
         """
         Register a commit to a record if the commit is linked to an issue or a PR.
 
@@ -137,8 +137,9 @@ class RecordFactory:
         """
         for record in records.values():
             if record.register_commit(c):
-                return
+                return records
 
-        iso_record = IsolatedCommitsRecord(repo)
-        iso_record.register_commit(c)
-        records[c.sha] = iso_record
+        records[c.sha] = IsolatedCommitsRecord(repo)
+        records[c.sha].register_commit(c)
+
+        return records
