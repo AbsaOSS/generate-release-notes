@@ -19,6 +19,7 @@ This module contains the BaseChapters class which is responsible for representin
 """
 
 import logging
+import re
 from typing import Optional
 
 from github.Issue import Issue
@@ -272,18 +273,31 @@ class Record:
         @return: None
         """
         if self.is_commit_sha_present(commit.sha):
-            logger.debug("Record does not contains commit sha. Skipping for commit registration check.")
+            logger.debug("Record '%s' does not contains commit sha. Skipping for commit registration check.", self.number)
             return False
 
         for pull in self.__pulls:
-            if commit.sha == pull.merge_commit_sha:
+            sha = commit.sha
+            if sha == pull.merge_commit_sha or sha == pull.head.sha:
                 if self.__pull_commits.get(pull.number) is None:
                     self.__pull_commits[pull.number] = []
                 self.__pull_commits[pull.number].append(commit)
-                logger.debug("Commit %s registered in PR %s of record %s", commit.sha, pull.number, self.number)
+                logger.debug("Commit %s registered using sha in PR %s of record %s", commit.sha, pull.number, self.number)
                 return True
 
-        logger.error("Commit %s registered in any PR of record %s", commit.sha, self.number)
+        # Parse commit message for PR numbers
+        message = commit.commit.message
+        match = re.search(r"Merge pull request #(\d+)", message)
+        if not match:
+            match = re.search(r"\(#(\d+)\)", message)
+        if match:
+            pr_number = int(match.group(1))
+            if self.__pull_commits.get(pr_number) is None:
+                self.__pull_commits[pr_number] = []
+            self.__pull_commits[pr_number].append(commit)
+            logger.debug("Commit %s registered using message in PR %s of record %s", commit.sha, pr_number, self.number)
+            return True
+
         return False
 
     def to_chapter_row(self) -> str:
