@@ -21,12 +21,14 @@ This module contains the RecordFactory class which is responsible for generating
 import logging
 import sys
 
+from astroid.brain.brain_unittest import IsolatedAsyncioTestCaseImport
 from github import Github
 from github.Issue import Issue
 from github.PullRequest import PullRequest
 from github.Repository import Repository
 from github.Commit import Commit
 
+from release_notes_generator.model.isolated_commits_record import IsolatedCommitsRecord
 from release_notes_generator.model.record import Record
 
 from release_notes_generator.utils.decorators import safe_call_decorator
@@ -45,7 +47,7 @@ class RecordFactory:
     @staticmethod
     def generate(
         github: Github, repo: Repository, issues: list[Issue], pulls: list[PullRequest], commits: list[Commit]
-    ) -> dict[int, Record]:
+    ) -> dict[int|str, Record]:
         """
         Generate records for release notes.
 
@@ -56,7 +58,7 @@ class RecordFactory:
         @param commits: The list of commits.
         @return: A dictionary of records.
         """
-        records = {sys.maxsize: Record(repo)}
+        records: dict[int|str, Record] = {}
         pull_numbers = [pull.number for pull in pulls]
 
         def create_record_for_issue(r: Repository, i: Issue):
@@ -89,18 +91,19 @@ class RecordFactory:
                         parent_issue_number,
                     )
 
-        def register_commit_to_record(commit: Commit) -> None:
+        def register_commit_to_record(c: Commit) -> None:
             """
             Register a commit to a record if the commit is linked to an issue or a PR.
 
-            @param commit: The commit to register.
+            @param c: The commit to register.
             @return: None
             """
             for record in records.values():
-                if record.register_commit(commit):
+                if record.register_commit(c):
                     return
 
-            records[sys.maxsize].register_commit(commit)
+            records[c.sha] = IsolatedCommitsRecord(repo)
+            records[c.sha].register_commit(c)
 
         rate_limiter = GithubRateLimiter(github)
         safe_call = safe_call_decorator(rate_limiter)
@@ -112,9 +115,8 @@ class RecordFactory:
                 logger.debug("Calling create issue for number %s", issue.number)
                 create_record_for_issue(repo, issue)
             else:
-                logger.debug("Detected issue number among pulls one %s", issue.number)
+                logger.debug("Detected pr number %s among issues", issue.number)
                 real_issue_counts -= 1
-                logger.debug("New count of issues is %s", real_issue_counts)
 
         for pull in pulls:
             if not extract_issue_numbers_from_body(pull):

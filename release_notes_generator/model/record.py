@@ -20,6 +20,7 @@ This module contains the BaseChapters class which is responsible for representin
 
 import logging
 import re
+import sys
 from typing import Optional
 
 from github.Issue import Issue

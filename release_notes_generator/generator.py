@@ -103,7 +103,7 @@ class ReleaseNotesGenerator:
 
         changelog_url = get_change_url(tag_name=ActionInputs.get_tag_name(), repository=repo, git_release=rls)
 
-        rls_notes_records: dict[int, Record] = RecordFactory.generate(
+        rls_notes_records: dict[int|str, Record] = RecordFactory.generate(
             github=self.github_instance,
             repo=repo,
             issues=list(issues),  # PaginatedList --> list
