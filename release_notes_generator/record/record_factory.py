@@ -92,6 +92,8 @@ class RecordFactory:
                     logger.debug("DEBUG - found in keys")
                 else:
                     logger.debug("DEBUG - not found in keys")
+            else:
+                logger.debug("DEBUG - Adding normal record to records dict")
 
             logger.debug("DEBUG count of records is '%s', keys %s", len(records), records.keys())
 
