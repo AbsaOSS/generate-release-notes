@@ -272,10 +272,6 @@ class Record:
         @param commit: The Commit object to register.
         @return: None
         """
-        # if self.is_commit_sha_present(commit.sha):
-        #     logger.debug("Record '%s' does not contain commit sha. Skipping for commit registration check.", self.number)
-        #     return False
-
         for pull in self.__pulls:
             sha = commit.sha
             if sha == pull.merge_commit_sha or sha == pull.head.sha:
@@ -396,19 +392,6 @@ class Record:
         @return: The count of chapters in which the record is present.
         """
         return self.__present_in_chapters
-
-    def is_commit_sha_present(self, sha: str) -> bool:
-        """
-        Checks if the specified commit SHA is present in the record.
-
-        @param sha: The commit SHA to check for.
-        @return: A boolean indicating whether the specified commit SHA is present in the record.
-        """
-        for pull in self.__pulls:
-            if pull.merge_commit_sha == sha:
-                return True
-
-        return False
 
     @staticmethod
     def is_pull_request_merged(pull: PullRequest) -> bool:

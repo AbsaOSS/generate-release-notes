@@ -25,6 +25,7 @@ from github.Issue import Issue
 from github.PullRequest import PullRequest
 from github.Repository import Repository
 from github.Commit import Commit
+from jsonschema.benchmarks.issue232 import issue232
 
 from release_notes_generator.model.record import Record
 
@@ -105,9 +106,12 @@ class RecordFactory:
         rate_limiter = GithubRateLimiter(github)
         safe_call = safe_call_decorator(rate_limiter)
 
+        real_issue_counts = len(issues)     # issues could contain PRs too - known behaviour from API
         for issue in issues:
             if issue.number not in pull_numbers:
                 create_record_for_issue(repo, issue)
+            else:
+                real_issue_counts -= 1
 
         for pull in pulls:
             if not extract_issue_numbers_from_body(pull):
@@ -122,7 +126,7 @@ class RecordFactory:
         logger.info(
             "Generated %d records from %d issues and %d PRs, with %d commits detected.",
             len(records),
-            len(issues),
+            real_issue_counts,
             len(pulls),
             detected_prs_count,
         )
