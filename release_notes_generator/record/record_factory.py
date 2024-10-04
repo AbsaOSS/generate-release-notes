@@ -20,8 +20,6 @@ This module contains the RecordFactory class which is responsible for generating
 
 import logging
 
-from typing import Optional
-
 from github import Github
 from github.Issue import Issue
 from github.PullRequest import PullRequest
@@ -37,6 +35,7 @@ from release_notes_generator.utils.pull_reuqest_utils import extract_issue_numbe
 
 logger = logging.getLogger(__name__)
 
+# TODO - make record types a classes
 
 # pylint: disable=too-few-public-methods
 class RecordFactory:
@@ -55,17 +54,17 @@ class RecordFactory:
         @param repo: The repository.
         @param issues: The list of issues.
         @param pulls: The list of pull requests.
-        @param commits: The list of commits.
+        @param commits: The list of commits with no links to PRs!
         @return: A dictionary of records.
         """
+        rate_limiter = GithubRateLimiter(github)
+        safe_call = safe_call_decorator(rate_limiter)
+
         def create_record_for_issue(i: Issue):
-            records[i.number] = Record(repo, i)
+            records[i.number] = Record(repo, safe_call, i)
             logger.debug("Created record for issue %d: %s", i.number, i.title)
 
         def register_pull_request(pull: PullRequest):
-            rate_limiter = GithubRateLimiter(github)
-            safe_call = safe_call_decorator(rate_limiter)
-
             for parent_issue_number in extract_issue_numbers_from_body(pull):
                 if parent_issue_number not in records:
                     logger.warning(
@@ -82,7 +81,7 @@ class RecordFactory:
                     records[parent_issue_number].register_pull_request(pull)
                     logger.debug("Registering PR %d: %s to Issue %d", pull.number, pull.title, parent_issue_number)
                 else:
-                    records[pull.number] = Record(repo)
+                    records[pull.number] = Record(repo, safe_call)
                     records[pull.number].register_pull_request(pull)
                     logger.debug(
                         "Registering stand-alone PR %d: %s as mentioned Issue %d not found.",
@@ -95,6 +94,7 @@ class RecordFactory:
         records_for_isolated_commits: dict[int|str, Record] = {}
         pull_numbers = [pull.number for pull in pulls]
 
+        logger.debug("Creating records from issue.")
         real_issue_counts = len(issues)     # issues could contain PRs too - known behaviour from API
         for issue in issues:
             if issue.number not in pull_numbers:
@@ -104,28 +104,35 @@ class RecordFactory:
                 logger.debug("Detected pr number %s among issues", issue.number)
                 real_issue_counts -= 1
 
+        logger.debug("Creating records from Pull Requests.")
         for pull in pulls:
             if not extract_issue_numbers_from_body(pull):
-                records[pull.number] = Record(repo)
+                records[pull.number] = Record(repo, safe_call)
                 records[pull.number].register_pull_request(pull)
                 logger.debug("Created record for PR %d: %s", pull.number, pull.title)
             else:
                 register_pull_request(pull)
 
-        for commit in commits:
-            normal_record_detected = False
-            for record in records.values():
-                if record.register_commit(commit):
-                    normal_record_detected = True
-                    break
+        logger.debug("Registering commits to Pull Requests.")
+        """Why are commits needed:
+            - identify developers - as commit authors
+            - identify contributors - as co-authors in commit message
+            - identify direct commits (no PRs related)
+        """
+        # cycle across all record's PRs & ask for their commits
+        for record in records.values():
+            record.get_commits()
 
-            isolated_r = None
-            if not normal_record_detected:
-                isolated_r = IsolatedCommitsRecord(repo)
-                isolated_r.register_commit(commit)
+        # cycle across all record's PR's commits & identify direct commits
+        linked_commits_by_sha: set[str] = set()
+        for r in records.values():
+            linked_commits_by_sha.update(r.get_commits_shas())
 
-            if isolated_r is not None:
-                records_for_isolated_commits[commit.sha] = isolated_r
+        for c in commits:
+            if c.sha not in linked_commits_by_sha:
+                isolated_record = IsolatedCommitsRecord(repo, safe_call)
+                isolated_record.register_commit(c)
+                records_for_isolated_commits[c.sha] = isolated_record
 
         records.update(records_for_isolated_commits)
         logger.info(

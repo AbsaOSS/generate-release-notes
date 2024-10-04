@@ -42,9 +42,9 @@ class IsolatedCommitsRecord(Record):
     The record holds isolated commit without link to Issue or Pull request.
     """
 
-    def __init__(self, repo: Repository):
-        super().__init__(repo)
-        self.__commits: dict = {}
+    def __init__(self, repo: Repository, safe_call):
+        super().__init__(repo, safe_call)
+        self.__commit: Optional[Commit] = None
 
     @property
     def number(self) -> int:
@@ -52,8 +52,8 @@ class IsolatedCommitsRecord(Record):
         return sys.maxsize
 
     @property
-    def commits(self) -> dict:
-        return self.__commits
+    def commit(self) -> Commit:
+        return self.__commit
 
     @property
     def is_pr(self) -> bool:
@@ -98,11 +98,19 @@ class IsolatedCommitsRecord(Record):
 
     @property
     def developers(self) -> Optional[str]:
-        return None
+        return f"{self.commit.author.login}"
 
     @property
     def contributors(self) -> Optional[str]:
-        return None
+        logins = set()
+        commit_comments = list(self._safe_call(self.commit.get_comments)())
+
+        for commit_comment in commit_comments:
+            for line in commit_comment.body.split("\n"):
+                if "Co-authored-by:" in line:
+                    logins.add(commit_comment.split("Co-authored-by:")[1].strip())
+
+        return ", ".join(logins) if len(logins) > 0 else None
 
     @property
     def pr_links(self) -> Optional[str]:
@@ -124,19 +132,26 @@ class IsolatedCommitsRecord(Record):
         @param commit: The Commit object to register.
         @return: Always return True.
         """
-        self.__commits[0] = commit
+        self.__commit = commit
         logger.debug("Registering commit 'type: Isolated' sha: %s", commit.sha)
         return True
 
     def to_chapter_row(self) -> str:
         """
-        Converts the record to a string row in a chapter.
+            Converts the record to a string row in a chapter.
 
         @return: The record as a row string.
         """
         self.increment_present_in_chapters()
         row_prefix = f"{ActionInputs.get_duplicity_icon()} " if self.present_in_chapters() > 1 else ""
-        return f"{row_prefix}Commit: {self.commits[0].sha}"
+
+        row = f"{row_prefix}Commit: {self.commit.sha} developed by {self.developers}"
+
+        contributors = self.contributors
+        if contributors:
+            row += f" co-authored by {contributors}."
+
+        return row.replace("  ", " ")
 
     def __get_row_format_values(self, row_format: str) -> dict:
         return {}
@@ -150,3 +165,6 @@ class IsolatedCommitsRecord(Record):
     @staticmethod
     def is_pull_request_merged(pull: PullRequest) -> bool:
         return False
+
+    def get_commits(self):
+        pass

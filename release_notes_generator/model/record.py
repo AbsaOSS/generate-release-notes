@@ -19,8 +19,6 @@ This module contains the BaseChapters class which is responsible for representin
 """
 
 import logging
-import re
-import sys
 from typing import Optional
 
 from github.Issue import Issue
@@ -48,14 +46,16 @@ class Record:
     A class used to represent a record in the release notes.
     """
 
-    def __init__(self, repo: Repository, issue: Optional[Issue] = None):
+    def __init__(self, repo: Repository, safe_call, issue: Optional[Issue] = None):
         self.__repo: Repository = repo
         self.__gh_issue: Issue = issue
         self.__pulls: list[PullRequest] = []
-        self.__pull_commits: dict = {}
+        self.__pull_commits: dict[int, list[Commit]] = {}
 
         self.__is_release_note_detected: bool = False
         self.__present_in_chapters = 0
+
+        self._safe_call = safe_call
 
     @property
     def number(self) -> int:
@@ -75,7 +75,7 @@ class Record:
         return self.__pulls
 
     @property
-    def commits(self) -> dict:
+    def commits(self) -> dict[int, list[Commit]]:
         """Getter for the commits of the record."""
         return self.__pull_commits
 
@@ -205,19 +205,47 @@ class Record:
     @property
     def developers(self) -> Optional[str]:
         """Getter for the developers of the record."""
-        # TODO - cycle across record commits and collect PR "authors"
-        # Commit.author - by mel byt ten, kdo ten PR pripravil, commiter je ten kdo s nim naposledy pracoval
+        if self.is_issue:
+            # is issue - go for its pulls
+            logins = set()
+            for commits in self.__pull_commits.values():
+                for commit in commits:
+                    if commit.author is not None:
+                        logins.add(f"@{commit.author.login}")
 
-        return None
+            if not logins:
+                logger.warning("Found issue record %s with %d pull requests and no commits", self.number, len(self.__pulls))
+            return ", ".join(logins) if len(logins) > 0 else None
+
+        elif self.is_pr:
+            # is pr - go for its one pull only
+            logins = {f"@{c.author.login}" for c in self.__pull_commits[self.pulls[0].number]}
+            if not logins:
+                logger.warning("Found pull request record '%s' with no commits", self.pulls[0].number)
+            return ", ".join(logins) if len(logins) > 0 else None
+
+        else:
+            logger.warning("Record '%s' is not issue nor PR. Developers cannot be determined.", self.number)
+            return None
 
     @property
     def contributors(self) -> Optional[str]:
         """Getter for the contributors of the record."""
-        # TODO - cycle across record commits and check if contribution string is present in commit message
-        #
-        #   Co-authored-by
-        # check if extra API calls are here - 100% jsou tam - udelat test na generovani s spoptrebe API + varovani do README
-        return None
+
+        if not self.is_issue and not self.is_pr:
+            logger.warning("Record '%s' is not issue nor PR. Contributors cannot be determined.", self.number)
+            return None
+
+        logins = []
+        for commits in self.commits.values():
+            for c in commits:
+                for line in c.commit.message.split("\n"):
+                    if "Co-authored-by:" in line:
+                        name = line.split("Co-authored-by:")[1].strip()
+                        if name not in logins:
+                            logins.append(name)
+
+        return ", ".join(logins) if len(logins) > 0 else None
 
     @property
     def pr_links(self) -> Optional[str]:
@@ -273,27 +301,14 @@ class Record:
         @param commit: The Commit object to register.
         @return: None
         """
+        sha = commit.sha
         for pull in self.__pulls:
-            sha = commit.sha
             if sha == pull.merge_commit_sha or sha == pull.head.sha:
                 if self.__pull_commits.get(pull.number) is None:
                     self.__pull_commits[pull.number] = []
                 self.__pull_commits[pull.number].append(commit)
                 logger.debug("Commit %s registered using sha in PR %s of record %s", commit.sha, pull.number, self.number)
                 return True
-
-        # Parse commit message for PR numbers
-        message = commit.commit.message
-        match = re.search(r"Merge pull request #(\d+)", message)
-        if not match:
-            match = re.search(r"\(#(\d+)\)", message)
-        if match:
-            pr_number = int(match.group(1))
-            if self.__pull_commits.get(pr_number) is None:
-                self.__pull_commits[pr_number] = []
-            self.__pull_commits[pr_number].append(commit)
-            logger.debug("Commit %s registered using message in PR %s of record %s", commit.sha, pr_number, self.number)
-            return True
 
         return False
 
@@ -327,7 +342,7 @@ class Record:
         if self.contains_release_notes:
             row = f"{row}\n{self.get_rls_notes()}"
 
-        return row
+        return row.replace("  ", " ")
 
     def __get_row_format_values(self, row_format: str) -> dict:
         """
@@ -340,13 +355,17 @@ class Record:
         format_values = {}
 
         if "{assignee}" in row_format:
-            format_values["assignee"] = f"assigned to @{self.assignee}" if self.assignee is not None else ""
+            assignee = self.assignees
+            format_values["assignee"] = f"assigned to @{assignee}" if assignee is not None else ""
         if "{assignees}" in row_format:
-            format_values["assignees"] = f"assigned to @{self.assignees}" if self.assignees is not None else ""
+            assignees = self.assignees
+            format_values["assignees"] = f"assigned to @{assignees}" if assignees is not None else ""
         if "{developed-by}" in row_format:
-            format_values["developed-by"] = f"developed by {self.developers}" if self.developers is not None else ""
+            developers = self.developers
+            format_values["developed-by"] = f"developed by {developers}" if developers is not None else ""
         if "{co-authored-by}" in row_format:
-            format_values["co-authored-by"] = f"co-authored by {self.contributors}" if self.contributors is not None else ""
+            contributors = self.contributors
+            format_values["co-authored-by"] = f"co-authored by {contributors}" if contributors is not None else ""
 
         return format_values
 
@@ -403,3 +422,20 @@ class Record:
         @return: A boolean indicating whether the pull request is merged.
         """
         return pull.state == PR_STATE_CLOSED and pull.merged_at is not None and pull.closed_at is not None
+
+    def get_commits(self) -> None:
+        for pull in self.__pulls:
+            self.__pull_commits[pull.number] = list(self._safe_call(pull.get_commits)())
+
+    def get_commits_shas(self) -> set[str]:
+        set_of_commit_shas = set()
+
+        for commits in self.__pull_commits.values():
+            for c in commits:
+                set_of_commit_shas.add(c.sha)
+                set_of_commit_shas.add(c.commit.sha)
+
+        for pull in self.__pulls:
+            set_of_commit_shas.add(pull.merge_commit_sha)
+
+        return set_of_commit_shas
