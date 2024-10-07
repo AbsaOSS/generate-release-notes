@@ -246,12 +246,10 @@ class Record(ABC):
 
             for line in body_lines:
                 if detection_pattern in line:
-                    logger.debug("Hello rls notes gen - pr.number %s, line: %s, detection_pattern: %s", pull.number, line, detection_pattern)
                     inside_release_notes = True
 
                 if detection_pattern not in line and inside_release_notes:
                     if line.startswith(line_mark):
-                        logger.debug("Hello rls notes gen - new line: %s", line)
                         release_notes += f"  {line.strip()}\n"
                     else:
                         break
@@ -267,7 +265,6 @@ class Record(ABC):
         rls_notes = self.get_rls_notes()
         # if RELEASE_NOTE_LINE_MARK in self.get_rls_notes():
         if RELEASE_NOTE_LINE_MARK in rls_notes:
-            logger.debug("DEBUG: Detected rls notes in value: %s", rls_notes)
             self.__is_release_note_detected = True
 
         return self.__is_release_note_detected
@@ -317,6 +314,9 @@ class Record(ABC):
         if "{assignees}" in row_format:
             assignees = self.assignees
             format_values["assignees"] = f"assigned to @{assignees}" if assignees is not None else ""
+        if "{author}" in row_format:
+            developers = self.developers
+            format_values["author"] = f"developed by {developers}" if developers is not None else ""
         if "{developed-by}" in row_format:
             developers = self.developers
             format_values["developed-by"] = f"developed by {developers}" if developers is not None else ""

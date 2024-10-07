@@ -39,7 +39,7 @@ from release_notes_generator.utils.constants import (
     DUPLICITY_ICON,
     ROW_FORMAT_LINK_PR,
     ROW_FORMAT_ISSUE,
-    ROW_FORMAT_PR,
+    ROW_FORMAT_PR, ROW_FORMAT_COMMIT, ROW_FORMAT_LINK_COMMIT,
 )
 from release_notes_generator.utils.enums import DuplicityScopeEnum
 from release_notes_generator.utils.gh_action import get_action_input
@@ -177,11 +177,25 @@ class ActionInputs:
         return get_action_input(ROW_FORMAT_PR, "#{number} _{title}_ {assignee} {developed-by} {co-authored-by}").strip()
 
     @staticmethod
+    def get_row_format_commit() -> str:
+        """
+        Get the commit row format for the release notes.
+        """
+        return get_action_input(ROW_FORMAT_COMMIT, "#{sha} {author} {co-authored-by}").strip()
+
+    @staticmethod
     def get_row_format_link_pr() -> bool:
         """
         Get the value controlling whether the row format should include a 'PR:' prefix when linking to PRs.
         """
         return get_action_input(ROW_FORMAT_LINK_PR, "true").lower() == "true"
+
+    @staticmethod
+    def get_row_format_link_commit() -> bool:
+        """
+        Get the value controlling whether the row format should include a 'Commit:' prefix when linking to direct commit.
+        """
+        return get_action_input(ROW_FORMAT_LINK_COMMIT, "true").lower() == "true"
 
     @staticmethod
     def validate_inputs():
@@ -230,6 +244,9 @@ class ActionInputs:
         row_format_link_pr = ActionInputs.get_row_format_link_pr()
         ActionInputs.validate_input(row_format_link_pr, bool, "'row-format-link-pr' value must be a boolean.", errors)
 
+        row_format_link_commit = ActionInputs.get_row_format_link_commit()
+        ActionInputs.validate_input(row_format_link_commit, bool, "'row-format-link-commit' value must be a boolean.", errors)
+
         # Features
         print_empty_chapters = ActionInputs.get_print_empty_chapters()
         ActionInputs.validate_input(print_empty_chapters, bool, "Print empty chapters must be a boolean.", errors)
@@ -251,6 +268,12 @@ class ActionInputs:
 
         errors.extend(detect_row_format_invalid_keywords(row_format_pr, row_type="PR"))
 
+        row_format_commit = ActionInputs.get_row_format_commit()
+        if not isinstance(row_format_commit, str) or not row_format_commit.strip():
+            errors.append("Commit Row format must be a non-empty string.")
+
+        errors.extend(detect_row_format_invalid_keywords(row_format_commit, row_type="Commit"))
+
         # Log errors if any
         if errors:
             for error in errors:
@@ -260,9 +283,17 @@ class ActionInputs:
         logging.debug("Repository: %s/%s", owner, repo_name)
         logger.debug("Tag name: %s", tag_name)
         logger.debug("Chapters JSON: %s", chapters_json)
+        logger.debug("Duplication scope: %s", ActionInputs.get_duplicity_scope())
+        logger.debug("Duplication icon: %s", duplicity_icon)
+        logger.debug("Warnings: %s", warnings)
         logger.debug("Published at: %s", published_at)
         logger.debug("Skip release notes label: %s", skip_release_notes_label)
-        logger.debug("Verbose logging: %s", verbose)
-        logger.debug("Warnings: %s", warnings)
         logger.debug("Print empty chapters: %s", print_empty_chapters)
         logger.debug("Chapters to PR without issue: %s", chapters_to_pr_without_issue)
+        logger.debug("Verbose logging: %s", verbose)
+        logger.debug("Github repository: %s", repository_id)
+        logger.debug("Row format issue: %s", row_format_issue)
+        logger.debug("Row format PR: %s", row_format_pr)
+        logger.debug("Row format commit: %s", row_format_commit)
+        logger.debug("Row format link PR: %s", row_format_link_pr)
+        logger.debug("Row format link commit: %s", row_format_commit)

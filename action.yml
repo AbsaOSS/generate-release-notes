@@ -56,15 +56,23 @@ inputs:
     required: false
     default: 'false'
   row-format-issue:
-    description: 'Format of the issue row in the release notes. Available placeholders: {link}, {title}, {pull-requests}, {assignee}, {assignees}, {developed-by}, {co-authored-by}. Placeholders are case-insensitive.'
+    description: 'Format of the issue row in the release notes. Available placeholders: {number}, {title}, {pull-requests}, {assignee}, {assignees}, {developed-by}, {co-authored-by}. Placeholders are case-insensitive.'
     required: false
     default: '#{number} _{title}_ {pull-requests} {assignee} {developed-by} {co-authored-by}'
   row-format-pr:
-    description: 'Format of the pr row in the release notes. Available placeholders: {link}, {title}, {pull-requests}, {assignee}, {assignees}, {developed-by}, {co-authored-by}. Placeholders are case-insensitive.'
+    description: 'Format of the pr row in the release notes. Available placeholders: {number}, {title}, {assignee}, {assignees}, {developed-by}, {co-authored-by}. Placeholders are case-insensitive.'
     required: false
     default: '#{number} _{title}_ {assignee} {developed-by} {co-authored-by}'
+  row-format-commit:
+    description: 'Format of the commit row in the release notes. Available placeholders: {sha}, {author}, {co-authored-by}. Placeholders are case-insensitive.'
+    required: false
+    default: '#{sha} {author} {co-authored-by}'
   row-format-link-pr:
     description: 'Add prefix "PR:" before link to PR when not linked an Issue.'
+    required: false
+    default: 'true'
+  row-format-link-commit:
+    description: 'Add prefix "Commit:" before link to direct commit.'
     required: false
     default: 'true'
 
@@ -123,7 +131,9 @@ runs:
         INPUT_GITHUB_REPOSITORY: ${{ github.repository }}
         INPUT_ROW_FORMAT_ISSUE: ${{ inputs.row-format-issue }}
         INPUT_ROW_FORMAT_PR: ${{ inputs.row-format-pr }}
+        INPUT_ROW_FORMAT_COMMIT: ${{ inputs.row-format-commit }}
         INPUT_ROW_FORMAT_LINK_PR: ${{ inputs.row-format-link-pr }}
+        INPUT_ROW_FORMAT_LINK_COMMIT: ${{ inputs.row-format-link-commit }}
       run: |
         python ${{ github.action_path }}/main.py
       shell: bash

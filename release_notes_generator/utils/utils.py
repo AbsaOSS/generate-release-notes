@@ -26,7 +26,9 @@ from typing import Optional
 from github.GitRelease import GitRelease
 from github.Repository import Repository
 
-from release_notes_generator.utils.constants import SUPPORTED_ROW_FORMAT_KEYS
+from release_notes_generator.utils.constants import SUPPORTED_ROW_ISSUE_FORMAT_KEYS, \
+    SUPPORTED_ROW_PR_FORMAT_KEYS, SUPPORTED_ROW_COMMIT_FORMAT_KEYS
+from release_notes_generator.utils.exceptions import NotSupportedException
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +71,17 @@ def detect_row_format_invalid_keywords(row_format: str, row_type: str = "Issue")
     """
     errors = []
     keywords_in_braces = re.findall(r"\{(.*?)\}", row_format)
-    invalid_keywords = [keyword for keyword in keywords_in_braces if keyword not in SUPPORTED_ROW_FORMAT_KEYS]
+    match row_type:
+        case "Issue":
+            supported_keys = SUPPORTED_ROW_ISSUE_FORMAT_KEYS
+        case "PR":
+            supported_keys = SUPPORTED_ROW_PR_FORMAT_KEYS
+        case "Commit":
+            supported_keys = SUPPORTED_ROW_COMMIT_FORMAT_KEYS
+        case _:
+            raise NotSupportedException(f"Row type '{row_type}' is not supported.")
+
+    invalid_keywords = [keyword for keyword in keywords_in_braces if keyword not in supported_keys]
     if invalid_keywords:
         errors.append(f"Invalid {row_type} row format '{row_format}'. Invalid keyword(s) found: {', '.join(invalid_keywords)}")
     return errors

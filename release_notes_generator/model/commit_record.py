@@ -84,7 +84,7 @@ class CommitRecord(Record):
     @property
     def developers(self) -> Optional[str]:
         """Get the developers of the record."""
-        return f"{self.commits[0].author.login}" if self.commits else None
+        return f"@{self.commits[0].author.login}" if self.commits else None
 
     @property
     def contributors(self) -> Optional[str]:
@@ -131,13 +131,16 @@ class CommitRecord(Record):
         """
         self.increment_present_in_chapters()
         row_prefix = f"{ActionInputs.get_duplicity_icon()} " if self.present_in_chapters > 1 else ""
+        format_values = {
+            "sha": self.__commit.sha if self.__commit is not None else None,
+        }
 
-        commit_sha = self.__commit.sha if self.__commit is not None else None
-        row = f"{row_prefix}Commit: {commit_sha} developed by {self.developers}"
+        format_values.update(self._get_row_format_values(ActionInputs.get_row_format_commit()))
 
-        contributors = self.contributors
-        if contributors:
-            row += f" co-authored by {contributors}."
+        prefix = "Commit: " if ActionInputs.get_row_format_link_commit() else ""
+        row = f"{row_prefix}{prefix}" + ActionInputs.get_row_format_commit().format(**format_values)
+        if self.contains_release_notes():
+            row = f"{row}\n{self.get_rls_notes()}"
 
         return row.replace("  ", " ")
 
