@@ -115,6 +115,9 @@ unsafe-load-any-extension=no
 # In verbose mode, extra non-checker-related info will be displayed.
 #verbose=
 
+[MASTER]
+
+ignore-paths=tests
 
 [BASIC]
 
