@@ -26,8 +26,10 @@ from github.PullRequest import PullRequest
 from github.Repository import Repository
 from github.Commit import Commit
 
-from release_notes_generator.model.isolated_commits_record import IsolatedCommitsRecord
-from release_notes_generator.model.record import Record
+from release_notes_generator.model.commit_record import CommitRecord
+from release_notes_generator.model.base_record import Record
+from release_notes_generator.model.issue_record import IssueRecord
+from release_notes_generator.model.pull_request_record import PullRequestRecord
 
 from release_notes_generator.utils.decorators import safe_call_decorator
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
@@ -61,7 +63,7 @@ class RecordFactory:
         safe_call = safe_call_decorator(rate_limiter)
 
         def create_record_for_issue(i: Issue):
-            records[i.number] = Record(repo, safe_call, i)
+            records[i.number] = IssueRecord(repo, safe_call, i)
             logger.debug("Created record for issue %d: %s", i.number, i.title)
 
         def register_pull_request(pull: PullRequest):
@@ -81,8 +83,7 @@ class RecordFactory:
                     records[parent_issue_number].register_pull_request(pull)
                     logger.debug("Registering PR %d: %s to Issue %d", pull.number, pull.title, parent_issue_number)
                 else:
-                    records[pull.number] = Record(repo, safe_call)
-                    records[pull.number].register_pull_request(pull)
+                    records[pull.number] = PullRequestRecord(repo, safe_call, pull)
                     logger.debug(
                         "Registering stand-alone PR %d: %s as mentioned Issue %d not found.",
                         pull.number,
@@ -107,8 +108,7 @@ class RecordFactory:
         logger.debug("Creating records from Pull Requests.")
         for pull in pulls:
             if not extract_issue_numbers_from_body(pull):
-                records[pull.number] = Record(repo, safe_call)
-                records[pull.number].register_pull_request(pull)
+                records[pull.number] = PullRequestRecord(repo, safe_call, pull)
                 logger.debug("Created record for PR %d: %s", pull.number, pull.title)
             else:
                 register_pull_request(pull)
@@ -121,16 +121,16 @@ class RecordFactory:
         """
         # cycle across all record's PRs & ask for their commits
         for record in records.values():
-            record.get_commits()
+            record.fetch_pr_commits()
 
         # cycle across all record's PR's commits & identify direct commits
         linked_commits_by_sha: set[str] = set()
         for r in records.values():
-            linked_commits_by_sha.update(r.get_commits_shas())
+            linked_commits_by_sha.update(r.get_sha_of_all_commits())
 
         for c in commits:
             if c.sha not in linked_commits_by_sha:
-                isolated_record = IsolatedCommitsRecord(repo, safe_call)
+                isolated_record = CommitRecord(repo, safe_call)
                 isolated_record.register_commit(c)
                 records_for_isolated_commits[c.sha] = isolated_record
 

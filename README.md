@@ -173,23 +173,20 @@ Add the following step to your GitHub workflow (in example are used non-default 
 
 ## Features
 ### Built-in
-#### Release Notes Extraction Process
+#### Release Notes Support
+This action enables GitHub pull requests to include a dedicated section for release notes, making it easier for maintainers to track changes and updates.
 
-This action requires that your GitHub issues include comments with specific release notes. Here's how it works:
-
-**Extraction Method**:
-- The action scans through comments on each closed issue since the last release. It identifies comments that follow the specified format and extracts the content as part of the release notes.
-- The time considered for the previous release is based on its creation time. This means that the action will look for issues closed after the creation time of the most recent release to ensure that all relevant updates since that release are included.
-
-**Release Notes Comment Format**
-- It must contain a comment starting with "Release Notes" followed by the note content. This comment is typically added by the contributors.
-- Here is an example of the content for a 'Release Notes' string, which is not case-sensitive:
+- **Format:** The section must begin with the title `Release Notes:`, followed by the release notes in bullet points.
+- **Example:** Here is an example of how to structure the release notes (case-sensitive):
 ```
-Release Notes
+Release Notes:
 - This update introduces a new caching mechanism that improves performance by 20%.
 ```
-- Using `-` as a bullet point for each note is the best practice. The Markdown parser will automatically convert it to a list.
-- These comments are not required for action functionality. If an issue does not contain a "Release Notes" comment, it will be marked accordingly in the release notes. This helps maintainers quickly identify which issues need attention for documentation.
+- **Best Practice:** Use `-` for bullet points. The Markdown parser will automatically format them as a list.
+- **Optional:** Including release notes is not mandatory for the action to function. If a pull request does not include a Release Notes: section, it will be flagged accordingly, helping maintainers identify which PRs require documentation updates.
+
+The action scans pull request descriptions for the `Release Notes:` section and extracts any content that follows the specified format.
+Additionally, the action tracks issues closed after the most recent release, using the release creation time as a reference point. This ensures that all relevant updates since the last release are captured.
 
 #### Handling Multiple PRs
 If an issue is linked to multiple PRs, the action fetches and aggregates contributions from all linked PRs.

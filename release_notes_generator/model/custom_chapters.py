@@ -24,7 +24,7 @@ import json
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.base_chapters import BaseChapters
 from release_notes_generator.model.chapter import Chapter
-from release_notes_generator.model.record import Record
+from release_notes_generator.model.base_record import Record
 from release_notes_generator.utils.enums import DuplicityScopeEnum
 
 
@@ -52,7 +52,7 @@ class CustomChapters(BaseChapters):
                     continue
 
                 for record_label in records[nr].labels:  # iterate all labels of the record (issue, or 1st PR)
-                    if record_label in ch.labels and records[nr].pulls_count > 0:
+                    if record_label in ch.labels and len(records[nr].pull_requests) > 0:
                         if not records[nr].is_present_in_chapters:
                             ch.add_row(nr, records[nr].to_chapter_row())
                             self.populated_record_numbers_list.append(nr)

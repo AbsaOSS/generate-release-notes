@@ -23,14 +23,16 @@ from typing import Union
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.base_chapters import BaseChapters
 from release_notes_generator.model.chapter import Chapter
-from release_notes_generator.model.record import Record
+from release_notes_generator.model.base_record import Record
+from release_notes_generator.model.issue_record import IssueRecord
+from release_notes_generator.model.pull_request_record import PullRequestRecord
 from release_notes_generator.utils.constants import (
     CLOSED_ISSUES_WITHOUT_PULL_REQUESTS,
     CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS,
     MERGED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS,
     CLOSED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS,
     MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES,
-    OTHERS_NO_TOPIC, ISOLATED_COMMITS,
+    OTHERS_NO_TOPIC, ISOLATED_COMMITS, ISSUE_STATE_CLOSED, ISSUE_STATE_OPEN, PR_STATE_CLOSED,
 )
 from release_notes_generator.utils.enums import DuplicityScopeEnum
 
@@ -108,16 +110,16 @@ class ServiceChapters(BaseChapters):
             if isinstance(nr, str):
                 self.__populate_isolated_commits(records[nr], nr)
 
-            elif records[nr].is_closed_issue:
+            elif isinstance(records[nr], IssueRecord) and records[nr].is_state(ISSUE_STATE_CLOSED):
                 self.__populate_closed_issues(records[nr], nr)
 
-            elif records[nr].is_pr:
+            elif isinstance(records[nr], PullRequestRecord):
                 self.__populate_pr(records[nr], nr)
 
             else:
-                if records[nr].is_open_issue and records[nr].pulls_count == 0:
+                if isinstance(records[nr], IssueRecord) and records[nr].is_state(ISSUE_STATE_OPEN) and len(records[nr].pull_requests) == 0:
                     pass
-                elif records[nr].is_open_issue and records[nr].pulls_count > 0:
+                elif isinstance(records[nr], IssueRecord) and records[nr].is_state(ISSUE_STATE_OPEN) and len(records[nr].pull_requests) > 0:
                     self.chapters[MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES].add_row(nr, records[nr].to_chapter_row())
                     self.used_record_numbers.append(nr)
                 else:
@@ -138,7 +140,7 @@ class ServiceChapters(BaseChapters):
         """
         # check record properties if it fits to a chapter: CLOSED_ISSUES_WITHOUT_PULL_REQUESTS
         populated = False
-        if r.pulls_count == 0:
+        if len(r.pull_requests) == 0:
             self.chapters[CLOSED_ISSUES_WITHOUT_PULL_REQUESTS].add_row(nr, r.to_chapter_row())
             self.used_record_numbers.append(nr)
             populated = True
@@ -153,7 +155,7 @@ class ServiceChapters(BaseChapters):
             self.used_record_numbers.append(nr)
             populated = True
 
-        if r.pulls_count > 0:
+        if len(r.pull_requests) > 0:
             # the record looks to be valid closed issue with 1+ pull requests
             return
 
@@ -172,7 +174,7 @@ class ServiceChapters(BaseChapters):
         @param nr: The number of the record.
         @return: None
         """
-        if r.is_merged_pr:
+        if Record.is_pull_request_merged(r.pull_requests[0]):
             # check record properties if it fits to a chapter: MERGED_PRS_WITHOUT_ISSUE
             if not r.pr_contains_issue_mentions and not r.contains_min_one_label(self.user_defined_labels):
                 if self.__is_row_present(nr) and not self.duplicity_allowed():
@@ -198,7 +200,7 @@ class ServiceChapters(BaseChapters):
 
         # check record properties if it fits to a chapter: CLOSED_PRS_WITHOUT_ISSUE
         elif (
-                r.is_closed
+                r.is_state(PR_STATE_CLOSED)
                 and not r.pr_contains_issue_mentions
                 and not r.contains_min_one_label(self.user_defined_labels)
         ):

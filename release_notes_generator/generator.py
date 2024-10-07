@@ -25,7 +25,7 @@ from typing import Optional
 from github import Github
 
 from release_notes_generator.model.custom_chapters import CustomChapters
-from release_notes_generator.model.record import Record
+from release_notes_generator.model.base_record import Record
 from release_notes_generator.builder import ReleaseNotesBuilder
 from release_notes_generator.record.record_factory import RecordFactory
 from release_notes_generator.action_inputs import ActionInputs

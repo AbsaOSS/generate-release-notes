@@ -28,7 +28,7 @@ from github.RateLimit import RateLimit
 from github.Repository import Repository
 
 from release_notes_generator.model.service_chapters import ServiceChapters
-from release_notes_generator.model.record import Record
+from release_notes_generator.model.base_record import Record
 from release_notes_generator.model.chapter import Chapter
 from release_notes_generator.model.custom_chapters import CustomChapters
 from release_notes_generator.utils.constants import ISSUE_STATE_OPEN, ISSUE_STATE_CLOSED, PR_STATE_CLOSED, PR_STATE_OPEN
@@ -120,7 +120,7 @@ def mock_issue_open(mocker):
     label2 = mocker.Mock(spec=MockLabel)
     label2.name = "label2"
     issue.labels = [label1, label2]
-    issue.number = 122
+    issue.id = 122
     issue.title = "I1 open"
     issue.state_reason = None
     return issue
@@ -135,7 +135,7 @@ def mock_issue_open_2(mocker):
     label2 = mocker.Mock(spec=MockLabel)
     label2.name = "label2"
     issue.labels = [label1, label2]
-    issue.number = 123
+    issue.id = 123
     issue.title = "I2 open"
     issue.state_reason = None
     return issue
@@ -151,7 +151,7 @@ def mock_issue_closed(mocker):
     label2.name = "label2"
     issue.labels = [label1, label2]
     issue.title = "Fix the bug"
-    issue.number = 121
+    issue.id = 121
     return issue
 
 
@@ -165,7 +165,7 @@ def mock_issue_closed_i1_bug(mocker):
     label2.name = "bug"
     issue.labels = [label1, label2]
     issue.title = "I1+bug"
-    issue.number = 122
+    issue.id = 122
     return issue
 
 
@@ -179,7 +179,7 @@ def mock_pull_closed(mocker):
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
     pull.labels = [label1]
-    pull.number = 123
+    pull.id = 123
     pull.merge_commit_sha = "merge_commit_sha"
     pull.title = "Fixed bug"
     pull.created_at = datetime.now()
@@ -198,7 +198,7 @@ def mock_pull_closed_with_rls_notes_101(mocker):
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
     pull.labels = [label1]
-    pull.number = 101
+    pull.id = 101
     pull.merge_commit_sha = "merge_commit_sha"
     pull.title = "Fixed bug"
     pull.created_at = datetime.now()
@@ -217,7 +217,7 @@ def mock_pull_closed_with_rls_notes_102(mocker):
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
     pull.labels = [label1]
-    pull.number = 102
+    pull.id = 102
     pull.merge_commit_sha = "merge_commit_sha"
     pull.title = "Fixed bug"
     pull.created_at = datetime.now()
@@ -236,7 +236,7 @@ def mock_pull_merged_with_rls_notes_101(mocker):
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
     pull.labels = [label1]
-    pull.number = 101
+    pull.id = 101
     pull.merge_commit_sha = "merge_commit_sha"
     pull.title = "Fixed bug"
     pull.created_at = datetime.now()
@@ -255,7 +255,7 @@ def mock_pull_merged_with_rls_notes_102(mocker):
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
     pull.labels = [label1]
-    pull.number = 102
+    pull.id = 102
     pull.merge_commit_sha = "merge_commit_sha"
     pull.title = "Fixed bug"
     pull.created_at = datetime.now()
@@ -274,7 +274,7 @@ def mock_pull_merged(mocker):
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
     pull.labels = [label1]
-    pull.number = 123
+    pull.id = 123
     pull.merge_commit_sha = "merge_commit_sha"
     pull.title = "Fixed bug"
     pull.created_at = datetime.now()
@@ -293,7 +293,7 @@ def mock_pull_open(mocker):
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
     pull.labels = [label1]
-    pull.number = 123
+    pull.id = 123
     pull.merge_commit_sha = None
     pull.title = "Fix bug"
     pull.created_at = datetime.now()
@@ -311,7 +311,7 @@ def mock_pull_no_rls_notes(mocker):
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
     pull.labels = [label1]
-    pull.number = 123
+    pull.id = 123
     pull.title = "Fixed bug"
     return pull
 
@@ -409,8 +409,8 @@ def record_with_two_issue_open_two_pulls_closed(request):
     mock_repo_fixture.full_name = "org/repo"
 
     records = {}
-    records[rec1.number] = rec1
-    records[rec2.number] = rec2
+    records[rec1.id] = rec1
+    records[rec2.id] = rec2
 
     return records
 

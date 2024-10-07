@@ -22,7 +22,7 @@ import logging
 from itertools import chain
 
 from release_notes_generator.model.custom_chapters import CustomChapters
-from release_notes_generator.model.record import Record
+from release_notes_generator.model.base_record import Record
 from release_notes_generator.model.service_chapters import ServiceChapters
 from release_notes_generator.action_inputs import ActionInputs
 

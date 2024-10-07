@@ -20,7 +20,7 @@ This module contains the BaseChapters class which is responsible for representin
 
 from abc import ABC, abstractmethod
 from release_notes_generator.model.chapter import Chapter
-from release_notes_generator.model.record import Record
+from release_notes_generator.model.base_record import Record
 
 
 class BaseChapters(ABC):
