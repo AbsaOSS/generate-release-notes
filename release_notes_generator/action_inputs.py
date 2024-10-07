@@ -181,7 +181,7 @@ class ActionInputs:
         """
         Get the commit row format for the release notes.
         """
-        return get_action_input(ROW_FORMAT_COMMIT, "#{sha} {author} {co-authored-by}").strip()
+        return get_action_input(ROW_FORMAT_COMMIT, "{sha} {author} {co-authored-by}").strip()
 
     @staticmethod
     def get_row_format_link_pr() -> bool:

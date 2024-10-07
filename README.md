@@ -9,7 +9,7 @@
   - [Built-in](#built-in)
     - [Release Notes Extraction Process](#release-notes-extraction-process)
     - [Contributors Mention](#contributors-mention)
-    - [Handling Multiple PRs](#handling-multiple-prs)
+    - [Handling Issue Mentioned By Multiple PRs](#handling-issue-mentioned-by-multiple-prs)
     - [No Release Notes Found](#no-release-notes-found)
   - [Select start date for closed issues and PRs](#select-start-date-for-closed-issues-and-prs)
   - [Enable skipping of release notes for specific issues using label](#enable-skipping-of-release-notes-for-specific-issues-using-label)
@@ -115,6 +115,29 @@ The output of the action is a markdown string containing the release notes for t
 
 See the [example of output](./examples/output_example.md).
 
+### Supported Row Types
+#### Issue Row
+An issue row may have multiple pull requests linked to it. These pull requests are associated using GitHub-supported keywords like closes, fixes, or resolves.
+
+**Example**
+- #33 _Example bugfix_ in [#44](https://github.com/absa-group/living-doc-example-project/pull/44), [#36](https://github.com/absa-group/living-doc-example-project/pull/36), [#35](https://github.com/absa-group/living-doc-example-project/pull/35), [#34](https://github.com/absa-group/living-doc-example-project/pull/34) assigned to @miroslavpojer developed by @miroslavpojer co-authored by Saša Zejnilović <zejnils@gmail.com>
+  - Another solved typos. Hello from second RLS notes comment.
+  - Solved some typos.
+
+#### Pull Request Row
+A pull request row represents one PR made against the repository. This pull request does not mention any issues.
+
+**Example**
+- PR: #41 _Initial commit._ assigned to @miroslavpojer developed by @miroslavpojer
+  - Test release notes nr1
+  - Test release notes nr2
+
+#### Direct Commit Row
+A direct commit row represents a commit that is not tied to any pull request or issue. This commit is not associated with any pull request.
+
+**Example**
+- Commit: fbe8e558f914cd58d8e7aab8c7d0c77f934aa707 developed by @miroslavpojer
+
 ## Usage Example
 
 ### Prerequisites
@@ -174,7 +197,7 @@ Add the following step to your GitHub workflow (in example are used non-default 
 ## Features
 ### Built-in
 #### Release Notes Support
-This action enables GitHub pull requests to include a dedicated section for release notes, making it easier for maintainers to track changes and updates.
+This action enables GitHub pull requests to include a dedicated section for release notes in its description, making it easier for maintainers to track changes and updates.
 
 - **Format:** The section must begin with the title `Release Notes:`, followed by the release notes in bullet points.
 - **Example:** Here is an example of how to structure the release notes (case-sensitive):
@@ -183,39 +206,50 @@ Release Notes:
 - This update introduces a new caching mechanism that improves performance by 20%.
 ```
 - **Best Practice:** Use `-` for bullet points. The Markdown parser will automatically format them as a list.
-- **Optional:** Including release notes is not mandatory for the action to function. If a pull request does not include a Release Notes: section, it will be flagged accordingly, helping maintainers identify which PRs require documentation updates.
+- **Optional:** Including release notes is not mandatory for the action of this GH action.
 
 The action scans pull request descriptions for the `Release Notes:` section and extracts any content that follows the specified format.
-Additionally, the action tracks issues closed after the most recent release, using the release creation time as a reference point. This ensures that all relevant updates since the last release are captured.
 
-#### Handling Multiple PRs
-If an issue is linked to multiple PRs, the action fetches and aggregates contributions from all linked PRs.
+#### Handling Issue Mentioned By Multiple PRs
+If an issue is linked from multiple PRs, the action fetches and aggregates developers and contributions from all linked PRs.
 
 #### No Release Notes Found
-If no valid "Release Notes" comment is found in an issue, it will be marked accordingly. This helps maintainers quickly identify which issues need attention for documentation.
+If no valid `Release Notes:` section is found in a pull request description, it will be mentioned in dedicated service chapters. This helps maintainers quickly identify which pull request need attention for documentation.
 
-#### Issue or PR Row formatting
-Format of the row for the issue and PR in the release notes can be customized. The placeholders are case-sensitive.
+#### Issue, Pull Request or Commit Row formatting
+Format of the different row types can be customized. The placeholders are case-sensitive. Each row type supports different set of keywords.
 
 **Supported row format keywords:**
-- `{number}`: Issue or PR number.
-- `{title}`: Issue or PR title.
-- `{pull-requests}`: List of PRs linked to the issue. Adds a list of PRs linked to the issue in the row with `in` prefix:
-  - `#{number} _{title}_ {pull-requests}` => "[#43]() _title_ in [#PR1](), [#PR2](), [#PR3]()"
-  - Not used in PR row format. See default value.
-- `{assingee}`: Issue or PR assignee. Adds a login of assignees in the row with `assigned to` prefix:
-  - `#{number} _{title}_ {assignee}` => "[#43]() _title_ implemented by @login1"
-  - TODO - mention problem with public and private email
-- `{assignees}`: Issue or PR assignees. Adds a list of assignees logins in the row with `assigned to` prefix:
-  - `#{number} _{title}_ {assignees}` => "[#43]() _title_ implemented by @login1, @login2"
-  - This is alternative representation of multiple assignees provided by GitHub.
-- `{developed-by}`: List of PR developer(s) login(s). Adds a login of commit authors for PR(s) in the row with `developed by` prefix:
-  - `#{number} _{title}_ {developed-by}` => "[#43]() _title_ developed by @login1"
-  - TODO - mention problem with public and private email
-- `{co-authored-by}`: List of PR contributors. Adds a login of contributors in the row with `co-authored by` prefix:
-  - `#{number} _{title}_ {co-authored-by}` => "[#43]() _title_ co-authored by @login1 @login2"
-  - Contribution is detected in PR commit messages by detection of GitHub supported trailer `Co-authored-by`. 
-  - TODO - mention problem with public and private email
+- **Issue & Pull Request**
+  - `{number}`: 
+    - Issue or PR number.
+  - `{title}`: 
+    - Issue or PR title.
+  - `{pull-requests}`: 
+    - List of PRs linked to the issue. Adds a list of PRs linked to the issue in the row with `in` prefix:
+      - _Example:_ `#{number} _{title}_ {pull-requests}` => "[#43]() _title_ in [#PR1](), [#PR2](), [#PR3]()"
+    - Not used in PR row format. Pull Request type already define single PR.
+  - `{assingee}`: 
+    - Issue or PR assignee. Adds a login of assignees in the row with `assigned to` prefix:
+      - `#{number} _{title}_ {assignee}` => "[#43]() _title_ implemented by @login1"
+  - `{assignees}`: 
+    - Issue or PR assignees. Adds a list of assignees logins in the row with `assigned to` prefix:
+      - `#{number} _{title}_ {assignees}` => "[#43]() _title_ implemented by @login1, @login2"
+    - This is alternative representation of multiple assignees provided by GitHub.
+  - `{developed-by}`: 
+    - List of PR developer(s) login(s). Adds a login of commit authors for PR(s) in the row with `developed by` prefix:
+      - `#{number} _{title}_ {developed-by}` => "[#43]() _title_ developed by @login1"
+  - `{co-authored-by}`: 
+    - List of PR contributors. Adds a login of contributors in the row with `co-authored by` prefix:
+      - `#{number} _{title}_ {co-authored-by}` => "[#43]() _title_ co-authored by @login1 @login2"
+    - Co-authors are detected in PR commit messages by detection of GitHub supported trailer `Co-authored-by`.
+- **Commit**
+  - `{sha}`: 
+    - Commit SHA.
+  - `{author}`: 
+    - Commit author login.
+  - `{co-authors}`: 
+    - List of commit contributors. Co-authors are detected in commit messages by detection of GitHub supported trailer `Co-authored-by`.
 
 ### Select start date for closed issues and PRs
 By set **published-at** to true the action will use the `published-at` timestamp of the latest release as the reference point for searching closed issues and PRs, instead of the `created-at` date. If first release, repository creation date is used. 
