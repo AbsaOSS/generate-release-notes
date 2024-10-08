@@ -28,7 +28,7 @@ from github.Commit import Commit
 
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.base_record import Record
-from release_notes_generator.utils.pull_reuqest_utils import extract_issue_numbers_from_body
+from release_notes_generator.utils.pull_request_utils import extract_issue_numbers_from_body
 
 logger = logging.getLogger(__name__)
 

@@ -33,7 +33,7 @@ from release_notes_generator.model.pull_request_record import PullRequestRecord
 
 from release_notes_generator.utils.decorators import safe_call_decorator
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
-from release_notes_generator.utils.pull_reuqest_utils import extract_issue_numbers_from_body
+from release_notes_generator.utils.pull_request_utils import extract_issue_numbers_from_body
 
 logger = logging.getLogger(__name__)
 
