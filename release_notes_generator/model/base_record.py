@@ -29,7 +29,8 @@ from github.Commit import Commit
 
 from release_notes_generator.utils.constants import (
     RELEASE_NOTE_DETECTION_PATTERN,
-    RELEASE_NOTE_LINE_MARK, PR_STATE_CLOSED,
+    RELEASE_NOTE_LINE_MARK,
+    PR_STATE_CLOSED,
 )
 
 logger = logging.getLogger(__name__)
@@ -125,7 +126,7 @@ class Record(ABC):
         pass
 
     @abstractmethod
-    def is_state(self, state:str) -> bool:
+    def is_state(self, state: str) -> bool:
         """Check if the record's state is the specified state."""
         pass
 

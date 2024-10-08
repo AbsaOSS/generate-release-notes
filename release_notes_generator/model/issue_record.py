@@ -95,7 +95,9 @@ class IssueRecord(Record):
                     logins.add(f"@{commit.author.login}")
 
         if not logins:
-            logger.warning("Found issue record %s with %d pull requests and no commits", self.id, len(self.__pulls_requests))
+            logger.warning(
+                "Found issue record %s with %d pull requests and no commits", self.id, len(self.__pulls_requests)
+            )
 
         return ", ".join(logins) if len(logins) > 0 else None
 
@@ -112,7 +114,7 @@ class IssueRecord(Record):
 
         return ", ".join(logins) if len(logins) > 0 else None
 
-    def is_state(self, state:str) -> bool:
+    def is_state(self, state: str) -> bool:
         """Check if the record is in a specific state."""
         return self.__issue.state == state if self.__issue is not None else False
 
@@ -125,7 +127,10 @@ class IssueRecord(Record):
         if len(self.__pulls_requests) == 0:
             return None
 
-        res = [self.LINK_TO_PR_TEMPLATE.format(number=pull.number, full_name=self._repo.full_name) for pull in self.__pulls_requests]
+        res = [
+            self.LINK_TO_PR_TEMPLATE.format(number=pull.number, full_name=self._repo.full_name)
+            for pull in self.__pulls_requests
+        ]
         return ", ".join(res)
 
     def register_pull_request(self, pr: PullRequest) -> None:
@@ -166,7 +171,7 @@ class IssueRecord(Record):
         format_values = {
             "number": self.__issue.number,
             "title": self.__issue.title,
-            "pull-requests": f"in {self.pr_links()}" if len(self.__pulls_requests) > 0 else ""
+            "pull-requests": f"in {self.pr_links()}" if len(self.__pulls_requests) > 0 else "",
         }
 
         format_values.update(self._get_row_format_values(ActionInputs.get_row_format_issue()))

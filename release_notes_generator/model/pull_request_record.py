@@ -103,7 +103,7 @@ class PullRequestRecord(Record):
 
         return ", ".join(logins) if len(logins) > 0 else None
 
-    def is_state(self, state:str) -> bool:
+    def is_state(self, state: str) -> bool:
         """Check if the record is in a specific state."""
         return self.__pull_request.state == state if self.__pull_request is not None else False
 
@@ -134,7 +134,9 @@ class PullRequestRecord(Record):
         sha = commit.sha
         if sha == self.__pull_request.merge_commit_sha or sha == self.__pull_request.head.sha:
             self.__commits.append(commit)
-            logger.debug("Commit %s registered using sha in PR %s of record %s", commit.sha, self.__pull_request.number, self.id)
+            logger.debug(
+                "Commit %s registered using sha in PR %s of record %s", commit.sha, self.__pull_request.number, self.id
+            )
             return True
 
         return False
@@ -147,10 +149,7 @@ class PullRequestRecord(Record):
         """
         self.increment_present_in_chapters()
         row_prefix = f"{ActionInputs.get_duplicity_icon()} " if self.present_in_chapters > 1 else ""
-        format_values = {
-            "number": self.__pull_request.number,
-            "title": self.__pull_request.title
-        }
+        format_values = {"number": self.__pull_request.number, "title": self.__pull_request.title}
 
         format_values.update(self._get_row_format_values(ActionInputs.get_row_format_pr()))
 

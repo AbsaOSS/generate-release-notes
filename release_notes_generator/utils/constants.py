@@ -34,7 +34,15 @@ ROW_FORMAT_PR = "row-format-pr"
 ROW_FORMAT_COMMIT = "row-format-commit"
 ROW_FORMAT_LINK_PR = "row-format-link-pr"
 ROW_FORMAT_LINK_COMMIT = "row-format-link-commit"
-SUPPORTED_ROW_ISSUE_FORMAT_KEYS = ["number", "title", "pull-requests", "assignee", "assignees", "developed-by", "co-authored-by"]
+SUPPORTED_ROW_ISSUE_FORMAT_KEYS = [
+    "number",
+    "title",
+    "pull-requests",
+    "assignee",
+    "assignees",
+    "developed-by",
+    "co-authored-by",
+]
 SUPPORTED_ROW_PR_FORMAT_KEYS = ["number", "title", "assignee", "assignees", "developed-by", "co-authored-by"]
 SUPPORTED_ROW_COMMIT_FORMAT_KEYS = ["sha", "author", "co-authored-by"]
 

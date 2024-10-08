@@ -39,6 +39,7 @@ logger = logging.getLogger(__name__)
 
 # TODO - make record types a classes
 
+
 # pylint: disable=too-few-public-methods
 class RecordFactory:
     """
@@ -48,7 +49,7 @@ class RecordFactory:
     @staticmethod
     def generate(
         github: Github, repo: Repository, issues: list[Issue], pulls: list[PullRequest], commits: list[Commit]
-    ) -> dict[int|str, Record]:
+    ) -> dict[int | str, Record]:
         """
         Generate records for release notes.
 
@@ -91,12 +92,12 @@ class RecordFactory:
                         parent_issue_number,
                     )
 
-        records: dict[int|str, Record] = {}
-        records_for_isolated_commits: dict[int|str, Record] = {}
+        records: dict[int | str, Record] = {}
+        records_for_isolated_commits: dict[int | str, Record] = {}
         pull_numbers = [pull.number for pull in pulls]
 
         logger.debug("Creating records from issue.")
-        real_issue_counts = len(issues)     # issues could contain PRs too - known behaviour from API
+        real_issue_counts = len(issues)  # issues could contain PRs too - known behaviour from API
         for issue in issues:
             if issue.number not in pull_numbers:
                 logger.debug("Calling create issue for number %s", issue.number)
@@ -141,6 +142,6 @@ class RecordFactory:
             real_issue_counts,
             len(pulls),
             len(commits),
-            len(records_for_isolated_commits)
+            len(records_for_isolated_commits),
         )
         return records

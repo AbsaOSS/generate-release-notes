@@ -32,7 +32,11 @@ from release_notes_generator.utils.constants import (
     MERGED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS,
     CLOSED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS,
     MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES,
-    OTHERS_NO_TOPIC, ISOLATED_COMMITS, ISSUE_STATE_CLOSED, ISSUE_STATE_OPEN, PR_STATE_CLOSED,
+    OTHERS_NO_TOPIC,
+    ISOLATED_COMMITS,
+    ISSUE_STATE_CLOSED,
+    ISSUE_STATE_OPEN,
+    PR_STATE_CLOSED,
 )
 from release_notes_generator.utils.enums import DuplicityScopeEnum
 
@@ -94,7 +98,7 @@ class ServiceChapters(BaseChapters):
 
         self.show_chapter_merged_prs_linked_to_open_issues = True
 
-    def populate(self, records: dict[int|str, Record]) -> None:
+    def populate(self, records: dict[int | str, Record]) -> None:
         """
         Populates the service chapters with records.
 
@@ -117,9 +121,17 @@ class ServiceChapters(BaseChapters):
                 self.__populate_pr(records[nr], nr)
 
             else:
-                if isinstance(records[nr], IssueRecord) and records[nr].is_state(ISSUE_STATE_OPEN) and len(records[nr].pull_requests) == 0:
+                if (
+                    isinstance(records[nr], IssueRecord)
+                    and records[nr].is_state(ISSUE_STATE_OPEN)
+                    and len(records[nr].pull_requests) == 0
+                ):
                     pass
-                elif isinstance(records[nr], IssueRecord) and records[nr].is_state(ISSUE_STATE_OPEN) and len(records[nr].pull_requests) > 0:
+                elif (
+                    isinstance(records[nr], IssueRecord)
+                    and records[nr].is_state(ISSUE_STATE_OPEN)
+                    and len(records[nr].pull_requests) > 0
+                ):
                     self.chapters[MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES].add_row(nr, records[nr].to_chapter_row())
                     self.used_record_numbers.append(nr)
                 else:
@@ -200,9 +212,9 @@ class ServiceChapters(BaseChapters):
 
         # check record properties if it fits to a chapter: CLOSED_PRS_WITHOUT_ISSUE
         elif (
-                r.is_state(PR_STATE_CLOSED)
-                and not r.pr_contains_issue_mentions
-                and not r.contains_min_one_label(self.user_defined_labels)
+            r.is_state(PR_STATE_CLOSED)
+            and not r.pr_contains_issue_mentions
+            and not r.contains_min_one_label(self.user_defined_labels)
         ):
             if self.__is_row_present(nr) and not self.duplicity_allowed():
                 return
@@ -218,7 +230,7 @@ class ServiceChapters(BaseChapters):
             self.chapters[OTHERS_NO_TOPIC].add_row(nr, r.to_chapter_row())
             self.used_record_numbers.append(nr)
 
-    def __is_row_present(self, nr: int|str) -> bool:
+    def __is_row_present(self, nr: int | str) -> bool:
         return nr in self.used_record_numbers
 
     @staticmethod

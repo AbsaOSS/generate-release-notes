@@ -29,7 +29,8 @@ from github.Commit import Commit
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.base_record import Record
 from release_notes_generator.utils.constants import (
-    RELEASE_NOTE_DETECTION_PATTERN, RELEASE_NOTE_LINE_MARK,
+    RELEASE_NOTE_DETECTION_PATTERN,
+    RELEASE_NOTE_LINE_MARK,
 )
 
 logger = logging.getLogger(__name__)
@@ -92,7 +93,7 @@ class CommitRecord(Record):
         logins = self.get_contributors_for_commit(self.__commit)
         return ", ".join(logins) if len(logins) > 0 else None
 
-    def is_state(self, state:str) -> bool:
+    def is_state(self, state: str) -> bool:
         """Check if the record is in the given state."""
         return False
 

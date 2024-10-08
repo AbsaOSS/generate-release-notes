@@ -38,7 +38,9 @@ from release_notes_generator.utils.constants import (
     DUPLICITY_ICON,
     ROW_FORMAT_LINK_PR,
     ROW_FORMAT_ISSUE,
-    ROW_FORMAT_PR, ROW_FORMAT_COMMIT, ROW_FORMAT_LINK_COMMIT,
+    ROW_FORMAT_PR,
+    ROW_FORMAT_COMMIT,
+    ROW_FORMAT_LINK_COMMIT,
 )
 from release_notes_generator.utils.enums import DuplicityScopeEnum
 from release_notes_generator.utils.gh_action import get_action_input
@@ -159,7 +161,9 @@ class ActionInputs:
         """
         Get the issue row format for the release notes.
         """
-        return get_action_input(ROW_FORMAT_ISSUE, "#{number} _{title}_ {pull-requests} {assignee} {developed-by} {co-authored-by}").strip()
+        return get_action_input(
+            ROW_FORMAT_ISSUE, "#{number} _{title}_ {pull-requests} {assignee} {developed-by} {co-authored-by}"
+        ).strip()
 
     @staticmethod
     def get_row_format_pr() -> str:
@@ -237,7 +241,9 @@ class ActionInputs:
         ActionInputs.validate_input(row_format_link_pr, bool, "'row-format-link-pr' value must be a boolean.", errors)
 
         row_format_link_commit = ActionInputs.get_row_format_link_commit()
-        ActionInputs.validate_input(row_format_link_commit, bool, "'row-format-link-commit' value must be a boolean.", errors)
+        ActionInputs.validate_input(
+            row_format_link_commit, bool, "'row-format-link-commit' value must be a boolean.", errors
+        )
 
         # Features
         print_empty_chapters = ActionInputs.get_print_empty_chapters()
