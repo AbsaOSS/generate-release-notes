@@ -7,7 +7,11 @@
 - [Usage Example](#usage-example)
 - [Features](#features)
   - [Built-in](#built-in)
-    - [Release Notes Extraction Process](#release-notes-extraction-process)
+    - [Release Notes Support](#release-notes-support)
+      - [Handling Issue Mentioned By Multiple PRs](#handling-issue-mentioned-by-multiple-prs)
+      - [No Release Notes Found](#no-release-notes-found)
+      - [Issue, Pull Request or Commit Row formatting](#issue-pull-request-or-commit-row-formatting)
+        - [Supported row format keywords](#supported-row-format-keywords)
     - [Contributors Mention](#contributors-mention)
     - [Handling Issue Mentioned By Multiple PRs](#handling-issue-mentioned-by-multiple-prs)
     - [No Release Notes Found](#no-release-notes-found)
@@ -104,11 +108,6 @@ Generate Release Notes action is dedicated to enhance the quality and organizati
 - **Required**: No
 - **Default**: true (Empty chapters are printed.)
 
-### `chapters-to-pr-without-issue`
-- **Description**: Set it to false to avoid the application of custom chapters for PRs without linked issues.
-- **Required**: No
-- **Default**: true (Custom chapters are applied to PRs without linked issues.)
-
 
 ## Outputs
 The output of the action is a markdown string containing the release notes for the specified tag. This string can be used in subsequent steps to publish the release notes to a file, create a GitHub release, or send notifications.
@@ -188,7 +187,6 @@ Add the following step to your GitHub workflow (in example are used non-default 
 
     warnings: false
     print-empty-chapters: false
-    chapters-to-pr-without-issue: false
     row-format-issue: '#{number} _{title}_ {pull-requests} {assignee} {developed-by} {co-authored-by}'
     row-format-pr: '#{number} _{title}_ {assignee} {developed-by} {co-authored-by}'
     row-format-link-pr: true
@@ -219,7 +217,7 @@ If no valid `Release Notes:` section is found in a pull request description, it 
 #### Issue, Pull Request or Commit Row formatting
 Format of the different row types can be customized. The placeholders are case-sensitive. Each row type supports different set of keywords.
 
-**Supported row format keywords:**
+##### Supported row format keywords
 - **Issue & Pull Request**
   - `{number}`: 
     - Issue or PR number.
@@ -404,6 +402,12 @@ pytest tests/
 
 This will execute all tests located in the tests directory and generate a code coverage report.
 
+TODO: add another example for partial run
+pytest tests/release_notes_generator/utils/test_utils.py
+
+debug only - how to run measuremnt on isolated test set
+pytest --cov=. tests/release_notes_generator/utils/test_utils.py --cov-fail-under=80 --cov-report=html
+
 ## Code Coverage
 
 Code coverage is collected using pytest-cov coverage tool. To run the tests and collect coverage information, use the following command:
@@ -411,6 +415,8 @@ Code coverage is collected using pytest-cov coverage tool. To run the tests and 
 ```
 pytest --cov=release_notes_generator --cov-report html tests/
 ```
+
+
 
 See the coverage report on the path:
 
@@ -436,7 +442,6 @@ export INPUT_WARNINGS="true"
 export INPUT_PUBLISHED_AT="true"
 export INPUT_SKIP_RELEASE_NOTES_LABEL="ignore-in-release"
 export INPUT_PRINT_EMPTY_CHAPTERS="true"
-export INPUT_CHAPTERS_TO_PR_WITHOUT_ISSUE="true"
 export INPUT_VERBOSE="true"
 
 # CI in-build variables

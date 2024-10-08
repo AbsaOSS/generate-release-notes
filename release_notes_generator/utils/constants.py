@@ -41,7 +41,6 @@ SUPPORTED_ROW_COMMIT_FORMAT_KEYS = ["sha", "author", "co-authored-by"]
 # Features
 WARNINGS = "warnings"
 PRINT_EMPTY_CHAPTERS = "print-empty-chapters"
-CHAPTERS_TO_PR_WITHOUT_ISSUE = "chapters-to-pr-without-issue"
 
 # Pull Request states
 PR_STATE_CLOSED = "closed"

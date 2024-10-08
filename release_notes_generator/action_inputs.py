@@ -34,7 +34,6 @@ from release_notes_generator.utils.constants import (
     WARNINGS,
     RUNNER_DEBUG,
     PRINT_EMPTY_CHAPTERS,
-    CHAPTERS_TO_PR_WITHOUT_ISSUE,
     DUPLICITY_SCOPE,
     DUPLICITY_ICON,
     ROW_FORMAT_LINK_PR,
@@ -137,13 +136,6 @@ class ActionInputs:
         Get the print empty chapters parameter value from the action inputs.
         """
         return get_action_input(PRINT_EMPTY_CHAPTERS, "true").lower() == "true"
-
-    @staticmethod
-    def get_chapters_to_pr_without_issue() -> bool:
-        """
-        Get the chapters to PR without issue parameter value from the action inputs.
-        """
-        return get_action_input(CHAPTERS_TO_PR_WITHOUT_ISSUE, "true").lower() == "true"
 
     @staticmethod
     def validate_input(input_value, expected_type: type, error_message: str, error_buffer: list) -> bool:
@@ -251,11 +243,6 @@ class ActionInputs:
         print_empty_chapters = ActionInputs.get_print_empty_chapters()
         ActionInputs.validate_input(print_empty_chapters, bool, "Print empty chapters must be a boolean.", errors)
 
-        chapters_to_pr_without_issue = ActionInputs.get_chapters_to_pr_without_issue()
-        ActionInputs.validate_input(
-            chapters_to_pr_without_issue, bool, "Chapters to PR without issue must be a boolean.", errors
-        )
-
         row_format_issue = ActionInputs.get_row_format_issue()
         if not isinstance(row_format_issue, str) or not row_format_issue.strip():
             errors.append("Issue row format must be a non-empty string.")
@@ -289,7 +276,6 @@ class ActionInputs:
         logger.debug("Published at: %s", published_at)
         logger.debug("Skip release notes label: %s", skip_release_notes_label)
         logger.debug("Print empty chapters: %s", print_empty_chapters)
-        logger.debug("Chapters to PR without issue: %s", chapters_to_pr_without_issue)
         logger.debug("Verbose logging: %s", verbose)
         logger.debug("Github repository: %s", repository_id)
         logger.debug("Row format issue: %s", row_format_issue)
