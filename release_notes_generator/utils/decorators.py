@@ -23,7 +23,7 @@ import logging
 from functools import wraps
 from typing import Callable, Optional, Any
 from github import GithubException
-from requests.exceptions import Timeout, RequestException, ConnectionError as RequestsConnectionError
+from requests.exceptions import Timeout, RequestException, ConnectionError
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
 
 logger = logging.getLogger(__name__)
@@ -64,7 +64,7 @@ def safe_call_decorator(rate_limiter: GithubRateLimiter) -> Callable:
         def wrapped(*args, **kwargs) -> Optional[Any]:
             try:
                 return method(*args, **kwargs)
-            except (RequestsConnectionError, Timeout) as e:
+            except (ConnectionError, Timeout) as e:
                 logger.error("Network error calling %s: %s", method.__name__, e, exc_info=True)
                 return None
             except GithubException as e:
@@ -74,7 +74,7 @@ def safe_call_decorator(rate_limiter: GithubRateLimiter) -> Callable:
                 logger.error("HTTP error calling %s: %s", method.__name__, e, exc_info=True)
                 return None
             except Exception as e:
-                logger.error("Unexpected error calling %s: %s", method.__name__, e, exc_info=True)
+                logger.error("%s by calling %s: %s.", type(e).__name__, method.__name__, e, exc_info=True)
                 return None
 
         return wrapped
