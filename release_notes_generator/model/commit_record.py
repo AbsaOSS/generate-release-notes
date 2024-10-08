@@ -140,10 +140,11 @@ class CommitRecord(Record):
 
         prefix = "Commit: " if ActionInputs.get_row_format_link_commit() else ""
         row = f"{row_prefix}{prefix}" + ActionInputs.get_row_format_commit().format(**format_values)
+        row = row.replace("  ", " ")
         if self.contains_release_notes():
             row = f"{row}\n{self.get_rls_notes()}"
 
-        return row.replace("  ", " ")
+        return row
 
     def fetch_pr_commits(self) -> None:
         """Fetch the pull request commits of the record."""

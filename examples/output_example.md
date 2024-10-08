@@ -3,17 +3,17 @@ No entries detected.
 
 ### New Features 🎉
 - #22 _REQ: Submit Reviews_ in [#31](https://github.com/absa-group/living-doc-example-project/pull/31) developed by @miroslavpojer
-- Now only book purchasers can submit reviews, with mandatory text and star ratings.
+  - Now only book purchasers can submit reviews, with mandatory text and star ratings.
 - #52 _Add Tag into Release Draft_ in [#59](https://github.com/absa-group/living-doc-example-project/pull/59), [#58](https://github.com/absa-group/living-doc-example-project/pull/58), [#57](https://github.com/absa-group/living-doc-example-project/pull/57), [#56](https://github.com/absa-group/living-doc-example-project/pull/56), [#55](https://github.com/absa-group/living-doc-example-project/pull/55), [#54](https://github.com/absa-group/living-doc-example-project/pull/54), [#53](https://github.com/absa-group/living-doc-example-project/pull/53) assigned to @miroslavpojer developed by @miroslavpojer
 - #82 _Create tag after success RLS notes generation_ in [#87](https://github.com/absa-group/living-doc-example-project/pull/87), [#86](https://github.com/absa-group/living-doc-example-project/pull/86), [#85](https://github.com/absa-group/living-doc-example-project/pull/85), [#84](https://github.com/absa-group/living-doc-example-project/pull/84), [#83](https://github.com/absa-group/living-doc-example-project/pull/83) assigned to @miroslavpojer developed by @miroslavpojer
 
 ### Bugfixes 🛠
 - #33 _Example bugfix_ in [#44](https://github.com/absa-group/living-doc-example-project/pull/44), [#36](https://github.com/absa-group/living-doc-example-project/pull/36), [#35](https://github.com/absa-group/living-doc-example-project/pull/35), [#34](https://github.com/absa-group/living-doc-example-project/pull/34) assigned to @miroslavpojer developed by @miroslavpojer co-authored by Saša Zejnilović <zejnils@gmail.com>
-- Another solved typos. Hello from second RLS notes comment.
-- Solved some typos.
+  - Another solved typos. Hello from second RLS notes comment.
+  - Solved some typos.
 - PR: #41 _Initial commit._ assigned to @miroslavpojer developed by @miroslavpojer
-- Test release notes nr1
-- Test release notes nr2
+  - Test release notes nr1
+  - Test release notes nr2
 
 ### Closed Issues without Pull Request ⚠️
 - #3 _FEAT: User Authentication_ assigned to @miroslavpojer
@@ -47,13 +47,13 @@ All closed PRs are linked to issues.
 - #20 _REQ: Search by Keywords_ in [#44](https://github.com/absa-group/living-doc-example-project/pull/44) assigned to @miroslavpojer developed by @miroslavpojer
 - PR: #26 _Initial test headers_ assigned to @miroslavpojer developed by @miroslavpojer
 - 🔔 #33 _Example bugfix_ in [#44](https://github.com/absa-group/living-doc-example-project/pull/44), [#36](https://github.com/absa-group/living-doc-example-project/pull/36), [#35](https://github.com/absa-group/living-doc-example-project/pull/35), [#34](https://github.com/absa-group/living-doc-example-project/pull/34) assigned to @miroslavpojer developed by @miroslavpojer co-authored by Saša Zejnilović <zejnils@gmail.com>
-- Another solved typos. Hello from second RLS notes comment.
-- Solved some typos.
+  - Another solved typos. Hello from second RLS notes comment.
+  - Solved some typos.
 - PR: #39 _Initial commit._ assigned to @miroslavpojer developed by @miroslavpojer
 - PR: #40 _Initial commit._ assigned to @miroslavpojer developed by @miroslavpojer
 - 🔔 PR: #41 _Initial commit._ assigned to @miroslavpojer developed by @miroslavpojer
-- Test release notes nr1
-- Test release notes nr2
+  - Test release notes nr1
+  - Test release notes nr2
 - PR: #42 _Initial commit._ developed by @miroslavpojer
 - PR: #43 _Feature/new tag_ developed by @miroslavpojer
 - PR: #45 _Initial commit._ developed by @miroslavpojer
@@ -187,7 +187,7 @@ All closed PRs are linked to issues.
 
 ### Others - No Topic ⚠️
 - PR: #60 _Test change to test close of PR instead of Merge._ assigned to @miroslavpojer developed by @miroslavpojer
-- PR: #65 _Fake change in PR to get PR._ developed by @miroslavpojer, @Zejnilovic
+- PR: #65 _Fake change in PR to get PR._ developed by @Zejnilovic, @miroslavpojer
 - PR: #92 _Fake change._ developed by @miroslavpojer
 
 #### Full Changelog

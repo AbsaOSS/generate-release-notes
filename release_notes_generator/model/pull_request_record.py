@@ -155,10 +155,11 @@ class PullRequestRecord(Record):
 
         pr_prefix = "PR: " if ActionInputs.get_row_format_link_pr() else ""
         row = f"{row_prefix}{pr_prefix}" + ActionInputs.get_row_format_pr().format(**format_values)
+        row = row.replace("  ", " ")
         if self.contains_release_notes():
             row = f"{row}\n{self.get_rls_notes()}"
 
-        return row.replace("  ", " ")
+        return row
 
     def fetch_pr_commits(self) -> None:
         """Fetches the commits of the record."""

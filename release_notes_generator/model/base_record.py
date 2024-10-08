@@ -250,8 +250,8 @@ class Record(ABC):
                     inside_release_notes = True
 
                 if detection_pattern not in line and inside_release_notes:
-                    if line.startswith(line_mark):
-                        release_notes += f"  {line.strip()}\n"
+                    if line.strip().startswith(line_mark):
+                        release_notes += f"  {line}\n"
                     else:
                         break
 

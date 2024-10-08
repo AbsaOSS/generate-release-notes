@@ -177,10 +177,11 @@ class IssueRecord(Record):
         format_values.update(self._get_row_format_values(ActionInputs.get_row_format_issue()))
 
         row = f"{row_prefix}" + ActionInputs.get_row_format_issue().format(**format_values)
+        row = row.replace("  ", " ")
         if self.contains_release_notes():
             row = f"{row}\n{self.get_rls_notes()}"
 
-        return row.replace("  ", " ")
+        return row
 
     def fetch_pr_commits(self) -> None:
         """Fetch commits of the record's pull requests."""
