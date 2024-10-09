@@ -23,10 +23,10 @@ on:
         required: true
 
 jobs:
-  tag:
+  check-tag:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.1.1
         with:
           fetch-depth: 0
 
@@ -36,7 +36,7 @@ jobs:
           script: |
             const newTag = core.getInput('tag-name');
             const regex = /^v[0-9]+\.[0-9]+\.[0-9]+$/;
-            
+
             if (!regex.test(newTag)) {
               core.setFailed('Tag does not match the required format "v[0-9]+.[0-9]+.[0-9]+"');
               return;
@@ -55,11 +55,14 @@ jobs:
               repo: context.repo.repo,
               ref: 'tags/'
             });
-            console.log(`Existing tags: ${refs.map(ref => ref.ref.replace('refs/tags/', '')).join(', ')}`);
+
+            if (refs.length === 0) {
+              // No existing tags, so any new tag is valid
+              console.log('No existing tags found. Any new tag is considered valid.');
+              return;
+            }
 
             const latestTag = refs.sort((a, b) => new Date(b.object.date) - new Date(a.object.date))[0].ref.replace('refs/tags/', '');
-            console.log(`Latest tag: ${latestTag}`);
-
             const latestVersion = latestTag.replace('v', '').split('.').map(Number);
             const newVersion = newTag.replace('v', '').split('.').map(Number);
 
@@ -75,34 +78,34 @@ jobs:
 
           tag-name: ${{ github.event.inputs.tag-name }}
 
-  release:
-    needs: tag
+  generate-release-notes:
+    needs: check-tag
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.1.1
         with:
           fetch-depth: 0
-          ref: refs/tags/${{ github.event.inputs.tag-name }}
 
       - uses: actions/setup-python@v5.1.1
         with:
           python-version: '3.11'
 
-      - name: Generate release notes
-        id: release_notes_generator
+      - name: Generate Release Notes
+        id: generate_release_notes
         uses: AbsaOSS/generate-release-notes@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag-name: ${{ github.event.inputs.tag-name }}
-          chapters: |
-            [
-              {"title": "Breaking Changes 💥", "label": "breaking-change"},
-              {"title": "New Features 🎉", "label": "feature"},
-              {"title": "New Features 🎉", "label": "enhancement"},
-              {"title": "Bugfixes 🛠", "label": "bug"}
-            ]
+          chapters: '[
+            {"title": "Breaking Changes 💥", "label": "breaking-change"},
+            {"title": "New Features 🎉", "label": "enhancement"},
+            {"title": "New Features 🎉", "label": "feature"},
+            {"title": "Bugfixes 🛠", "label": "bug"}
+          ]'
+          verbose: true
           warnings: true
+
 
       - name: Create and Push Tag
         uses: actions/github-script@v7
@@ -123,13 +126,13 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           tag-name: ${{ github.event.inputs.tag-name }}
 
-      - name: Create draft release
+      - name: Create Draft Release
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           name: ${{ github.event.inputs.tag-name }}
-          body: ${{ steps.release_notes_generator.outputs.release-notes }}
+          body: ${{ steps.generate_release_notes.outputs.release-notes }}
           tag_name: ${{ github.event.inputs.tag-name }}
           draft: true
           prerelease: false
