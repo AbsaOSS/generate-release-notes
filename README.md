@@ -452,6 +452,22 @@ export INPUT_GITHUB_TOKEN=$(printenv <your-env-token-var>)
 python3 ./<path-to-action-project-root>/main.py
 ```
 
+## GitHub Workflow Examples
+GitHub Actions enable automating key parts of your development process.
+
+### Create Release Tag & Draft Release - By Workflow Dispatch
+This workflow automates the creation of a release tag and a draft release, triggered manually via a workflow dispatch.
+Tag is created after successful release notes generation to avoid manual removing of the tag if the release notes are not generated due to wrong configuration.
+
+See the [example of workflow](./examples/release_draft.yml).
+
+### Check Release Notes Presence - in Pull Request Description 
+This workflow checks that every pull request includes release notes in the description.
+- The check can be skipped by using the `skip-release-notes` label.
+- The check is searching a `[Rr]elease [Nn]otes:` strings in the PR description.
+
+See the [example of workflow](./examples/check_pr_release_notes.yml).
+
 ## Contribution Guidelines
 
 We welcome contributions to the Generate Release Notes Action! Whether you're fixing bugs, improving documentation, or proposing new features, your help is appreciated.
