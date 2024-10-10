@@ -16,7 +16,7 @@
 
 from github.PullRequest import PullRequest
 
-from release_notes_generator.utils.pull_reuqest_utils import extract_issue_numbers_from_body
+from release_notes_generator.utils.pull_request_utils import extract_issue_numbers_from_body
 
 
 # extract_issue_numbers_from_body

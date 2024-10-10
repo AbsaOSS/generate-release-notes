@@ -173,10 +173,10 @@ http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_ISSUE_NO_PR_NO_USER_LABELS = """### Closed Issues without Pull Request ⚠️
-- #121 _Fix the bug_ in
+- #121 _Fix the bug_
 
 ### Closed Issues without User Defined Labels ⚠️
-- 🔔 #121 _Fix the bug_ in
+- 🔔 #121 _Fix the bug_
 
 #### Full Changelog
 http://example.com/changelog
@@ -224,7 +224,7 @@ http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_CLOSED_ISSUE_NO_PR_WITH_USER_LABELS = """### Closed Issues without Pull Request ⚠️
-- #121 _Fix the bug_ in
+- #121 _Fix the bug_
 
 #### Full Changelog
 http://example.com/changelog

@@ -7,9 +7,13 @@
 - [Usage Example](#usage-example)
 - [Features](#features)
   - [Built-in](#built-in)
-    - [Release Notes Extraction Process](#release-notes-extraction-process)
+    - [Release Notes Support](#release-notes-support)
+      - [Handling Issue Mentioned By Multiple PRs](#handling-issue-mentioned-by-multiple-prs)
+      - [No Release Notes Found](#no-release-notes-found)
+      - [Issue, Pull Request or Commit Row formatting](#issue-pull-request-or-commit-row-formatting)
+        - [Supported row format keywords](#supported-row-format-keywords)
     - [Contributors Mention](#contributors-mention)
-    - [Handling Multiple PRs](#handling-multiple-prs)
+    - [Handling Issue Mentioned By Multiple PRs](#handling-issue-mentioned-by-multiple-prs)
     - [No Release Notes Found](#no-release-notes-found)
   - [Select start date for closed issues and PRs](#select-start-date-for-closed-issues-and-prs)
   - [Enable skipping of release notes for specific issues using label](#enable-skipping-of-release-notes-for-specific-issues-using-label)
@@ -54,12 +58,12 @@ Generate Release Notes action is dedicated to enhance the quality and organizati
 ### `row-format-issue`
 - **Description**: The format of the row for the issue in the release notes. The format can contain placeholders for the issue `number`, `title`, and issues `pull-requests`. The placeholders are case-sensitive.
 - **Required**: No
-- **Default**: `#{number} _{title}_ in {pull-requests}"`
+- **Default**: `#{number} _{title}_ {pull-requests} {assignee} {implemented-by} {contributed-by}"`
 
 ### `row-format-pr`
 - **Description**: The format of the row for the PR in the release notes. The format can contain placeholders for the PR `number`, `title`, and PR `pull-requests`. The placeholders are case-sensitive.
 - **Required**: No
-- **Default**: `#{number} _{title}_"`
+- **Default**: `#{number} _{title}_ {assignee} {implemented-by} {contributed-by}`
 
 ### `row-format-link-pr`
 - **Description**: If defined `true`, the PR row will begin with a `"PR: "` string. Otherwise, no prefix will be added.
@@ -104,16 +108,34 @@ Generate Release Notes action is dedicated to enhance the quality and organizati
 - **Required**: No
 - **Default**: true (Empty chapters are printed.)
 
-### `chapters-to-pr-without-issue`
-- **Description**: Set it to false to avoid the application of custom chapters for PRs without linked issues.
-- **Required**: No
-- **Default**: true (Custom chapters are applied to PRs without linked issues.)
-
 
 ## Outputs
 The output of the action is a markdown string containing the release notes for the specified tag. This string can be used in subsequent steps to publish the release notes to a file, create a GitHub release, or send notifications.
 
 See the [example of output](./examples/output_example.md).
+
+### Supported Row Types
+#### Issue Row
+An issue row may have multiple pull requests linked to it. These pull requests are associated using GitHub-supported keywords like closes, fixes, or resolves.
+
+**Example**
+- #33 _Example bugfix_ in [#44](https://github.com/absa-group/living-doc-example-project/pull/44), [#36](https://github.com/absa-group/living-doc-example-project/pull/36), [#35](https://github.com/absa-group/living-doc-example-project/pull/35), [#34](https://github.com/absa-group/living-doc-example-project/pull/34) assigned to @miroslavpojer developed by @miroslavpojer co-authored by Saša Zejnilović <zejnils@gmail.com>
+  - Another solved typos. Hello from second RLS notes comment.
+  - Solved some typos.
+
+#### Pull Request Row
+A pull request row represents one PR made against the repository. This pull request does not mention any issues.
+
+**Example**
+- PR: #41 _Initial commit._ assigned to @miroslavpojer developed by @miroslavpojer
+  - Test release notes nr1
+  - Test release notes nr2
+
+#### Direct Commit Row
+A direct commit row represents a commit that is not tied to any pull request or issue. This commit is not associated with any pull request.
+
+**Example**
+- Commit: fbe8e558f914cd58d8e7aab8c7d0c77f934aa707 developed by @miroslavpojer
 
 ## Usage Example
 
@@ -165,37 +187,67 @@ Add the following step to your GitHub workflow (in example are used non-default 
 
     warnings: false
     print-empty-chapters: false
-    chapters-to-pr-without-issue: false
+    row-format-issue: '#{number} _{title}_ {pull-requests} {assignee} {developed-by} {co-authored-by}'
+    row-format-pr: '#{number} _{title}_ {assignee} {developed-by} {co-authored-by}'
+    row-format-link-pr: true
 ```
 
 ## Features
 ### Built-in
-#### Release Notes Extraction Process
+#### Release Notes Support
+This action enables GitHub pull requests to include a dedicated section for release notes in its description, making it easier for maintainers to track changes and updates.
 
-This action requires that your GitHub issues include comments with specific release notes. Here's how it works:
-
-**Extraction Method**:
-- The action scans through comments on each closed issue since the last release. It identifies comments that follow the specified format and extracts the content as part of the release notes.
-- The time considered for the previous release is based on its creation time. This means that the action will look for issues closed after the creation time of the most recent release to ensure that all relevant updates since that release are included.
-
-**Comment Format**
-- For an issue's contributions to be included in the release notes, it must contain a comment starting with "Release Notes" followed by the note content. This comment is typically added by the contributors.
-- Here is an example of the content for a 'Release Notes' string, which is not case-sensitive:
+- **Format:** The section must begin with the title `Release Notes:`, followed by the release notes in bullet points.
+- **Example:** Here is an example of how to structure the release notes (case-sensitive):
 ```
-Release Notes
+Release Notes:
 - This update introduces a new caching mechanism that improves performance by 20%.
 ```
-- Using `-` as a bullet point for each note is the best practice. The Markdown parser will automatically convert it to a list.
-- These comments are not required for action functionality. If an issue does not contain a "Release Notes" comment, it will be marked accordingly in the release notes. This helps maintainers quickly identify which issues need attention for documentation.
+- **Best Practice:** Use `-` for bullet points. The Markdown parser will automatically format them as a list.
+- **Optional:** Including release notes is not mandatory for the action of this GH action.
 
-#### Contributors Mention
-Along with the release note content, the action also gathers a list of contributors for each issue. This includes issue assignees and authors of linked pull requests' commits, providing acknowledgment for their contributions in the release notes.
+The action scans pull request descriptions for the `Release Notes:` section and extracts any content that follows the specified format.
 
-#### Handling Multiple PRs
-If an issue is linked to multiple PRs, the action fetches and aggregates contributions from all linked PRs.
+#### Handling Issue Mentioned By Multiple PRs
+If an issue is linked from multiple PRs, the action fetches and aggregates developers and contributions from all linked PRs.
 
 #### No Release Notes Found
-If no valid "Release Notes" comment is found in an issue, it will be marked accordingly. This helps maintainers quickly identify which issues need attention for documentation.
+If no valid `Release Notes:` section is found in a pull request description, it will be mentioned in dedicated service chapters. This helps maintainers quickly identify which pull request need attention for documentation.
+
+#### Issue, Pull Request or Commit Row formatting
+Format of the different row types can be customized. The placeholders are case-sensitive. Each row type supports different set of keywords.
+
+##### Supported row format keywords
+- **Issue & Pull Request**
+  - `{number}`: 
+    - Issue or PR number.
+  - `{title}`: 
+    - Issue or PR title.
+  - `{pull-requests}`: 
+    - List of PRs linked to the issue. Adds a list of PRs linked to the issue in the row with `in` prefix:
+      - _Example:_ `#{number} _{title}_ {pull-requests}` => "[#43]() _title_ in [#PR1](), [#PR2](), [#PR3]()"
+    - Not used in PR row format. Pull Request type already define single PR.
+  - `{assingee}`: 
+    - Issue or PR assignee. Adds a login of assignees in the row with `assigned to` prefix:
+      - `#{number} _{title}_ {assignee}` => "[#43]() _title_ implemented by @login1"
+  - `{assignees}`: 
+    - Issue or PR assignees. Adds a list of assignees logins in the row with `assigned to` prefix:
+      - `#{number} _{title}_ {assignees}` => "[#43]() _title_ implemented by @login1, @login2"
+    - This is alternative representation of multiple assignees provided by GitHub.
+  - `{developed-by}`: 
+    - List of PR developer(s) login(s). Adds a login of commit authors for PR(s) in the row with `developed by` prefix:
+      - `#{number} _{title}_ {developed-by}` => "[#43]() _title_ developed by @login1"
+  - `{co-authored-by}`: 
+    - List of PR contributors. Adds a login of contributors in the row with `co-authored by` prefix:
+      - `#{number} _{title}_ {co-authored-by}` => "[#43]() _title_ co-authored by @login1 @login2"
+    - Co-authors are detected in PR commit messages by detection of GitHub supported trailer `Co-authored-by`.
+- **Commit**
+  - `{sha}`: 
+    - Commit SHA.
+  - `{author}`: 
+    - Commit author login.
+  - `{co-authors}`: 
+    - List of commit contributors. Co-authors are detected in commit messages by detection of GitHub supported trailer `Co-authored-by`.
 
 ### Select start date for closed issues and PRs
 By set **published-at** to true the action will use the `published-at` timestamp of the latest release as the reference point for searching closed issues and PRs, instead of the `created-at` date. If first release, repository creation date is used. 
@@ -350,6 +402,12 @@ pytest tests/
 
 This will execute all tests located in the tests directory and generate a code coverage report.
 
+TODO: add another example for partial run
+pytest tests/release_notes_generator/utils/test_utils.py
+
+debug only - how to run measuremnt on isolated test set
+pytest --cov=. tests/release_notes_generator/utils/test_utils.py --cov-fail-under=80 --cov-report=html
+
 ## Code Coverage
 
 Code coverage is collected using pytest-cov coverage tool. To run the tests and collect coverage information, use the following command:
@@ -357,6 +415,8 @@ Code coverage is collected using pytest-cov coverage tool. To run the tests and 
 ```
 pytest --cov=release_notes_generator --cov-report html tests/
 ```
+
+
 
 See the coverage report on the path:
 
@@ -382,7 +442,6 @@ export INPUT_WARNINGS="true"
 export INPUT_PUBLISHED_AT="true"
 export INPUT_SKIP_RELEASE_NOTES_LABEL="ignore-in-release"
 export INPUT_PRINT_EMPTY_CHAPTERS="true"
-export INPUT_CHAPTERS_TO_PR_WITHOUT_ISSUE="true"
 export INPUT_VERBOSE="true"
 
 # CI in-build variables

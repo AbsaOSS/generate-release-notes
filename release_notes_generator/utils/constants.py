@@ -31,13 +31,24 @@ VERBOSE = "verbose"
 RUNNER_DEBUG = "RUNNER_DEBUG"
 ROW_FORMAT_ISSUE = "row-format-issue"
 ROW_FORMAT_PR = "row-format-pr"
+ROW_FORMAT_COMMIT = "row-format-commit"
 ROW_FORMAT_LINK_PR = "row-format-link-pr"
-SUPPORTED_ROW_FORMAT_KEYS = ["number", "title", "pull-requests"]
+ROW_FORMAT_LINK_COMMIT = "row-format-link-commit"
+SUPPORTED_ROW_ISSUE_FORMAT_KEYS = [
+    "number",
+    "title",
+    "pull-requests",
+    "assignee",
+    "assignees",
+    "developed-by",
+    "co-authored-by",
+]
+SUPPORTED_ROW_PR_FORMAT_KEYS = ["number", "title", "assignee", "assignees", "developed-by", "co-authored-by"]
+SUPPORTED_ROW_COMMIT_FORMAT_KEYS = ["sha", "author", "co-authored-by"]
 
 # Features
 WARNINGS = "warnings"
 PRINT_EMPTY_CHAPTERS = "print-empty-chapters"
-CHAPTERS_TO_PR_WITHOUT_ISSUE = "chapters-to-pr-without-issue"
 
 # Pull Request states
 PR_STATE_CLOSED = "closed"
@@ -53,6 +64,8 @@ RELEASE_NOTE_DETECTION_PATTERN = "Release notes:"
 RELEASE_NOTE_LINE_MARK = "-"
 
 # Service chapters titles
+ISOLATED_COMMITS: str = "Isolated commits without Issue or PR ⚠️"
+
 CLOSED_ISSUES_WITHOUT_PULL_REQUESTS: str = "Closed Issues without Pull Request ⚠️"
 CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS: str = "Closed Issues without User Defined Labels ⚠️"
 
