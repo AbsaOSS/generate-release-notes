@@ -192,12 +192,8 @@ Release Notes:
 - **Best Practice:** Select one character from `-`, `*`, `+` for bullet points. The Markdown parser will automatically format them as a list.
 - **Optional:** Usage of release notes is not mandatory for this GH action.
 
-
 #### Handling Multiple PRs
 If an issue is linked to multiple PRs, the action fetches and aggregates contributions from all linked PRs.
-
-#### No Release Notes Found
-If no valid "Release Notes" comment is found in an issue, it will be marked accordingly. This helps maintainers quickly identify which issues need attention for documentation.
 
 ### Select start date for closed issues and PRs
 By set **published-at** to true the action will use the `published-at` timestamp of the latest release as the reference point for searching closed issues and PRs, instead of the `created-at` date. If first release, repository creation date is used. 
@@ -219,7 +215,7 @@ The action includes four specific warning chapters to highlight potential areas 
   - **Importance**: Ensures all issues are categorized correctly according to the project's classification system. It aids in organizing release notes into predefined chapters effectively.
 
 - **_Closed Issues Without Release Notes_**
-  - **Purpose**: Identifies issues that do not contain a "Release Notes" comment.
+  - **Purpose**: Identifies pull requests which do not contain a "Release Notes" section in description.
   - **Importance**: Ensures that all significant changes are properly documented in the release notes, enhancing the completeness and usefulness of the release information provided to end-users.
 
 - **_Merged PRs Without Linked Issue_**
@@ -458,8 +454,8 @@ We defined chapters for our GH actions this way:
 Then in chapters `New Features 🎉` and `Bugfixes 🛠` will be duplicated lines for this issue. When mentioned second+ times then **[Duplicate]** prefix will be visible.
 In the `New Features 🎉` chapter will be mentioned this issue once only.
 
-### What will happen when the issue contains multiple "Release Notes" comments?
-All issue comments are checked for presence of `Release Notes` string. All detected release notes are collected printed under issue.
+### What will happen when the pull request contains multiple "Release Notes" sections?
+Only the first one will be used.
 
 ### What will happen when Merged PR is linked to open issues?
 The PR will be mentioned in warning chapter **Merged PRs Linked to Open Issue**.
