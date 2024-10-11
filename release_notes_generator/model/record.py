@@ -31,7 +31,8 @@ from release_notes_generator.utils.constants import (
     PR_STATE_CLOSED,
     ISSUE_STATE_CLOSED,
     ISSUE_STATE_OPEN,
-    RELEASE_NOTE_DETECTION_PATTERN, RELEASE_NOTE_LINE_MARKS,
+    RELEASE_NOTE_DETECTION_PATTERN,
+    RELEASE_NOTE_LINE_MARKS,
 )
 from release_notes_generator.utils.pull_reuqest_utils import extract_issue_numbers_from_body
 
@@ -128,7 +129,9 @@ class Record:
     # TODO in Issue named 'Configurable regex-based Release note detection in the PR body'
     #   - 'Release notest:' as detection pattern default - can be defined by user
     #   - '-' as leading line mark for each release note to be used
-    def get_rls_notes(self, detection_pattern=RELEASE_NOTE_DETECTION_PATTERN, line_marks=RELEASE_NOTE_LINE_MARKS) -> str:
+    def get_rls_notes(
+        self, detection_pattern=RELEASE_NOTE_DETECTION_PATTERN, line_marks=RELEASE_NOTE_LINE_MARKS
+    ) -> str:
         """
         Gets the release notes of the record.
 

@@ -50,7 +50,7 @@ ISSUE_STATE_ALL = "all"
 
 # Release notes comment constants
 RELEASE_NOTE_DETECTION_PATTERN = "Release notes:"
-RELEASE_NOTE_LINE_MARKS = ['-', '*', '+']
+RELEASE_NOTE_LINE_MARKS = ["-", "*", "+"]
 
 # Service chapters titles
 CLOSED_ISSUES_WITHOUT_PULL_REQUESTS: str = "Closed Issues without Pull Request ⚠️"
