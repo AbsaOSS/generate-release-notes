@@ -196,6 +196,8 @@ RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_PR_NO_ISSUE_NO_USER_LABELS = """### C
 - PR: #123 _Fixed bug_
   - Fixed bug
   - Improved performance
+  + More nice code
+    * Awesome architecture
 
 #### Full Changelog
 http://example.com/changelog
@@ -275,6 +277,8 @@ RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_MERGED_PRS_WITHOUT_USER_LABELS = """### Clo
 - #121 _Fix the bug_ in [#123](https://github.com/org/repo/pull/123)
   - Fixed bug
   - Improved performance
+  + More nice code
+    * Awesome architecture
 
 #### Full Changelog
 http://example.com/changelog

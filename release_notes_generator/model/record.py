@@ -25,6 +25,7 @@ from github.Issue import Issue
 from github.PullRequest import PullRequest
 from github.Repository import Repository
 from github.Commit import Commit
+from scipy.stats import tmean
 
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.utils.constants import (
@@ -152,7 +153,8 @@ class Record:
                     continue
 
                 if inside_release_notes:
-                    if line.strip()[0] in line_marks:
+                    tmp = line.strip()
+                    if len(tmp) > 0 and tmp[0] in line_marks:
                         release_notes += f"  {line.rstrip()}\n"
                     else:
                         break

@@ -174,7 +174,7 @@ def mock_issue_closed_i1_bug(mocker):
 def mock_pull_closed(mocker):
     pull = mocker.Mock(spec=PullRequest)
     pull.state = PR_STATE_CLOSED
-    pull.body = "Release notes:\n- Fixed bug\n- Improved performance\n"
+    pull.body = "Release notes:\n- Fixed bug\n- Improved performance\n+ More nice code\n  * Awesome architecture"
     pull.url = "http://example.com/pull/123"
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"

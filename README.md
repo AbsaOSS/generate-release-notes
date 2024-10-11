@@ -171,25 +171,27 @@ Add the following step to your GitHub workflow (in example are used non-default 
 ## Features
 ### Built-in
 #### Release Notes Extraction Process
-
-This action requires that your GitHub issues include comments with specific release notes. Here's how it works:
-
-**Extraction Method**:
-- The action scans through comments on each closed issue since the last release. It identifies comments that follow the specified format and extracts the content as part of the release notes.
-- The time considered for the previous release is based on its creation time. This means that the action will look for issues closed after the creation time of the most recent release to ensure that all relevant updates since that release are included.
-
-**Comment Format**
-- For an issue's contributions to be included in the release notes, it must contain a comment starting with "Release Notes" followed by the note content. This comment is typically added by the contributors.
-- Here is an example of the content for a 'Release Notes' string, which is not case-sensitive:
+This feature searches for release notes in the description of GitHub pull requests, making it easier for maintainers to track changes and updates.
+- **Format:** 
+  - The release notes section have to begin with the title `Release Notes:`, followed by the release notes in bullet points. [See Markdown formatting is supported](https://www.markdownguide.org/basic-syntax/#unordered-lists).
+  - If no release notes line is detected under the Release notes: "title," no release notes will be printed in the output.
+- **Example:** 
+  - Here are examples of how to structure the release notes (case-sensitive):
 ```
-Release Notes
+Release Notes:
 - This update introduces a new caching mechanism that improves performance by 20%.
-```
-- Using `-` as a bullet point for each note is the best practice. The Markdown parser will automatically convert it to a list.
-- These comments are not required for action functionality. If an issue does not contain a "Release Notes" comment, it will be marked accordingly in the release notes. This helps maintainers quickly identify which issues need attention for documentation.
 
-#### Contributors Mention
-Along with the release note content, the action also gathers a list of contributors for each issue. This includes issue assignees and authors of linked pull requests' commits, providing acknowledgment for their contributions in the release notes.
+Release Notes:
+* This update introduces a new caching mechanism that improves performance by 20%.
+
+Release Notes:
++ This update introduces a new caching mechanism that improves performance by 20%.
+
+```
+  - The extraction process supports all three types of bullet points: `-`, `*`, and `+`, and their combinations even when mixed. (It is not recommended to mix them.)
+- **Best Practice:** Select one character from `-`, `*`, `+` for bullet points. The Markdown parser will automatically format them as a list.
+- **Optional:** Usage of release notes is not mandatory for this GH action.
+
 
 #### Handling Multiple PRs
 If an issue is linked to multiple PRs, the action fetches and aggregates contributions from all linked PRs.
