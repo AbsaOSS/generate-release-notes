@@ -25,7 +25,6 @@ from github.Issue import Issue
 from github.PullRequest import PullRequest
 from github.Repository import Repository
 from github.Commit import Commit
-from scipy.stats import tmean
 
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.utils.constants import (
