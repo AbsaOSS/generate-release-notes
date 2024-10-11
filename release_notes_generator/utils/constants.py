@@ -37,7 +37,6 @@ SUPPORTED_ROW_FORMAT_KEYS = ["number", "title", "pull-requests"]
 # Features
 WARNINGS = "warnings"
 PRINT_EMPTY_CHAPTERS = "print-empty-chapters"
-CHAPTERS_TO_PR_WITHOUT_ISSUE = "chapters-to-pr-without-issue"
 
 # Pull Request states
 PR_STATE_CLOSED = "closed"

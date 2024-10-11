@@ -47,10 +47,6 @@ inputs:
     description: 'Print chapters even if they are empty.'
     required: false
     default: 'true'
-  chapters-to-pr-without-issue:
-    description: 'Apply custom chapters for PRs without linked issues.'
-    required: false
-    default: 'true'
   verbose:
     description: 'Print verbose logs.'
     required: false
@@ -118,7 +114,6 @@ runs:
         INPUT_PUBLISHED_AT: ${{ inputs.published-at }}
         INPUT_SKIP_RELEASE_NOTES_LABEL: ${{ inputs.skip-release-notes-label }}
         INPUT_PRINT_EMPTY_CHAPTERS: ${{ inputs.print-empty-chapters }}
-        INPUT_CHAPTERS_TO_PR_WITHOUT_ISSUE: ${{ inputs.chapters-to-pr-without-issue }}
         INPUT_VERBOSE: ${{ inputs.verbose }}
         INPUT_GITHUB_REPOSITORY: ${{ github.repository }}
         INPUT_ROW_FORMAT_ISSUE: ${{ inputs.row-format-issue }}
