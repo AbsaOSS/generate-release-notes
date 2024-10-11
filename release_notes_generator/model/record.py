@@ -31,8 +31,7 @@ from release_notes_generator.utils.constants import (
     PR_STATE_CLOSED,
     ISSUE_STATE_CLOSED,
     ISSUE_STATE_OPEN,
-    RELEASE_NOTE_DETECTION_PATTERN,
-    RELEASE_NOTE_LINE_MARK,
+    RELEASE_NOTE_DETECTION_PATTERN, RELEASE_NOTE_LINE_MARKS,
 )
 from release_notes_generator.utils.pull_reuqest_utils import extract_issue_numbers_from_body
 
@@ -129,12 +128,12 @@ class Record:
     # TODO in Issue named 'Configurable regex-based Release note detection in the PR body'
     #   - 'Release notest:' as detection pattern default - can be defined by user
     #   - '-' as leading line mark for each release note to be used
-    def get_rls_notes(self, detection_pattern=RELEASE_NOTE_DETECTION_PATTERN, line_mark=RELEASE_NOTE_LINE_MARK) -> str:
+    def get_rls_notes(self, detection_pattern=RELEASE_NOTE_DETECTION_PATTERN, line_marks=RELEASE_NOTE_LINE_MARKS) -> str:
         """
         Gets the release notes of the record.
 
         @param detection_pattern: The detection pattern to use.
-        @param line_mark: The line mark to use.
+        @param line_marks: The line marks to use.
         @return: The release notes of the record as a string.
         """
         release_notes = ""
@@ -150,8 +149,8 @@ class Record:
                     continue
 
                 if inside_release_notes:
-                    if line.startswith(line_mark):
-                        release_notes += f"  {line.strip()}\n"
+                    if line.strip()[0] in line_marks:
+                        release_notes += f"  {line.rstrip()}\n"
                     else:
                         break
 
@@ -164,7 +163,8 @@ class Record:
         if self.__is_release_note_detected:
             return self.__is_release_note_detected
 
-        if RELEASE_NOTE_LINE_MARK in self.get_rls_notes():
+        rls_notes = self.get_rls_notes()
+        if any(mark in rls_notes for mark in RELEASE_NOTE_LINE_MARKS):
             self.__is_release_note_detected = True
 
         return self.__is_release_note_detected
