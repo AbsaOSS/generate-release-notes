@@ -100,7 +100,7 @@ def test_pr_contains_issue_mentions(record_with_no_issue_one_pull_closed, mocker
 
 
 def test_pr_links(record_with_no_issue_one_pull_closed):
-    expected_links = "[#123](https://github.com/org/repo/pull/123)"
+    expected_links = "#123"
     assert record_with_no_issue_one_pull_closed.pr_links == expected_links
 
 
@@ -152,7 +152,7 @@ def test_to_chapter_row_with_pull_no_pr_prefix(record_with_no_issue_one_pull_clo
 
 
 def test_to_chapter_row_with_issue(record_with_issue_closed_one_pull):
-    expected_row = """#121 _Fix the bug_ in [#123](https://github.com/org/repo/pull/123)
+    expected_row = """#121 _Fix the bug_ in #123
   - Fixed bug
   - Improved performance
   + More nice code
@@ -166,7 +166,7 @@ def test_to_chapter_row_with_pull_no_rls_notes(record_with_no_issue_one_pull_clo
 
 
 def test_to_chapter_row_with_issue_no_rls_notes(record_with_issue_closed_one_pull_no_rls_notes):
-    expected_row = "#121 _Fix the bug_ in [#123](https://github.com/org/repo/pull/123)"
+    expected_row = "#121 _Fix the bug_ in #123"
     assert expected_row == record_with_issue_closed_one_pull_no_rls_notes.to_chapter_row()
 
 

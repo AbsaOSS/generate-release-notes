@@ -211,8 +211,8 @@ class Record:
         if len(self.__pulls) == 0:
             return None
 
-        template = "[#{number}](https://github.com/{full_name}/pull/{number})"
-        res = [template.format(number=pull.number, full_name=self.__repo.full_name) for pull in self.__pulls]
+        template = "#{number}"
+        res = [template.format(number=pull.number) for pull in self.__pulls]
 
         return ", ".join(res)
 
@@ -280,7 +280,7 @@ class Record:
 
         if self.__gh_issue is None:
             p = self.__pulls[0]
-            format_values["number"] = p.number
+            format_values["number"] = f"#{p.number}"
             format_values["title"] = p.title
             format_values["authors"] = self.authors if self.authors is not None else ""
             format_values["contributors"] = self.contributors if self.contributors is not None else ""
@@ -289,7 +289,7 @@ class Record:
             row = f"{row_prefix}{pr_prefix}" + ActionInputs.get_row_format_pr().format(**format_values)
 
         else:
-            format_values["number"] = self.__gh_issue.number
+            format_values["number"] = f"#{self.__gh_issue.number}"
             format_values["title"] = self.__gh_issue.title
             format_values["pull-requests"] = self.pr_links if len(self.__pulls) > 0 else ""
             format_values["authors"] = self.authors if self.authors is not None else ""
