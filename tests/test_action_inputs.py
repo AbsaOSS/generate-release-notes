@@ -29,7 +29,6 @@ success_case = {
     "get_published_at": False,
     "get_skip_release_notes_label": "skip",
     "get_print_empty_chapters": True,
-    "get_chapters_to_pr_without_issue": False,
     "get_verbose": True,
 }
 
@@ -42,7 +41,6 @@ failure_cases = [
     ("get_published_at", "not_bool", "Published at must be a boolean."),
     ("get_skip_release_notes_label", "", "Skip release notes label must be a non-empty string."),
     ("get_print_empty_chapters", "not_bool", "Print empty chapters must be a boolean."),
-    ("get_chapters_to_pr_without_issue", "not_bool", "Chapters to PR without issue must be a boolean."),
     ("get_verbose", "not_bool", "Verbose logging must be a boolean."),
     ("get_duplicity_icon", "", "Duplicity icon must be a non-empty string and have a length of 1."),
     ("get_duplicity_icon", "Oj", "Duplicity icon must be a non-empty string and have a length of 1."),
@@ -127,11 +125,6 @@ def test_get_skip_release_notes_label(mocker):
 def test_get_print_empty_chapters(mocker):
     mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="true")
     assert ActionInputs.get_print_empty_chapters() is True
-
-
-def test_get_chapters_to_pr_without_issue(mocker):
-    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="false")
-    assert ActionInputs.get_chapters_to_pr_without_issue() is False
 
 
 def test_get_verbose_verbose_by_action_input(mocker):

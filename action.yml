@@ -47,10 +47,6 @@ inputs:
     description: 'Print chapters even if they are empty.'
     required: false
     default: 'true'
-  chapters-to-pr-without-issue:
-    description: 'Apply custom chapters for PRs without linked issues.'
-    required: false
-    default: 'true'
   verbose:
     description: 'Print verbose logs.'
     required: false
@@ -97,6 +93,9 @@ runs:
         else
           echo "Python version meets the minimum requirement of $minimal_required_version"
         fi
+        
+        python -m venv .venv
+        source .venv/bin/activate
         pip install -r ${{ github.action_path }}/requirements.txt
       shell: bash
 
@@ -118,12 +117,12 @@ runs:
         INPUT_PUBLISHED_AT: ${{ inputs.published-at }}
         INPUT_SKIP_RELEASE_NOTES_LABEL: ${{ inputs.skip-release-notes-label }}
         INPUT_PRINT_EMPTY_CHAPTERS: ${{ inputs.print-empty-chapters }}
-        INPUT_CHAPTERS_TO_PR_WITHOUT_ISSUE: ${{ inputs.chapters-to-pr-without-issue }}
         INPUT_VERBOSE: ${{ inputs.verbose }}
         INPUT_GITHUB_REPOSITORY: ${{ github.repository }}
         INPUT_ROW_FORMAT_ISSUE: ${{ inputs.row-format-issue }}
         INPUT_ROW_FORMAT_PR: ${{ inputs.row-format-pr }}
         INPUT_ROW_FORMAT_LINK_PR: ${{ inputs.row-format-link-pr }}
       run: |
+        source .venv/bin/activate
         python ${{ github.action_path }}/main.py
       shell: bash

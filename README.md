@@ -104,12 +104,6 @@ Generate Release Notes action is dedicated to enhance the quality and organizati
 - **Required**: No
 - **Default**: true (Empty chapters are printed.)
 
-### `chapters-to-pr-without-issue`
-- **Description**: Set it to false to avoid the application of custom chapters for PRs without linked issues.
-- **Required**: No
-- **Default**: true (Custom chapters are applied to PRs without linked issues.)
-
-
 ## Outputs
 The output of the action is a markdown string containing the release notes for the specified tag. This string can be used in subsequent steps to publish the release notes to a file, create a GitHub release, or send notifications.
 
@@ -165,7 +159,6 @@ Add the following step to your GitHub workflow (in example are used non-default 
 
     warnings: false
     print-empty-chapters: false
-    chapters-to-pr-without-issue: false
 ```
 
 ## Features
@@ -380,7 +373,6 @@ export INPUT_WARNINGS="true"
 export INPUT_PUBLISHED_AT="true"
 export INPUT_SKIP_RELEASE_NOTES_LABEL="ignore-in-release"
 export INPUT_PRINT_EMPTY_CHAPTERS="true"
-export INPUT_CHAPTERS_TO_PR_WITHOUT_ISSUE="true"
 export INPUT_VERBOSE="true"
 
 # CI in-build variables
