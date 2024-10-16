@@ -116,6 +116,11 @@ unsafe-load-any-extension=no
 #verbose=
 
 
+[MASTER]
+
+ignore-paths=tests
+
+
 [BASIC]
 
 # Naming style matching correct argument names.
