@@ -181,9 +181,10 @@ Release Notes:
 + This update introduces a new caching mechanism that improves performance by 20%.
 
 ```
-  - The extraction process supports all three types of bullet points: `-`, `*`, and `+`, and their combinations even when mixed. (It is not recommended to mix them.)
+The extraction process supports all three types of bullet points: `-`, `*`, and `+`, and their combinations. (GitHub documentation do not recommend to mix them.)
+
 - **Best Practice:** Select one character from `-`, `*`, `+` for bullet points. The Markdown parser will automatically format them as a list.
-- **Optional:** Usage of release notes is not mandatory for this GH action.
+- **Optional usage:** The release notes section is not mandatory for GH action to work.
 
 #### Handling Multiple PRs
 If an issue is linked to multiple PRs, the action fetches and aggregates contributions from all linked PRs.
