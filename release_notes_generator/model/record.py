@@ -167,7 +167,7 @@ class Record:
         if self.__is_release_note_detected:
             return self.__is_release_note_detected
 
-        rls_notes = self.get_rls_notes()
+        rls_notes: str = self.get_rls_notes()
         if any(mark in rls_notes for mark in RELEASE_NOTE_LINE_MARKS):
             self.__is_release_note_detected = True
 
