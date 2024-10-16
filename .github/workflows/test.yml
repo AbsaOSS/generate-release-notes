@@ -102,7 +102,7 @@ jobs:
         run: echo "PYTHONPATH=${GITHUB_WORKSPACE}/release_notes_generator/release_notes_generator" >> $GITHUB_ENV
 
       - name: Build and run unit tests
-        run: pytest --cov=release_notes_generator --cov-report html tests/ -vv
+        run: pytest --cov=release_notes_generator --cov-report=html tests/ -vv
 
       - name: Check overall coverage
         run: |

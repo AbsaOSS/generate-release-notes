@@ -340,15 +340,17 @@ Unit tests are written using pytest. To run the tests, use the following command
 pytest tests/
 ```
 
-This will execute all tests located in the tests directory and generate a code coverage report.
+This will execute all tests located in the tests directory.
 
 ## Code Coverage
 
 Code coverage is collected using pytest-cov coverage tool. To run the tests and collect coverage information, use the following command:
 
 ```
-pytest --cov=release_notes_generator --cov-report html tests/
+pytest --cov=release_notes_generator --cov-report=html tests/
 ```
+
+This will execute all tests located in the tests directory and generate a code coverage report.
 
 See the coverage report on the path:
 
