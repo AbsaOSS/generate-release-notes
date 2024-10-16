@@ -97,6 +97,9 @@ runs:
         else
           echo "Python version meets the minimum requirement of $minimal_required_version"
         fi
+        
+        python -m venv .venv
+        source .venv/bin/activate
         pip install -r ${{ github.action_path }}/requirements.txt
       shell: bash
 
@@ -125,5 +128,6 @@ runs:
         INPUT_ROW_FORMAT_PR: ${{ inputs.row-format-pr }}
         INPUT_ROW_FORMAT_LINK_PR: ${{ inputs.row-format-link-pr }}
       run: |
+        source .venv/bin/activate
         python ${{ github.action_path }}/main.py
       shell: bash
