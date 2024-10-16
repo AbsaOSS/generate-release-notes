@@ -82,7 +82,7 @@ class BaseChapters(ABC):
         return [chapter.title for chapter in self.chapters.values()]
 
     @abstractmethod
-    def populate(self, records: dict[int, Record]):
+    def populate(self, records: dict[int, Record]) -> None:
         """
         Populates the chapters with records.
 

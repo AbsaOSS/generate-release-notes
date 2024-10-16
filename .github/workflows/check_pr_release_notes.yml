@@ -63,7 +63,7 @@ jobs:
         if: steps.pr_info.outputs.skip_check == 'true'
         run: echo "Skipping release notes validation."
 
-      - name: Check for 'Release notes:' and bullet list
+      - name: Check for 'Release Notes:' and bullet list
         if: steps.pr_info.outputs.skip_check == 'false'
         run: |
           # Extract the body from the previous step
