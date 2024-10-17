@@ -78,8 +78,8 @@ jobs:
           # Extract text after "Release notes:" line
           RELEASE_NOTES=$(echo "$PR_BODY" | sed -n '/Release.*Notes/,$p' | tail -n +2)
           
-          # Check if there's a bullet list (lines starting with '-' or '*')
-          if ! echo "$RELEASE_NOTES" | grep -qE '^\s*[-*]\s+.+$'; then
+          # Check if there's a bullet list (lines starting with '-', '+' or '*')
+          if ! echo "$RELEASE_NOTES" | grep -qE '^\s*[-+*]\s+.+$'; then
             echo "Error: No bullet list found under 'Release Notes:'."
             exit 1
           fi

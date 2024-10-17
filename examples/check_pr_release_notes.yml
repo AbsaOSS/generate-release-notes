@@ -43,27 +43,27 @@ jobs:
             core.setOutput("skip_check", 'false');
             return;
 
-      - name: Skip check if 'no-release-notes' label is present
+      - name: Skip check if 'skip-release-notes-check' label is present
         if: steps.pr_info.outputs.skip_check == 'true'
         run: echo "Skipping release notes validation."
 
-      - name: Check for 'Release notes:' and bullet list
+      - name: Check for 'Release Notes:' and bullet list
         if: steps.pr_info.outputs.skip_check == 'false'
         run: |
           # Extract the body from the previous step
           PR_BODY="${{ steps.pr_info.outputs.pr_body }}"
           
           # Check if "Release notes:" exists
-          if ! echo "$PR_BODY" | grep -qi 'release notes:'; then
-            echo "Error: 'Release notes:' not found in pull request description."
+          if ! echo "$PR_BODY" | grep -q 'Release Notes:'; then
+            echo "Error: 'Release Notes:' not found in pull request description."
             exit 1
           fi
           
           # Extract text after "Release notes:" line
-          RELEASE_NOTES=$(echo "$PR_BODY" | sed -n '/[Rr]elease.*[Nn]otes/,$p' | tail -n +2)
+          RELEASE_NOTES=$(echo "$PR_BODY" | sed -n '/Release.*Notes/,$p' | tail -n +2)
           
-          # Check if there's a bullet list (lines starting with '-' or '*')
-          if ! echo "$RELEASE_NOTES" | grep -qE '^\s*[-*]\s+.+$'; then
-            echo "Error: No bullet list found under 'Release notes:'."
+          # Check if there's a bullet list (lines starting with '-', '+' or '*')
+          if ! echo "$RELEASE_NOTES" | grep -qE '^\s*[-+*]\s+.+$'; then
+            echo "Error: No bullet list found under 'Release Notes:'."
             exit 1
           fi
