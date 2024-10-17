@@ -166,7 +166,7 @@ Add the following step to your GitHub workflow (in example are used non-default 
 #### Release Notes Extraction Process
 This feature searches for release notes in the description of GitHub pull requests, making it easier for maintainers to track changes and updates.
 - **Format:** 
-  - The release notes section have to begin with the title `Release Notes:` (case-sensitive), followed by the release notes in bullet points. [See Markdown formatting is supported](https://www.markdownguide.org/basic-syntax/#unordered-lists).
+  - The release notes section have to begin with the title `Release Notes:` (case-sensitive), followed by the release notes in bullet points. [Markdown formatting is supported](https://www.markdownguide.org/basic-syntax/#unordered-lists).
   - If no release notes line is detected under the `Release Notes:` title, no release notes will be printed in the output.
 - **Example:** 
   - Here are examples of how to structure the release notes:
