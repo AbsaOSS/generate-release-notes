@@ -92,7 +92,7 @@ class ReleaseNotesGenerator:
         if rls is not None:
             logger.info("Count of issues: %d", len(list(issues)))
 
-            # filter out merged PRs and commits before the since date
+            # filter out merged PRs and commits before the date
             pulls = list(filter(lambda pull: pull.merged_at is not None and pull.merged_at > since, list(pulls_all)))
             logger.debug("Count of pulls reduced from %d to %d", len(list(pulls_all)), len(pulls))
 
