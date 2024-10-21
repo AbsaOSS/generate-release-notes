@@ -54,12 +54,12 @@ Generate Release Notes action is dedicated to enhance the quality and organizati
 ### `row-format-issue`
 - **Description**: The format of the row for the issue in the release notes. The format can contain placeholders for the issue `number`, `title`, and issues `pull-requests`. The placeholders are case-sensitive.
 - **Required**: No
-- **Default**: `#{number} _{title}_ in {pull-requests}"`
+- **Default**: `"{number} _{title}_ in {pull-requests}"`
 
 ### `row-format-pr`
-- **Description**: The format of the row for the PR in the release notes. The format can contain placeholders for the PR `number`, `title`, and PR `pull-requests`. The placeholders are case-sensitive.
+- **Description**: The format of the row for the PR in the release notes. The format can contain placeholders for the PR `number`, and `title`. The placeholders are case-sensitive.
 - **Required**: No
-- **Default**: `#{number} _{title}_"`
+- **Default**: `"{number} _{title}_"`
 
 ### `row-format-link-pr`
 - **Description**: If defined `true`, the PR row will begin with a `"PR: "` string. Otherwise, no prefix will be added.
@@ -164,31 +164,30 @@ Add the following step to your GitHub workflow (in example are used non-default 
 ## Features
 ### Built-in
 #### Release Notes Extraction Process
-
-This action requires that your GitHub issues include comments with specific release notes. Here's how it works:
-
-**Extraction Method**:
-- The action scans through comments on each closed issue since the last release. It identifies comments that follow the specified format and extracts the content as part of the release notes.
-- The time considered for the previous release is based on its creation time. This means that the action will look for issues closed after the creation time of the most recent release to ensure that all relevant updates since that release are included.
-
-**Comment Format**
-- For an issue's contributions to be included in the release notes, it must contain a comment starting with "Release Notes" followed by the note content. This comment is typically added by the contributors.
-- Here is an example of the content for a 'Release Notes' string, which is not case-sensitive:
+This feature searches for release notes in the description of GitHub pull requests, making it easier for maintainers to track changes and updates.
+- **Format:** 
+  - The release notes section have to begin with the title `Release Notes:` (case-sensitive), followed by the release notes in bullet points. [Markdown formatting is supported](https://www.markdownguide.org/basic-syntax/#unordered-lists).
+  - If no release notes line is detected under the `Release Notes:` title, no release notes will be printed in the output.
+- **Example:** 
+  - Here are examples of how to structure the release notes:
 ```
-Release Notes
+Release Notes:
 - This update introduces a new caching mechanism that improves performance by 20%.
-```
-- Using `-` as a bullet point for each note is the best practice. The Markdown parser will automatically convert it to a list.
-- These comments are not required for action functionality. If an issue does not contain a "Release Notes" comment, it will be marked accordingly in the release notes. This helps maintainers quickly identify which issues need attention for documentation.
 
-#### Contributors Mention
-Along with the release note content, the action also gathers a list of contributors for each issue. This includes issue assignees and authors of linked pull requests' commits, providing acknowledgment for their contributions in the release notes.
+Release Notes:
+* This update introduces a new caching mechanism that improves performance by 20%.
+
+Release Notes:
++ This update introduces a new caching mechanism that improves performance by 20%.
+
+```
+The extraction process supports all three types of bullet points: `-`, `*`, and `+`, and their combinations. (GitHub documentation do not recommend to mix them.)
+
+- **Best Practice:** Select one character from `-`, `*`, `+` for bullet points. The Markdown parser will automatically format them as a list.
+- **Optional usage:** The release notes section is not mandatory for GH action to work.
 
 #### Handling Multiple PRs
 If an issue is linked to multiple PRs, the action fetches and aggregates contributions from all linked PRs.
-
-#### No Release Notes Found
-If no valid "Release Notes" comment is found in an issue, it will be marked accordingly. This helps maintainers quickly identify which issues need attention for documentation.
 
 ### Select start date for closed issues and PRs
 By set **published-at** to true the action will use the `published-at` timestamp of the latest release as the reference point for searching closed issues and PRs, instead of the `created-at` date. If first release, repository creation date is used. 
@@ -210,7 +209,7 @@ The action includes four specific warning chapters to highlight potential areas 
   - **Importance**: Ensures all issues are categorized correctly according to the project's classification system. It aids in organizing release notes into predefined chapters effectively.
 
 - **_Closed Issues Without Release Notes_**
-  - **Purpose**: Identifies issues that do not contain a "Release Notes" comment.
+  - **Purpose**: Identifies pull requests which do not contain a "Release Notes" section in description.
   - **Importance**: Ensures that all significant changes are properly documented in the release notes, enhancing the completeness and usefulness of the release information provided to end-users.
 
 - **_Merged PRs Without Linked Issue_**
@@ -341,15 +340,17 @@ Unit tests are written using pytest. To run the tests, use the following command
 pytest tests/
 ```
 
-This will execute all tests located in the tests directory and generate a code coverage report.
+This will execute all tests located in the tests directory.
 
 ## Code Coverage
 
 Code coverage is collected using pytest-cov coverage tool. To run the tests and collect coverage information, use the following command:
 
 ```
-pytest --cov=release_notes_generator --cov-report html tests/
+pytest --cov=. --cov-report=html tests/
 ```
+
+This will execute all tests located in the tests directory and generate a code coverage report.
 
 See the coverage report on the path:
 
@@ -448,8 +449,8 @@ We defined chapters for our GH actions this way:
 Then in chapters `New Features 🎉` and `Bugfixes 🛠` will be duplicated lines for this issue. When mentioned second+ times then **[Duplicate]** prefix will be visible.
 In the `New Features 🎉` chapter will be mentioned this issue once only.
 
-### What will happen when the issue contains multiple "Release Notes" comments?
-All issue comments are checked for presence of `Release Notes` string. All detected release notes are collected printed under issue.
+### What will happen when the pull request contains multiple "Release Notes" sections?
+Only the first one will be used.
 
 ### What will happen when Merged PR is linked to open issues?
 The PR will be mentioned in warning chapter **Merged PRs Linked to Open Issue**.

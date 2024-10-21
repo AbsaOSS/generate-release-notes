@@ -58,7 +58,14 @@ class RecordFactory:
         records = {}
         pull_numbers = [pull.number for pull in pulls]
 
-        def create_record_for_issue(r: Repository, i: Issue):
+        def create_record_for_issue(r: Repository, i: Issue) -> None:
+            """
+            Create a record for an issue.
+
+            @param r: Repository instance.
+            @param i: Issue instance.
+            @return: None
+            """
             records[i.number] = Record(r, i)
             logger.debug("Created record for issue %d: %s", i.number, i.title)
 

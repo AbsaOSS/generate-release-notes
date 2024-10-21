@@ -205,8 +205,19 @@ class ServiceChapters(BaseChapters):
             self.used_record_numbers.append(nr)
 
     def __is_row_present(self, nr: int) -> bool:
+        """
+        Checks if the row is already present in the chapters.
+
+        @param nr: The number of the record.
+        @return: True if the row is present, False otherwise.
+        """
         return nr in self.used_record_numbers
 
     @staticmethod
     def duplicity_allowed() -> bool:
+        """
+        Checks if duplicity is allowed in the service chapters.
+
+        @return: True if duplicity is allowed, False otherwise.
+        """
         return ActionInputs.get_duplicity_scope() in (DuplicityScopeEnum.SERVICE, DuplicityScopeEnum.BOTH)

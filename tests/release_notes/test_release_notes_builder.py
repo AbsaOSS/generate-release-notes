@@ -138,7 +138,7 @@ http://example.com/changelog
 RELEASE_NOTES_NO_DATA_NO_EMPTY_CHAPTERS = RELEASE_NOTES_NO_DATA_NO_WARNING_NO_EMPTY_CHAPTERS
 
 RELEASE_NOTES_DATA_CUSTOM_CHAPTERS_ONE_LABEL = """### Chapter 1 🛠
-- #122 _I1+bug_ in [#101](https://github.com/org/repo/pull/101), [#102](https://github.com/org/repo/pull/102)
+- #122 _I1+bug_ in #101, #102
   - PR 101 1st release note
   - PR 101 2nd release note
   - PR 102 1st release note
@@ -149,7 +149,7 @@ http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_CUSTOM_CHAPTERS_MORE_LABELS_DUPLICITY_REDUCTION_ON = """### Chapter 1 🛠
-- #122 _I1+bug-enhancement_ in [#101](https://github.com/org/repo/pull/101), [#102](https://github.com/org/repo/pull/102)
+- #122 _I1+bug-enhancement_ in #101, #102
   - PR 101 1st release note
   - PR 101 2nd release note
   - PR 102 1st release note
@@ -160,7 +160,7 @@ http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_CUSTOM_CHAPTERS_MORE_LABELS_DUPLICITY_REDUCTION_OFF = """### New Features 🎉
-- #1 _I1+0PR+2L-bug-enhancement_ in [#101](https://github.com/org/repo/pull/101), [#102](https://github.com/org/repo/pull/102)
+- #1 _I1+0PR+2L-bug-enhancement_ in #101, #102
   - PR 101 1st release note
   - PR 101 2nd release note
   - PR 102 1st release note
@@ -196,13 +196,15 @@ RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_PR_NO_ISSUE_NO_USER_LABELS = """### C
 - PR: #123 _Fixed bug_
   - Fixed bug
   - Improved performance
+  + More nice code
+    * Awesome architecture
 
 #### Full Changelog
 http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_SERVICE_CHAPTERS_OPEN_ISSUE_AND_MERGED_PR_NO_USER_LABELS = """### Merged PRs Linked to 'Not Closed' Issue ⚠️
-- #122 _I1 open_ in [#101](https://github.com/org/repo/pull/101), [#102](https://github.com/org/repo/pull/102)
+- #122 _I1 open_ in #101, #102
   - PR 101 1st release note
   - PR 101 2nd release note
   - PR 102 1st release note
@@ -231,7 +233,7 @@ http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_PR_WITHOUT_USER_LABELS = """### Closed Issues without User Defined Labels ⚠️
-- #122 _I1_ in [#101](https://github.com/org/repo/pull/101), [#102](https://github.com/org/repo/pull/102)
+- #122 _I1_ in #101, #102
   - PR 101 1st release note
   - PR 101 2nd release note
   - PR 102 1st release note
@@ -272,16 +274,18 @@ http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_MERGED_PRS_WITHOUT_USER_LABELS = """### Closed Issues without User Defined Labels ⚠️
-- #121 _Fix the bug_ in [#123](https://github.com/org/repo/pull/123)
+- #121 _Fix the bug_ in #123
   - Fixed bug
   - Improved performance
+  + More nice code
+    * Awesome architecture
 
 #### Full Changelog
 http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_MERGED_PRS_WITH_USER_LABELS = """### Chapter 1 🛠
-- #122 _I1+bug_ in [#123](https://github.com/org/repo/pull/123)
+- #122 _I1+bug_ in #123
   - Fixed bug
   - Improved performance
 

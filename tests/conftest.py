@@ -174,7 +174,7 @@ def mock_issue_closed_i1_bug(mocker):
 def mock_pull_closed(mocker):
     pull = mocker.Mock(spec=PullRequest)
     pull.state = PR_STATE_CLOSED
-    pull.body = "Release notes:\n- Fixed bug\n- Improved performance\n"
+    pull.body = "Release Notes:\n- Fixed bug\n- Improved performance\n+ More nice code\n  * Awesome architecture"
     pull.url = "http://example.com/pull/123"
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
@@ -193,7 +193,7 @@ def mock_pull_closed(mocker):
 def mock_pull_closed_with_rls_notes_101(mocker):
     pull = mocker.Mock(spec=PullRequest)
     pull.state = PR_STATE_CLOSED
-    pull.body = "Release notes:\n- PR 101 1st release note\n- PR 101 2nd release note\n"
+    pull.body = "Release Notes:\n- PR 101 1st release note\n- PR 101 2nd release note\n"
     pull.url = "http://example.com/pull/101"
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
@@ -212,7 +212,7 @@ def mock_pull_closed_with_rls_notes_101(mocker):
 def mock_pull_closed_with_rls_notes_102(mocker):
     pull = mocker.Mock(spec=PullRequest)
     pull.state = PR_STATE_CLOSED
-    pull.body = "Release notes:\n- PR 102 1st release note\n- PR 102 2nd release note\n"
+    pull.body = "Release Notes:\n- PR 102 1st release note\n- PR 102 2nd release note\n"
     pull.url = "http://example.com/pull/102"
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
@@ -231,7 +231,7 @@ def mock_pull_closed_with_rls_notes_102(mocker):
 def mock_pull_merged_with_rls_notes_101(mocker):
     pull = mocker.Mock(spec=PullRequest)
     pull.state = PR_STATE_CLOSED
-    pull.body = "Closes #122\n\nRelease notes:\n- PR 101 1st release note\n- PR 101 2nd release note\n"
+    pull.body = "Closes #122\n\nRelease Notes:\n- PR 101 1st release note\n- PR 101 2nd release note\n"
     pull.url = "http://example.com/pull/101"
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
@@ -250,7 +250,7 @@ def mock_pull_merged_with_rls_notes_101(mocker):
 def mock_pull_merged_with_rls_notes_102(mocker):
     pull = mocker.Mock(spec=PullRequest)
     pull.state = PR_STATE_CLOSED
-    pull.body = "Closes #123\n\nRelease notes:\n- PR 102 1st release note\n- PR 102 2nd release note\n"
+    pull.body = "Closes #123\n\nRelease Notes:\n- PR 102 1st release note\n- PR 102 2nd release note\n"
     pull.url = "http://example.com/pull/102"
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
@@ -269,7 +269,7 @@ def mock_pull_merged_with_rls_notes_102(mocker):
 def mock_pull_merged(mocker):
     pull = mocker.Mock(spec=PullRequest)
     pull.state = PR_STATE_CLOSED
-    pull.body = "Release notes:\n- Fixed bug\n- Improved performance\n"
+    pull.body = "Release Notes:\n- Fixed bug\n- Improved performance\n"
     pull.url = "http://example.com/pull/123"
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
@@ -288,7 +288,7 @@ def mock_pull_merged(mocker):
 def mock_pull_open(mocker):
     pull = mocker.Mock(spec=PullRequest)
     pull.state = PR_STATE_OPEN
-    pull.body = "Release notes:\n- Fixed bug\n- Improved performance\n"
+    pull.body = "Release Notes:\n- Fixed bug\n- Improved performance\n"
     pull.url = "http://example.com/pull/123"
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
@@ -450,7 +450,7 @@ def record_with_no_issue_one_pull_merged_with_issue_mentioned(request):
     record = Record(repo=(mock_repo_fixture := request.getfixturevalue("mock_repo")))
     mock_repo_fixture.full_name = "org/repo"
     mock_pull_merged_fixture = request.getfixturevalue("mock_pull_merged")
-    mock_pull_merged_fixture.body = "Release notes:\n- Fixed bug\n- Improved performance\n\nFixes #123"
+    mock_pull_merged_fixture.body = "Release Notes:\n- Fixed bug\n- Improved performance\n\nFixes #123"
     record.register_pull_request(mock_pull_merged_fixture)
     record.register_commit(request.getfixturevalue("mock_commit"))
     return record

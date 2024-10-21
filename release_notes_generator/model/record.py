@@ -32,7 +32,7 @@ from release_notes_generator.utils.constants import (
     ISSUE_STATE_CLOSED,
     ISSUE_STATE_OPEN,
     RELEASE_NOTE_DETECTION_PATTERN,
-    RELEASE_NOTE_LINE_MARK,
+    RELEASE_NOTE_LINE_MARKS,
 )
 from release_notes_generator.utils.pull_reuqest_utils import extract_issue_numbers_from_body
 
@@ -129,12 +129,14 @@ class Record:
     # TODO in Issue named 'Configurable regex-based Release note detection in the PR body'
     #   - 'Release notest:' as detection pattern default - can be defined by user
     #   - '-' as leading line mark for each release note to be used
-    def get_rls_notes(self, detection_pattern=RELEASE_NOTE_DETECTION_PATTERN, line_mark=RELEASE_NOTE_LINE_MARK) -> str:
+    def get_rls_notes(
+        self, detection_pattern=RELEASE_NOTE_DETECTION_PATTERN, line_marks=RELEASE_NOTE_LINE_MARKS
+    ) -> str:
         """
         Gets the release notes of the record.
 
         @param detection_pattern: The detection pattern to use.
-        @param line_mark: The line mark to use.
+        @param line_marks: The line marks to use.
         @return: The release notes of the record as a string.
         """
         release_notes = ""
@@ -150,8 +152,9 @@ class Record:
                     continue
 
                 if inside_release_notes:
-                    if line.startswith(line_mark):
-                        release_notes += f"  {line.strip()}\n"
+                    tmp = line.strip()
+                    if len(tmp) > 0 and tmp[0] in line_marks:
+                        release_notes += f"  {line.rstrip()}\n"
                     else:
                         break
 
@@ -164,7 +167,8 @@ class Record:
         if self.__is_release_note_detected:
             return self.__is_release_note_detected
 
-        if RELEASE_NOTE_LINE_MARK in self.get_rls_notes():
+        rls_notes: str = self.get_rls_notes()
+        if any(mark in rls_notes for mark in RELEASE_NOTE_LINE_MARKS):
             self.__is_release_note_detected = True
 
         return self.__is_release_note_detected
@@ -207,8 +211,8 @@ class Record:
         if len(self.__pulls) == 0:
             return None
 
-        template = "[#{number}](https://github.com/{full_name}/pull/{number})"
-        res = [template.format(number=pull.number, full_name=self.__repo.full_name) for pull in self.__pulls]
+        template = "#{number}"
+        res = [template.format(number=pull.number) for pull in self.__pulls]
 
         return ", ".join(res)
 
@@ -276,7 +280,7 @@ class Record:
 
         if self.__gh_issue is None:
             p = self.__pulls[0]
-            format_values["number"] = p.number
+            format_values["number"] = f"#{p.number}"
             format_values["title"] = p.title
             format_values["authors"] = self.authors if self.authors is not None else ""
             format_values["contributors"] = self.contributors if self.contributors is not None else ""
@@ -285,7 +289,7 @@ class Record:
             row = f"{row_prefix}{pr_prefix}" + ActionInputs.get_row_format_pr().format(**format_values)
 
         else:
-            format_values["number"] = self.__gh_issue.number
+            format_values["number"] = f"#{self.__gh_issue.number}"
             format_values["title"] = self.__gh_issue.title
             format_values["pull-requests"] = self.pr_links if len(self.__pulls) > 0 else ""
             format_values["authors"] = self.authors if self.authors is not None else ""
