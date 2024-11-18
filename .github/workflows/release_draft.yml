@@ -23,64 +23,7 @@ on:
         required: true
 
 jobs:
-  check-tag:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Validate format of received tag
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const newTag = core.getInput('tag-name');
-            const regex = /^v[0-9]+\.[0-9]+\.[0-9]+$/;
-
-            if (!regex.test(newTag)) {
-              core.setFailed('Tag does not match the required format "v[0-9]+.[0-9]+.[0-9]+"');
-              return;
-            }
-          tag-name: ${{ github.event.inputs.tag-name }}
-
-#      - name: Check tag's correct version increment
-#        uses: actions/github-script@v7
-#        with:
-#          script: |
-#            const newTag = core.getInput('tag-name');
-#
-#            // get latest tag
-#            const { data: refs } = await github.rest.git.listMatchingRefs({
-#              owner: context.repo.owner,
-#              repo: context.repo.repo,
-#              ref: 'tags/'
-#            });
-#
-#            if (refs.length === 0) {
-#              // No existing tags, so any new tag is valid
-#              console.log('No existing tags found. Any new tag is considered valid.');
-#              return;
-#            }
-#
-#            const latestTag = refs.sort((a, b) => new Date(b.object.date) - new Date(a.object.date))[0].ref.replace('refs/tags/', '');
-#            const latestVersion = latestTag.replace('v', '').split('.').map(Number);
-#            const newVersion = newTag.replace('v', '').split('.').map(Number);
-#
-#            // check tag's correct version increase
-#            const isValid = (latestVersion[0] === newVersion[0] && latestVersion[1] === newVersion[1] && newVersion[2] === latestVersion[2] + 1) ||
-#              (latestVersion[0] === newVersion[0] && newVersion[1] === latestVersion[1] + 1 && newVersion[2] === 0) ||
-#              (newVersion[0] === latestVersion[0] + 1 && newVersion[1] === 0 && newVersion[2] === 0);
-#
-#            if (!isValid) {
-#              core.setFailed('New tag is not one version higher than the latest tag');
-#              return;
-#            }
-#
-#          tag-name: ${{ github.event.inputs.tag-name }}
-
   release-draft:
-    needs: check-tag
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -92,33 +35,15 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Generate Release Notes
-        id: generate_release_notes
-        uses: AbsaOSS/generate-release-notes@master
+      - name: Check format of received tag
+        id: check-version-tag
+        uses: AbsaOSS/generate-release-notes@feature/3-Implement-check-logic-without-qualifiers-support
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag-name: ${{ github.event.inputs.tag-name }}
-          chapters: '[
-            {"title": "No entry 🚫", "label": "duplicate"},
-            {"title": "No entry 🚫", "label": "invalid"},
-            {"title": "No entry 🚫", "label": "wontfix"},
-            {"title": "No entry 🚫", "label": "no RN"},
-            {"title": "Breaking Changes 💥", "label": "breaking-change"},
-            {"title": "New Features 🎉", "label": "enhancement"},
-            {"title": "New Features 🎉", "label": "feature"},
-            {"title": "Bugfixes 🛠", "label": "bug"},
-            {"title": "Infrastructure ⚙️", "label": "infrastructure"},
-            {"title": "Silent-live 🤫", "label": "silent-live"},
-            {"title": "Documentation 📜", "label": "documentation"}
-          ]'
-          skip-release-notes-label: 'no RN'
-          verbose: true
-
-          warnings: true
-          print-empty-chapters: true
-          chapters-to-pr-without-issue: true
-
+            github-repository: ${{ github.repository }}
+            branch: 'master'
+            version-tag: ${{ github.event.inputs.tag-name }}
 
       - name: Create and Push Tag
         uses: actions/github-script@v7
