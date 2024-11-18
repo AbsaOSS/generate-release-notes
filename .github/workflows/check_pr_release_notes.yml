@@ -26,6 +26,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/setup-python@v5.1.1
+        with:
+          python-version: '3.11'
+
       - name: Check presence of release notes in PR description
         uses: AbsaOSS/release-notes-presence-check@feature/2-Implement-basic-logic-for-Release-notes-located-in-PR-body
         env:
