@@ -37,7 +37,7 @@ jobs:
 
       - name: Check format of received tag
         id: check-version-tag
-        uses: AbsaOSS/generate-release-notes@feature/3-Implement-check-logic-without-qualifiers-support
+        uses: AbsaOSS/version-tag-check@feature/3-Implement-check-logic-without-qualifiers-support
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
