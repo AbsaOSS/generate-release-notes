@@ -37,5 +37,3 @@ jobs:
         with:
           github-repository: ${{ github.repository }}
           pr-number: ${{ github.event.number }}
-          title: '[Rr]elease Qotes:'
-          skip-labels: 'skip-rls-notes-check'
