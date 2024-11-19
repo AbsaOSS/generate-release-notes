@@ -31,7 +31,7 @@ jobs:
           python-version: '3.11'
 
       - name: Check presence of release notes in PR description
-        uses: AbsaOSS/release-notes-presence-check@feature/2-Implement-basic-logic-for-Release-notes-located-in-PR-body
+        uses: AbsaOSS/release-notes-presence-check@v0.1.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
