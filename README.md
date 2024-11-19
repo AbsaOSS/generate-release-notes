@@ -20,6 +20,9 @@
 - [Run Black Tool Locally](#run-black-tool-locally)
 - [Run Unit Test](#running-unit-test)
 - [Run Action Locally](#run-action-locally)
+- [GitHub Workflow Examples](#github-workflow-examples)
+  - [Create Release Tag & Draft Release - By Workflow Dispatch](#create-release-tag--draft-release---by-workflow-dispatch)
+  - [Check Release Notes Presence - in Pull Request Description](#check-release-notes-presence---in-pull-request-description)
 - [Contribution Guidelines](#contribution-guidelines)
   - [How to Contribute](#how-to-contribute)
 - [License Information](#license-information)
@@ -246,14 +249,14 @@ By setting `duplicity-icon` you can customize the icon used to indicate duplicit
 
 Clone the repository and navigate to the project directory:
 
-```
+```shell
 git clone https://github.com/AbsaOSS/generate-release-notes.git
 cd generate-release-notes
 ```
 
 Install the dependencies:
 
-```
+```shell
 pip install -r requirements.txt
 export PYTHONPATH=<your path>/generate-release-notes/src
 ```
@@ -269,24 +272,20 @@ Pylint displays a global evaluation score for the code, rated out of a maximum s
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-
-# run your commands
-
-deactivate
 ```
 
 This command will also install a Pylint tool, since it is listed in the project requirements.
 
 ### Run Pylint
 Run Pylint on all files that are currently tracked by Git in the project.
-```
+```shell
 pylint $(git ls-files '*.py')
 ```
 
 To run Pylint on a specific file, follow the pattern `pylint <path_to_file>/<name_of_file>.py`.
 
 Example:
-```
+```shell
 pylint release-notes-generator/generator.py
 ``` 
 
@@ -336,7 +335,7 @@ All done! ✨ 🍰 ✨
 
 Unit tests are written using pytest. To run the tests, use the following command:
 
-```
+```shell
 pytest tests/
 ```
 
@@ -346,16 +345,16 @@ This will execute all tests located in the tests directory.
 
 Code coverage is collected using pytest-cov coverage tool. To run the tests and collect coverage information, use the following command:
 
-```
-pytest --cov=. --cov-report=html tests/
+```shell
+pytest --cov=. -v tests/ --cov-fail-under=80
 ```
 
 This will execute all tests located in the tests directory and generate a code coverage report.
 
 See the coverage report on the path:
 
-```
-htmlcov/index.html
+```shell
+open htmlcov/index.html
 ```
 
 ## Run Action Locally
@@ -397,8 +396,6 @@ See the [example of workflow](./examples/release_draft.yml).
 
 ### Check Release Notes Presence - in Pull Request Description 
 This workflow checks that every pull request includes release notes in the description.
-- The check can be skipped by using the `skip-release-notes` label.
-- The check is searching a `[Rr]elease [Nn]otes:` strings in the PR description.
 
 See the [example of workflow](./examples/check_pr_release_notes.yml).
 
