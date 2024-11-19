@@ -11,6 +11,7 @@ env:
 
 jobs:
   check-release-notes:
+    # place your runner here
     runs-on: {your-runner}
 
     steps:

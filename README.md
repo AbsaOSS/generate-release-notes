@@ -396,8 +396,6 @@ See the [example of workflow](./examples/release_draft.yml).
 
 ### Check Release Notes Presence - in Pull Request Description 
 This workflow checks that every pull request includes release notes in the description.
-- The check can be skipped by using the `skip-release-notes` label.
-- The check is searching a `[Rr]elease [Nn]otes:` strings in the PR description.
 
 See the [example of workflow](./examples/check_pr_release_notes.yml).
 
