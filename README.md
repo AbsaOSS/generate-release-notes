@@ -85,7 +85,7 @@ Generate Release Notes action is dedicated to enhance the quality and organizati
 - **Default**: false
 
 ### `skip-release-notes-label`
-- **Description**: Set to a label name to skip issues and PRs with this label from the release notes process generation.
+- **Description**: List labels used for detection if issues or pull requests are ignored in the Release Notes generation process. Example: `skip-release-notes, question`.
 - **Required**: No
 - **Default**: `skip-release-notes`
 

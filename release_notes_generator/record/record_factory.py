@@ -26,6 +26,7 @@ from github.PullRequest import PullRequest
 from github.Repository import Repository
 from github.Commit import Commit
 
+from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.record import Record
 
 from release_notes_generator.utils.decorators import safe_call_decorator
@@ -66,10 +67,23 @@ class RecordFactory:
             @param i: Issue instance.
             @return: None
             """
+            # check for skip labels presence and skip when detected
+            issue_labels = [label.name for label in issue.labels]
+            if bool(set(ActionInputs.get_skip_release_notes_labels()) - set(issue_labels)):
+                logger.debug("Issue %d: %s contains skip labels, skipping ...", issue.number, issue.title)
+                return
+
             records[i.number] = Record(r, i)
             logger.debug("Created record for issue %d: %s", i.number, i.title)
 
-        def register_pull_request(pull: PullRequest):
+        def register_pull_request(pull: PullRequest) -> None:
+            # check for skip labels presence and skip when detected
+            pull_labels = [label.name for label in pull.labels]
+            skip_detected = bool(set(ActionInputs.get_skip_release_notes_labels()) - set(pull_labels))
+            if skip_detected:
+                logger.debug("PR %d: %s contains skip labels, skipping ...", pull.number, pull.title)
+                return
+
             for parent_issue_number in extract_issue_numbers_from_body(pull):
                 if parent_issue_number not in records:
                     logger.warning(

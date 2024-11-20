@@ -109,11 +109,14 @@ class ActionInputs:
         return get_action_input(PUBLISHED_AT, "false").lower() == "true"
 
     @staticmethod
-    def get_skip_release_notes_label() -> str:
+    def get_skip_release_notes_labels() -> list[str]:
         """
         Get the skip release notes label from the action inputs.
         """
-        return get_action_input(SKIP_RELEASE_NOTES_LABEL) or "skip-release-notes"
+        user_choice = [item.strip() for item in get_action_input(SKIP_RELEASE_NOTES_LABEL, "").split(',')]
+        if len(user_choice) > 0:
+            return user_choice
+        return ["skip-release-notes"]
 
     @staticmethod
     def get_verbose() -> bool:
@@ -212,10 +215,6 @@ class ActionInputs:
         published_at = ActionInputs.get_published_at()
         ActionInputs.validate_input(published_at, bool, "Published at must be a boolean.", errors)
 
-        skip_release_notes_label = ActionInputs.get_skip_release_notes_label()
-        if not isinstance(skip_release_notes_label, str) or not skip_release_notes_label.strip():
-            errors.append("Skip release notes label must be a non-empty string.")
-
         verbose = ActionInputs.get_verbose()
         ActionInputs.validate_input(verbose, bool, "Verbose logging must be a boolean.", errors)
 
@@ -248,7 +247,7 @@ class ActionInputs:
         logger.debug("Tag name: %s", tag_name)
         logger.debug("Chapters JSON: %s", chapters_json)
         logger.debug("Published at: %s", published_at)
-        logger.debug("Skip release notes label: %s", skip_release_notes_label)
+        logger.debug("Skip release notes labels: %s", ActionInputs.get_skip_release_notes_labels())
         logger.debug("Verbose logging: %s", verbose)
         logger.debug("Warnings: %s", warnings)
         logger.debug("Print empty chapters: %s", print_empty_chapters)
