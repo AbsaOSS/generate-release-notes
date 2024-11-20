@@ -39,6 +39,8 @@ from release_notes_generator.utils.constants import (
     ROW_FORMAT_LINK_PR,
     ROW_FORMAT_ISSUE,
     ROW_FORMAT_PR,
+    RELEASE_NOTES_TITLE,
+    RELEASE_NOTE_TITLE_DEFAULT,
 )
 from release_notes_generator.utils.enums import DuplicityScopeEnum
 from release_notes_generator.utils.gh_action import get_action_input
@@ -121,6 +123,13 @@ class ActionInputs:
         Get the verbose parameter value from the action inputs.
         """
         return os.getenv(RUNNER_DEBUG, "0") == "1" or get_action_input(VERBOSE).lower() == "true"
+
+    @staticmethod
+    def get_release_notes_title() -> str:
+        """
+        Get the release notes title from the action inputs.
+        """
+        return get_action_input(RELEASE_NOTES_TITLE, RELEASE_NOTE_TITLE_DEFAULT)
 
     # Features
     @staticmethod
@@ -218,6 +227,10 @@ class ActionInputs:
 
         verbose = ActionInputs.get_verbose()
         ActionInputs.validate_input(verbose, bool, "Verbose logging must be a boolean.", errors)
+
+        release_notes_title = ActionInputs.get_release_notes_title()
+        if not isinstance(release_notes_title, str) or len(release_notes_title) == 0:
+            errors.append("Release Notes title must be a non-empty string and have non-zero length.")
 
         row_format_issue = ActionInputs.get_row_format_issue()
         if not isinstance(row_format_issue, str) or not row_format_issue.strip():

@@ -95,6 +95,11 @@ Generate Release Notes action is dedicated to enhance the quality and organizati
 - **Default**: false
 - **Note**: If workflow run in debug regime, 'verbose' logging is activated.
 
+### `release-notes-title`
+- **Description**: The title of the release notes section in the PR description.
+- **Required**: No
+- **Default**: `[Rr]elease [Nn]otes:`
+
 ### Feature controls
 
 ### `warnings`
@@ -159,6 +164,7 @@ Add the following step to your GitHub workflow (in example are used non-default 
     published-at: true
     skip-release-notes-label: 'ignore-in-release'     # changing default value of label
     verbose: false
+    release-notes-title: '[Rr]elease Notes:'
 
     warnings: false
     print-empty-chapters: false
