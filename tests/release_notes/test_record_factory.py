@@ -78,6 +78,7 @@ def setup_issues_no_pulls_no_commits(mocker):
     mock_git_issue1.body = "Body of issue 1"
     mock_git_issue1.state = "open"
     mock_git_issue1.created_at = datetime.now()
+    mock_git_issue1.labels = []
 
     mock_git_issue2 = mocker.Mock(spec=Issue)
     mock_git_issue2.id = 2
@@ -86,6 +87,7 @@ def setup_issues_no_pulls_no_commits(mocker):
     mock_git_issue2.body = "Body of issue 2"
     mock_git_issue2.state = "closed"
     mock_git_issue2.created_at = datetime.now()
+    mock_git_issue2.labels = []
 
     return mock_git_issue1, mock_git_issue2
 
@@ -99,6 +101,7 @@ def setup_issues_pulls_commits(mocker):
     mock_git_issue1.body = "Body of issue 1"
     mock_git_issue1.state = "open"
     mock_git_issue1.created_at = datetime.now()
+    mock_git_issue1.labels = []
 
     mock_git_issue2 = mocker.Mock(spec=Issue)
     mock_git_issue2.id = 2
@@ -107,6 +110,7 @@ def setup_issues_pulls_commits(mocker):
     mock_git_issue2.body = "Body of issue 2"
     mock_git_issue2.state = "closed"
     mock_git_issue2.created_at = datetime.now()
+    mock_git_issue2.labels = []
 
     mock_git_pr1 = mocker.Mock(spec=PullRequest)
     mock_git_pr1.id = 101
@@ -120,7 +124,7 @@ def setup_issues_pulls_commits(mocker):
     mock_git_pr1.merged_at = None
     mock_git_pr1.assignee = None
     mock_git_pr1.merge_commit_sha = "abc123"
-    mock_git_pr1.get_labels = mocker.Mock(return_value=[])
+    mock_git_pr1.labels = []
 
     mock_git_pr2 = mocker.Mock(spec=PullRequest)
     mock_git_pr2.id = 102
@@ -134,7 +138,7 @@ def setup_issues_pulls_commits(mocker):
     mock_git_pr2.merged_at = None
     mock_git_pr2.assignee = None
     mock_git_pr2.merge_commit_sha = "def456"
-    mock_git_pr2.get_labels = mocker.Mock(return_value=[])
+    mock_git_pr2.labels = []
 
     mock_git_commit1 = mocker.Mock(spec=Commit)
     mock_git_commit1.sha = "abc123"

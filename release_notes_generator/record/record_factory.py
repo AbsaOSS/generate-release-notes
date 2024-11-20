@@ -69,7 +69,7 @@ class RecordFactory:
             """
             # check for skip labels presence and skip when detected
             issue_labels = [label.name for label in issue.labels]
-            if bool(set(ActionInputs.get_skip_release_notes_labels()) - set(issue_labels)):
+            if any(item in issue_labels for item in ActionInputs.get_skip_release_notes_labels()):
                 logger.debug("Issue %d: %s contains skip labels, skipping ...", issue.number, issue.title)
                 return
 
@@ -79,8 +79,7 @@ class RecordFactory:
         def register_pull_request(pull: PullRequest) -> None:
             # check for skip labels presence and skip when detected
             pull_labels = [label.name for label in pull.labels]
-            skip_detected = bool(set(ActionInputs.get_skip_release_notes_labels()) - set(pull_labels))
-            if skip_detected:
+            if any(item in pull_labels for item in ActionInputs.get_skip_release_notes_labels()):
                 logger.debug("PR %d: %s contains skip labels, skipping ...", pull.number, pull.title)
                 return
 
