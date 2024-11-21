@@ -285,12 +285,15 @@ def test_generate_with_no_issues(mocker, request):
 def test_generate_with_no_issues_skip_labels(mocker, request):
     mock_github_client = mocker.Mock(spec=Github)
     pr1, pr2, commit1, commit2 = setup_no_issues_pulls_commits(mocker)
-    mock_label = mocker.Mock(spec=MockLabel)
-    mock_label.name = "skip-release-notes"
-    pr1.labels = [mock_label]
+    mock_label1 = mocker.Mock(spec=MockLabel)
+    mock_label1.name = "skip-release-notes"
+    pr1.labels = [mock_label1]
+    mock_label2 = mocker.Mock(spec=MockLabel)
+    mock_label2.name = "another-skip-label"
+    pr2.labels = [mock_label2]
     pulls = [pr1, pr2]
     commits = [commit1, commit2]
-    mocker.patch("release_notes_generator.builder.ActionInputs.get_skip_release_notes_labels", return_value=["skip-release-notes"])
+    mocker.patch("release_notes_generator.builder.ActionInputs.get_skip_release_notes_labels", return_value=["skip-release-notes", "another-skip-label"])
 
     records = RecordFactory.generate(mock_github_client, request.getfixturevalue("mock_repo"), [], pulls, commits)
 
@@ -299,7 +302,7 @@ def test_generate_with_no_issues_skip_labels(mocker, request):
     assert isinstance(records[102], Record)
 
     assert records[101].skip
-    assert not records[102].skip
+    assert records[102].skip
 
     # Verify that PRs are registered
     assert 1 == records[101].pulls_count

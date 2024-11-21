@@ -212,6 +212,9 @@ def mock_pull_closed_with_skip_label(mocker):
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "skip-release-notes"
     pull.labels = [label1]
+    label2 = mocker.Mock(spec=MockLabel)
+    label2.name = "another-skip-label"
+    pull.labels = [label2]
     pull.number = 123
     pull.merge_commit_sha = "merge_commit_sha"
     pull.title = "Fixed bug"
