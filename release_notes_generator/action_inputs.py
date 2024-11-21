@@ -113,7 +113,7 @@ class ActionInputs:
         """
         Get the skip release notes label from the action inputs.
         """
-        user_choice = [item.strip() for item in get_action_input(SKIP_RELEASE_NOTES_LABEL, "").split(',')]
+        user_choice = [item.strip() for item in get_action_input(SKIP_RELEASE_NOTES_LABEL, "").split(",")]
         if len(user_choice) > 0:
             return user_choice
         return ["skip-release-notes"]

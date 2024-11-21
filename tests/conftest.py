@@ -169,6 +169,20 @@ def mock_issue_closed_i1_bug(mocker):
     return issue
 
 
+@pytest.fixture
+def mock_issue_closed_i1_bug_and_skip(mocker):
+    issue = mocker.Mock(spec=Issue)
+    issue.state = ISSUE_STATE_CLOSED
+    label1 = mocker.Mock(spec=MockLabel)
+    label1.name = "skip-release-notes"
+    label2 = mocker.Mock(spec=MockLabel)
+    label2.name = "bug"
+    issue.labels = [label1, label2]
+    issue.title = "I1+bug"
+    issue.number = 122
+    return issue
+
+
 # Fixtures for GitHub Pull Request(s)
 @pytest.fixture
 def mock_pull_closed(mocker):
@@ -178,6 +192,25 @@ def mock_pull_closed(mocker):
     pull.url = "http://example.com/pull/123"
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
+    pull.labels = [label1]
+    pull.number = 123
+    pull.merge_commit_sha = "merge_commit_sha"
+    pull.title = "Fixed bug"
+    pull.created_at = datetime.now()
+    pull.updated_at = datetime.now()
+    pull.merged_at = None
+    pull.closed_at = datetime.now()
+    return pull
+
+
+@pytest.fixture
+def mock_pull_closed_with_skip_label(mocker):
+    pull = mocker.Mock(spec=PullRequest)
+    pull.state = PR_STATE_CLOSED
+    pull.body = "Release Notes:\n- Fixed bug\n- Improved performance\n+ More nice code\n  * Awesome architecture"
+    pull.url = "http://example.com/pull/123"
+    label1 = mocker.Mock(spec=MockLabel)
+    label1.name = "skip-release-notes"
     pull.labels = [label1]
     pull.number = 123
     pull.merge_commit_sha = "merge_commit_sha"
@@ -365,6 +398,18 @@ def record_with_issue_closed_one_pull_merged(request):
 
 
 @pytest.fixture
+def record_with_issue_closed_one_pull_merged_skip(request):
+    rec = Record(
+        repo=(mock_repo_fixture := request.getfixturevalue("mock_repo")),
+        issue=request.getfixturevalue("mock_issue_closed_i1_bug_and_skip"),
+        skip=True,
+    )
+    rec.register_pull_request(request.getfixturevalue("mock_pull_merged"))
+    mock_repo_fixture.full_name = "org/repo"
+    return rec
+
+
+@pytest.fixture
 def record_with_issue_closed_two_pulls(request):
     rec = Record(
         repo=(mock_repo_fixture := request.getfixturevalue("mock_repo")),
@@ -462,6 +507,16 @@ def record_with_no_issue_one_pull_closed(request):
     mock_repo_fixture.full_name = "org/repo"
     mock_repo_fixture.draft = False
     record.register_pull_request(request.getfixturevalue("mock_pull_closed"))
+    record.register_commit(request.getfixturevalue("mock_commit"))
+    return record
+
+
+@pytest.fixture
+def record_with_no_issue_one_pull_closed_with_skip_label(request):
+    record = Record(repo=(mock_repo_fixture := request.getfixturevalue("mock_repo")), skip=True)
+    mock_repo_fixture.full_name = "org/repo"
+    mock_repo_fixture.draft = False
+    record.register_pull_request(request.getfixturevalue("mock_pull_closed_with_skip_label"))
     record.register_commit(request.getfixturevalue("mock_commit"))
     return record
 

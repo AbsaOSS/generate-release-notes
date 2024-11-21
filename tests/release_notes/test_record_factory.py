@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+import os
 import time
 
 from datetime import datetime
@@ -25,6 +25,7 @@ from github.Commit import Commit
 
 from release_notes_generator.model.record import Record
 from release_notes_generator.record.record_factory import RecordFactory
+from tests.conftest import MockLabel
 
 
 def setup_no_issues_pulls_commits(mocker):
@@ -40,7 +41,7 @@ def setup_no_issues_pulls_commits(mocker):
     mock_git_pr1.merged_at = None
     mock_git_pr1.assignee = None
     mock_git_pr1.merge_commit_sha = "abc123"
-    mock_git_pr1.get_labels = mocker.Mock(return_value=[])
+    mock_git_pr1.labels = []
 
     mock_git_pr2 = mocker.Mock(spec=PullRequest)
     mock_git_pr2.id = 102
@@ -54,7 +55,7 @@ def setup_no_issues_pulls_commits(mocker):
     mock_git_pr2.merged_at = None
     mock_git_pr2.assignee = None
     mock_git_pr2.merge_commit_sha = "def456"
-    mock_git_pr2.get_labels = mocker.Mock(return_value=[])
+    mock_git_pr2.labels = []
 
     mock_git_commit1 = mocker.Mock(spec=Commit)
     mock_git_commit1.sha = "abc123"
@@ -168,6 +169,9 @@ def test_generate_with_issues_and_pulls_and_commits(mocker, mock_repo):
     assert 1 in records
     assert 2 in records
 
+    assert not records[1].skip
+    assert not records[2].skip
+
     # Verify the record creation
     assert isinstance(records[1], Record)
     assert isinstance(records[2], Record)
@@ -182,6 +186,46 @@ def test_generate_with_issues_and_pulls_and_commits(mocker, mock_repo):
     # Verify that commits are registered
     assert 1 == records[1].pull_request_commit_count(101)
     assert 1 == records[2].pull_request_commit_count(102)
+
+
+def test_generate_with_issues_and_pulls_and_commits_with_skip_labels(mocker, mock_repo):
+    mock_github_client = mocker.Mock(spec=Github)
+    issue1, issue2, pr1, pr2, commit1, commit2 = setup_issues_pulls_commits(mocker)
+    mock_label = mocker.Mock(spec=MockLabel)
+    mock_label.name = "skip-release-notes"
+    issue1.labels = [mock_label]
+    pr2.labels = [mock_label]
+    issues = [issue1, issue2]
+    pulls = [pr1, pr2]
+    commit3 = mocker.Mock(spec=Commit)
+    commit3.sha = "ghi789"
+    commits = [commit1, commit2, commit3]
+    mocker.patch("release_notes_generator.builder.ActionInputs.get_skip_release_notes_labels", return_value=["skip-release-notes"])
+
+    records = RecordFactory.generate(mock_github_client, mock_repo, issues, pulls, commits)
+
+    # Check if records for issues and PRs were created
+    assert 1 in records
+    assert 2 in records
+
+    # Verify the record creation
+    assert isinstance(records[1], Record)
+    assert isinstance(records[2], Record)
+
+    assert records[1].skip      # skip label appied to issue as the record was created from issue
+    assert not records[2].skip  # skip label is present only on inner PR but record create from issues (leading)
+
+    # Verify that PRs are registered
+    # assert 1 == records[1].pulls_count
+    assert 1 == records[2].pulls_count
+
+    # assert pr1 == records[1].pull_request(0)
+    assert pr2 == records[2].pull_request(0)
+
+    # Verify that commits are registered
+    # assert 1 == records[1].pull_request_commit_count(101)
+    assert 1 == records[2].pull_request_commit_count(102)
+
 
 
 def test_generate_with_no_commits(mocker, mock_repo):
@@ -226,6 +270,36 @@ def test_generate_with_no_issues(mocker, request):
     # Verify the record creation
     assert isinstance(records[101], Record)
     assert isinstance(records[102], Record)
+
+    # Verify that PRs are registered
+    assert 1 == records[101].pulls_count
+    assert 1 == records[102].pulls_count
+
+    assert pr1 == records[101].pull_request(0)
+    assert pr2 == records[102].pull_request(0)
+
+    # Verify that commits are registered
+    assert 1 == records[101].pull_request_commit_count(101)
+    assert 1 == records[102].pull_request_commit_count(102)
+
+def test_generate_with_no_issues_skip_labels(mocker, request):
+    mock_github_client = mocker.Mock(spec=Github)
+    pr1, pr2, commit1, commit2 = setup_no_issues_pulls_commits(mocker)
+    mock_label = mocker.Mock(spec=MockLabel)
+    mock_label.name = "skip-release-notes"
+    pr1.labels = [mock_label]
+    pulls = [pr1, pr2]
+    commits = [commit1, commit2]
+    mocker.patch("release_notes_generator.builder.ActionInputs.get_skip_release_notes_labels", return_value=["skip-release-notes"])
+
+    records = RecordFactory.generate(mock_github_client, request.getfixturevalue("mock_repo"), [], pulls, commits)
+
+    # Verify the record creation
+    assert isinstance(records[101], Record)
+    assert isinstance(records[102], Record)
+
+    assert records[101].skip
+    assert not records[102].skip
 
     # Verify that PRs are registered
     assert 1 == records[101].pulls_count

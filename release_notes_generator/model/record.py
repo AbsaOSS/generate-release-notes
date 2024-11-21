@@ -46,7 +46,7 @@ class Record:
     A class used to represent a record in the release notes.
     """
 
-    def __init__(self, repo: Repository, issue: Optional[Issue] = None):
+    def __init__(self, repo: Repository, issue: Optional[Issue] = None, skip: bool = False):
         self.__repo: Repository = repo
         self.__gh_issue: Issue = issue
         self.__pulls: list[PullRequest] = []
@@ -54,6 +54,7 @@ class Record:
 
         self.__is_release_note_detected: bool = False
         self.__present_in_chapters = 0
+        self.__skip = skip
 
     @property
     def number(self) -> int:
@@ -81,6 +82,11 @@ class Record:
     def is_present_in_chapters(self) -> bool:
         """Check if the record is present in chapters."""
         return self.__present_in_chapters > 0
+
+    @property
+    def skip(self) -> bool:
+        """Check if the record should be skipped during output generation process."""
+        return self.__skip
 
     @property
     def is_pr(self) -> bool:

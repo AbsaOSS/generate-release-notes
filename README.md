@@ -88,6 +88,10 @@ Generate Release Notes action is dedicated to enhance the quality and organizati
 - **Description**: List labels used for detection if issues or pull requests are ignored in the Release Notes generation process. Example: `skip-release-notes, question`.
 - **Required**: No
 - **Default**: `skip-release-notes`
+- Notes:
+  - If used on issue then Issue will be skipped during Release Notes generation.
+  - If used on PR with issue then on PR it will be ignored and PR will show as part of issue's release notes.
+  - If used on PR without issue then PR will be skipped during Release Notes generation.
 
 ### `verbose`
 - **Description**: Set to true to enable verbose logging for detailed output during the action's execution.

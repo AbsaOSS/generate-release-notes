@@ -96,6 +96,9 @@ class ServiceChapters(BaseChapters):
         """
         # iterate all records
         for nr in records:
+            if records[nr].skip:
+                continue
+
             # skip the record when used in used and not allowed to be duplicated in Service chapters
             if self.__is_row_present(nr) and not self.duplicity_allowed():
                 continue
