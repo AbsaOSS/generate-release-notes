@@ -22,6 +22,7 @@ import json
 import logging
 import os
 import sys
+import re
 
 from release_notes_generator.utils.constants import (
     GITHUB_REPOSITORY,
@@ -38,11 +39,10 @@ from release_notes_generator.utils.constants import (
     DUPLICITY_ICON,
     ROW_FORMAT_LINK_PR,
     ROW_FORMAT_ISSUE,
-    ROW_FORMAT_PR,
+    ROW_FORMAT_PR, SUPPORTED_ROW_FORMAT_KEYS,
 )
 from release_notes_generator.utils.enums import DuplicityScopeEnum
 from release_notes_generator.utils.gh_action import get_action_input
-from release_notes_generator.utils.utils import detect_row_format_invalid_keywords
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +52,10 @@ class ActionInputs:
     """
     A class representing the inputs provided to the GH action.
     """
+
+    _row_format_issue = None
+    _row_format_pr = None
+    _row_format_link_pr = None
 
     @staticmethod
     def get_github_repository() -> str:
@@ -159,14 +163,18 @@ class ActionInputs:
         """
         Get the issue row format for the release notes.
         """
-        return get_action_input(ROW_FORMAT_ISSUE, "{number} _{title}_ in {pull-requests}").strip()
+        if ActionInputs._row_format_issue is None:
+            ActionInputs._row_format_issue = ActionInputs._clean_row_format_invalid_keywords(get_action_input(ROW_FORMAT_ISSUE, "{number} _{title}_ in {pull-requests}").strip())
+        return ActionInputs._row_format_issue
 
     @staticmethod
     def get_row_format_pr() -> str:
         """
         Get the pr row format for the release notes.
         """
-        return get_action_input(ROW_FORMAT_PR, "{number} _{title}_").strip()
+        if ActionInputs._row_format_pr is None:
+            ActionInputs._row_format_pr = ActionInputs._clean_row_format_invalid_keywords(get_action_input(ROW_FORMAT_PR, "{number} _{title}_").strip())
+        return ActionInputs._row_format_pr
 
     @staticmethod
     def get_row_format_link_pr() -> bool:
@@ -223,13 +231,13 @@ class ActionInputs:
         if not isinstance(row_format_issue, str) or not row_format_issue.strip():
             errors.append("Issue row format must be a non-empty string.")
 
-        errors.extend(detect_row_format_invalid_keywords(row_format_issue))
+        ActionInputs._detect_row_format_invalid_keywords(row_format_issue)
 
         row_format_pr = ActionInputs.get_row_format_pr()
         if not isinstance(row_format_pr, str) or not row_format_pr.strip():
             errors.append("PR Row format must be a non-empty string.")
 
-        errors.extend(detect_row_format_invalid_keywords(row_format_pr, row_type="PR"))
+        ActionInputs._detect_row_format_invalid_keywords(row_format_pr, row_type="PR")
 
         row_format_link_pr = ActionInputs.get_row_format_link_pr()
         ActionInputs.validate_input(row_format_link_pr, bool, "'row-format-link-pr' value must be a boolean.", errors)
@@ -252,3 +260,31 @@ class ActionInputs:
         logger.debug("Verbose logging: %s", verbose)
         logger.debug("Warnings: %s", warnings)
         logger.debug("Print empty chapters: %s", print_empty_chapters)
+
+    @staticmethod
+    def _detect_row_format_invalid_keywords(row_format: str, row_type: str = "Issue") -> None:
+        """
+        Detects invalid keywords in the row format.
+
+        @param row_format: The row format to be checked for invalid keywords.
+        @param row_type: The type of row format. Default is "Issue".
+        @return: None
+        """
+        keywords_in_braces = re.findall(r"\{(.*?)\}", row_format)
+        invalid_keywords = [keyword for keyword in keywords_in_braces if keyword not in SUPPORTED_ROW_FORMAT_KEYS]
+        for invalid_keyword in invalid_keywords:
+            logger.error(f"Invalid `{invalid_keyword}` detected in `{row_type}` row format keyword(s) found: {', '.join(invalid_keywords)}. Will be removed from string.")
+
+    @staticmethod
+    def _clean_row_format_invalid_keywords(row_format: str) -> str:
+        """
+        Detects and clean invalid keywords in the row format.
+
+        @param row_format: The row format to be checked for invalid keywords.
+        @return: The cleaned row format.
+        """
+        keywords_in_braces = re.findall(r"\{(.*?)\}", row_format)
+        invalid_keywords = [keyword for keyword in keywords_in_braces if keyword not in SUPPORTED_ROW_FORMAT_KEYS]
+        for invalid_keyword in invalid_keywords:
+            row_format = row_format.replace(f"{{{invalid_keyword}}}", "")
+        return row_format
