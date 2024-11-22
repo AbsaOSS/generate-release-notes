@@ -39,7 +39,8 @@ from release_notes_generator.utils.constants import (
     DUPLICITY_ICON,
     ROW_FORMAT_LINK_PR,
     ROW_FORMAT_ISSUE,
-    ROW_FORMAT_PR, SUPPORTED_ROW_FORMAT_KEYS,
+    ROW_FORMAT_PR,
+    SUPPORTED_ROW_FORMAT_KEYS,
 )
 from release_notes_generator.utils.enums import DuplicityScopeEnum
 from release_notes_generator.utils.gh_action import get_action_input
@@ -164,7 +165,9 @@ class ActionInputs:
         Get the issue row format for the release notes.
         """
         if ActionInputs._row_format_issue is None:
-            ActionInputs._row_format_issue = ActionInputs._clean_row_format_invalid_keywords(get_action_input(ROW_FORMAT_ISSUE, "{number} _{title}_ in {pull-requests}").strip())
+            ActionInputs._row_format_issue = ActionInputs._clean_row_format_invalid_keywords(
+                get_action_input(ROW_FORMAT_ISSUE, "{number} _{title}_ in {pull-requests}").strip()
+            )
         return ActionInputs._row_format_issue
 
     @staticmethod
@@ -173,7 +176,9 @@ class ActionInputs:
         Get the pr row format for the release notes.
         """
         if ActionInputs._row_format_pr is None:
-            ActionInputs._row_format_pr = ActionInputs._clean_row_format_invalid_keywords(get_action_input(ROW_FORMAT_PR, "{number} _{title}_").strip())
+            ActionInputs._row_format_pr = ActionInputs._clean_row_format_invalid_keywords(
+                get_action_input(ROW_FORMAT_PR, "{number} _{title}_").strip()
+            )
         return ActionInputs._row_format_pr
 
     @staticmethod
@@ -273,7 +278,9 @@ class ActionInputs:
         keywords_in_braces = re.findall(r"\{(.*?)\}", row_format)
         invalid_keywords = [keyword for keyword in keywords_in_braces if keyword not in SUPPORTED_ROW_FORMAT_KEYS]
         for invalid_keyword in invalid_keywords:
-            logger.error(f"Invalid `{invalid_keyword}` detected in `{row_type}` row format keyword(s) found: {', '.join(invalid_keywords)}. Will be removed from string.")
+            logger.error(
+                f"Invalid `{invalid_keyword}` detected in `{row_type}` row format keyword(s) found: {', '.join(invalid_keywords)}. Will be removed from string."
+            )
 
     @staticmethod
     def _clean_row_format_invalid_keywords(row_format: str) -> str:
