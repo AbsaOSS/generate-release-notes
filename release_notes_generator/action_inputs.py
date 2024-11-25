@@ -29,7 +29,6 @@ from release_notes_generator.utils.constants import (
     TAG_NAME,
     CHAPTERS,
     PUBLISHED_AT,
-    SKIP_RELEASE_NOTES_LABEL,
     VERBOSE,
     WARNINGS,
     RUNNER_DEBUG,
@@ -39,6 +38,7 @@ from release_notes_generator.utils.constants import (
     ROW_FORMAT_LINK_PR,
     ROW_FORMAT_ISSUE,
     ROW_FORMAT_PR,
+    SKIP_RELEASE_NOTES_LABELS,
 )
 from release_notes_generator.utils.enums import DuplicityScopeEnum
 from release_notes_generator.utils.gh_action import get_action_input
@@ -113,7 +113,7 @@ class ActionInputs:
         """
         Get the skip release notes label from the action inputs.
         """
-        user_choice = [item.strip() for item in get_action_input(SKIP_RELEASE_NOTES_LABEL, "").split(",")]
+        user_choice = [item.strip() for item in get_action_input(SKIP_RELEASE_NOTES_LABELS, "").split(",")]
         if len(user_choice) > 0:
             return user_choice
         return ["skip-release-notes"]

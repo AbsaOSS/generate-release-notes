@@ -84,7 +84,7 @@ Generate Release Notes action is dedicated to enhance the quality and organizati
 - **Required**: No
 - **Default**: false
 
-### `skip-release-notes-label`
+### `skip-release-notes-labels`
 - **Description**: List labels used for detection if issues or pull requests are ignored in the Release Notes generation process. Example: `skip-release-notes, question`.
 - **Required**: No
 - **Default**: `skip-release-notes`
@@ -161,7 +161,7 @@ Add the following step to your GitHub workflow (in example are used non-default 
     duplicity-scope: 'service'
     duplicity-icon: '🔁'
     published-at: true
-    skip-release-notes-label: 'ignore-in-release'     # changing default value of label
+    skip-release-notes-labels: 'ignore-in-release'     # changing default value of label
     verbose: false
 
     warnings: false
@@ -200,7 +200,7 @@ If an issue is linked to multiple PRs, the action fetches and aggregates contrib
 By set **published-at** to true the action will use the `published-at` timestamp of the latest release as the reference point for searching closed issues and PRs, instead of the `created-at` date. If first release, repository creation date is used. 
 
 ### Enable skipping of release notes for specific issues using label
-By set **skip-release-notes-label** to true the action will skip all issues and related PRs if they contain a label defined in configuration. This is useful for issues that are not relevant for release notes.
+By defining the `skip-release-notes-labels` option, the action will skip all issues and related PRs if they contain a label defined in configuration. This is useful for issues that are not relevant for release notes.
 
 ### Enable Service Chapters
 If the `warnings` option is enabled in the action's configuration, the release notes will include sections that highlight possible issues.
@@ -377,7 +377,7 @@ export INPUT_CHAPTERS='[
 ]'
 export INPUT_WARNINGS="true"
 export INPUT_PUBLISHED_AT="true"
-export INPUT_SKIP_RELEASE_NOTES_LABEL="ignore-in-release"
+export INPUT_SKIP_RELEASE_NOTES_LABELS="ignore-in-release"
 export INPUT_PRINT_EMPTY_CHAPTERS="true"
 export INPUT_VERBOSE="true"
 

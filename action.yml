@@ -115,7 +115,7 @@ runs:
         INPUT_DUPLICITY_ICON: ${{ inputs.duplicity-icon }}
         INPUT_WARNINGS: ${{ inputs.warnings }}
         INPUT_PUBLISHED_AT: ${{ inputs.published-at }}
-        INPUT_SKIP_RELEASE_NOTES_LABEL: ${{ inputs.skip-release-notes-label }}
+        INPUT_SKIP_RELEASE_NOTES_LABELS: ${{ inputs.skip-release-notes-labels }}
         INPUT_PRINT_EMPTY_CHAPTERS: ${{ inputs.print-empty-chapters }}
         INPUT_VERBOSE: ${{ inputs.verbose }}
         INPUT_GITHUB_REPOSITORY: ${{ github.repository }}

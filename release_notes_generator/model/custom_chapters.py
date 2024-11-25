@@ -41,6 +41,7 @@ class CustomChapters(BaseChapters):
         @return: None
         """
         for nr in records:  # iterate all records
+            # check if the record should be skipped
             if records[nr].skip:
                 continue
 
