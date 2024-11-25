@@ -18,6 +18,7 @@ import logging
 
 from github.Commit import Commit
 
+from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.utils.constants import ISSUE_STATE_CLOSED, PR_STATE_CLOSED
 
 
@@ -67,7 +68,10 @@ def test_record_properties_authors_contributors(record_with_no_issue_one_pull_cl
 
 def test_get_rls_notes(record_with_no_issue_one_pull_closed):
     expected_notes = "  - Fixed bug\n  - Improved performance\n  + More nice code\n    * Awesome architecture"
-    assert record_with_no_issue_one_pull_closed.get_rls_notes() == expected_notes
+    assert record_with_no_issue_one_pull_closed.get_rls_notes(detection_pattern=ActionInputs.get_release_notes_title()) == expected_notes
+
+def test_get_rls_notes_not_detected(record_with_no_issue_one_pull_closed):
+    assert '' == record_with_no_issue_one_pull_closed.get_rls_notes(detection_pattern="XXX")
 
 
 # contains_release_notes

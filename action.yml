@@ -35,8 +35,8 @@ inputs:
     description: 'Use `published-at` timestamp instead of `created-at` as the reference point of previous Release.'
     required: false
     default: 'false'
-  skip-release-notes-label:
-    description: 'Skip label used for detection of issues or pull requests to ignore in Release Notes generation process.'
+  skip-release-notes-labels:
+    description: 'List labels used for detection if issues or pull requests are ignored in the Release Notes generation process.'
     required: false
     default: 'skip-release-notes'
   warnings:
@@ -51,6 +51,10 @@ inputs:
     description: 'Print verbose logs.'
     required: false
     default: 'false'
+  release-notes-title:
+    description: 'The title of the release notes section in the PR body. Value supports regex.'
+    required: false
+    default: '[Rr]elease [Nn]otes:'
   row-format-issue:
     description: 'Format of the issue row in the release notes. Available placeholders: {number}, {title}, {pull-requests}. Placeholders are case-insensitive.'
     required: false
@@ -115,9 +119,10 @@ runs:
         INPUT_DUPLICITY_ICON: ${{ inputs.duplicity-icon }}
         INPUT_WARNINGS: ${{ inputs.warnings }}
         INPUT_PUBLISHED_AT: ${{ inputs.published-at }}
-        INPUT_SKIP_RELEASE_NOTES_LABEL: ${{ inputs.skip-release-notes-label }}
+        INPUT_SKIP_RELEASE_NOTES_LABELS: ${{ inputs.skip-release-notes-labels }}
         INPUT_PRINT_EMPTY_CHAPTERS: ${{ inputs.print-empty-chapters }}
         INPUT_VERBOSE: ${{ inputs.verbose }}
+        INPUT_RELEASE_NOTES_TITLE: ${{ inputs.release-notes-title }}
         INPUT_GITHUB_REPOSITORY: ${{ github.repository }}
         INPUT_ROW_FORMAT_ISSUE: ${{ inputs.row-format-issue }}
         INPUT_ROW_FORMAT_PR: ${{ inputs.row-format-pr }}

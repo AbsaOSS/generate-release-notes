@@ -26,6 +26,7 @@ from github.PullRequest import PullRequest
 from github.Repository import Repository
 from github.Commit import Commit
 
+from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.record import Record
 
 from release_notes_generator.utils.decorators import safe_call_decorator
@@ -66,10 +67,14 @@ class RecordFactory:
             @param i: Issue instance.
             @return: None
             """
-            records[i.number] = Record(r, i)
+            # check for skip labels presence and skip when detected
+            issue_labels = [label.name for label in issue.labels]
+            skip_record = any(item in issue_labels for item in ActionInputs.get_skip_release_notes_labels())
+            records[i.number] = Record(r, i, skip=skip_record)
+
             logger.debug("Created record for issue %d: %s", i.number, i.title)
 
-        def register_pull_request(pull: PullRequest):
+        def register_pull_request(pull: PullRequest, skip_record: bool) -> None:
             for parent_issue_number in extract_issue_numbers_from_body(pull):
                 if parent_issue_number not in records:
                     logger.warning(
@@ -86,7 +91,7 @@ class RecordFactory:
                     records[parent_issue_number].register_pull_request(pull)
                     logger.debug("Registering PR %d: %s to Issue %d", pull.number, pull.title, parent_issue_number)
                 else:
-                    records[pull.number] = Record(repo)
+                    records[pull.number] = Record(repo, skip=skip_record)
                     records[pull.number].register_pull_request(pull)
                     logger.debug(
                         "Registering stand-alone PR %d: %s as mentioned Issue %d not found.",
@@ -116,12 +121,15 @@ class RecordFactory:
                 create_record_for_issue(repo, issue)
 
         for pull in pulls:
+            pull_labels = [label.name for label in pull.labels]
+            skip_record: bool = any(item in pull_labels for item in ActionInputs.get_skip_release_notes_labels())
+
             if not extract_issue_numbers_from_body(pull):
-                records[pull.number] = Record(repo)
+                records[pull.number] = Record(repo, skip=skip_record)
                 records[pull.number].register_pull_request(pull)
                 logger.debug("Created record for PR %d: %s", pull.number, pull.title)
             else:
-                register_pull_request(pull)
+                register_pull_request(pull, skip_record)
 
         detected_prs_count = sum(register_commit_to_record(commit) for commit in commits)
 

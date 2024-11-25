@@ -38,18 +38,21 @@ def test_populate(custom_chapters, mocker):
     record1.pulls_count = 1
     record1.is_present_in_chapters = False
     record1.to_chapter_row.return_value = "Record 1 Chapter Row"
+    record1.skip = False
 
     record2 = mocker.Mock(spec=Record)
     record2.labels = ["enhancement"]
     record2.pulls_count = 1
     record2.is_present_in_chapters = False
     record2.to_chapter_row.return_value = "Record 2 Chapter Row"
+    record2.skip = False
 
     record3 = mocker.Mock(spec=Record)
     record3.labels = ["feature"]
     record3.pulls_count = 1
     record3.is_present_in_chapters = False
     record3.to_chapter_row.return_value = "Record 3 Chapter Row"
+    record3.skip = False
 
     records = {
         1: record1,
@@ -102,6 +105,7 @@ def test_populate_service_duplicity_scope(custom_chapters, mocker):
     record1.pulls_count = 1
     record1.is_present_in_chapters = False
     record1.to_chapter_row.return_value = "Record 1 Chapter Row"
+    record1.skip = False
 
     records = {
         1: record1,
@@ -125,6 +129,7 @@ def test_populate_none_duplicity_scope(custom_chapters, mocker):
     record1.pulls_count = 1
     record1.is_present_in_chapters = False
     record1.to_chapter_row.return_value = "Record 1 Chapter Row"
+    record1.skip = False
 
     records = {
         1: record1,

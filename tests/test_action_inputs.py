@@ -28,7 +28,7 @@ success_case = {
     "get_duplicity_icon": "🔁",
     "get_warnings": True,
     "get_published_at": False,
-    "get_skip_release_notes_label": "skip",
+    "get_skip_release_notes_labels": ["skip"],
     "get_print_empty_chapters": True,
     "get_verbose": True,
 }
@@ -40,7 +40,6 @@ failure_cases = [
     ("get_chapters_json", "invalid_json", "Chapters JSON must be a valid JSON string."),
     ("get_warnings", "not_bool", "Warnings must be a boolean."),
     ("get_published_at", "not_bool", "Published at must be a boolean."),
-    ("get_skip_release_notes_label", "", "Skip release notes label must be a non-empty string."),
     ("get_print_empty_chapters", "not_bool", "Print empty chapters must be a boolean."),
     ("get_verbose", "not_bool", "Verbose logging must be a boolean."),
     ("get_duplicity_icon", "", "Duplicity icon must be a non-empty string and have a length of 1."),
@@ -121,9 +120,16 @@ def test_get_published_at(mocker):
 
 
 def test_get_skip_release_notes_label(mocker):
-    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="")
-    assert ActionInputs.get_skip_release_notes_label() == "skip-release-notes"
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="skip-release-notes")
+    assert ActionInputs.get_skip_release_notes_labels() == ["skip-release-notes"]
 
+def test_get_skip_release_notes_labels(mocker):
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="skip-release-notes, another-skip-label")
+    assert ActionInputs.get_skip_release_notes_labels() == ["skip-release-notes", "another-skip-label"]
+
+def test_get_skip_release_notes_labels_no_space(mocker):
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="skip-release-notes,another-skip-label")
+    assert ActionInputs.get_skip_release_notes_labels() == ["skip-release-notes", "another-skip-label"]
 
 def test_get_print_empty_chapters(mocker):
     mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="true")

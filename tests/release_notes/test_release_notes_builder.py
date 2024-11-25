@@ -203,6 +203,8 @@ RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_PR_NO_ISSUE_NO_USER_LABELS = """### C
 http://example.com/changelog
 """
 
+RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_PR_NO_ISSUE_SKIP_USER_LABELS = RELEASE_NOTES_NO_DATA_NO_WARNING_NO_EMPTY_CHAPTERS
+
 RELEASE_NOTES_DATA_SERVICE_CHAPTERS_OPEN_ISSUE_AND_MERGED_PR_NO_USER_LABELS = """### Merged PRs Linked to 'Not Closed' Issue ⚠️
 - #122 _I1 open_ in #101, #102
   - PR 101 1st release note
@@ -283,6 +285,8 @@ RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_MERGED_PRS_WITHOUT_USER_LABELS = """### Clo
 #### Full Changelog
 http://example.com/changelog
 """
+
+RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_MERGED_PRS_WITH_USER_LABELS_WITH_SKIP_LABEL = RELEASE_NOTES_NO_DATA_NO_WARNING_NO_EMPTY_CHAPTERS
 
 RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_MERGED_PRS_WITH_USER_LABELS = """### Chapter 1 🛠
 - #122 _I1+bug_ in #123
@@ -873,6 +877,41 @@ def test_merged_pr_with_closed_issue_mention_with_user_labels(
 ):
     expected_release_notes = RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_MERGED_PRS_WITH_USER_LABELS
     rec = record_with_issue_closed_one_pull_merged
+    mocker.patch("release_notes_generator.builder.ActionInputs.get_print_empty_chapters", return_value=False)
+
+    builder = ReleaseNotesBuilder(
+        records={rec.number: rec},
+        changelog_url=DEFAULT_CHANGELOG_URL,
+        custom_chapters=custom_chapters_not_print_empty_chapters,
+    )
+
+    actual_release_notes = builder.build()
+
+    assert expected_release_notes == actual_release_notes
+
+def test_merged_pr_with_closed_issue_mention_with_user_labels_with_skip_label_on_issue(
+    custom_chapters_not_print_empty_chapters, record_with_issue_closed_one_pull_merged_skip, mocker
+):
+    expected_release_notes = RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_MERGED_PRS_WITH_USER_LABELS_WITH_SKIP_LABEL
+    rec = record_with_issue_closed_one_pull_merged_skip
+    mocker.patch("release_notes_generator.builder.ActionInputs.get_print_empty_chapters", return_value=False)
+
+    builder = ReleaseNotesBuilder(
+        records={rec.number: rec},
+        changelog_url=DEFAULT_CHANGELOG_URL,
+        custom_chapters=custom_chapters_not_print_empty_chapters,
+    )
+
+    actual_release_notes = builder.build()
+
+    assert expected_release_notes == actual_release_notes
+
+
+def test_build_closed_pr_service_chapter_without_issue_with_skip_label_on_pr(
+        custom_chapters_not_print_empty_chapters, record_with_no_issue_one_pull_closed_with_skip_label, mocker
+):
+    expected_release_notes = RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_PR_NO_ISSUE_SKIP_USER_LABELS
+    rec = record_with_no_issue_one_pull_closed_with_skip_label
     mocker.patch("release_notes_generator.builder.ActionInputs.get_print_empty_chapters", return_value=False)
 
     builder = ReleaseNotesBuilder(

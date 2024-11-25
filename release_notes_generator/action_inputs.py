@@ -30,7 +30,6 @@ from release_notes_generator.utils.constants import (
     TAG_NAME,
     CHAPTERS,
     PUBLISHED_AT,
-    SKIP_RELEASE_NOTES_LABEL,
     VERBOSE,
     WARNINGS,
     RUNNER_DEBUG,
@@ -40,6 +39,9 @@ from release_notes_generator.utils.constants import (
     ROW_FORMAT_LINK_PR,
     ROW_FORMAT_ISSUE,
     ROW_FORMAT_PR,
+    SKIP_RELEASE_NOTES_LABELS,
+    RELEASE_NOTES_TITLE,
+    RELEASE_NOTE_TITLE_DEFAULT,
     SUPPORTED_ROW_FORMAT_KEYS,
 )
 from release_notes_generator.utils.enums import DuplicityScopeEnum
@@ -114,11 +116,14 @@ class ActionInputs:
         return get_action_input(PUBLISHED_AT, "false").lower() == "true"
 
     @staticmethod
-    def get_skip_release_notes_label() -> str:
+    def get_skip_release_notes_labels() -> str:
         """
         Get the skip release notes label from the action inputs.
         """
-        return get_action_input(SKIP_RELEASE_NOTES_LABEL) or "skip-release-notes"
+        user_choice = [item.strip() for item in get_action_input(SKIP_RELEASE_NOTES_LABELS, "").split(",")]
+        if len(user_choice) > 0:
+            return user_choice
+        return ["skip-release-notes"]
 
     @staticmethod
     def get_verbose() -> bool:
@@ -126,6 +131,13 @@ class ActionInputs:
         Get the verbose parameter value from the action inputs.
         """
         return os.getenv(RUNNER_DEBUG, "0") == "1" or get_action_input(VERBOSE).lower() == "true"
+
+    @staticmethod
+    def get_release_notes_title() -> str:
+        """
+        Get the release notes title from the action inputs.
+        """
+        return get_action_input(RELEASE_NOTES_TITLE, RELEASE_NOTE_TITLE_DEFAULT)
 
     # Features
     @staticmethod
@@ -189,10 +201,11 @@ class ActionInputs:
         return get_action_input(ROW_FORMAT_LINK_PR, "true").lower() == "true"
 
     @staticmethod
-    def validate_inputs():
+    def validate_inputs() -> None:
         """
         Validates the inputs provided for the release notes generator.
         Logs any validation errors and exits if any are found.
+        @return: None
         """
         errors = []
 
@@ -225,24 +238,24 @@ class ActionInputs:
         published_at = ActionInputs.get_published_at()
         ActionInputs.validate_input(published_at, bool, "Published at must be a boolean.", errors)
 
-        skip_release_notes_label = ActionInputs.get_skip_release_notes_label()
-        if not isinstance(skip_release_notes_label, str) or not skip_release_notes_label.strip():
-            errors.append("Skip release notes label must be a non-empty string.")
-
         verbose = ActionInputs.get_verbose()
         ActionInputs.validate_input(verbose, bool, "Verbose logging must be a boolean.", errors)
+
+        release_notes_title = ActionInputs.get_release_notes_title()
+        if not isinstance(release_notes_title, str) or len(release_notes_title) == 0:
+            errors.append("Release Notes title must be a non-empty string and have non-zero length.")
 
         row_format_issue = ActionInputs.get_row_format_issue()
         if not isinstance(row_format_issue, str) or not row_format_issue.strip():
             errors.append("Issue row format must be a non-empty string.")
 
-        ActionInputs._detect_row_format_invalid_keywords(row_format_issue)
+        errors.extend(detect_row_format_invalid_keywords(row_format_issue))
 
         row_format_pr = ActionInputs.get_row_format_pr()
         if not isinstance(row_format_pr, str) or not row_format_pr.strip():
             errors.append("PR Row format must be a non-empty string.")
 
-        ActionInputs._detect_row_format_invalid_keywords(row_format_pr, row_type="PR")
+        errors.extend(detect_row_format_invalid_keywords(row_format_pr, row_type="PR"))
 
         row_format_link_pr = ActionInputs.get_row_format_link_pr()
         ActionInputs.validate_input(row_format_link_pr, bool, "'row-format-link-pr' value must be a boolean.", errors)
@@ -257,14 +270,15 @@ class ActionInputs:
                 logger.error(error)
             sys.exit(1)
 
-        logging.debug("Repository: %s/%s", owner, repo_name)
+        logger.debug("Repository: %s/%s", owner, repo_name)
         logger.debug("Tag name: %s", tag_name)
         logger.debug("Chapters JSON: %s", chapters_json)
         logger.debug("Published at: %s", published_at)
-        logger.debug("Skip release notes label: %s", skip_release_notes_label)
+        logger.debug("Skip release notes labels: %s", ActionInputs.get_skip_release_notes_labels())
         logger.debug("Verbose logging: %s", verbose)
         logger.debug("Warnings: %s", warnings)
         logger.debug("Print empty chapters: %s", print_empty_chapters)
+        logger.debug("Release notes title: %s", release_notes_title)
 
     @staticmethod
     def _detect_row_format_invalid_keywords(row_format: str, row_type: str = "Issue", clean: bool = False) -> str:
