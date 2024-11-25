@@ -19,14 +19,11 @@ This module contains utility functions for generating release notes.
 """
 
 import logging
-import re
 
 from typing import Optional
 
 from github.GitRelease import GitRelease
 from github.Repository import Repository
-
-from release_notes_generator.utils.constants import SUPPORTED_ROW_FORMAT_KEYS
 
 logger = logging.getLogger(__name__)
 
@@ -57,19 +54,3 @@ def get_change_url(
         changelog_url = f"https://github.com/{repo.full_name}/compare/{rls.tag_name}...{tag_name}"
 
     return changelog_url
-
-
-def detect_row_format_invalid_keywords(row_format: str, row_type: str = "Issue") -> list[str]:
-    """
-    Detects invalid keywords in the row format.
-
-    @param row_format: The row format to be checked for invalid keywords.
-    @param row_type: The type of row format. Default is "Issue".
-    @return: A list of errors if invalid keywords are found, otherwise an empty list.
-    """
-    errors = []
-    keywords_in_braces = re.findall(r"\{(.*?)\}", row_format)
-    invalid_keywords = [keyword for keyword in keywords_in_braces if keyword not in SUPPORTED_ROW_FORMAT_KEYS]
-    if invalid_keywords:
-        errors.append(f"Invalid {row_type} row format keyword(s) found: {', '.join(invalid_keywords)}")
-    return errors

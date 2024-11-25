@@ -21,6 +21,7 @@ from github import Github
 
 from release_notes_generator.generator import ReleaseNotesGenerator
 from release_notes_generator.model.custom_chapters import CustomChapters
+from release_notes_generator.utils.constants import ROW_FORMAT_ISSUE
 
 
 # generate_release_notes tests
@@ -110,6 +111,11 @@ def test_generate_release_notes_latest_release_found_by_created_at(
     mock_rate_limit = mocker.Mock()
     mock_rate_limit.core.remaining = 1000
     github_mock.get_rate_limit.return_value = mock_rate_limit
+
+    mock_get_action_input = mocker.patch("release_notes_generator.utils.gh_action.get_action_input")
+    mock_get_action_input.side_effect = lambda first_arg, **kwargs: (
+        "{number} _{title}_ in {pull-requests} {unknown} {another-unknown}" if first_arg == ROW_FORMAT_ISSUE else None
+    )
 
     custom_chapters = CustomChapters(print_empty_chapters=True)
 

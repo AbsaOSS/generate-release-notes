@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import logging
 
 import pytest
 
@@ -43,6 +44,8 @@ failure_cases = [
     ("get_verbose", "not_bool", "Verbose logging must be a boolean."),
     ("get_duplicity_icon", "", "Duplicity icon must be a non-empty string and have a length of 1."),
     ("get_duplicity_icon", "Oj", "Duplicity icon must be a non-empty string and have a length of 1."),
+    ("get_row_format_issue", "", "Issue row format must be a non-empty string."),
+    ("get_row_format_pr", "", "PR Row format must be a non-empty string."),
 ]
 
 
@@ -163,3 +166,37 @@ def test_get_duplicity_scope_wrong_value(mocker):
 
     assert ActionInputs.get_duplicity_scope() == "BOTH"
     mock_error.assert_called_with("Error: '%s' is not a valid DuplicityType.", "HUH")
+
+
+def test_detect_row_format_invalid_keywords_no_invalid_keywords(caplog):
+    caplog.set_level(logging.ERROR)
+    row_format = "{number} _{title}_ in {pull-requests}"
+    ActionInputs._detect_row_format_invalid_keywords(row_format)
+    assert len(caplog.records) == 0
+
+
+def test_detect_row_format_invalid_keywords_with_invalid_keywords(caplog):
+    caplog.set_level(logging.ERROR)
+    row_format = "{number} _{title}_ in {pull-requests} {invalid_key} {another_invalid}"
+    ActionInputs._detect_row_format_invalid_keywords(row_format)
+    assert len(caplog.records) == 2
+    expected_errors = [
+        "Invalid `invalid_key` detected in `Issue` row format keyword(s) found: invalid_key, another_invalid. Will be removed from string.",
+        "Invalid `another_invalid` detected in `Issue` row format keyword(s) found: invalid_key, another_invalid. Will be removed from string."
+    ]
+    actual_errors = [record.getMessage() for record in caplog.records]
+    assert actual_errors == expected_errors
+
+
+def test_clean_row_format_invalid_keywords_no_keywords():
+    expected_row_format = "{number} _{title}_ in {pull-requests}"
+    actual_format = ActionInputs._detect_row_format_invalid_keywords(expected_row_format, clean=True)
+    assert expected_row_format == actual_format
+
+
+def test_clean_row_format_invalid_keywords_nested_braces():
+    row_format = "{number} _{title}_ in {pull-requests} {invalid_key} {another_invalid}"
+    expected_format = "{number} _{title}_ in {pull-requests}  "
+    actual_format = ActionInputs._detect_row_format_invalid_keywords(row_format, clean=True)
+    assert expected_format == actual_format
+
