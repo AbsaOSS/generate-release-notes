@@ -249,13 +249,13 @@ class ActionInputs:
         if not isinstance(row_format_issue, str) or not row_format_issue.strip():
             errors.append("Issue row format must be a non-empty string.")
 
-        errors.extend(detect_row_format_invalid_keywords(row_format_issue))
+        ActionInputs._detect_row_format_invalid_keywords(row_format_issue)
 
         row_format_pr = ActionInputs.get_row_format_pr()
         if not isinstance(row_format_pr, str) or not row_format_pr.strip():
             errors.append("PR Row format must be a non-empty string.")
 
-        errors.extend(detect_row_format_invalid_keywords(row_format_pr, row_type="PR"))
+        ActionInputs._detect_row_format_invalid_keywords(row_format_pr, row_type="PR")
 
         row_format_link_pr = ActionInputs.get_row_format_link_pr()
         ActionInputs.validate_input(row_format_link_pr, bool, "'row-format-link-pr' value must be a boolean.", errors)
