@@ -35,8 +35,8 @@ inputs:
     description: 'Use `published-at` timestamp instead of `created-at` as the reference point of previous Release.'
     required: false
     default: 'false'
-  skip-release-notes-label:
-    description: 'Skip label used for detection of issues or pull requests to ignore in Release Notes generation process.'
+  skip-release-notes-labels:
+    description: 'List labels used for detection if issues or pull requests are ignored in the Release Notes generation process.'
     required: false
     default: 'skip-release-notes'
   warnings:
@@ -115,7 +115,7 @@ runs:
         INPUT_DUPLICITY_ICON: ${{ inputs.duplicity-icon }}
         INPUT_WARNINGS: ${{ inputs.warnings }}
         INPUT_PUBLISHED_AT: ${{ inputs.published-at }}
-        INPUT_SKIP_RELEASE_NOTES_LABEL: ${{ inputs.skip-release-notes-label }}
+        INPUT_SKIP_RELEASE_NOTES_LABELS: ${{ inputs.skip-release-notes-labels }}
         INPUT_PRINT_EMPTY_CHAPTERS: ${{ inputs.print-empty-chapters }}
         INPUT_VERBOSE: ${{ inputs.verbose }}
         INPUT_GITHUB_REPOSITORY: ${{ github.repository }}

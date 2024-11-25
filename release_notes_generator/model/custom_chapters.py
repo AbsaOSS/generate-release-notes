@@ -41,6 +41,10 @@ class CustomChapters(BaseChapters):
         @return: None
         """
         for nr in records:  # iterate all records
+            # check if the record should be skipped
+            if records[nr].skip:
+                continue
+
             for ch in self.chapters.values():  # iterate all chapters
                 if nr in self.populated_record_numbers_list and ActionInputs.get_duplicity_scope() not in (
                     DuplicityScopeEnum.CUSTOM,
