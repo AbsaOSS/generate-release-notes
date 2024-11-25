@@ -19,6 +19,8 @@ This module contains the BaseChapters class which is responsible for representin
 """
 
 import logging
+import re
+
 from typing import Optional
 
 from github.Issue import Issue
@@ -31,7 +33,6 @@ from release_notes_generator.utils.constants import (
     PR_STATE_CLOSED,
     ISSUE_STATE_CLOSED,
     ISSUE_STATE_OPEN,
-    RELEASE_NOTE_DETECTION_PATTERN,
     RELEASE_NOTE_LINE_MARKS,
 )
 from release_notes_generator.utils.pull_reuqest_utils import extract_issue_numbers_from_body
@@ -132,20 +133,18 @@ class Record:
 
         return [label.name for label in self.__gh_issue.labels]
 
-    # TODO in Issue named 'Configurable regex-based Release note detection in the PR body'
-    #   - 'Release notest:' as detection pattern default - can be defined by user
-    #   - '-' as leading line mark for each release note to be used
-    def get_rls_notes(
-        self, detection_pattern=RELEASE_NOTE_DETECTION_PATTERN, line_marks=RELEASE_NOTE_LINE_MARKS
-    ) -> str:
+    def get_rls_notes(self, detection_pattern: str, line_marks: str = RELEASE_NOTE_LINE_MARKS) -> str:
         """
         Gets the release notes of the record.
 
-        @param detection_pattern: The detection pattern to use.
+        @param detection_pattern: The detection pattern (regex allowed) to use.
         @param line_marks: The line marks to use.
         @return: The release notes of the record as a string.
         """
         release_notes = ""
+
+        # Compile the regex pattern for efficiency
+        detection_regex = re.compile(detection_pattern)
 
         # Iterate over all PRs
         for pull in self.__pulls:
@@ -153,7 +152,7 @@ class Record:
             inside_release_notes = False
 
             for line in body_lines:
-                if detection_pattern in line:
+                if detection_regex.search(line):  # Use regex search
                     inside_release_notes = True
                     continue
 
@@ -173,7 +172,7 @@ class Record:
         if self.__is_release_note_detected:
             return self.__is_release_note_detected
 
-        rls_notes: str = self.get_rls_notes()
+        rls_notes: str = self.get_rls_notes(detection_pattern=ActionInputs.get_release_notes_title())
         if any(mark in rls_notes for mark in RELEASE_NOTE_LINE_MARKS):
             self.__is_release_note_detected = True
 
@@ -304,7 +303,7 @@ class Record:
             row = f"{row_prefix}" + ActionInputs.get_row_format_issue().format(**format_values)
 
         if self.contains_release_notes:
-            row = f"{row}\n{self.get_rls_notes()}"
+            row = f"{row}\n{self.get_rls_notes(detection_pattern=ActionInputs.get_release_notes_title())}"
 
         return row
 

@@ -51,6 +51,10 @@ inputs:
     description: 'Print verbose logs.'
     required: false
     default: 'false'
+  release-notes-title:
+    description: 'The title of the release notes section in the PR body. Value supports regex.'
+    required: false
+    default: '[Rr]elease [Nn]otes:'
   row-format-issue:
     description: 'Format of the issue row in the release notes. Available placeholders: {number}, {title}, {pull-requests}. Placeholders are case-insensitive.'
     required: false
@@ -118,6 +122,7 @@ runs:
         INPUT_SKIP_RELEASE_NOTES_LABELS: ${{ inputs.skip-release-notes-labels }}
         INPUT_PRINT_EMPTY_CHAPTERS: ${{ inputs.print-empty-chapters }}
         INPUT_VERBOSE: ${{ inputs.verbose }}
+        INPUT_RELEASE_NOTES_TITLE: ${{ inputs.release-notes-title }}
         INPUT_GITHUB_REPOSITORY: ${{ github.repository }}
         INPUT_ROW_FORMAT_ISSUE: ${{ inputs.row-format-issue }}
         INPUT_ROW_FORMAT_PR: ${{ inputs.row-format-pr }}

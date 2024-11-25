@@ -28,6 +28,7 @@ DUPLICITY_ICON = "duplicity-icon"
 PUBLISHED_AT = "published-at"
 SKIP_RELEASE_NOTES_LABELS = "skip-release-notes-labels"
 VERBOSE = "verbose"
+RELEASE_NOTES_TITLE = "release-notes-title"
 RUNNER_DEBUG = "RUNNER_DEBUG"
 ROW_FORMAT_ISSUE = "row-format-issue"
 ROW_FORMAT_PR = "row-format-pr"
@@ -48,7 +49,7 @@ ISSUE_STATE_OPEN = "open"
 ISSUE_STATE_ALL = "all"
 
 # Release notes comment constants
-RELEASE_NOTE_DETECTION_PATTERN = "Release Notes:"
+RELEASE_NOTE_TITLE_DEFAULT = "[Rr]elease [Nn]otes:"
 RELEASE_NOTE_LINE_MARKS = ["-", "*", "+"]
 
 # Service chapters titles
