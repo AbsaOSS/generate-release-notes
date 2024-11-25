@@ -265,3 +265,4 @@ class ActionInputs:
         logger.debug("Verbose logging: %s", verbose)
         logger.debug("Warnings: %s", warnings)
         logger.debug("Print empty chapters: %s", print_empty_chapters)
+        logger.debug("Release notes title: %s", release_notes_title)
