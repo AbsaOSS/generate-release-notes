@@ -16,6 +16,8 @@
 import logging
 
 import pytest
+from coverage.files import actual_path
+from scipy.stats.contingency import expected_freq
 
 from release_notes_generator.action_inputs import ActionInputs
 
@@ -183,14 +185,14 @@ def test_detect_row_format_invalid_keywords_with_invalid_keywords(caplog):
 
 
 def test_clean_row_format_invalid_keywords_no_keywords():
-    row_format = "{number} _{title}_ in {pull-requests}"
-    cleaned_format = ActionInputs._clean_row_format_invalid_keywords(row_format)
-    assert cleaned_format == row_format
+    expected_row_format = "{number} _{title}_ in {pull-requests}"
+    actual_format = ActionInputs._detect_row_format_invalid_keywords(expected_row_format, clean=True)
+    assert expected_row_format == actual_format
 
 
 def test_clean_row_format_invalid_keywords_nested_braces():
     row_format = "{number} _{title}_ in {pull-requests} {invalid_key} {another_invalid}"
     expected_format = "{number} _{title}_ in {pull-requests}  "
-    cleaned_format = ActionInputs._clean_row_format_invalid_keywords(row_format)
-    assert cleaned_format == expected_format
+    actual_format = ActionInputs._detect_row_format_invalid_keywords(row_format, clean=True)
+    assert expected_format == actual_format
 

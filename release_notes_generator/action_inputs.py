@@ -165,8 +165,8 @@ class ActionInputs:
         Get the issue row format for the release notes.
         """
         if ActionInputs._row_format_issue is None:
-            ActionInputs._row_format_issue = ActionInputs._clean_row_format_invalid_keywords(
-                get_action_input(ROW_FORMAT_ISSUE, "{number} _{title}_ in {pull-requests}").strip()
+            ActionInputs._row_format_issue = ActionInputs._detect_row_format_invalid_keywords(
+                get_action_input(ROW_FORMAT_ISSUE, "{number} _{title}_ in {pull-requests}").strip(), clean=True
             )
         return ActionInputs._row_format_issue
 
@@ -176,8 +176,8 @@ class ActionInputs:
         Get the pr row format for the release notes.
         """
         if ActionInputs._row_format_pr is None:
-            ActionInputs._row_format_pr = ActionInputs._clean_row_format_invalid_keywords(
-                get_action_input(ROW_FORMAT_PR, "{number} _{title}_").strip()
+            ActionInputs._row_format_pr = ActionInputs._detect_row_format_invalid_keywords(
+                get_action_input(ROW_FORMAT_PR, "{number} _{title}_").strip(), clean=True
             )
         return ActionInputs._row_format_pr
 
@@ -267,31 +267,24 @@ class ActionInputs:
         logger.debug("Print empty chapters: %s", print_empty_chapters)
 
     @staticmethod
-    def _detect_row_format_invalid_keywords(row_format: str, row_type: str = "Issue") -> None:
+    def _detect_row_format_invalid_keywords(row_format: str, row_type: str = "Issue", clean: bool = False) -> str:
         """
         Detects invalid keywords in the row format.
 
         @param row_format: The row format to be checked for invalid keywords.
         @param row_type: The type of row format. Default is "Issue".
-        @return: None
+        @return: If clean is True, the cleaned row format. Otherwise, the original row format.
         """
         keywords_in_braces = re.findall(r"\{(.*?)\}", row_format)
         invalid_keywords = [keyword for keyword in keywords_in_braces if keyword not in SUPPORTED_ROW_FORMAT_KEYS]
+        cleaned_row_format = row_format
         for invalid_keyword in invalid_keywords:
             logger.error(
-                f"Invalid `{invalid_keyword}` detected in `{row_type}` row format keyword(s) found: {', '.join(invalid_keywords)}. Will be removed from string."
+                "Invalid `{}` detected in `{}` row format keyword(s) found: {}. Will be removed from string.".format(
+                    invalid_keyword, row_type, ", ".join(invalid_keywords)
+                )
             )
+            if clean:
+                cleaned_row_format = cleaned_row_format.replace(f"{{{invalid_keyword}}}", "")
 
-    @staticmethod
-    def _clean_row_format_invalid_keywords(row_format: str) -> str:
-        """
-        Detects and clean invalid keywords in the row format.
-
-        @param row_format: The row format to be checked for invalid keywords.
-        @return: The cleaned row format.
-        """
-        keywords_in_braces = re.findall(r"\{(.*?)\}", row_format)
-        invalid_keywords = [keyword for keyword in keywords_in_braces if keyword not in SUPPORTED_ROW_FORMAT_KEYS]
-        for invalid_keyword in invalid_keywords:
-            row_format = row_format.replace(f"{{{invalid_keyword}}}", "")
-        return row_format
+        return cleaned_row_format

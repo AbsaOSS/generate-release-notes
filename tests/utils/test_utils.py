@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from release_notes_generator.action_inputs import ActionInputs
+
 from release_notes_generator.utils.utils import get_change_url
 
 

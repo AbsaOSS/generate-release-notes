@@ -19,14 +19,11 @@ This module contains utility functions for generating release notes.
 """
 
 import logging
-import re
 
 from typing import Optional
 
 from github.GitRelease import GitRelease
 from github.Repository import Repository
-
-from release_notes_generator.utils.constants import SUPPORTED_ROW_FORMAT_KEYS
 
 logger = logging.getLogger(__name__)
 
