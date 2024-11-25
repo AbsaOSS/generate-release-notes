@@ -16,8 +16,6 @@
 import logging
 
 import pytest
-from coverage.files import actual_path
-from scipy.stats.contingency import expected_freq
 
 from release_notes_generator.action_inputs import ActionInputs
 
