@@ -81,6 +81,7 @@ class ReleaseNotesGenerator:
             logger.info("Latest release not found for %s. 1st release for repository!", repo.full_name)
 
         # default is repository creation date if no releases OR created_at of latest release
+        logger.debug("RLS created_at: %s, published_at: %s", rls.created_at, rls.published_at)
         since = rls.created_at if rls else repo.created_at
         if rls and ActionInputs.get_published_at():
             since = rls.published_at
