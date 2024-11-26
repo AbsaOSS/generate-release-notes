@@ -79,9 +79,10 @@ class ReleaseNotesGenerator:
         rls = self._safe_call(repo.get_latest_release)()
         if rls is None:
             logger.info("Latest release not found for %s. 1st release for repository!", repo.full_name)
+        else:
+            logger.debug("RLS created_at: %s, published_at: %s", rls.created_at, rls.published_at)
 
         # default is repository creation date if no releases OR created_at of latest release
-        logger.debug("RLS created_at: %s, published_at: %s", rls.created_at, rls.published_at)
         since = rls.created_at if rls else repo.created_at
         if rls and ActionInputs.get_published_at():
             since = rls.published_at
@@ -94,7 +95,9 @@ class ReleaseNotesGenerator:
             logger.info("Starting issue, prs and commit reduction by the latest release since time.")
 
             # filter out closed Issues before the date
-            issues = list(filter(lambda issue: issue.closed_at is not None and issue.closed_at > since, list(issues_all)))
+            issues = list(
+                filter(lambda issue: issue.closed_at is not None and issue.closed_at > since, list(issues_all))
+            )
             logger.debug("Count of issues reduced from %d to %d", len(list(issues_all)), len(issues))
 
             # filter out merged PRs and commits before the date

@@ -61,6 +61,7 @@ def test_generate_release_notes_latest_release_not_found(
 
     mock_issue_closed.created_at = mock_repo.created_at + timedelta(days=2)
     mock_issue_closed_i1_bug.created_at = mock_repo.created_at + timedelta(days=7)
+    mock_issue_closed_i1_bug.closed_at = mock_repo.created_at + timedelta(days=6)
     mock_pull_closed_with_rls_notes_101.merged_at = mock_repo.created_at + timedelta(days=2)
     mock_pull_closed_with_rls_notes_102.merged_at = mock_repo.created_at + timedelta(days=7)
 
@@ -94,6 +95,7 @@ def test_generate_release_notes_latest_release_found_by_created_at(
     github_mock = mocker.Mock(spec=Github)
     github_mock.get_repo.return_value = mock_repo
     mock_repo.created_at = datetime.now() - timedelta(days=10)
+    mock_repo.published_at = datetime.now() - timedelta(days=9)
 
     mock_repo.get_issues.return_value = [mock_issue_closed_i1_bug]
     mock_repo.get_pulls.return_value = [mock_pull_closed_with_rls_notes_101, mock_pull_closed_with_rls_notes_102]
@@ -101,6 +103,7 @@ def test_generate_release_notes_latest_release_found_by_created_at(
     mock_commit.commit.author.date = mock_repo.created_at + timedelta(days=1)
 
     mock_issue_closed_i1_bug.created_at = mock_repo.created_at + timedelta(days=7)
+    mock_issue_closed_i1_bug.closed_at = mock_repo.created_at + timedelta(days=6)
     mock_pull_closed_with_rls_notes_101.merged_at = mock_repo.created_at + timedelta(days=2)
     mock_pull_closed_with_rls_notes_102.merged_at = mock_repo.created_at + timedelta(days=7)
 
@@ -148,7 +151,7 @@ def test_generate_release_notes_latest_release_found_by_published_at(
     mock_commit.commit.author.date = mock_repo.created_at + timedelta(days=1)
 
     mock_issue_closed_i1_bug.created_at = mock_repo.created_at + timedelta(days=7)
-    mock_issue_closed_i1_bug.published_at = mock_repo.created_at + timedelta(days=8)
+    mock_issue_closed_i1_bug.closed_at = mock_repo.created_at + timedelta(days=8)
     mock_pull_closed_with_rls_notes_101.merged_at = mock_repo.created_at + timedelta(days=2)
     mock_pull_closed_with_rls_notes_102.merged_at = mock_repo.created_at + timedelta(days=7)
 
