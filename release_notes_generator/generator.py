@@ -87,6 +87,7 @@ class ReleaseNotesGenerator:
         if rls and ActionInputs.get_published_at():
             since = rls.published_at
 
+        # get all issues, pulls and commits, and then reduce them by the latest release since time
         issues = issues_all = self._safe_call(repo.get_issues)(state=ISSUE_STATE_ALL, since=since)
         pulls = pulls_all = self._safe_call(repo.get_pulls)(state="closed")
         commits = commits_all = list(self._safe_call(repo.get_commits)())
