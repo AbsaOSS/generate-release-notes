@@ -37,12 +37,11 @@ jobs:
 
       - name: Check format of received tag
         id: check-version-tag
-        uses: AbsaOSS/version-tag-check@v0.1.0
+        uses: AbsaOSS/version-tag-check@v0.2.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
             github-repository: ${{ github.repository }}
-            branch: 'master'
             version-tag: ${{ github.event.inputs.tag-name }}
 
       - name: Generate Release Notes
