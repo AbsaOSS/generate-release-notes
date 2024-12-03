@@ -316,7 +316,9 @@ class ActionInputs:
         for invalid_keyword in invalid_keywords:
             logger.error(
                 "Invalid `%s` detected in `%s` row format keyword(s) found: %s. Will be removed from string.",
-                    invalid_keyword, row_type, ", ".join(invalid_keywords)
+                invalid_keyword,
+                row_type,
+                ", ".join(invalid_keywords),
             )
             if clean:
                 cleaned_row_format = cleaned_row_format.replace(f"{{{invalid_keyword}}}", "")
