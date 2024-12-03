@@ -42,7 +42,7 @@ from release_notes_generator.utils.constants import (
     SKIP_RELEASE_NOTES_LABELS,
     RELEASE_NOTES_TITLE,
     RELEASE_NOTE_TITLE_DEFAULT,
-    SUPPORTED_ROW_FORMAT_KEYS,
+    SUPPORTED_ROW_FORMAT_KEYS, FROM_TAG_NAME,
 )
 from release_notes_generator.utils.enums import DuplicityScopeEnum
 from release_notes_generator.utils.gh_action import get_action_input
@@ -80,6 +80,21 @@ class ActionInputs:
         Get the tag name from the action inputs.
         """
         return get_action_input(TAG_NAME)
+
+    @staticmethod
+    def get_from_tag_name() -> str:
+        """
+        Get the from-tag name from the action inputs.
+        """
+        return get_action_input(FROM_TAG_NAME, default="")
+
+    @staticmethod
+    def is_from_tag_name_defined() -> bool:
+        """
+        Check if the from-tag name is defined in the action inputs.
+        """
+        value = ActionInputs.get_from_tag_name()
+        return value.strip() != ""
 
     @staticmethod
     def get_chapters_json() -> str:
@@ -120,8 +135,9 @@ class ActionInputs:
         """
         Get the skip release notes label from the action inputs.
         """
-        user_choice = [item.strip() for item in get_action_input(SKIP_RELEASE_NOTES_LABELS, "").split(",")]
-        if len(user_choice) > 0:
+        user_input = get_action_input(SKIP_RELEASE_NOTES_LABELS, "")
+        user_choice = [item.strip() for item in user_input.split(",")] if user_input else []
+        if user_choice:
             return user_choice
         return ["skip-release-notes"]
 
@@ -221,6 +237,10 @@ class ActionInputs:
         tag_name = ActionInputs.get_tag_name()
         if not isinstance(tag_name, str) or not tag_name.strip():
             errors.append("Tag name must be a non-empty string.")
+
+        from_tag_name = ActionInputs.get_from_tag_name()
+        if not isinstance(from_tag_name, str):
+            errors.append("From tag name must be a string.")
 
         chapters_json = ActionInputs.get_chapters_json()
         try:
