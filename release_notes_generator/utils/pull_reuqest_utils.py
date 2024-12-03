@@ -14,6 +14,10 @@
 # limitations under the License.
 #
 
+"""
+This module contains the main script for the Release Notes Generator GH Action.
+"""
+
 import re
 
 from github.PullRequest import PullRequest

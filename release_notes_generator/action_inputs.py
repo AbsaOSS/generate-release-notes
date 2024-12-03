@@ -42,7 +42,8 @@ from release_notes_generator.utils.constants import (
     SKIP_RELEASE_NOTES_LABELS,
     RELEASE_NOTES_TITLE,
     RELEASE_NOTE_TITLE_DEFAULT,
-    SUPPORTED_ROW_FORMAT_KEYS, FROM_TAG_NAME,
+    SUPPORTED_ROW_FORMAT_KEYS,
+    FROM_TAG_NAME,
 )
 from release_notes_generator.utils.enums import DuplicityScopeEnum
 from release_notes_generator.utils.gh_action import get_action_input
@@ -314,9 +315,8 @@ class ActionInputs:
         cleaned_row_format = row_format
         for invalid_keyword in invalid_keywords:
             logger.error(
-                "Invalid `{}` detected in `{}` row format keyword(s) found: {}. Will be removed from string.".format(
+                "Invalid `%s` detected in `%s` row format keyword(s) found: %s. Will be removed from string.",
                     invalid_keyword, row_type, ", ".join(invalid_keywords)
-                )
             )
             if clean:
                 cleaned_row_format = cleaned_row_format.replace(f"{{{invalid_keyword}}}", "")
