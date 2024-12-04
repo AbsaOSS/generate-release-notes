@@ -18,11 +18,14 @@
 This module contains the ActionInputs class which is responsible for handling the inputs provided to the GH action.
 """
 
-import json
 import logging
 import os
 import sys
 import re
+import yaml
+
+from typing import Optional
+
 
 from release_notes_generator.utils.constants import (
     GITHUB_REPOSITORY,
@@ -82,11 +85,24 @@ class ActionInputs:
         return get_action_input(TAG_NAME)
 
     @staticmethod
-    def get_chapters_json() -> str:
+    def get_chapters() -> Optional[list[dict[str, str]]]:
         """
-        Get the chapters JSON from the action inputs.
+        Get list of the chapters from the action inputs. Each chapter is a dict.
         """
-        return get_action_input(CHAPTERS)
+        # Get the 'chapters' input from environment variables
+        chapters_input: str = get_action_input(CHAPTERS, default='')
+
+        # Parse the YAML input
+        try:
+            chapters = yaml.safe_load(chapters_input)
+            if not isinstance(chapters, list):
+                logger.error("Error: 'chapters' input is not a valid YAML list.")
+                return None
+        except yaml.YAMLError as exc:
+            logger.error(f"Error parsing 'chapters' input: {exc}")
+            return None
+
+        return chapters
 
     @staticmethod
     def get_duplicity_scope() -> DuplicityScopeEnum:
@@ -222,11 +238,9 @@ class ActionInputs:
         if not isinstance(tag_name, str) or not tag_name.strip():
             errors.append("Tag name must be a non-empty string.")
 
-        chapters_json = ActionInputs.get_chapters_json()
-        try:
-            json.loads(chapters_json)
-        except json.JSONDecodeError:
-            errors.append("Chapters JSON must be a valid JSON string.")
+        chapters = ActionInputs.get_chapters()
+        if chapters is None:
+            errors.append("Chapters JSON must be a valid JSON array.")
 
         duplicity_icon = ActionInputs.get_duplicity_icon()
         if not isinstance(duplicity_icon, str) or not duplicity_icon.strip() or len(duplicity_icon) != 1:
@@ -272,7 +286,7 @@ class ActionInputs:
 
         logger.debug("Repository: %s/%s", owner, repo_name)
         logger.debug("Tag name: %s", tag_name)
-        logger.debug("Chapters JSON: %s", chapters_json)
+        logger.debug("Chapters JSON: %s", chapters)
         logger.debug("Published at: %s", published_at)
         logger.debug("Skip release notes labels: %s", ActionInputs.get_skip_release_notes_labels())
         logger.debug("Verbose logging: %s", verbose)

@@ -140,12 +140,11 @@ Add the following step to your GitHub workflow (in example are used non-default 
     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
   with:
     tag-name: "v0.1.0"
-    chapters: '[
-      {"title": "Breaking Changes 💥", "label": "breaking-change"},
-      {"title": "New Features 🎉", "label": "enhancement"},
-      {"title": "New Features 🎉", "label": "feature"},
-      {"title": "Bugfixes 🛠", "label": "bug"}
-    ]'
+    chapters:
+      - {"title": "Breaking Changes 💥", "label": "breaking-change"},
+      - {"title": "New Features 🎉", "label": "enhancement"},
+      - {"title": "New Features 🎉", "label": "feature"},
+      - {"title": "Bugfixes 🛠", "label": "bug"}
 ```
 
 #### Full example
@@ -157,12 +156,12 @@ Add the following step to your GitHub workflow (in example are used non-default 
     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
   with:
     tag-name: "v0.1.0"
-    chapters: '[
-      {"title": "Breaking Changes 💥", "label": "breaking-change"},
-      {"title": "New Features 🎉", "label": "enhancement"},
-      {"title": "New Features 🎉", "label": "feature"},
-      {"title": "Bugfixes 🛠", "label": "bug"}
-    ]'
+    chapters:
+      - {"title": "Breaking Changes 💥", "label": "breaking-change"},
+      - {"title": "New Features 🎉", "label": "enhancement"},
+      - {"title": "New Features 🎉", "label": "feature"},
+      - {"title": "Bugfixes 🛠", "label": "bug"}
+
     duplicity-scope: 'service'
     duplicity-icon: '🔁'
     published-at: true
