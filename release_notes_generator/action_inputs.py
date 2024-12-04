@@ -22,8 +22,8 @@ import logging
 import os
 import sys
 import re
-import yaml
 
+import yaml
 from typing import Optional
 
 
