@@ -22,7 +22,7 @@ on:
         description: 'Name of git tag to be created, and then draft release created. Syntax: "v[0-9]+.[0-9]+.[0-9]+".'
         required: true
       from-tag-name:
-        description: 'Name of git tag from which to detect changes. Syntax: "v[0-9]+.[0-9]+.[0-9]+".'
+        description: 'Name of the git tag from which to detect changes from. Default value: latest tag. Syntax: "v[0-9]+.[0-9]+.[0-9]+".'
         required: false
 
 jobs:
