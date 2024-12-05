@@ -14,6 +14,10 @@
 # limitations under the License.
 #
 
+"""
+This module contains the PullRequestRecord class which is responsible for representing a record in the release notes.
+"""
+
 import re
 
 from github.PullRequest import PullRequest

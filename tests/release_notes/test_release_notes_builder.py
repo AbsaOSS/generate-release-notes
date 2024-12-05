@@ -78,14 +78,12 @@ class MockLabel:
 
 
 DEFAULT_CHANGELOG_URL = "http://example.com/changelog"
-default_chapters_json = json.dumps(
-    [
+default_chapters = [
         {"title": "Breaking Changes 💥", "label": "breaking-change"},
         {"title": "New Features 🎉", "label": "feature"},
         {"title": "New Features 🎉", "label": "enhancement"},
         {"title": "Bugfixes 🛠", "label": "bug"},
     ]
-)
 
 RELEASE_NOTES_NO_DATA = """### Breaking Changes 💥
 No entries detected.
@@ -302,7 +300,7 @@ http://example.com/changelog
 
 def test_build_no_data():
     custom_chapters = CustomChapters()
-    custom_chapters.from_json(default_chapters_json)
+    custom_chapters.from_yaml_array(default_chapters)
 
     expected_release_notes = RELEASE_NOTES_NO_DATA
 
@@ -318,7 +316,7 @@ def test_build_no_data():
 
 def test_build_no_data_no_warnings(mocker):
     custom_chapters = CustomChapters()
-    custom_chapters.from_json(default_chapters_json)
+    custom_chapters.from_yaml_array(default_chapters)
     mocker.patch("release_notes_generator.builder.ActionInputs.get_warnings", return_value=False)
 
     expected_release_notes = RELEASE_NOTES_NO_DATA_NO_WARNING
@@ -335,7 +333,7 @@ def test_build_no_data_no_warnings(mocker):
 
 def test_build_no_data_no_warnings_no_empty_chapters(mocker):
     custom_chapters_no_empty_chapters = CustomChapters()
-    custom_chapters_no_empty_chapters.from_json(default_chapters_json)
+    custom_chapters_no_empty_chapters.from_yaml_array(default_chapters)
     custom_chapters_no_empty_chapters.print_empty_chapters = False
     mocker.patch("release_notes_generator.builder.ActionInputs.get_warnings", return_value=False)
     mocker.patch("release_notes_generator.builder.ActionInputs.get_print_empty_chapters", return_value=False)
@@ -354,7 +352,7 @@ def test_build_no_data_no_warnings_no_empty_chapters(mocker):
 
 def test_build_no_data_no_empty_chapters(mocker):
     custom_chapters_no_empty_chapters = CustomChapters()
-    custom_chapters_no_empty_chapters.from_json(default_chapters_json)
+    custom_chapters_no_empty_chapters.from_yaml_array(default_chapters)
     custom_chapters_no_empty_chapters.print_empty_chapters = False
     mocker.patch("release_notes_generator.builder.ActionInputs.get_print_empty_chapters", return_value=False)
 

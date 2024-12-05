@@ -23,8 +23,8 @@ import os
 import sys
 import re
 
-import yaml
 from typing import Optional
+import yaml
 
 
 from release_notes_generator.utils.constants import (
@@ -90,7 +90,7 @@ class ActionInputs:
         Get list of the chapters from the action inputs. Each chapter is a dict.
         """
         # Get the 'chapters' input from environment variables
-        chapters_input: str = get_action_input(CHAPTERS, default='')
+        chapters_input: str = get_action_input(CHAPTERS, default="")
 
         # Parse the YAML input
         try:
@@ -99,7 +99,7 @@ class ActionInputs:
                 logger.error("Error: 'chapters' input is not a valid YAML list.")
                 return None
         except yaml.YAMLError as exc:
-            logger.error(f"Error parsing 'chapters' input: {exc}")
+            logger.error("Error parsing 'chapters' input: {%s}", exc)
             return None
 
         return chapters
@@ -240,7 +240,7 @@ class ActionInputs:
 
         chapters = ActionInputs.get_chapters()
         if chapters is None:
-            errors.append("Chapters JSON must be a valid JSON array.")
+            errors.append("Chapters must be a valid yaml array.")
 
         duplicity_icon = ActionInputs.get_duplicity_icon()
         if not isinstance(duplicity_icon, str) or not duplicity_icon.strip() or len(duplicity_icon) != 1:
@@ -286,7 +286,7 @@ class ActionInputs:
 
         logger.debug("Repository: %s/%s", owner, repo_name)
         logger.debug("Tag name: %s", tag_name)
-        logger.debug("Chapters JSON: %s", chapters)
+        logger.debug("Chapters: %s", chapters)
         logger.debug("Published at: %s", published_at)
         logger.debug("Skip release notes labels: %s", ActionInputs.get_skip_release_notes_labels())
         logger.debug("Verbose logging: %s", verbose)
@@ -308,9 +308,10 @@ class ActionInputs:
         cleaned_row_format = row_format
         for invalid_keyword in invalid_keywords:
             logger.error(
-                "Invalid `{}` detected in `{}` row format keyword(s) found: {}. Will be removed from string.".format(
-                    invalid_keyword, row_type, ", ".join(invalid_keywords)
-                )
+                "Invalid `%s` detected in `%s` row format keyword(s) found: %s. Will be removed from string.",
+                invalid_keyword,
+                row_type,
+                ", ".join(invalid_keywords),
             )
             if clean:
                 cleaned_row_format = cleaned_row_format.replace(f"{{{invalid_keyword}}}", "")

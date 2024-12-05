@@ -51,7 +51,7 @@ Generate Release Notes action is dedicated to enhance the quality and organizati
 - **Required**: Yes
 
 ### `chapters`
-- **Description**: A JSON string defining chapters and corresponding labels for categorization. Each chapter should have a title and a label matching your GitHub issues and PRs.
+- **Description**: An Yaml array defining chapters and corresponding labels for categorization. Each chapter should have a title and a label matching your GitHub issues and PRs.
 - **Required**: Yes
 
 ### `row-format-issue`
@@ -374,11 +374,16 @@ Create *.sh file and place it in the project root.
 
 # Set environment variables based on the action inputs
 export INPUT_TAG_NAME="v0.2.0"
+
 export INPUT_CHAPTERS='[
-  {"title": "Breaking Changes 💥", "label": "breaking-change"},
-  {"title": "New Features 🎉", "label": "enhancement"},
-  {"title": "New Features 🎉", "label": "feature"},
-  {"title": "Bugfixes 🛠", "label": "bug"}
+{ title: No entry 🚫, label: duplicate },
+{ title: Breaking Changes 💥, label: breaking-change },
+{ title: New Features 🎉, label: enhancement },
+{ title: New Features 🎉, label: feature },
+{ title: Bugfixes 🛠, label: bug },
+{ title: Infrastructure ⚙️, label: infrastructure },
+{ title: Silent-live 🤫, label: silent-live },
+{ title: Documentation 📜, label: documentation }
 ]'
 export INPUT_WARNINGS="true"
 export INPUT_PUBLISHED_AT="true"

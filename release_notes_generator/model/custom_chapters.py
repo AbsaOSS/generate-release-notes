@@ -19,8 +19,6 @@ This module contains the CustomChapters class which is responsible for represent
 notes.
 """
 
-import json
-
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.base_chapters import BaseChapters
 from release_notes_generator.model.chapter import Chapter
