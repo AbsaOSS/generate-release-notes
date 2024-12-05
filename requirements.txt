@@ -5,3 +5,4 @@ PyGithub==1.59.0
 pylint==3.2.6
 requests==2.31.0
 black==24.8.0
+PyYAML==6.0.2
