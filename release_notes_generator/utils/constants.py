@@ -22,6 +22,7 @@ This module contains the constants used in the release notes generator.
 GITHUB_REPOSITORY = "GITHUB_REPOSITORY"
 GITHUB_TOKEN = "github-token"
 TAG_NAME = "tag-name"
+FROM_TAG_NAME = "from-tag-name"
 CHAPTERS = "chapters"
 DUPLICITY_SCOPE = "duplicity-scope"
 DUPLICITY_ICON = "duplicity-icon"
