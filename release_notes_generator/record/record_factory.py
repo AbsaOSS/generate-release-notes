@@ -68,7 +68,7 @@ class RecordFactory:
             @return: None
             """
             # check for skip labels presence and skip when detected
-            issue_labels = [label.name for label in issue.labels]
+            issue_labels = [label.name for label in i.labels]
             skip_record = any(item in issue_labels for item in ActionInputs.get_skip_release_notes_labels())
             records[i.number] = Record(r, i, skip=skip_record)
 
