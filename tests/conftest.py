@@ -21,6 +21,7 @@ from datetime import datetime
 import pytest
 
 from github import Github
+from github.GitRelease import GitRelease
 from github.Issue import Issue
 from github.PullRequest import PullRequest
 from github.Rate import Rate
@@ -83,9 +84,22 @@ def mock_repo(mocker):
 # Fixtures for GitHub Release(s)
 @pytest.fixture
 def mock_git_release(mocker):
-    release = mocker.Mock()
+    release = mocker.Mock(spec=GitRelease)
     release.tag_name = "v1.0.0"
     return release
+
+
+@pytest.fixture
+def mock_git_releases(mocker):
+    release_1 = mocker.Mock(spec=GitRelease)
+    release_1.tag_name = "v1.0.0"
+    release_1.draft = False
+    release_1.prerelease = False
+    release_2 = mocker.Mock(spec=GitRelease)
+    release_2.tag_name = "v2.0.0"
+    release_2.draft = False
+    release_2.prerelease = False
+    return [release_1, release_2]
 
 
 @pytest.fixture
