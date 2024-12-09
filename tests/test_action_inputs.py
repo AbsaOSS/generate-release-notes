@@ -127,6 +127,7 @@ def test_get_skip_release_notes_label(mocker):
     mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="skip-release-notes")
     assert ActionInputs.get_skip_release_notes_labels() == ["skip-release-notes"]
 
+
 def test_get_skip_release_notes_label_not_defined(mocker):
     mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="")
     assert ActionInputs.get_skip_release_notes_labels() == ["skip-release-notes"]
@@ -135,9 +136,11 @@ def test_get_skip_release_notes_labels(mocker):
     mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="skip-release-notes, another-skip-label")
     assert ActionInputs.get_skip_release_notes_labels() == ["skip-release-notes", "another-skip-label"]
 
+
 def test_get_skip_release_notes_labels_no_space(mocker):
     mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="skip-release-notes,another-skip-label")
     assert ActionInputs.get_skip_release_notes_labels() == ["skip-release-notes", "another-skip-label"]
+
 
 def test_get_print_empty_chapters(mocker):
     mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="true")

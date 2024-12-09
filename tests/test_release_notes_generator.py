@@ -76,7 +76,6 @@ def test_generate_release_notes_latest_release_not_found(
 
     release_notes = ReleaseNotesGenerator(github_mock, custom_chapters).generate()
 
-    print(release_notes)
     assert release_notes is not None
     assert "- #121 _Fix the bug_" in release_notes
     assert "- #122 _I1+bug_" in release_notes

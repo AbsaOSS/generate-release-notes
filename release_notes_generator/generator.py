@@ -81,7 +81,7 @@ class ReleaseNotesGenerator:
             return None
 
         # get the latest release
-        rls = self.get_latest_release(repo)
+        rls: GitRelease = self.get_latest_release(repo)
 
         # default is repository creation date if no releases OR created_at of latest release
         since = rls.created_at if rls else repo.created_at
@@ -136,7 +136,7 @@ class ReleaseNotesGenerator:
         """
         if ActionInputs.is_from_tag_name_defined():
             logger.info("Getting latest release by from-tag name %s", ActionInputs.get_tag_name())
-            rls = self._safe_call(repo.get_release)(ActionInputs.get_from_tag_name())
+            rls: GitRelease = self._safe_call(repo.get_release)(ActionInputs.get_from_tag_name())
 
             if rls is None:
                 logger.info("Latest release not found for received tag %s. Ending!", ActionInputs.get_from_tag_name())
@@ -144,7 +144,7 @@ class ReleaseNotesGenerator:
 
         else:
             logger.info("Getting latest release by time.")
-            rls = self._safe_call(repo.get_latest_release)()
+            rls: GitRelease = self._safe_call(repo.get_latest_release)()
 
             if rls is None:
                 logger.info("Latest release not found for %s. 1st release for repository!", repo.full_name)
