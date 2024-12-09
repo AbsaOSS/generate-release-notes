@@ -15,7 +15,7 @@
 #
 
 """
-This module contains the main script for the Release Notes Generator GH Action.
+This module contains the PullRequestUtils class which is responsible for extracting information from pull requests.
 """
 
 import re

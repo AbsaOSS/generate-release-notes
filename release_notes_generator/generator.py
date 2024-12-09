@@ -21,6 +21,7 @@ the Release Notes output.
 
 import logging
 import sys
+
 from typing import Optional
 import semver
 
