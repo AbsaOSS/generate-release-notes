@@ -149,17 +149,16 @@ def test_populate_none_duplicity_scope(custom_chapters, mocker):
 # from_json
 
 
-def test_custom_chapters_from_json():
+def test_custom_chapters_from_yaml_array():
     custom_chapters = CustomChapters()
-    json_string = """
-    [
+    yaml_array_in_string = [
         {"title": "Breaking Changes 💥", "label": "breaking-change"},
         {"title": "New Features 🎉", "label": "enhancement"},
         {"title": "New Features 🎉", "label": "feature"},
         {"title": "Bugfixes 🛠", "label": "bug"}
     ]
-    """
-    custom_chapters.from_json(json_string)
+
+    custom_chapters.from_yaml_array(yaml_array_in_string)
 
     assert "Breaking Changes 💥" in custom_chapters.titles
     assert "New Features 🎉" in custom_chapters.titles

@@ -15,7 +15,7 @@
 #
 
 """
-This module contains the PullRequestUtils class which is responsible for extracting information from pull requests.
+This module contains the PullRequestRecord class which is responsible for representing a record in the release notes.
 """
 
 import re
