@@ -14,6 +14,10 @@
 # limitations under the License.
 #
 
+"""
+This module contains the PullRequestUtils class which is responsible for extracting information from pull requests.
+"""
+
 import re
 
 from github.PullRequest import PullRequest

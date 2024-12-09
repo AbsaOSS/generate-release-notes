@@ -23,6 +23,7 @@ from release_notes_generator.action_inputs import ActionInputs
 success_case = {
     "get_github_repository": "owner/repo_name",
     "get_tag_name": "tag_name",
+    "get_from_tag_name": "from_tag_name",
     "get_chapters_json": '{"chapter": "content"}',
     "get_duplicity_scope": "custom",
     "get_duplicity_icon": "🔁",
@@ -31,12 +32,14 @@ success_case = {
     "get_skip_release_notes_labels": ["skip"],
     "get_print_empty_chapters": True,
     "get_verbose": True,
+    "get_release_notes_title": "Success value",
 }
 
 failure_cases = [
     ("get_github_repository", "", "Owner and Repo must be a non-empty string."),
     ("get_github_repository", "owner/", "Owner and Repo must be a non-empty string."),
     ("get_tag_name", "", "Tag name must be a non-empty string."),
+    ("get_from_tag_name", 1, "From tag name must be a string."),
     ("get_chapters_json", "invalid_json", "Chapters JSON must be a valid JSON string."),
     ("get_warnings", "not_bool", "Warnings must be a boolean."),
     ("get_published_at", "not_bool", "Published at must be a boolean."),
@@ -46,6 +49,7 @@ failure_cases = [
     ("get_duplicity_icon", "Oj", "Duplicity icon must be a non-empty string and have a length of 1."),
     ("get_row_format_issue", "", "Issue row format must be a non-empty string."),
     ("get_row_format_pr", "", "PR Row format must be a non-empty string."),
+    ("get_release_notes_title", "", "Release Notes title must be a non-empty string and have non-zero length."),
 ]
 
 
@@ -123,13 +127,20 @@ def test_get_skip_release_notes_label(mocker):
     mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="skip-release-notes")
     assert ActionInputs.get_skip_release_notes_labels() == ["skip-release-notes"]
 
+
+def test_get_skip_release_notes_label_not_defined(mocker):
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="")
+    assert ActionInputs.get_skip_release_notes_labels() == ["skip-release-notes"]
+
 def test_get_skip_release_notes_labels(mocker):
     mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="skip-release-notes, another-skip-label")
     assert ActionInputs.get_skip_release_notes_labels() == ["skip-release-notes", "another-skip-label"]
 
+
 def test_get_skip_release_notes_labels_no_space(mocker):
     mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="skip-release-notes,another-skip-label")
     assert ActionInputs.get_skip_release_notes_labels() == ["skip-release-notes", "another-skip-label"]
+
 
 def test_get_print_empty_chapters(mocker):
     mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="true")
@@ -200,3 +211,11 @@ def test_clean_row_format_invalid_keywords_nested_braces():
     actual_format = ActionInputs._detect_row_format_invalid_keywords(row_format, clean=True)
     assert expected_format == actual_format
 
+
+def test_release_notes_title_default():
+    assert ActionInputs.get_release_notes_title() == "[Rr]elease [Nn]otes:"
+
+
+def test_release_notes_title_custom(mocker):
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="Custom Title")
+    assert ActionInputs.get_release_notes_title() == "Custom Title"
