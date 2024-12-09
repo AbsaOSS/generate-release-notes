@@ -66,7 +66,7 @@ def test_generate_release_notes_latest_release_not_found(
     mock_pull_closed_with_rls_notes_101.merged_at = mock_repo.created_at + timedelta(days=2)
     mock_pull_closed_with_rls_notes_102.merged_at = mock_repo.created_at + timedelta(days=7)
 
-    github_mock.get_repo().get_latest_release.return_value = None
+    mocker.patch("release_notes_generator.generator.ReleaseNotesGenerator.get_latest_release", return_value=None)
 
     mock_rate_limit = mocker.Mock()
     mock_rate_limit.core.remaining = 1000
@@ -107,9 +107,9 @@ def test_generate_release_notes_latest_release_found_by_created_at(
     mock_pull_closed_with_rls_notes_101.merged_at = mock_repo.created_at + timedelta(days=2)
     mock_pull_closed_with_rls_notes_102.merged_at = mock_repo.created_at + timedelta(days=7)
 
-    github_mock.get_repo().get_latest_release.return_value = mock_git_release
     mock_git_release.created_at = mock_repo.created_at + timedelta(days=5)
     mock_git_release.published_at = mock_repo.created_at + timedelta(days=5)
+    mocker.patch("release_notes_generator.generator.ReleaseNotesGenerator.get_latest_release", return_value=mock_git_release)
 
     mock_rate_limit = mocker.Mock()
     mock_rate_limit.core.remaining = 1000
@@ -158,6 +158,7 @@ def test_generate_release_notes_latest_release_found_by_published_at(
     github_mock.get_repo().get_latest_release.return_value = mock_git_release
     mock_git_release.created_at = mock_repo.created_at + timedelta(days=5)
     mock_git_release.published_at = mock_repo.created_at + timedelta(days=5)
+    mocker.patch("release_notes_generator.generator.ReleaseNotesGenerator.get_latest_release", return_value=mock_git_release)
 
     mock_rate_limit = mocker.Mock()
     mock_rate_limit.core.remaining = 1000
@@ -223,3 +224,99 @@ def test_get_latest_release_from_tag_name_defined_release_exists(mocker, mock_re
     mock_exit.assert_not_called()
     assert mock_log_info.called_with(1)
     assert ('Getting latest release by from-tag name %s', None) == mock_log_info.call_args_list[0][0]
+
+
+def test_get_latest_release_from_tag_name_not_defined_no_release(mocker, mock_repo):
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.is_from_tag_name_defined", return_value=False)
+    mock_log_info = mocker.patch("release_notes_generator.generator.logger.info")
+
+    github_mock = mocker.Mock(spec=Github)
+    github_mock.get_repo.return_value = mock_repo
+
+    mock_repo.get_releases.return_value = []
+
+    mock_rate_limit = mocker.Mock()
+    mock_rate_limit.core.remaining = 1000
+    github_mock.get_rate_limit.return_value = mock_rate_limit
+
+    release_notes_generator = ReleaseNotesGenerator(github_mock, CustomChapters(print_empty_chapters=True))
+
+    latest_release = release_notes_generator.get_latest_release(mock_repo)
+
+    assert latest_release is None
+    assert mock_log_info.called_with(2)
+    assert ('Getting latest release by semantic ordering (could not be the last one by time).',) == mock_log_info.call_args_list[0][0]
+    assert ('Latest release not found for %s. 1st release for repository!', 'org/repo') == mock_log_info.call_args_list[1][0]
+
+
+def test_get_latest_release_from_tag_name_not_defined_2_releases(mocker, mock_repo, mock_git_releases):
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.is_from_tag_name_defined", return_value=False)
+    mock_log_info = mocker.patch("release_notes_generator.generator.logger.info")
+
+    github_mock = mocker.Mock(spec=Github)
+    github_mock.get_repo.return_value = mock_repo
+
+    mock_repo.get_releases.return_value = mock_git_releases
+
+    mock_rate_limit = mocker.Mock()
+    mock_rate_limit.core.remaining = 1000
+    github_mock.get_rate_limit.return_value = mock_rate_limit
+
+    release_notes_generator = ReleaseNotesGenerator(github_mock, CustomChapters(print_empty_chapters=True))
+
+    latest_release = release_notes_generator.get_latest_release(mock_repo)
+
+    assert latest_release is not None
+    assert ('Getting latest release by semantic ordering (could not be the last one by time).',) == mock_log_info.call_args_list[0][0]
+
+
+def test_get_latest_release_from_tag_name_not_defined_2_releases_value_error(mocker, mock_repo, mock_git_releases):
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.is_from_tag_name_defined", return_value=False)
+    mock_log_info = mocker.patch("release_notes_generator.generator.logger.info")
+    mock_log_debug = mocker.patch("release_notes_generator.generator.logger.debug")
+
+    github_mock = mocker.Mock(spec=Github)
+    github_mock.get_repo.return_value = mock_repo
+
+    mock_repo.get_releases.return_value = mock_git_releases
+
+    mock_rate_limit = mocker.Mock()
+    mock_rate_limit.core.remaining = 1000
+    github_mock.get_rate_limit.return_value = mock_rate_limit
+
+    release_notes_generator = ReleaseNotesGenerator(github_mock, CustomChapters(print_empty_chapters=True))
+    mocker.patch("semver.Version.parse", side_effect=ValueError)
+
+    latest_release = release_notes_generator.get_latest_release(mock_repo)
+
+    assert latest_release is None
+    assert ('Getting latest release by semantic ordering (could not be the last one by time).',) == mock_log_info.call_args_list[0][0]
+    assert ('Latest release not found for %s. 1st release for repository!', 'org/repo') == mock_log_info.call_args_list[1][0]
+    assert ('Skipping invalid value of version tag: %s', 'v1.0.0') == mock_log_debug.call_args_list[0][0]
+    assert ('Skipping invalid value of version tag: %s', 'v2.0.0') == mock_log_debug.call_args_list[1][0]
+
+
+def test_get_latest_release_from_tag_name_not_defined_2_releases_type_error(mocker, mock_repo, mock_git_releases):
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.is_from_tag_name_defined", return_value=False)
+    mock_log_info = mocker.patch("release_notes_generator.generator.logger.info")
+    mock_log_debug = mocker.patch("release_notes_generator.generator.logger.debug")
+
+    github_mock = mocker.Mock(spec=Github)
+    github_mock.get_repo.return_value = mock_repo
+
+    mock_repo.get_releases.return_value = mock_git_releases
+
+    mock_rate_limit = mocker.Mock()
+    mock_rate_limit.core.remaining = 1000
+    github_mock.get_rate_limit.return_value = mock_rate_limit
+
+    release_notes_generator = ReleaseNotesGenerator(github_mock, CustomChapters(print_empty_chapters=True))
+    mocker.patch("semver.Version.parse", side_effect=TypeError)
+
+    latest_release = release_notes_generator.get_latest_release(mock_repo)
+
+    assert latest_release is None
+    assert ('Getting latest release by semantic ordering (could not be the last one by time).',) == mock_log_info.call_args_list[0][0]
+    assert ('Latest release not found for %s. 1st release for repository!', 'org/repo') == mock_log_info.call_args_list[1][0]
+    assert ('Skipping invalid type of version tag: %s', 'v1.0.0') == mock_log_debug.call_args_list[0][0]
+    assert ('Skipping invalid type of version tag: %s', 'v2.0.0') == mock_log_debug.call_args_list[1][0]
