@@ -20,20 +20,24 @@ the Release Notes output.
 """
 
 import logging
+import sys
 
 from typing import Optional
-from github import Github
+import semver
 
+from github import Github
+from github.GitRelease import GitRelease
+from github.Repository import Repository
+
+from release_notes_generator.action_inputs import ActionInputs
+from release_notes_generator.builder import ReleaseNotesBuilder
 from release_notes_generator.model.custom_chapters import CustomChapters
 from release_notes_generator.model.record import Record
-from release_notes_generator.builder import ReleaseNotesBuilder
 from release_notes_generator.record.record_factory import RecordFactory
-from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.utils.constants import ISSUE_STATE_ALL
-
 from release_notes_generator.utils.decorators import safe_call_decorator
-from release_notes_generator.utils.utils import get_change_url
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
+from release_notes_generator.utils.utils import get_change_url
 
 logger = logging.getLogger(__name__)
 
@@ -72,15 +76,13 @@ class ReleaseNotesGenerator:
 
         @return: The generated release notes as a string, or None if the repository could not be found.
         """
+        # get the repository
         repo = self._safe_call(self.github_instance.get_repo)(ActionInputs.get_github_repository())
         if repo is None:
             return None
 
-        rls = self._safe_call(repo.get_latest_release)()
-        if rls is None:
-            logger.info("Latest release not found for %s. 1st release for repository!", repo.full_name)
-        else:
-            logger.debug("RLS created_at: %s, published_at: %s", rls.created_at, rls.published_at)
+        # get the latest release
+        rls: GitRelease = self.get_latest_release(repo)
 
         # default is repository creation date if no releases OR created_at of latest release
         since = rls.created_at if rls else repo.created_at
@@ -97,12 +99,12 @@ class ReleaseNotesGenerator:
 
             # filter out closed Issues before the date
             issues = list(
-                filter(lambda issue: issue.closed_at is not None and issue.closed_at > since, list(issues_all))
+                filter(lambda issue: issue.closed_at is not None and issue.closed_at >= since, list(issues_all))
             )
             logger.debug("Count of issues reduced from %d to %d", len(list(issues_all)), len(issues))
 
             # filter out merged PRs and commits before the date
-            pulls = list(filter(lambda pull: pull.merged_at is not None and pull.merged_at > since, list(pulls_all)))
+            pulls = list(filter(lambda pull: pull.merged_at is not None and pull.merged_at >= since, list(pulls_all)))
             logger.debug("Count of pulls reduced from %d to %d", len(list(pulls_all)), len(pulls))
 
             commits = list(filter(lambda commit: commit.commit.author.date > since, list(commits_all)))
@@ -125,3 +127,59 @@ class ReleaseNotesGenerator:
         )
 
         return release_notes_builder.build()
+
+    def get_latest_release(self, repo: Repository) -> Optional[GitRelease]:
+        """
+        Get the latest release of the repository.
+
+        @param repo: The repository to get the latest release from.
+        @return: The latest release of the repository, or None if no releases are found.
+        """
+        # check if from-tag name is defined
+        if ActionInputs.is_from_tag_name_defined():
+            logger.info("Getting latest release by from-tag name %s", ActionInputs.get_tag_name())
+            rls: GitRelease = self._safe_call(repo.get_release)(ActionInputs.get_from_tag_name())
+
+            if rls is None:
+                logger.info("Latest release not found for received tag %s. Ending!", ActionInputs.get_from_tag_name())
+                sys.exit(1)
+
+        else:
+            logger.info("Getting latest release by semantic ordering (could not be the last one by time).")
+            gh_releases: list = list(self._safe_call(repo.get_releases)())
+            rls: GitRelease = self.__get_latest_semantic_release(gh_releases)
+
+            if rls is None:
+                logger.info("Latest release not found for %s. 1st release for repository!", repo.full_name)
+
+        if rls is not None:
+            logger.debug(
+                "Latest release with tag:'%s' created_at: %s, published_at: %s",
+                rls.tag_name,
+                rls.created_at,
+                rls.published_at,
+            )
+
+        return rls
+
+    def __get_latest_semantic_release(self, releases) -> Optional[GitRelease]:
+        published_releases = [release for release in releases if not release.draft and not release.prerelease]
+        latest_version: Optional[semver.Version] = None
+        rls: Optional[GitRelease] = None
+
+        for release in published_releases:
+            try:
+                version_str = release.tag_name.lstrip("v")
+                current_version: Optional[semver.Version] = semver.VersionInfo.parse(version_str)
+            except ValueError:
+                logger.debug("Skipping invalid value of version tag: %s", release.tag_name)
+                continue
+            except TypeError:
+                logger.debug("Skipping invalid type of version tag: %s", release.tag_name)
+                continue
+
+            if latest_version is None or current_version > latest_version:
+                latest_version = current_version
+                rls = release
+
+        return rls

@@ -21,6 +21,9 @@ on:
       tag-name:
         description: 'Name of git tag to be created, and then draft release created. Syntax: "v[0-9]+.[0-9]+.[0-9]+".'
         required: true
+      from-tag-name:
+        description: 'Name of the git tag from which to detect changes from. Default value: latest tag. Syntax: "v[0-9]+.[0-9]+.[0-9]+".'
+        required: false
 
 jobs:
   release-draft:
@@ -37,12 +40,23 @@ jobs:
 
       - name: Check format of received tag
         id: check-version-tag
-        uses: AbsaOSS/version-tag-check@v0.2.0
+        uses: AbsaOSS/version-tag-check@v0.3.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
             github-repository: ${{ github.repository }}
             version-tag: ${{ github.event.inputs.tag-name }}
+
+      - name: Check format of received from tag
+        if: ${{ github.event.inputs.from-tag-name }}
+        id: check-version-from-tag
+        uses: AbsaOSS/version-tag-check@v0.3.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          github-repository: ${{ github.repository }}
+          version-tag: ${{ github.event.inputs.from-tag-name }}
+          should-exist: true
 
       - name: Generate Release Notes
         id: generate_release_notes

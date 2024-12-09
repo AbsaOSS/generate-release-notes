@@ -28,6 +28,10 @@ inputs:
     description: 'Allow duplicity of issue lines in chapters. Scopes: custom, service, both, none.'
     required: false
     default: 'both'
+  from-tag-name:
+    description: 'The tag name of the previous release to use as a start reference point for the current release notes.'
+    required: false
+    default: ''
   duplicity-icon:
     description: 'Icon to be used for duplicity warning. Icon is placed before the record line.'
     required: false
@@ -116,6 +120,7 @@ runs:
         INPUT_GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
         INPUT_TAG_NAME: ${{ inputs.tag-name }}
         INPUT_CHAPTERS: ${{ inputs.chapters }}
+        INPUT_FROM_TAG_NAME: ${{ inputs.from-tag-name }}
         INPUT_DUPLICITY_SCOPE: ${{ inputs.duplicity-scope }}
         INPUT_DUPLICITY_ICON: ${{ inputs.duplicity-icon }}
         INPUT_WARNINGS: ${{ inputs.warnings }}
