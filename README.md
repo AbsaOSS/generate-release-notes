@@ -51,7 +51,7 @@ Generate Release Notes action is dedicated to enhance the quality and organizati
 - **Required**: Yes
 
 ### `chapters`
-- **Description**: An Yaml array defining chapters and corresponding labels for categorization. Each chapter should have a title and a label matching your GitHub issues and PRs.
+- **Description**: An YAML array defining chapters and corresponding labels for categorization. Each chapter should have a title and a label matching your GitHub issues and PRs.
 - **Required**: Yes
 
 ### `row-format-issue`
@@ -140,7 +140,7 @@ Add the following step to your GitHub workflow (in example are used non-default 
     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
   with:
     tag-name: "v0.1.0"
-    chapters:
+    chapters: |
       - {"title": "Breaking Changes 💥", "label": "breaking-change"},
       - {"title": "New Features 🎉", "label": "enhancement"},
       - {"title": "New Features 🎉", "label": "feature"},
@@ -156,7 +156,7 @@ Add the following step to your GitHub workflow (in example are used non-default 
     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
   with:
     tag-name: "v0.1.0"
-    chapters:
+    chapters: |
       - {"title": "Breaking Changes 💥", "label": "breaking-change"},
       - {"title": "New Features 🎉", "label": "enhancement"},
       - {"title": "New Features 🎉", "label": "feature"},
