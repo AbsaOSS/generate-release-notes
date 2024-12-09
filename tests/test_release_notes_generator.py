@@ -226,33 +226,6 @@ def test_get_latest_release_from_tag_name_defined_release_exists(mocker, mock_re
     assert ('Getting latest release by from-tag name %s', None) == mock_log_info.call_args_list[0][0]
 
 
-# get_latest_release tests
-
-def test_get_latest_release_from_tag_name_defined_no_release(mocker, mock_repo):
-    mocker.patch("release_notes_generator.action_inputs.ActionInputs.is_from_tag_name_defined", return_value=True)
-    mock_exit = mocker.patch("sys.exit")
-    mock_log_info = mocker.patch("release_notes_generator.generator.logger.info")
-
-    github_mock = mocker.Mock(spec=Github)
-    github_mock.get_repo.return_value = mock_repo
-
-    mock_repo.get_release.return_value = None
-
-    mock_rate_limit = mocker.Mock()
-    mock_rate_limit.core.remaining = 1000
-    github_mock.get_rate_limit.return_value = mock_rate_limit
-
-    release_notes_generator = ReleaseNotesGenerator(github_mock, CustomChapters(print_empty_chapters=True))
-
-    latest_release = release_notes_generator.get_latest_release(mock_repo)
-
-    assert latest_release is None
-    mock_exit.assert_called_once_with(1)
-    assert mock_log_info.called_with(2)
-    assert ('Getting latest release by from-tag name %s', None) == mock_log_info.call_args_list[0][0]
-    assert ('Latest release not found for received tag %s. Ending!', '') == mock_log_info.call_args_list[1][0]
-
-
 def test_get_latest_release_from_tag_name_not_defined_no_release(mocker, mock_repo):
     mocker.patch("release_notes_generator.action_inputs.ActionInputs.is_from_tag_name_defined", return_value=False)
     mock_log_info = mocker.patch("release_notes_generator.generator.logger.info")
@@ -347,28 +320,3 @@ def test_get_latest_release_from_tag_name_not_defined_2_releases_type_error(mock
     assert ('Latest release not found for %s. 1st release for repository!', 'org/repo') == mock_log_info.call_args_list[1][0]
     assert ('Skipping invalid type of version tag: %s', 'v1.0.0') == mock_log_debug.call_args_list[0][0]
     assert ('Skipping invalid type of version tag: %s', 'v2.0.0') == mock_log_debug.call_args_list[1][0]
-
-
-def test_get_latest_release_from_tag_name_defined_release_exists(mocker, mock_repo):
-    mocker.patch("release_notes_generator.action_inputs.ActionInputs.is_from_tag_name_defined", return_value=True)
-    mock_exit = mocker.patch("sys.exit")
-    mock_log_info = mocker.patch("release_notes_generator.generator.logger.info")
-
-    github_mock = mocker.Mock(spec=Github)
-    github_mock.get_repo.return_value = mock_repo
-
-    rls_mock = mocker.Mock(spec=GitRelease)
-    mock_repo.get_release.return_value = rls_mock
-
-    mock_rate_limit = mocker.Mock()
-    mock_rate_limit.core.remaining = 1000
-    github_mock.get_rate_limit.return_value = mock_rate_limit
-
-    release_notes_generator = ReleaseNotesGenerator(github_mock, CustomChapters(print_empty_chapters=True))
-
-    latest_release = release_notes_generator.get_latest_release(mock_repo)
-
-    assert rls_mock == latest_release
-    mock_exit.assert_not_called()
-    assert mock_log_info.called_with(1)
-    assert ('Getting latest release by from-tag name %s', None) == mock_log_info.call_args_list[0][0]
