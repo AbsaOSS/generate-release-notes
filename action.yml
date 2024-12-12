@@ -23,7 +23,7 @@ inputs:
   chapters:
     description: 'An YAML array defining chapters and corresponding labels for categorization.'
     required: false
-    default: []
+    default: ''
   duplicity-scope:
     description: 'Allow duplicity of issue lines in chapters. Scopes: custom, service, both, none.'
     required: false
