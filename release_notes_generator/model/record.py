@@ -25,7 +25,6 @@ from typing import Optional
 
 from github.Issue import Issue
 from github.PullRequest import PullRequest
-from github.Repository import Repository
 from github.Commit import Commit
 
 from release_notes_generator.action_inputs import ActionInputs
@@ -40,15 +39,13 @@ from release_notes_generator.utils.pull_reuqest_utils import extract_issue_numbe
 logger = logging.getLogger(__name__)
 
 
-# TODO - recheck the size of class, is there a way to reduce or split it?
 # pylint: disable=too-many-instance-attributes, too-many-public-methods
 class Record:
     """
     A class used to represent a record in the release notes.
     """
 
-    def __init__(self, repo: Repository, issue: Optional[Issue] = None, skip: bool = False):
-        self.__repo: Repository = repo
+    def __init__(self, issue: Optional[Issue] = None, skip: bool = False):
         self.__gh_issue: Issue = issue
         self.__pulls: list[PullRequest] = []
         self.__pull_commits: dict = {}
@@ -133,7 +130,7 @@ class Record:
 
         return [label.name for label in self.__gh_issue.labels]
 
-    def get_rls_notes(self, detection_pattern: str, line_marks: str = RELEASE_NOTE_LINE_MARKS) -> str:
+    def get_rls_notes(self, detection_pattern: str, line_marks: str = None) -> str:
         """
         Gets the release notes of the record.
 
@@ -141,6 +138,9 @@ class Record:
         @param line_marks: The line marks to use.
         @return: The release notes of the record as a string.
         """
+        if line_marks is None:
+            line_marks = RELEASE_NOTE_LINE_MARKS
+
         release_notes = ""
 
         # Compile the regex pattern for efficiency

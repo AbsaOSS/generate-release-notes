@@ -36,7 +36,7 @@ from release_notes_generator.utils.pull_reuqest_utils import extract_issue_numbe
 logger = logging.getLogger(__name__)
 
 
-# pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods, too-many-locals
 class RecordFactory:
     """
     A class used to generate records for release notes.
@@ -59,18 +59,17 @@ class RecordFactory:
         records = {}
         pull_numbers = [pull.number for pull in pulls]
 
-        def create_record_for_issue(r: Repository, i: Issue) -> None:
+        def create_record_for_issue(i: Issue) -> None:
             """
             Create a record for an issue.
 
-            @param r: Repository instance.
             @param i: Issue instance.
             @return: None
             """
             # check for skip labels presence and skip when detected
             issue_labels = [label.name for label in i.labels]
             skip_record = any(item in issue_labels for item in ActionInputs.get_skip_release_notes_labels())
-            records[i.number] = Record(r, i, skip=skip_record)
+            records[i.number] = Record(i, skip=skip_record)
 
             logger.debug("Created record for issue %d: %s", i.number, i.title)
 
@@ -85,13 +84,13 @@ class RecordFactory:
                     )
                     parent_issue = safe_call(repo.get_issue)(parent_issue_number)
                     if parent_issue is not None:
-                        create_record_for_issue(repo, parent_issue)
+                        create_record_for_issue(parent_issue)
 
                 if parent_issue_number in records:
                     records[parent_issue_number].register_pull_request(pull)
                     logger.debug("Registering PR %d: %s to Issue %d", pull.number, pull.title, parent_issue_number)
                 else:
-                    records[pull.number] = Record(repo, skip=skip_record)
+                    records[pull.number] = Record(skip=skip_record)
                     records[pull.number].register_pull_request(pull)
                     logger.debug(
                         "Registering stand-alone PR %d: %s as mentioned Issue %d not found.",
@@ -118,14 +117,14 @@ class RecordFactory:
 
         for issue in issues:
             if issue.number not in pull_numbers:
-                create_record_for_issue(repo, issue)
+                create_record_for_issue(issue)
 
         for pull in pulls:
             pull_labels = [label.name for label in pull.labels]
             skip_record: bool = any(item in pull_labels for item in ActionInputs.get_skip_release_notes_labels())
 
             if not extract_issue_numbers_from_body(pull):
-                records[pull.number] = Record(repo, skip=skip_record)
+                records[pull.number] = Record(skip=skip_record)
                 records[pull.number].register_pull_request(pull)
                 logger.debug("Created record for PR %d: %s", pull.number, pull.title)
             else:
