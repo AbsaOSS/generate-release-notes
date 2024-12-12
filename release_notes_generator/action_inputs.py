@@ -24,6 +24,7 @@ import sys
 import re
 
 from typing import Optional
+
 import yaml
 
 from release_notes_generator.utils.constants import (
