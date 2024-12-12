@@ -19,8 +19,6 @@ This module contains the CustomChapters class which is responsible for represent
 notes.
 """
 
-import json
-
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.base_chapters import BaseChapters
 from release_notes_generator.model.chapter import Chapter
@@ -58,17 +56,16 @@ class CustomChapters(BaseChapters):
                             ch.add_row(nr, records[nr].to_chapter_row())
                             self.populated_record_numbers_list.append(nr)
 
-    def from_json(self, json_string: str) -> "CustomChapters":
+    def from_yaml_array(self, chapters: list[dict[str, str]]) -> "CustomChapters":
         """
         Populates the custom chapters from a JSON string.
 
-        @param json_string: The JSON string containing the custom chapters.
+        @param chapters: A list of dictionaries where each dictionary represents a chapter.
         @return: The instance of the CustomChapters class.
         """
-        data = json.loads(json_string)
-        for item in data:
-            title = item["title"]
-            labels = [item["label"]]
+        for chapter in chapters:
+            title = chapter["title"]
+            labels = [chapter["label"]]
             if title not in self.chapters:
                 self.chapters[title] = Chapter(title, labels)
             else:

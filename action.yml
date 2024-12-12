@@ -21,8 +21,9 @@ inputs:
     description: 'The tag name of the release to generate notes for.'
     required: true
   chapters:
-    description: 'JSON string defining chapters and corresponding labels for categorization.'
+    description: 'An string representation of YAML array defining chapters and corresponding labels for categorization. (Created by used "|".)'
     required: false
+    default: ''
   duplicity-scope:
     description: 'Allow duplicity of issue lines in chapters. Scopes: custom, service, both, none.'
     required: false
