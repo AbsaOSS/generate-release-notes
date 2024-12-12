@@ -108,7 +108,7 @@ class ActionInputs:
         # Get the 'chapters' input from environment variables
         chapters_input: str = get_action_input(CHAPTERS, default="")
 
-        # Parse the YAML input
+        # Parse the received string back to YAML array input.
         try:
             chapters = yaml.safe_load(chapters_input)
             if not isinstance(chapters, list):
