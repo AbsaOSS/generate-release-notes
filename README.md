@@ -15,6 +15,7 @@
   - [Enable skipping of release notes for specific issues using label](#enable-skipping-of-release-notes-for-specific-issues-using-label)
   - [Enable Service Chapters](#enable-service-chapters)
   - [Showing Duplicity Lines In Chapters](#showing-duplicity-lines-in-chapters)
+  - [Define "From Tag" Name](#define-from-tag-name)
 - [Get Started](#get-started)
 - [Run Static Code Analysis](#running-static-code-analysis)
 - [Run Black Tool Locally](#run-black-tool-locally)
@@ -49,6 +50,11 @@ Generate Release Notes action is dedicated to enhance the quality and organizati
 ### `tag-name`
 - **Description**: The name of the tag for which you want to generate release notes. This should be the same as the tag name used in the release workflow.
 - **Required**: Yes
+
+### `from-tag-name`
+- **Description**: The name of the tag from which you want to generate release notes.
+- **Required**: No
+- **Default**: ``
 
 ### `chapters`
 - **Description**: An YAML array defining chapters and corresponding labels for categorization. Each chapter should have a title and a label matching your GitHub issues and PRs.
@@ -139,7 +145,8 @@ Add the following step to your GitHub workflow (in example are used non-default 
   env:
     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
   with:
-    tag-name: "v0.1.0"
+    tag-name: "v0.2.0"
+    from-tag-name: "v0.1.0"
     chapters: |
       - {"title": "Breaking Changes 💥", "label": "breaking-change"}
       - {"title": "New Features 🎉", "label": "enhancement"}
@@ -155,7 +162,8 @@ Add the following step to your GitHub workflow (in example are used non-default 
   env:
     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
   with:
-    tag-name: "v0.1.0"
+    tag-name: "v0.2.0"
+    from-tag-name: "v0.1.0"
     chapters: |
       - {"title": "Breaking Changes 💥", "label": "breaking-change"}
       - {"title": "New Features 🎉", "label": "enhancement"}
@@ -253,6 +261,11 @@ By setting the `duplicity-scope` with one of the options, the action will show w
 Duplicity lines in `custom` chapters can point to potential issues with wrong labeling. In contrast, duplicity lines in `service` chapters can help maintainers identify areas with the most significant problems to address.
 
 By setting `duplicity-icon` you can customize the icon used to indicate duplicity issue lines in the release notes. Icon will be placed at the beginning of the line. The duplicity icon is visible from **second** occurrence of the issue in the selected scope.
+
+### Define "From Tag" Name
+By setting the `from-tag-name` option, the action will generate release notes from the specified tag to the tag defined in the `tag-name` option. This feature is helpful for generating release notes for a specific range of tags.
+
+The final interval is time-based. The `published-at` or `created-at` timestamp of the previous release or repository creation date, if it is the first release, is used as the starting point. The previous release is determined to be the previous semantic version tag.
 
 ## Get Started
 
