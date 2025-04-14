@@ -31,7 +31,7 @@ jobs:
           python-version: '3.11'
 
       - name: Check presence of release notes in PR description
-        uses: AbsaOSS/release-notes-presence-check@v0.2.0
+        uses: AbsaOSS/release-notes-presence-check@bug/13-Action-does-not-fail-in-workflow-when-RLS-notes-title
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
