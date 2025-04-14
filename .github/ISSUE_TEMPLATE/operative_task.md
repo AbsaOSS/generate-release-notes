@@ -1,6 +1,6 @@
 ---
 name: Operative task
-about: Issue template for spikes, research and investigation tasks
+about: Issue template for operational tasks.
 labels: 'infrastructure,no RN'
 type: 'Task'
 ---
