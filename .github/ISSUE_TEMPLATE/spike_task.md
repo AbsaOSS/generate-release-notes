@@ -2,7 +2,7 @@
 name: Spike
 about: Issue template for spikes, research and investigation tasks
 labels: 'spike'
-
+type: 'Task'
 ---
 
 ## Background
@@ -20,14 +20,12 @@ Feel free to add information about why it's needed and what assumptions you have
 
 The list of desired outcomes of this spike ticket.
 
-```[tasklist]
 ### Tasks
 - [ ] Questions have been answered or we have a clearer idea of how to get to our goal
 - [ ] Discussion with the team
 - [ ] Documentation
 - [ ] Create recommendations and new implementation tickets
 - [ ] item here..
-```
 
 ## Additional Info/Resources [Optional]
 
