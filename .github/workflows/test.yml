@@ -108,3 +108,26 @@ jobs:
 
       - name: Check code coverage with Pytest
         run: pytest --cov=. -v tests/ --cov-fail-under=80
+
+  mypy-check:
+    runs-on: ubuntu-latest
+    name: Mypy Type Check
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.1.5
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5.1.0
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+      - name: Check types with Mypy
+        id: check-types
+        run: |
+          mypy .
