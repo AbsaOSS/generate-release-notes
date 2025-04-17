@@ -46,7 +46,7 @@ class Record:
     """
 
     def __init__(self, issue: Optional[Issue] = None, skip: bool = False):
-        self.__gh_issue: Issue = issue
+        self.__gh_issue: Optional[Issue] = issue
         self.__pulls: list[PullRequest] = []
         self.__pull_commits: dict = {}
 
@@ -108,12 +108,12 @@ class Record:
     @property
     def is_closed_issue(self) -> bool:
         """Check if the record is a closed issue."""
-        return self.is_issue and self.__gh_issue.state == ISSUE_STATE_CLOSED
+        return self.is_issue and self.__gh_issue.state == ISSUE_STATE_CLOSED    # type: ignore
 
     @property
     def is_open_issue(self) -> bool:
         """Check if the record is an open issue."""
-        return self.is_issue and self.__gh_issue.state == ISSUE_STATE_OPEN
+        return self.is_issue and self.__gh_issue.state == ISSUE_STATE_OPEN      # type: ignore
 
     @property
     def is_merged_pr(self) -> bool:
@@ -130,7 +130,7 @@ class Record:
 
         return [label.name for label in self.__gh_issue.labels]
 
-    def get_rls_notes(self, detection_pattern: str, line_marks: str = None) -> str:
+    def get_rls_notes(self, detection_pattern: str, line_marks: Optional[list[str]] = None) -> str:
         """
         Gets the release notes of the record.
 

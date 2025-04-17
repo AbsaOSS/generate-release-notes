@@ -148,7 +148,7 @@ class ActionInputs:
         return get_action_input(PUBLISHED_AT, "false").lower() == "true"
 
     @staticmethod
-    def get_skip_release_notes_labels() -> str:
+    def get_skip_release_notes_labels() -> list[str]:
         """
         Get the skip release notes label from the action inputs.
         """

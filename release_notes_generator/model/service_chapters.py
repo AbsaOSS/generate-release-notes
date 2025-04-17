@@ -52,9 +52,9 @@ class ServiceChapters(BaseChapters):
         self.sort_ascending = sort_ascending
 
         if used_record_numbers is None:
-            self.used_record_numbers = []
+            self.used_record_numbers: list[int] = []
         else:
-            self.used_record_numbers = used_record_numbers
+            self.used_record_numbers: list[int] = used_record_numbers
 
         self.chapters = {
             CLOSED_ISSUES_WITHOUT_PULL_REQUESTS: Chapter(
