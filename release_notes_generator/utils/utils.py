@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 def get_change_url(
     tag_name: str, repository: Optional[Repository] = None, git_release: Optional[GitRelease] = None
-) -> Optional[str]:
+) -> str:
     """
     Generates a URL for viewing changes associated with a given tag name in a GitHub repository.
 

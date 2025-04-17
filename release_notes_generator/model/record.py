@@ -48,7 +48,7 @@ class Record:
     def __init__(self, issue: Optional[Issue] = None, skip: bool = False):
         self.__gh_issue: Optional[Issue] = issue
         self.__pulls: list[PullRequest] = []
-        self.__pull_commits: dict = {}
+        self.__pull_commits: dict[int, list[Commit]] = {}
 
         self.__is_release_note_detected: bool = False
         self.__present_in_chapters = 0
@@ -108,12 +108,12 @@ class Record:
     @property
     def is_closed_issue(self) -> bool:
         """Check if the record is a closed issue."""
-        return self.is_issue and self.__gh_issue.state == ISSUE_STATE_CLOSED    # type: ignore
+        return self.is_issue and self.__gh_issue.state == ISSUE_STATE_CLOSED  # type: ignore
 
     @property
     def is_open_issue(self) -> bool:
         """Check if the record is an open issue."""
-        return self.is_issue and self.__gh_issue.state == ISSUE_STATE_OPEN      # type: ignore
+        return self.is_issue and self.__gh_issue.state == ISSUE_STATE_OPEN  # type: ignore
 
     @property
     def is_merged_pr(self) -> bool:
@@ -231,7 +231,8 @@ class Record:
         for pull in self.__pulls:
             if pull.number == pull_number:
                 if pull.number in self.__pull_commits:
-                    return len(self.__pull_commits.get(pull.number))
+                    pull_commits = self.__pull_commits.get(pull.number)
+                    return len(pull_commits) if pull_commits is not None else 0
 
                 return 0
 
@@ -296,7 +297,8 @@ class Record:
         else:
             format_values["number"] = f"#{self.__gh_issue.number}"
             format_values["title"] = self.__gh_issue.title
-            format_values["pull-requests"] = self.pr_links if len(self.__pulls) > 0 else ""
+            pr_links: str = self.pr_links if self.pr_links is not None else ""
+            format_values["pull-requests"] = pr_links if len(self.__pulls) > 0 else ""
             format_values["authors"] = self.authors if self.authors is not None else ""
             format_values["contributors"] = self.contributors if self.contributors is not None else ""
 

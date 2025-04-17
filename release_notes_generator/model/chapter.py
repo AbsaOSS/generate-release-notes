@@ -25,7 +25,9 @@ class Chapter:
     A class representing a chapter in the release notes.
     """
 
-    def __init__(self, title: str = "", labels: Optional[list[str]] = None, empty_message: str = "No entries detected."):
+    def __init__(
+        self, title: str = "", labels: Optional[list[str]] = None, empty_message: str = "No entries detected."
+    ):
         self.title: str = title
         self.labels: list[str] = labels if labels else []
         self.rows: dict[int, str] = {}

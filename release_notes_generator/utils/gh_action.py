@@ -32,7 +32,7 @@ def get_action_input(name: str, default: Optional[str] = None) -> str:
 
     @return: The value of the specified input parameter, or an empty string if the environment
     """
-    return os.getenv(f'INPUT_{name.replace("-", "_").upper()}', default=default)   # type: ignore[arg-type]
+    return os.getenv(f'INPUT_{name.replace("-", "_").upper()}', default=default)  # type: ignore[arg-type]
 
 
 def set_action_output(name: str, value: str, default_output_path: str = "default_output.txt"):
