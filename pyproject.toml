@@ -5,3 +5,7 @@ force-exclude = '''test'''
 
 [tool.coverage.run]
 omit = ["tests/*"]
+
+[tool.mypy]
+check_untyped_defs = true
+exclude = "tests"

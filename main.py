@@ -47,7 +47,7 @@ def run() -> None:
     ActionInputs.validate_inputs()
     # Load custom chapters configuration
     custom_chapters = CustomChapters(print_empty_chapters=ActionInputs.get_print_empty_chapters()).from_yaml_array(
-        ActionInputs.get_chapters()
+        ActionInputs.get_chapters()  # type: ignore[arg-type]
     )
 
     generator = ReleaseNotesGenerator(py_github, custom_chapters)
@@ -55,7 +55,10 @@ def run() -> None:
     logger.debug("Generated release notes: \n%s", rls_notes)
 
     # Set the output for the GitHub Action
-    set_action_output("release-notes", rls_notes)
+    set_action_output(
+        "release-notes",
+        rls_notes if rls_notes is not None else "Failed to generate release notes. See logs for details.",
+    )
     logger.info("GitHub Action 'Release Notes Generator' completed successfully")
 
 

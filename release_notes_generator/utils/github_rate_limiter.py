@@ -21,7 +21,7 @@ This module contains the GithubRateLimiter class which is responsible for rate l
 import logging
 import time
 from datetime import datetime
-from typing import Optional, Callable
+from typing import Optional, Callable, Any
 from github import Github
 
 logger = logging.getLogger(__name__)
@@ -44,7 +44,7 @@ class GithubRateLimiter:
         @return: The decorated method.
         """
 
-        def wrapped_method(*args, **kwargs) -> Optional:
+        def wrapped_method(*args, **kwargs) -> Optional[Any]:
             # rate_limit = self.github_client.get_rate_limit().core
             remaining_calls = self.github_client.get_rate_limit().core.remaining
             reset_time = self.github_client.get_rate_limit().core.reset.timestamp()

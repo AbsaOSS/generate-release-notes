@@ -17,6 +17,7 @@
 """
 This module contains the Chapter class which is responsible for representing a chapter in the release notes.
 """
+from typing import Optional
 
 
 class Chapter:
@@ -24,12 +25,11 @@ class Chapter:
     A class representing a chapter in the release notes.
     """
 
-    def __init__(self, title: str = "", labels: list[str] = None, empty_message: str = "No entries detected."):
+    def __init__(
+        self, title: str = "", labels: Optional[list[str]] = None, empty_message: str = "No entries detected."
+    ):
         self.title: str = title
-        if labels is None:
-            self.labels = []
-        else:
-            self.labels: list[str] = labels
+        self.labels: list[str] = labels if labels else []
         self.rows: dict[int, str] = {}
         self.empty_message = empty_message
 
