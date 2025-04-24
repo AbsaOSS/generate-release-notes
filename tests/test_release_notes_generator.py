@@ -196,8 +196,8 @@ def test_get_latest_release_from_tag_name_defined_no_release(mocker, mock_repo):
 
     assert latest_release is None
     mock_exit.assert_called_once_with(1)
-    assert mock_log_info.called_with(2)
-    assert ('Getting latest release by from-tag name %s', None) == mock_log_info.call_args_list[0][0]
+    assert 2 == len(mock_log_info.call_args_list)
+    assert ('Getting latest release by from-tag name %s', "") == mock_log_info.call_args_list[0][0]
     assert ('Latest release not found for received tag %s. Ending!', '') == mock_log_info.call_args_list[1][0]
 
 
@@ -222,8 +222,8 @@ def test_get_latest_release_from_tag_name_defined_release_exists(mocker, mock_re
 
     assert rls_mock == latest_release
     mock_exit.assert_not_called()
-    assert mock_log_info.called_with(1)
-    assert ('Getting latest release by from-tag name %s', None) == mock_log_info.call_args_list[0][0]
+    assert 1 == len(mock_log_info.call_args_list)
+    assert ('Getting latest release by from-tag name %s', "") == mock_log_info.call_args_list[0][0]
 
 
 def test_get_latest_release_from_tag_name_not_defined_no_release(mocker, mock_repo):
@@ -244,7 +244,7 @@ def test_get_latest_release_from_tag_name_not_defined_no_release(mocker, mock_re
     latest_release = release_notes_generator.get_latest_release(mock_repo)
 
     assert latest_release is None
-    assert mock_log_info.called_with(2)
+    assert 2 == len(mock_log_info.call_args_list)
     assert ('Getting latest release by semantic ordering (could not be the last one by time).',) == mock_log_info.call_args_list[0][0]
     assert ('Latest release not found for %s. 1st release for repository!', 'org/repo') == mock_log_info.call_args_list[1][0]
 

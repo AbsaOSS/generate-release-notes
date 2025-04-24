@@ -18,6 +18,8 @@
 This module contains the ServiceChapters class which is responsible for representing the service chapters in the release
  notes.
 """
+from typing import Optional
+
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.base_chapters import BaseChapters
 from release_notes_generator.model.chapter import Chapter
@@ -43,18 +45,14 @@ class ServiceChapters(BaseChapters):
         self,
         sort_ascending: bool = True,
         print_empty_chapters: bool = True,
-        user_defined_labels: list[str] = None,
-        used_record_numbers: list[int] = None,
+        user_defined_labels: Optional[list[str]] = None,
+        used_record_numbers: Optional[list[int]] = None,
     ):
         super().__init__(sort_ascending, print_empty_chapters)
 
         self.user_defined_labels = user_defined_labels if user_defined_labels is not None else []
         self.sort_ascending = sort_ascending
-
-        if used_record_numbers is None:
-            self.used_record_numbers = []
-        else:
-            self.used_record_numbers = used_record_numbers
+        self.used_record_numbers: list[int] = used_record_numbers if used_record_numbers is not None else []
 
         self.chapters = {
             CLOSED_ISSUES_WITHOUT_PULL_REQUESTS: Chapter(

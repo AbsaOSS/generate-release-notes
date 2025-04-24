@@ -23,6 +23,7 @@ import logging
 import sys
 
 from typing import Optional
+
 import semver
 
 from github import Github
@@ -82,15 +83,20 @@ class ReleaseNotesGenerator:
             return None
 
         # get the latest release
-        rls: GitRelease = self.get_latest_release(repo)
+        rls: Optional[GitRelease] = self.get_latest_release(repo)
 
-        # default is repository creation date if no releases OR created_at of latest release
-        since = rls.created_at if rls else repo.created_at
-        if rls and ActionInputs.get_published_at():
-            since = rls.published_at
+        # get all issues
+        if rls is None:
+            issues = issues_all = self._safe_call(repo.get_issues)(state=ISSUE_STATE_ALL)
+        else:
+            # default is repository creation date if no releases OR created_at of latest release
+            since = rls.created_at if rls else repo.created_at
+            if rls and ActionInputs.get_published_at():
+                since = rls.published_at
 
-        # get all issues, pulls and commits, and then reduce them by the latest release since time
-        issues = issues_all = self._safe_call(repo.get_issues)(state=ISSUE_STATE_ALL, since=since)
+            issues = issues_all = self._safe_call(repo.get_issues)(state=ISSUE_STATE_ALL, since=since)
+
+        # pulls and commits, and then reduce them by the latest release since time
         pulls = pulls_all = self._safe_call(repo.get_pulls)(state="closed")
         commits = commits_all = list(self._safe_call(repo.get_commits)())
 
@@ -110,7 +116,7 @@ class ReleaseNotesGenerator:
             commits = list(filter(lambda commit: commit.commit.author.date > since, list(commits_all)))
             logger.debug("Count of commits reduced from %d to %d", len(list(commits_all)), len(commits))
 
-        changelog_url = get_change_url(tag_name=ActionInputs.get_tag_name(), repository=repo, git_release=rls)
+        changelog_url: str = get_change_url(tag_name=ActionInputs.get_tag_name(), repository=repo, git_release=rls)
 
         rls_notes_records: dict[int, Record] = RecordFactory.generate(
             github=self.github_instance,
@@ -135,10 +141,12 @@ class ReleaseNotesGenerator:
         @param repo: The repository to get the latest release from.
         @return: The latest release of the repository, or None if no releases are found.
         """
+        rls: Optional[GitRelease] = None
+
         # check if from-tag name is defined
         if ActionInputs.is_from_tag_name_defined():
             logger.info("Getting latest release by from-tag name %s", ActionInputs.get_tag_name())
-            rls: GitRelease = self._safe_call(repo.get_release)(ActionInputs.get_from_tag_name())
+            rls = self._safe_call(repo.get_release)(ActionInputs.get_from_tag_name())
 
             if rls is None:
                 logger.info("Latest release not found for received tag %s. Ending!", ActionInputs.get_from_tag_name())
@@ -147,7 +155,7 @@ class ReleaseNotesGenerator:
         else:
             logger.info("Getting latest release by semantic ordering (could not be the last one by time).")
             gh_releases: list = list(self._safe_call(repo.get_releases)())
-            rls: GitRelease = self.__get_latest_semantic_release(gh_releases)
+            rls = self.__get_latest_semantic_release(gh_releases)
 
             if rls is None:
                 logger.info("Latest release not found for %s. 1st release for repository!", repo.full_name)
@@ -178,7 +186,8 @@ class ReleaseNotesGenerator:
                 logger.debug("Skipping invalid type of version tag: %s", release.tag_name)
                 continue
 
-            if latest_version is None or current_version > latest_version:
+            if latest_version is None or current_version > latest_version:  # type: ignore[operator]
+                # mypy: check for None is done first
                 latest_version = current_version
                 rls = release
 
