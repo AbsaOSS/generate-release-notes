@@ -34,8 +34,8 @@ def get_action_input(name: str, default: Optional[str] = None) -> Optional[str]:
     """
     if default is None:
         return os.getenv(f'INPUT_{name.replace("-", "_").upper()}')
-    else:
-        return os.getenv(f'INPUT_{name.replace("-", "_").upper()}', default=default)
+
+    return os.getenv(f'INPUT_{name.replace("-", "_").upper()}', default=default)
 
 
 def set_action_output(name: str, value: str, default_output_path: str = "default_output.txt"):

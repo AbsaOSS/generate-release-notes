@@ -23,8 +23,6 @@ import os
 import sys
 import re
 
-from typing import Optional
-
 import yaml
 
 from release_notes_generator.utils.constants import (
@@ -90,7 +88,7 @@ class ActionInputs:
         """
         Get the from-tag name from the action inputs.
         """
-        return get_action_input(FROM_TAG_NAME, default="")  # type: ignore[return-value]    # string is returned as default
+        return get_action_input(FROM_TAG_NAME, default="")  # type: ignore[return-value] # string is returned as default
 
     @staticmethod
     def is_from_tag_name_defined() -> bool:
@@ -106,7 +104,8 @@ class ActionInputs:
         Get list of the chapters from the action inputs. Each chapter is a dict.
         """
         # Get the 'chapters' input from environment variables
-        chapters_input: str = get_action_input(CHAPTERS, default="")    # type: ignore[assignment]    # string is returned as default
+        chapters_input: str = get_action_input(CHAPTERS, default="")  # type: ignore[assignment]
+        # mypy: string is returned as default
 
         # Parse the received string back to YAML array input.
         try:
@@ -125,7 +124,8 @@ class ActionInputs:
         """
         Get the duplicity scope parameter value from the action inputs.
         """
-        duplicity_scope = get_action_input(DUPLICITY_SCOPE, "both").upper() # type: ignore[union-attr]  # string is returned as default
+        duplicity_scope = get_action_input(DUPLICITY_SCOPE, "both").upper()  # type: ignore[union-attr]
+        # mypy: string is returned as default
 
         try:
             return DuplicityScopeEnum(duplicity_scope)
@@ -138,14 +138,15 @@ class ActionInputs:
         """
         Get the duplicity icon from the action inputs.
         """
-        return get_action_input(DUPLICITY_ICON, "🔔") # type: ignore[return-value]  # string is returned as default
+        return get_action_input(DUPLICITY_ICON, "🔔")  # type: ignore[return-value]  # string is returned as default
 
     @staticmethod
     def get_published_at() -> bool:
         """
         Get the published at parameter value from the action inputs.
         """
-        return get_action_input(PUBLISHED_AT, "false").lower() == "true"    # type: ignore[union-attr]    # string is returned as default
+        return get_action_input(PUBLISHED_AT, "false").lower() == "true"  # type: ignore[union-attr]
+        # mypy: string is returned as default
 
     @staticmethod
     def get_skip_release_notes_labels() -> list[str]:
@@ -163,14 +164,18 @@ class ActionInputs:
         """
         Get the verbose parameter value from the action inputs.
         """
-        return os.getenv(RUNNER_DEBUG, "0") == "1" or get_action_input(VERBOSE).lower() == "true"   # type: ignore[union-attr]    # string is returned as default
+        return (
+            os.getenv(RUNNER_DEBUG, "0") == "1" or get_action_input(VERBOSE).lower() == "true"
+        )  # type: ignore[union-attr]
+        # mypy: string is returned as default
 
     @staticmethod
     def get_release_notes_title() -> str:
         """
         Get the release notes title from the action inputs.
         """
-        return get_action_input(RELEASE_NOTES_TITLE, RELEASE_NOTE_TITLE_DEFAULT)    # type: ignore[return-value]    # string is returned as default
+        return get_action_input(RELEASE_NOTES_TITLE, RELEASE_NOTE_TITLE_DEFAULT)  # type: ignore[return-value]
+        # mypy: string is returned as default
 
     # Features
     @staticmethod
@@ -178,14 +183,16 @@ class ActionInputs:
         """
         Get the warnings parameter value from the action inputs.
         """
-        return get_action_input(WARNINGS, "true").lower() == "true" # type: ignore[union-attr]    # string is returned as default
+        return get_action_input(WARNINGS, "true").lower() == "true"  # type: ignore[union-attr]
+        # mypy: string is returned as default
 
     @staticmethod
     def get_print_empty_chapters() -> bool:
         """
         Get the print empty chapters parameter value from the action inputs.
         """
-        return get_action_input(PRINT_EMPTY_CHAPTERS, "true").lower() == "true" # type: ignore[union-attr]    # string is returned as default
+        return get_action_input(PRINT_EMPTY_CHAPTERS, "true").lower() == "true"  # type: ignore[union-attr]
+        # mypy: string is returned as default
 
     @staticmethod
     def validate_input(input_value, expected_type: type, error_message: str, error_buffer: list) -> bool:
@@ -211,7 +218,9 @@ class ActionInputs:
         """
         if ActionInputs._row_format_issue is None:
             ActionInputs._row_format_issue = ActionInputs._detect_row_format_invalid_keywords(
-                get_action_input(ROW_FORMAT_ISSUE, "{number} _{title}_ in {pull-requests}").strip(), clean=True # type: ignore[union-attr]    # string is returned as default
+                get_action_input(ROW_FORMAT_ISSUE, "{number} _{title}_ in {pull-requests}").strip(),
+                clean=True,  # type: ignore[union-attr]
+                # mypy: string is returned as default
             )
         return ActionInputs._row_format_issue
 
@@ -222,7 +231,9 @@ class ActionInputs:
         """
         if ActionInputs._row_format_pr is None:
             ActionInputs._row_format_pr = ActionInputs._detect_row_format_invalid_keywords(
-                get_action_input(ROW_FORMAT_PR, "{number} _{title}_").strip(), clean=True   # type: ignore[union-attr]    # string is returned as default
+                get_action_input(ROW_FORMAT_PR, "{number} _{title}_").strip(),
+                clean=True,  # type: ignore[union-attr]
+                # mypy: string is returned as default
             )
         return ActionInputs._row_format_pr
 
@@ -231,7 +242,8 @@ class ActionInputs:
         """
         Get the value controlling whether the row format should include a 'PR:' prefix when linking to PRs.
         """
-        return get_action_input(ROW_FORMAT_LINK_PR, "true").lower() == "true"   # type: ignore[union-attr]    # string is returned as default
+        return get_action_input(ROW_FORMAT_LINK_PR, "true").lower() == "true"  # type: ignore[union-attr]
+        # mypy: string is returned as default
 
     @staticmethod
     def validate_inputs() -> None:

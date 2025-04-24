@@ -108,12 +108,14 @@ class Record:
     @property
     def is_closed_issue(self) -> bool:
         """Check if the record is a closed issue."""
-        return self.is_issue and self.__gh_issue.state == ISSUE_STATE_CLOSED    # type: ignore[union-attr]  # check for None done first
+        return self.is_issue and self.__gh_issue.state == ISSUE_STATE_CLOSED  # type: ignore[union-attr]
+        # mypy: check for None done first
 
     @property
     def is_open_issue(self) -> bool:
         """Check if the record is an open issue."""
-        return self.is_issue and self.__gh_issue.state == ISSUE_STATE_OPEN  # type: ignore[union-attr]  # check for None done first
+        return self.is_issue and self.__gh_issue.state == ISSUE_STATE_OPEN  # type: ignore[union-attr]
+        # mypy: check for None done first
 
     @property
     def is_merged_pr(self) -> bool:

@@ -186,7 +186,8 @@ class ReleaseNotesGenerator:
                 logger.debug("Skipping invalid type of version tag: %s", release.tag_name)
                 continue
 
-            if latest_version is None or current_version > latest_version:  # type: ignore[operator]    # check for None is done first
+            if latest_version is None or current_version > latest_version:  # type: ignore[operator]
+                # mypy: check for None is done first
                 latest_version = current_version
                 rls = release
 
