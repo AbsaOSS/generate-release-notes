@@ -69,28 +69,28 @@ class ActionInputs:
         """
         Get the GitHub repository from the action inputs.
         """
-        return get_action_input(GITHUB_REPOSITORY)
+        return get_action_input(GITHUB_REPOSITORY) or ""
 
     @staticmethod
     def get_github_token() -> str:
         """
         Get the GitHub token from the action inputs.
         """
-        return get_action_input(GITHUB_TOKEN)
+        return get_action_input(GITHUB_TOKEN) or ""
 
     @staticmethod
     def get_tag_name() -> str:
         """
         Get the tag name from the action inputs.
         """
-        return get_action_input(TAG_NAME)
+        return get_action_input(TAG_NAME) or ""
 
     @staticmethod
     def get_from_tag_name() -> str:
         """
         Get the from-tag name from the action inputs.
         """
-        return get_action_input(FROM_TAG_NAME, default="")
+        return get_action_input(FROM_TAG_NAME, default="")  # type: ignore[return-value]    # string is returned as default
 
     @staticmethod
     def is_from_tag_name_defined() -> bool:
@@ -101,22 +101,22 @@ class ActionInputs:
         return value.strip() != ""
 
     @staticmethod
-    def get_chapters() -> Optional[list[dict[str, str]]]:
+    def get_chapters() -> list[dict[str, str]]:
         """
         Get list of the chapters from the action inputs. Each chapter is a dict.
         """
         # Get the 'chapters' input from environment variables
-        chapters_input: str = get_action_input(CHAPTERS, default="")
+        chapters_input: str = get_action_input(CHAPTERS, default="")    # type: ignore[assignment]    # string is returned as default
 
         # Parse the received string back to YAML array input.
         try:
             chapters = yaml.safe_load(chapters_input)
             if not isinstance(chapters, list):
                 logger.error("Error: 'chapters' input is not a valid YAML list.")
-                return None
+                return []
         except yaml.YAMLError as exc:
             logger.error("Error parsing 'chapters' input: {%s}", exc)
-            return None
+            return []
 
         return chapters
 
@@ -125,7 +125,7 @@ class ActionInputs:
         """
         Get the duplicity scope parameter value from the action inputs.
         """
-        duplicity_scope = get_action_input(DUPLICITY_SCOPE, "both").upper()
+        duplicity_scope = get_action_input(DUPLICITY_SCOPE, "both").upper() # type: ignore[union-attr]  # string is returned as default
 
         try:
             return DuplicityScopeEnum(duplicity_scope)
@@ -138,14 +138,14 @@ class ActionInputs:
         """
         Get the duplicity icon from the action inputs.
         """
-        return get_action_input(DUPLICITY_ICON, "🔔")
+        return get_action_input(DUPLICITY_ICON, "🔔") # type: ignore[return-value]  # string is returned as default
 
     @staticmethod
     def get_published_at() -> bool:
         """
         Get the published at parameter value from the action inputs.
         """
-        return get_action_input(PUBLISHED_AT, "false").lower() == "true"
+        return get_action_input(PUBLISHED_AT, "false").lower() == "true"    # type: ignore[union-attr]    # string is returned as default
 
     @staticmethod
     def get_skip_release_notes_labels() -> list[str]:
@@ -163,14 +163,14 @@ class ActionInputs:
         """
         Get the verbose parameter value from the action inputs.
         """
-        return os.getenv(RUNNER_DEBUG, "0") == "1" or get_action_input(VERBOSE).lower() == "true"
+        return os.getenv(RUNNER_DEBUG, "0") == "1" or get_action_input(VERBOSE).lower() == "true"   # type: ignore[union-attr]    # string is returned as default
 
     @staticmethod
     def get_release_notes_title() -> str:
         """
         Get the release notes title from the action inputs.
         """
-        return get_action_input(RELEASE_NOTES_TITLE, RELEASE_NOTE_TITLE_DEFAULT)
+        return get_action_input(RELEASE_NOTES_TITLE, RELEASE_NOTE_TITLE_DEFAULT)    # type: ignore[return-value]    # string is returned as default
 
     # Features
     @staticmethod
@@ -178,14 +178,14 @@ class ActionInputs:
         """
         Get the warnings parameter value from the action inputs.
         """
-        return get_action_input(WARNINGS, "true").lower() == "true"
+        return get_action_input(WARNINGS, "true").lower() == "true" # type: ignore[union-attr]    # string is returned as default
 
     @staticmethod
     def get_print_empty_chapters() -> bool:
         """
         Get the print empty chapters parameter value from the action inputs.
         """
-        return get_action_input(PRINT_EMPTY_CHAPTERS, "true").lower() == "true"
+        return get_action_input(PRINT_EMPTY_CHAPTERS, "true").lower() == "true" # type: ignore[union-attr]    # string is returned as default
 
     @staticmethod
     def validate_input(input_value, expected_type: type, error_message: str, error_buffer: list) -> bool:
@@ -211,7 +211,7 @@ class ActionInputs:
         """
         if ActionInputs._row_format_issue is None:
             ActionInputs._row_format_issue = ActionInputs._detect_row_format_invalid_keywords(
-                get_action_input(ROW_FORMAT_ISSUE, "{number} _{title}_ in {pull-requests}").strip(), clean=True
+                get_action_input(ROW_FORMAT_ISSUE, "{number} _{title}_ in {pull-requests}").strip(), clean=True # type: ignore[union-attr]    # string is returned as default
             )
         return ActionInputs._row_format_issue
 
@@ -222,7 +222,7 @@ class ActionInputs:
         """
         if ActionInputs._row_format_pr is None:
             ActionInputs._row_format_pr = ActionInputs._detect_row_format_invalid_keywords(
-                get_action_input(ROW_FORMAT_PR, "{number} _{title}_").strip(), clean=True
+                get_action_input(ROW_FORMAT_PR, "{number} _{title}_").strip(), clean=True   # type: ignore[union-attr]    # string is returned as default
             )
         return ActionInputs._row_format_pr
 
@@ -231,7 +231,7 @@ class ActionInputs:
         """
         Get the value controlling whether the row format should include a 'PR:' prefix when linking to PRs.
         """
-        return get_action_input(ROW_FORMAT_LINK_PR, "true").lower() == "true"
+        return get_action_input(ROW_FORMAT_LINK_PR, "true").lower() == "true"   # type: ignore[union-attr]    # string is returned as default
 
     @staticmethod
     def validate_inputs() -> None:
@@ -243,6 +243,9 @@ class ActionInputs:
         errors = []
 
         repository_id = ActionInputs.get_github_repository()
+        if not isinstance(repository_id, str) or not repository_id.strip():
+            errors.append("Repository ID must be a non-empty string.")
+
         if "/" in repository_id:
             owner, repo_name = ActionInputs.get_github_repository().split("/")
         else:
@@ -260,8 +263,8 @@ class ActionInputs:
             errors.append("From tag name must be a string.")
 
         chapters = ActionInputs.get_chapters()
-        if chapters is None:
-            errors.append("Chapters must be a valid yaml array.")
+        if len(chapters) == 0:
+            errors.append("Chapters must be a valid yaml array and not empty.")
 
         duplicity_icon = ActionInputs.get_duplicity_icon()
         if not isinstance(duplicity_icon, str) or not duplicity_icon.strip() or len(duplicity_icon) != 1:

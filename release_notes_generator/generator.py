@@ -141,10 +141,12 @@ class ReleaseNotesGenerator:
         @param repo: The repository to get the latest release from.
         @return: The latest release of the repository, or None if no releases are found.
         """
+        rls: Optional[GitRelease] = None
+
         # check if from-tag name is defined
         if ActionInputs.is_from_tag_name_defined():
             logger.info("Getting latest release by from-tag name %s", ActionInputs.get_tag_name())
-            rls: GitRelease = self._safe_call(repo.get_release)(ActionInputs.get_from_tag_name())
+            rls = self._safe_call(repo.get_release)(ActionInputs.get_from_tag_name())
 
             if rls is None:
                 logger.info("Latest release not found for received tag %s. Ending!", ActionInputs.get_from_tag_name())
@@ -153,7 +155,7 @@ class ReleaseNotesGenerator:
         else:
             logger.info("Getting latest release by semantic ordering (could not be the last one by time).")
             gh_releases: list = list(self._safe_call(repo.get_releases)())
-            rls: GitRelease = self.__get_latest_semantic_release(gh_releases)  # type: ignore[no-redef]
+            rls = self.__get_latest_semantic_release(gh_releases)
 
             if rls is None:
                 logger.info("Latest release not found for %s. 1st release for repository!", repo.full_name)
@@ -184,7 +186,7 @@ class ReleaseNotesGenerator:
                 logger.debug("Skipping invalid type of version tag: %s", release.tag_name)
                 continue
 
-            if latest_version is None or current_version > latest_version:  # type: ignore[operator]
+            if latest_version is None or current_version > latest_version:  # type: ignore[operator]    # check for None is done first
                 latest_version = current_version
                 rls = release
 

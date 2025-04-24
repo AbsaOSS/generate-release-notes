@@ -47,7 +47,7 @@ def run() -> None:
     ActionInputs.validate_inputs()
     # Load custom chapters configuration
     custom_chapters = CustomChapters(print_empty_chapters=ActionInputs.get_print_empty_chapters()).from_yaml_array(
-        ActionInputs.get_chapters()  # type: ignore[arg-type]
+        ActionInputs.get_chapters()
     )
 
     generator = ReleaseNotesGenerator(py_github, custom_chapters)

@@ -25,7 +25,7 @@ def test_get_input_with_hyphen(mocker):
 
     result = get_action_input("test-input", default=None)
 
-    mock_getenv.assert_called_with("INPUT_TEST_INPUT", default=None)
+    mock_getenv.assert_called_with("INPUT_TEST_INPUT")
     assert "test_value" == result
 
 
@@ -34,7 +34,7 @@ def test_get_input_without_hyphen(mocker):
 
     result = get_action_input("anotherinput", default=None)
 
-    mock_getenv.assert_called_with("INPUT_ANOTHERINPUT", default=None)
+    mock_getenv.assert_called_with("INPUT_ANOTHERINPUT")
     assert "another_test_value" == result
 
 

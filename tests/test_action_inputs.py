@@ -39,7 +39,7 @@ failure_cases = [
     ("get_github_repository", "owner/", "Owner and Repo must be a non-empty string."),
     ("get_tag_name", "", "Tag name must be a non-empty string."),
     ("get_from_tag_name", 1, "From tag name must be a string."),
-    ("get_chapters", None, "Chapters must be a valid yaml array."),
+    ("get_chapters", [], "Chapters must be a valid yaml array and not empty."),
     ("get_warnings", "not_bool", "Warnings must be a boolean."),
     ("get_published_at", "not_bool", "Published at must be a boolean."),
     ("get_print_empty_chapters", "not_bool", "Print empty chapters must be a boolean."),
@@ -114,12 +114,12 @@ def test_get_chapters_success(mocker):
 
 def test_get_chapters_exception(mocker):
     mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="wrong value")
-    assert None == ActionInputs.get_chapters()
+    assert [] == ActionInputs.get_chapters()
 
 
 def test_get_chapters_yaml_error(mocker):
     mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="[{\"title\": \"Title\" \"label\": \"Label\"}]")
-    assert None == ActionInputs.get_chapters()
+    assert [] == ActionInputs.get_chapters()
 
 
 def test_get_warnings(mocker):

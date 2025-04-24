@@ -23,7 +23,7 @@ import sys
 from typing import Optional
 
 
-def get_action_input(name: str, default: Optional[str] = None) -> str:
+def get_action_input(name: str, default: Optional[str] = None) -> Optional[str]:
     """
     Retrieve the value of a specified input parameter from environment variables.
 
@@ -32,7 +32,10 @@ def get_action_input(name: str, default: Optional[str] = None) -> str:
 
     @return: The value of the specified input parameter, or an empty string if the environment
     """
-    return os.getenv(f'INPUT_{name.replace("-", "_").upper()}', default=default)  # type: ignore[arg-type]
+    if default is None:
+        return os.getenv(f'INPUT_{name.replace("-", "_").upper()}')
+    else:
+        return os.getenv(f'INPUT_{name.replace("-", "_").upper()}', default=default)
 
 
 def set_action_output(name: str, value: str, default_output_path: str = "default_output.txt"):
