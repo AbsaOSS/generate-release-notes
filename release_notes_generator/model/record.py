@@ -154,8 +154,7 @@ class Record:
             inside_release_notes = False
 
             for line in body_lines:
-                stripped_line = line.strip()
-                if len(stripped_line) == 0:
+                if not line.strip():
                     # skip empty lines as they are not relevant
                     continue
 
