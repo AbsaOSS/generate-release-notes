@@ -66,7 +66,25 @@ def test_record_properties_authors_contributors(record_with_no_issue_one_pull_cl
 # get_rls_notes
 
 
-def test_get_rls_notes(record_with_no_issue_one_pull_closed):
+def test_get_rls_notes_multi_level(record_with_no_issue_one_pull_closed):
+    record_with_no_issue_one_pull_closed.pull_request(0).body = """Release Notes:
+
+- Fixed bug
+  - Which was awful
+
+- Improved performance
+  + Now it runs like a cheetah - really!
+
++ More nice code
+  * Awesome architecture
+
+## Another chapter
+You should not see this chapter as part of the collected RLS notes.
+    """
+    expected_notes = "  - Fixed bug\n    - Which was awful\n  - Improved performance\n    + Now it runs like a cheetah - really!\n  + More nice code\n    * Awesome architecture"
+    assert record_with_no_issue_one_pull_closed.get_rls_notes(detection_pattern=ActionInputs.get_release_notes_title()) == expected_notes
+
+def test_get_rls_notes_mixed_line_marks(record_with_no_issue_one_pull_closed):
     expected_notes = "  - Fixed bug\n  - Improved performance\n  + More nice code\n    * Awesome architecture"
     assert record_with_no_issue_one_pull_closed.get_rls_notes(detection_pattern=ActionInputs.get_release_notes_title()) == expected_notes
 

@@ -1,5 +1,4 @@
-## Release Notes:
-> Provide a concise summary of changes for the release notes. Include any new features, bug fixes, or other significant updates. Keep it brief and to the point.
+{PR Summary}
 
 ## Checklist:
 > Ensure the following tasks are completed before submission.

@@ -154,6 +154,10 @@ class Record:
             inside_release_notes = False
 
             for line in body_lines:
+                if not line.strip():
+                    # skip empty lines as they are not relevant
+                    continue
+
                 if detection_regex.search(line):  # Use regex search
                     inside_release_notes = True
                     continue
