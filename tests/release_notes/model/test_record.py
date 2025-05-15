@@ -67,7 +67,7 @@ def test_record_properties_authors_contributors(record_with_no_issue_one_pull_cl
 
 
 def test_get_rls_notes_multi_level(record_with_no_issue_one_pull_closed):
-    record_with_no_issue_one_pull_closed.pull_request(0).body = """"Release Notes:
+    record_with_no_issue_one_pull_closed.pull_request(0).body = """Release Notes:
 
 - Fixed bug
   - Which was awful

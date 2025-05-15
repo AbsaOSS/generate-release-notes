@@ -1,4 +1,4 @@
-{PR summary}
+{PR Summary}
 
 ## Checklist:
 > Ensure the following tasks are completed before submission.
