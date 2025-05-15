@@ -1,4 +1,4 @@
-# Generate Release Notes Action - for Developers
+# Generate Release Notes Action—for Developers
 
 - [Get Started](#get-started)
 - [Run Static Code Analysis](#running-static-code-analysis)
@@ -25,9 +25,9 @@ export PYTHONPATH=<your path>/generate-release-notes/src
 
 ## Running Static Code Analysis
 
-This project uses Pylint tool for static code analysis. Pylint analyses your code without actually running it. It checks for errors, enforces, coding standards, looks for code smells etc.
+This project uses the Pylint tool for static code analysis. Pylint analyzes your code without actually running it. It checks for errors, enforces coding standards, looks for code smells, etc.
 
-Pylint displays a global evaluation score for the code, rated out of a maximum score of 10.0. We are aiming to keep our code quality high above the score 9.5.
+Pylint displays a global evaluation score for the code, rated out of a maximum score of 10.0. We aim to keep our code quality above 9.5.
 
 ### Set Up Python Environment
 ```shell
@@ -39,7 +39,7 @@ pip install -r requirements.txt
 This command will also install a Pylint tool, since it is listed in the project requirements.
 
 ### Run Pylint
-Run Pylint on all files that are currently tracked by Git in the project.
+Run Pylint on all files currently tracked by Git in the project.
 ```shell
 pylint $(git ls-files '*.py')
 ```
@@ -53,16 +53,16 @@ pylint release-notes-generator/generator.py
 
 ## Run Black Tool Locally
 This project uses the [Black](https://github.com/psf/black) tool for code formatting.
-Black aims for consistency, generality, readability and reducing git diffs.
+Black aims for consistency, generality, readability, and reducing git diffs.
 The coding style used can be viewed as a strict subset of PEP 8.
 
 The project root file `pyproject.toml` defines the Black tool configuration.
-In this project we are accepting the line length of 120 characters.
+In this project, we are accepting a line length of 120 characters.
 
 Follow these steps to format your code with Black locally:
 
 ### Set Up Python Environment
-From terminal in the root of the project, run the following command:
+From the terminal in the root of the project, run the following command:
 
 ```shell
 python3 -m venv venv
@@ -73,7 +73,7 @@ pip install -r requirements.txt
 This command will also install a Black tool, since it is listed in the project requirements.
 
 ### Run Black
-Run Black on all files that are currently tracked by Git in the project.
+Run Black on all files currently tracked by Git in the project.
 ```shell
 black $(git ls-files '*.py')
 ```
@@ -86,7 +86,7 @@ black release_notes_generator/generator.py
 ``` 
 
 ### Expected Output
-This is the console expected output example after running the tool:
+This is the console's expected output example after running the tool:
 ```
 All done! ✨ 🍰 ✨
 1 file reformatted.
@@ -95,10 +95,9 @@ All done! ✨ 🍰 ✨
 
 ## Run mypy Tool Locally
 
-This project uses the [my[py]](https://mypy.readthedocs.io/en/stable/)
-tool which is a static type checker for Python.
+This project uses the [my[py]](https://mypy.readthedocs.io/en/stable/) tool, a static type checker for Python.
 
-> Type checkers help ensure that you’re using variables and functions in your code correctly.
+> Type checkers help ensure that you correctly use variables and functions in your code.
 > With mypy, add type hints (PEP 484) to your Python programs,
 > and mypy will warn you when you use those types incorrectly.
 my[py] configuration is in `pyproject.toml` file.
@@ -132,13 +131,13 @@ This will execute all tests located in the tests directory.
 
 ## Code Coverage
 
-Code coverage is collected using pytest-cov coverage tool. To run the tests and collect coverage information, use the following command:
+Code coverage is collected using the pytest-cov coverage tool. To run the tests and collect coverage information, use the following command:
 
 ```shell
 pytest --cov=. -v tests/ --cov-fail-under=80
 ```
 
-This will execute all tests located in the tests directory and generate a code coverage report.
+This will execute all tests in the tests directory and generate a code coverage report.
 
 See the coverage report on the path:
 
@@ -171,7 +170,7 @@ export INPUT_SKIP_RELEASE_NOTES_LABELS="ignore-in-release"
 export INPUT_PRINT_EMPTY_CHAPTERS="true"
 export INPUT_VERBOSE="true"
 
-# CI in-build variables
+# CI in-built variables
 export GITHUB_REPOSITORY="< owner >/< repo-name >"
 export INPUT_GITHUB_TOKEN=$(printenv <your-env-token-var>)
 

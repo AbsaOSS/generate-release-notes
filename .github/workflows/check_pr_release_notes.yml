@@ -38,3 +38,4 @@ jobs:
           github-repository: ${{ github.repository }}
           pr-number: ${{ github.event.number }}
           skip-labels: 'no RN'
+          title: '(?:[Rr]elease [Nn]otes:|Summary by CodeRabbit)'
