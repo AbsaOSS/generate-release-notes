@@ -189,10 +189,14 @@ This feature searches for release notes in the description of GitHub pull reques
 ```
 Release Notes:
 - This update introduces a new caching mechanism that improves performance by 20%.
-
+  - The caching mechanism reduces database queries.
+    - Optimized for high-traffic scenarios.
+  - Includes support for distributed caching.
+  
 Release Notes:
 * This update introduces a new caching mechanism that improves performance by 20%.
-
+  * Affected only specific edge cases.
+  
 Release Notes:
 + This update introduces a new caching mechanism that improves performance by 20%.
 
