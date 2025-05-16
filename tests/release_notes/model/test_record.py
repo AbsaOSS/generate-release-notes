@@ -80,23 +80,52 @@ def test_get_rls_notes_multi_level(record_with_no_issue_one_pull_closed):
 
 ## Another chapter
 You should not see this chapter as part of the collected RLS notes.
+
+## Summary by CodeRabbit
+
+- **Group1**
+  - Fixed bug
     """
     expected_notes = "  - Fixed bug\n    - Which was awful\n  - Improved performance\n    + Now it runs like a cheetah - really!\n  + More nice code\n    * Awesome architecture"
-    assert record_with_no_issue_one_pull_closed.get_rls_notes(detection_pattern=ActionInputs.get_release_notes_title()) == expected_notes
+    assert record_with_no_issue_one_pull_closed.get_rls_notes() == expected_notes
+
 
 def test_get_rls_notes_mixed_line_marks(record_with_no_issue_one_pull_closed):
     expected_notes = "  - Fixed bug\n  - Improved performance\n  + More nice code\n    * Awesome architecture"
-    assert record_with_no_issue_one_pull_closed.get_rls_notes(detection_pattern=ActionInputs.get_release_notes_title()) == expected_notes
+    assert record_with_no_issue_one_pull_closed.get_rls_notes() == expected_notes
 
-def test_get_rls_notes_not_detected(record_with_no_issue_one_pull_closed):
-    assert '' == record_with_no_issue_one_pull_closed.get_rls_notes(detection_pattern="XXX")
+
+def test_get_rls_notes_not_detected(record_with_no_issue_one_pull_closed, mocker):
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_release_notes_title", return_value="XXX")
+    assert '' == record_with_no_issue_one_pull_closed.get_rls_notes()
+
+
+def test_get_rls_notes_multi_level_coderabbit(record_with_no_issue_one_pull_closed, mocker):
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.is_coderabbit_support_active", return_value="true")
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_coderabbit_summary_ignore_groups", return_value=["Group2"])
+    record_with_no_issue_one_pull_closed.pull_request(0).body = """## Another chapter
+You should not see this chapter as part of the collected RLS notes.
+
+## Summary by CodeRabbit
+
+- **Group1**
+  - Fixed bug
+  
+- **Group2**
+  - Improved performance
+  
+## Another chapter
+
+With another test section.
+    """
+    expected_notes = "  - Fixed bug"
+    assert record_with_no_issue_one_pull_closed.get_rls_notes() == expected_notes
 
 
 # contains_release_notes
 
 
 def test_contains_release_notes_success(record_with_no_issue_one_pull_closed):
-    assert record_with_no_issue_one_pull_closed.contains_release_notes
     assert record_with_no_issue_one_pull_closed.contains_release_notes
 
 

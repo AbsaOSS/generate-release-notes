@@ -106,6 +106,21 @@ Generate Release Notes action is dedicated to enhance the quality and organizati
 - **Required**: No
 - **Default**: `[Rr]elease [Nn]otes:`
 
+### `coderabbit-support-active:`
+- **Description**: Set to true to enable CodeRabbit support for generating release notes.
+- **Required**: No
+- **Default**: false
+
+### `coderabbit-release-notes-title`
+- **Description**: The CodeRabbit's summary section title in the PR description.
+- **Required**: No
+- **Default**: `Summary by CodeRabbit`
+
+### `coderabbit-summary-ignore-groups`
+- **Description**: List of "group names" to be ignored by release notes detection logic. Example: `Documentation, Tests, Chores, Bug Fixes`.
+- **Required**: No
+- **Default**: []
+
 ### Feature controls
 
 ### `warnings`
@@ -173,6 +188,10 @@ Add the following step to your GitHub workflow (in example are used non-default 
     verbose: false
     release-notes-title: '[Rr]elease Notes:'
 
+    coderabbit-support-active: 'true'
+    coderabbit-release-notes-title: 'Summary by CodeRabbit'
+    coderabbit-release-notes-ignore-types: ['Documentation', 'Tests', 'Chores', 'Bug Fixes']
+
     warnings: false
     print-empty-chapters: false
 ```
@@ -180,31 +199,62 @@ Add the following step to your GitHub workflow (in example are used non-default 
 ## Features
 ### Built-in
 #### Release Notes Extraction Process
-This feature searches for release notes in the description of GitHub pull requests, making it easier for maintainers to track changes and updates.
-- **Format:** 
-  - The release notes section have to begin with the title `Release Notes:` (case-sensitive), followed by the release notes in bullet points. [Markdown formatting is supported](https://www.markdownguide.org/basic-syntax/#unordered-lists).
-  - If no release notes line is detected under the `Release Notes:` title, no release notes will be printed in the output.
+
+This feature automatically extracts release notes from GitHub pull request descriptions to help maintainers track meaningful changes.
+
+##### 🔍 How Detection Works
+
+- The Action looks for a specific section in the PR body, defined by:
+  - `release-notes-title`: A regex pattern to match the release notes section header.
+  - `coderabbit-support-active`: Enables fallback support for CodeRabbit summaries.
+    - ✅ _Used only if no section matching `release-notes-title` is found._
+
+##### 📏 Detection Rules
+- The release notes section:
+  - Can be **anywhere in the PR body**
+  - Must begin with a header that matches either:
+    - `release-notes-title`
+    - OR `coderabbit-release-notes-title` (when CodeRabbit support is active)
+  - Supports [Markdown formatting](https://www.markdownguide.org/basic-syntax/#unordered-lists)
+  - Only the **first matching section** is extracted
+  - Is **optional** – the Action will still proceed even if no notes are found
+  - Will be **skipped silently** if the PR has a label listed in `skip-release-notes-labels`
+
+> 🔕 If no valid section is found, the output Release Notes record will not contain any release notes.
+
 - **Example:** 
   - Here are examples of how to structure the release notes:
 ```
-Release Notes:
+## Release Notes:
 - This update introduces a new caching mechanism that improves performance by 20%.
   - The caching mechanism reduces database queries.
     - Optimized for high-traffic scenarios.
   - Includes support for distributed caching.
   
-Release Notes:
+## Release Notes:
 * This update introduces a new caching mechanism that improves performance by 20%.
   * Affected only specific edge cases.
   
-Release Notes:
+## Release Notes:
 + This update introduces a new caching mechanism that improves performance by 20%.
 
-```
-The extraction process supports all three types of bullet points: `-`, `*`, and `+`, and their combinations. (GitHub documentation do not recommend to mix them.)
+## Summary by CodeRabbit
 
-- **Best Practice:** Select one character from `-`, `*`, `+` for bullet points. The Markdown parser will automatically format them as a list.
-- **Optional usage:** The release notes section is not mandatory for GH action to work.
+- **New Features**
+  - Introduced a new feature.
+  
+- **Documentation**
+  - Added new descriptions.
+
+- **Chores**
+  - Added configuration files for code style.
+
+- **Tests**
+  - Introduced a complete test suite for all classes.
+```
+> The extraction process supports all three types of bullet points: `-`, `*`, and `+`, and their combinations. (GitHub documentation do not recommend to mix them.)
+> 
+> **Best Practice:** Select one character from `-`, `*`, `+` for bullet points. The Markdown parser will automatically format them as a list.
 
 #### Handling Multiple PRs
 If an issue is linked to multiple PRs, the action fetches and aggregates contributions from all linked PRs.

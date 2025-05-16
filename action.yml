@@ -21,7 +21,7 @@ inputs:
     description: 'The tag name of the release to generate notes for.'
     required: true
   chapters:
-    description: 'An string representation of YAML array defining chapters and corresponding labels for categorization. (Created by used "|".)'
+    description: 'A string representation of a YAML array defining chapters and corresponding labels for categorization. (Created by used "|".)'
     required: false
     default: ''
   duplicity-scope:
@@ -60,6 +60,18 @@ inputs:
     description: 'The title of the release notes section in the PR body. Value supports regex.'
     required: false
     default: '[Rr]elease [Nn]otes:'
+  coderabbit-support-active:
+    description: 'Enable CodeRabbit support. If true, the action will use CodeRabbit to generate release notes.'
+    required: false
+    default: 'false'
+  coderabbit-release-notes-title:
+    description: 'The title of the CodeRabbit summary in the PR body. Value supports regex.'
+    required: false
+    default: 'Summary by CodeRabbit'
+  coderabbit-summary-ignore-groups:
+    description: 'List of "group names" to be ignored by release notes detection logic.'
+    required: false
+    default: ''
   row-format-issue:
     description: 'Format of the issue row in the release notes. Available placeholders: {number}, {title}, {pull-requests}. Placeholders are case-insensitive.'
     required: false
@@ -129,6 +141,9 @@ runs:
         INPUT_PRINT_EMPTY_CHAPTERS: ${{ inputs.print-empty-chapters }}
         INPUT_VERBOSE: ${{ inputs.verbose }}
         INPUT_RELEASE_NOTES_TITLE: ${{ inputs.release-notes-title }}
+        INPUT_CODERABBIT_SUPPORT_ACTIVE: ${{ inputs.coderabbit-support-active }}
+        INPUT_CODERABBIT_RELEASE_NOTES_TITLE: ${{ inputs.coderabbit-release-notes-title }}
+        INPUT_CODERABBIT_RELEASE_NOTES_IGNORE_TYPES: ${{ inputs.coderabbit-release-notes-ignore-types }}
         INPUT_GITHUB_REPOSITORY: ${{ github.repository }}
         INPUT_ROW_FORMAT_ISSUE: ${{ inputs.row-format-issue }}
         INPUT_ROW_FORMAT_PR: ${{ inputs.row-format-pr }}

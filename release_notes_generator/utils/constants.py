@@ -30,6 +30,9 @@ PUBLISHED_AT = "published-at"
 SKIP_RELEASE_NOTES_LABELS = "skip-release-notes-labels"
 VERBOSE = "verbose"
 RELEASE_NOTES_TITLE = "release-notes-title"
+CODERABBIT_SUPPORT_ACTIVE = "coderabbit-support-active"
+CODERABBIT_RELEASE_NOTES_TITLE = "coderabbit-release-notes-title"
+CODERABBIT_SUMMARY_IGNORE_GROUPS = "coderabbit-summary-ignore-groups"
 RUNNER_DEBUG = "RUNNER_DEBUG"
 ROW_FORMAT_ISSUE = "row-format-issue"
 ROW_FORMAT_PR = "row-format-pr"
@@ -51,6 +54,7 @@ ISSUE_STATE_ALL = "all"
 
 # Release notes comment constants
 RELEASE_NOTE_TITLE_DEFAULT: str = "[Rr]elease [Nn]otes:"
+CODERABBIT_RELEASE_NOTE_TITLE_DEFAULT: str = "Summary by CodeRabbit"
 RELEASE_NOTE_LINE_MARKS: list[str] = ["-", "*", "+"]
 
 # Service chapters titles

@@ -45,6 +45,10 @@ from release_notes_generator.utils.constants import (
     RELEASE_NOTE_TITLE_DEFAULT,
     SUPPORTED_ROW_FORMAT_KEYS,
     FROM_TAG_NAME,
+    CODERABBIT_SUPPORT_ACTIVE,
+    CODERABBIT_RELEASE_NOTES_TITLE,
+    CODERABBIT_RELEASE_NOTE_TITLE_DEFAULT,
+    CODERABBIT_SUMMARY_IGNORE_GROUPS,
 )
 from release_notes_generator.utils.enums import DuplicityScopeEnum
 from release_notes_generator.utils.gh_action import get_action_input
@@ -52,7 +56,7 @@ from release_notes_generator.utils.gh_action import get_action_input
 logger = logging.getLogger(__name__)
 
 
-# pylint: disable=too-many-branches, too-many-statements, too-many-locals
+# pylint: disable=too-many-branches, too-many-statements, too-many-locals, too-many-public-methods
 class ActionInputs:
     """
     A class representing the inputs provided to the GH action.
@@ -178,6 +182,40 @@ class ActionInputs:
         return get_action_input(RELEASE_NOTES_TITLE, RELEASE_NOTE_TITLE_DEFAULT)  # type: ignore[return-value]
         # mypy: string is returned as default
 
+    @staticmethod
+    def is_coderabbit_support_active() -> bool:
+        """
+        Get the CodeRabbit support active parameter value from the action inputs.
+        """
+        return get_action_input(CODERABBIT_SUPPORT_ACTIVE, "false").lower() == "true"   # type: ignore[union-attr]
+
+    @staticmethod
+    def get_coderabbit_release_notes_title() -> str:
+        """
+        Get the CodeRabbit release notes title from the action inputs.
+        """
+        return get_action_input(CODERABBIT_RELEASE_NOTES_TITLE, CODERABBIT_RELEASE_NOTE_TITLE_DEFAULT)  # type: ignore[return-value]
+
+    @staticmethod
+    def get_coderabbit_summary_ignore_groups() -> list[str]:
+        """
+        Get the CodeRabbit summary title types to ignore.
+        """
+        l: list[str] = []
+        raw = get_action_input(CODERABBIT_SUMMARY_IGNORE_GROUPS, "")
+        if not isinstance(raw, str):
+            logger.error("Error: 'coderabbit_summary_ignore_groups' is not a valid string.")
+            return l
+
+        titles = raw.strip()
+        split_by: str = "," if "," in titles else "\n"
+
+        if len(titles) > 0:
+            for title in titles.split(split_by):
+                l.append(title.strip())
+
+        return l
+
     # Features
     @staticmethod
     def get_warnings() -> bool:
@@ -298,6 +336,20 @@ class ActionInputs:
         if not isinstance(release_notes_title, str) or len(release_notes_title) == 0:
             errors.append("Release Notes title must be a non-empty string and have non-zero length.")
 
+        coderabbit_support_active = ActionInputs.is_coderabbit_support_active()
+        coderabbit_release_notes_title = ActionInputs.get_coderabbit_release_notes_title()
+        coderabbit_summary_ignore_groups = ActionInputs.get_coderabbit_summary_ignore_groups()
+
+        if coderabbit_support_active:
+            if not isinstance(coderabbit_release_notes_title, str) or len(coderabbit_release_notes_title) == 0:
+                errors.append("CodeRabbit Release Notes title must be a non-empty string and have non-zero length.")
+
+            for group in coderabbit_summary_ignore_groups:
+                if not isinstance(group, str) or len(group) == 0:
+                    errors.append(
+                        "CodeRabbit summary ignore groups must be a non-empty string and have non-zero length."
+                    )
+
         row_format_issue = ActionInputs.get_row_format_issue()
         if not isinstance(row_format_issue, str) or not row_format_issue.strip():
             errors.append("Issue row format must be a non-empty string.")
@@ -332,6 +384,9 @@ class ActionInputs:
         logger.debug("Warnings: %s", warnings)
         logger.debug("Print empty chapters: %s", print_empty_chapters)
         logger.debug("Release notes title: %s", release_notes_title)
+        logger.debug("CodeRabbit support active: %s", coderabbit_support_active)
+        logger.debug("CodeRabbit release notes title: %s", coderabbit_release_notes_title)
+        logger.debug("CodeRabbit summary ignore groups: %s", coderabbit_summary_ignore_groups)
 
     @staticmethod
     def _detect_row_format_invalid_keywords(row_format: str, row_type: str = "Issue", clean: bool = False) -> str:
