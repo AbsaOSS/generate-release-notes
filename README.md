@@ -131,7 +131,7 @@ Add the following step to your GitHub workflow (in example are used non-default 
 
     coderabbit-support-active: 'true'
     coderabbit-release-notes-title: 'Summary by CodeRabbit'
-    coderabbit-summary-ignore-types: ['Documentation', 'Tests', 'Chores', 'Bug Fixes']
+    coderabbit-summary-ignore-types: ['Documentation', 'Tests', 'Chores', 'Bug Fixes', 'Refactor']
 
     warnings: false
     print-empty-chapters: false
