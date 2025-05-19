@@ -148,14 +148,16 @@ class Record:
         # Compile the regex pattern for efficiency
         detection_regex = re.compile(detection_pattern)
         cr_active: bool = ActionInputs.is_coderabbit_support_active()
-        cr_detection_regex: Optional[re.Pattern[Any]] = re.compile(ActionInputs.get_coderabbit_release_notes_title()) if cr_active else None
+        cr_detection_regex: Optional[re.Pattern[Any]] = (
+            re.compile(ActionInputs.get_coderabbit_release_notes_title()) if cr_active else None
+        )
 
         # Iterate over all PRs
         for pull in self.__pulls:
             if pull.body and detection_regex.search(pull.body):
                 release_notes += self.__get_rls_notes_default(pull, line_marks, detection_regex)
             elif pull.body and cr_active and cr_detection_regex.search(pull.body):  # type: ignore[union-attr]
-                release_notes += self.__get_rls_notes_code_rabbit(pull, line_marks, cr_detection_regex) # type: ignore[arg-type]
+                release_notes += self.__get_rls_notes_code_rabbit(pull, line_marks, cr_detection_regex)  # type: ignore[arg-type]
 
         # Return the concatenated release notes
         return release_notes.rstrip()
@@ -211,9 +213,11 @@ class Record:
                 continue
 
             if inside_section:
-                if line[0] in line_marks:
+                # Check if this is a bold group heading
+                if line[0] in line_marks and "**" in stripped:
                     # Group heading – check if it should be skipped
-                    skipping_group = any(f"**{group}**" in stripped for group in ignore_groups)
+                    group_name = stripped.split("**")[1]
+                    skipping_group = any(group.lower() == group_name.lower() for group in ignore_groups)
                     continue
 
                 if skipping_group and line.startswith("  - "):

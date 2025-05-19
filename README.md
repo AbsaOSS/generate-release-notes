@@ -55,7 +55,7 @@ Generate Release Notes action is dedicated to enhance the quality and organizati
 | `skip-release-notes-labels` | List labels used for detection if issues or pull requests are ignored in the Release Notes generation process. Example: `skip-release-notes, question`. | No  | `skip-release-notes` | 
 | `verbose` | Set to true to enable verbose logging for detailed output during the action's execution. | No | false |
 | `release-notes-title` | The title of the release notes section in the PR description. | No | `[Rr]elease [Nn]otes:` |
-| `coderabbit-support-active:` | Set to true to enable CodeRabbit support for generating release notes. | No | false |
+| `coderabbit-support-active` | Set to true to enable CodeRabbit support for generating release notes. | No | false |
 | `coderabbit-release-notes-title` | The CodeRabbit's summary section title in the PR description. | No | `Summary by CodeRabbit` |
 | `coderabbit-summary-ignore-groups` | List of "group names" to be ignored by release notes detection logic. Example: `Documentation, Tests, Chores, Bug Fixes`. | No | [] |
 
@@ -131,7 +131,7 @@ Add the following step to your GitHub workflow (in example are used non-default 
 
     coderabbit-support-active: 'true'
     coderabbit-release-notes-title: 'Summary by CodeRabbit'
-    coderabbit-release-notes-ignore-types: ['Documentation', 'Tests', 'Chores', 'Bug Fixes']
+    coderabbit-summary-ignore-types: ['Documentation', 'Tests', 'Chores', 'Bug Fixes']
 
     warnings: false
     print-empty-chapters: false

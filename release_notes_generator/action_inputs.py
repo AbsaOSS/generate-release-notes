@@ -187,7 +187,7 @@ class ActionInputs:
         """
         Get the CodeRabbit support active parameter value from the action inputs.
         """
-        return get_action_input(CODERABBIT_SUPPORT_ACTIVE, "false").lower() == "true"   # type: ignore[union-attr]
+        return get_action_input(CODERABBIT_SUPPORT_ACTIVE, "false").lower() == "true"  # type: ignore[union-attr]
 
     @staticmethod
     def get_coderabbit_release_notes_title() -> str:
@@ -201,20 +201,18 @@ class ActionInputs:
         """
         Get the CodeRabbit summary title types to ignore.
         """
-        l: list[str] = []
+        ignore_groups: list[str] = []
         raw = get_action_input(CODERABBIT_SUMMARY_IGNORE_GROUPS, "")
         if not isinstance(raw, str):
             logger.error("Error: 'coderabbit_summary_ignore_groups' is not a valid string.")
-            return l
+            return ignore_groups
 
         titles = raw.strip()
-        split_by: str = "," if "," in titles else "\n"
+        if titles:
+            separator = "," if "," in titles else "\n"
+            ignore_groups = [title.strip() for title in titles.split(separator)]
 
-        if len(titles) > 0:
-            for title in titles.split(split_by):
-                l.append(title.strip())
-
-        return l
+        return ignore_groups
 
     # Features
     @staticmethod
