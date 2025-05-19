@@ -55,8 +55,8 @@ Generate Release Notes action is dedicated to enhance the quality and organizati
 | `skip-release-notes-labels` | List labels used for detection if issues or pull requests are ignored in the Release Notes generation process. Example: `skip-release-notes, question`. | No  | `skip-release-notes` | 
 | `verbose` | Set to true to enable verbose logging for detailed output during the action's execution. | No | false |
 | `release-notes-title` | The title of the release notes section in the PR description. | No | `[Rr]elease [Nn]otes:` |
-| `coderabbit-support-active` | Set to true to enable CodeRabbit support for generating release notes. | No | false |
-| `coderabbit-release-notes-title` | The CodeRabbit's summary section title in the PR description. | No | `Summary by CodeRabbit` |
+| `coderabbit-support-active` | Enable CodeRabbit support. If true, the action will use CodeRabbit to generate release notes. | No | false |
+| `coderabbit-release-notes-title` | The title of the CodeRabbit summary in the PR body. Value supports regex. | No | `Summary by CodeRabbit` |
 | `coderabbit-summary-ignore-groups` | List of "group names" to be ignored by release notes detection logic. Example: `Documentation, Tests, Chores, Bug Fixes`. | No | '' |
 
 > **Notes**
@@ -110,7 +110,7 @@ Add the following step to your GitHub workflow (in example are used non-default 
 ```yaml
 - name: Generate Release Notes
   id: release_notes_generator
-  uses: AbsaOSS/generate-release-notes@v0.2.0
+  uses: AbsaOSS/generate-release-notes@v0.7.0
   env:
     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
   with:
