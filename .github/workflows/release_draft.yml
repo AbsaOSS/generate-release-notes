@@ -60,7 +60,7 @@ jobs:
 
       - name: Generate Release Notes
         id: generate_release_notes
-        uses: AbsaOSS/generate-release-notes@master
+        uses: AbsaOSS/generate-release-notes@bugfix/fix-coderabbit-summary-groups
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
