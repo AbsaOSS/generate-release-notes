@@ -129,7 +129,7 @@ Add the following step to your GitHub workflow (in example are used non-default 
     verbose: false
     release-notes-title: '[Rr]elease Notes:'
 
-    coderabbit-support-active: 'true'
+    coderabbit-support-active: true
     coderabbit-release-notes-title: 'Summary by CodeRabbit'
     coderabbit-summary-ignore-groups: 'Documentation, Tests, Chores, Bug Fixes, Refactor'
 
@@ -155,7 +155,7 @@ This feature automatically extracts release notes from GitHub pull request descr
   - Can be **anywhere in the PR body**
   - Must begin with a header that matches either:
     - `release-notes-title`
-    - OR `coderabbit-release-notes-title` (when CodeRabbit support is active)
+    - or `coderabbit-release-notes-title` (when CodeRabbit support is active)
   - Supports [Markdown formatting](https://www.markdownguide.org/basic-syntax/#unordered-lists)
   - Only the **first matching section** is extracted
   - Is **optional** – the Action will still proceed even if no notes are found
