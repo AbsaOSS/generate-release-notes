@@ -143,7 +143,7 @@ runs:
         INPUT_RELEASE_NOTES_TITLE: ${{ inputs.release-notes-title }}
         INPUT_CODERABBIT_SUPPORT_ACTIVE: ${{ inputs.coderabbit-support-active }}
         INPUT_CODERABBIT_RELEASE_NOTES_TITLE: ${{ inputs.coderabbit-release-notes-title }}
-        INPUT_CODERABBIT_SUMARY_IGNORE_GROUPS: ${{ inputs.coderabbit-summary-ignore-groups }}
+        INPUT_CODERABBIT_SUMMARY_IGNORE_GROUPS: ${{ inputs.coderabbit-summary-ignore-groups }}
         INPUT_GITHUB_REPOSITORY: ${{ github.repository }}
         INPUT_ROW_FORMAT_ISSUE: ${{ inputs.row-format-issue }}
         INPUT_ROW_FORMAT_PR: ${{ inputs.row-format-pr }}
