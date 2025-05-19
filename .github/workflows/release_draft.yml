@@ -77,7 +77,7 @@ jobs:
             - { title: Documentation 📜, label: documentation }
           coderabbit-support-active: 'true'
           coderabbit-release-notes-title: 'Summary by CodeRabbit'
-          coderabbit-summary-ignore-groups: 'Documentation,Tests,Chores,Bug Fixes,Refactor'
+          coderabbit-summary-ignore-groups: 'Documentation, Tests, Chores, Bug Fixes, Refactor'
 
           skip-release-notes-label: 'no RN'
           verbose: true

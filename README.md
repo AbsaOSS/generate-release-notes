@@ -131,7 +131,7 @@ Add the following step to your GitHub workflow (in example are used non-default 
 
     coderabbit-support-active: 'true'
     coderabbit-release-notes-title: 'Summary by CodeRabbit'
-    coderabbit-summary-ignore-groups: 'Documentation,Tests,Chores,Bug Fixes,Refactor'
+    coderabbit-summary-ignore-groups: 'Documentation, Tests, Chores, Bug Fixes, Refactor'
 
     warnings: false
     print-empty-chapters: false
@@ -165,7 +165,8 @@ This feature automatically extracts release notes from GitHub pull request descr
 
 - **Example:** 
   - Here are examples of how to structure the release notes:
-```
+
+```markdown
 ## Release Notes:
 - This update introduces a new caching mechanism that improves performance by 20%.
   - The caching mechanism reduces database queries.
