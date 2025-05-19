@@ -21,7 +21,7 @@ This module contains the BaseChapters class which is responsible for representin
 import logging
 import re
 
-from typing import Optional
+from typing import Optional, AnyStr, Any
 
 from github.Issue import Issue
 from github.PullRequest import PullRequest
@@ -132,45 +132,103 @@ class Record:
 
         return [label.name for label in self.__gh_issue.labels]
 
-    def get_rls_notes(self, detection_pattern: str, line_marks: Optional[list[str]] = None) -> str:
+    def get_rls_notes(self, line_marks: Optional[list[str]] = None) -> str:
         """
         Gets the release notes of the record.
 
-        @param detection_pattern: The detection pattern (regex allowed) to use.
         @param line_marks: The line marks to use.
         @return: The release notes of the record as a string.
         """
+        release_notes = ""
+        detection_pattern = ActionInputs.get_release_notes_title()
+
         if line_marks is None:
             line_marks = RELEASE_NOTE_LINE_MARKS
 
-        release_notes = ""
-
         # Compile the regex pattern for efficiency
         detection_regex = re.compile(detection_pattern)
+        cr_active: bool = ActionInputs.is_coderabbit_support_active()
+        cr_detection_regex: Optional[re.Pattern[Any]] = (
+            re.compile(ActionInputs.get_coderabbit_release_notes_title()) if cr_active else None
+        )
 
         # Iterate over all PRs
         for pull in self.__pulls:
-            body_lines = pull.body.split("\n") if pull.body is not None else []
-            inside_release_notes = False
-
-            for line in body_lines:
-                if not line.strip():
-                    # skip empty lines as they are not relevant
-                    continue
-
-                if detection_regex.search(line):  # Use regex search
-                    inside_release_notes = True
-                    continue
-
-                if inside_release_notes:
-                    tmp = line.strip()
-                    if len(tmp) > 0 and tmp[0] in line_marks:
-                        release_notes += f"  {line.rstrip()}\n"
-                    else:
-                        break
+            if pull.body and detection_regex.search(pull.body):
+                release_notes += self.__get_rls_notes_default(pull, line_marks, detection_regex)
+            elif pull.body and cr_active and cr_detection_regex.search(pull.body):  # type: ignore[union-attr]
+                release_notes += self.__get_rls_notes_code_rabbit(pull, line_marks, cr_detection_regex)  # type: ignore[arg-type]
 
         # Return the concatenated release notes
         return release_notes.rstrip()
+
+    def __get_rls_notes_default(
+        self, pull: PullRequest, line_marks: list[str], detection_regex: re.Pattern[str]
+    ) -> str:
+        if not pull.body:
+            return ""
+
+        lines = pull.body.splitlines()
+        release_notes_lines = []
+
+        found_section = False
+        for line in lines:
+            stripped = line.strip()
+            if not stripped:
+                continue
+
+            if not found_section:
+                if detection_regex.search(line):
+                    found_section = True
+                continue
+
+            if stripped[0] in line_marks:
+                release_notes_lines.append(f"  {line.rstrip()}")
+            else:
+                break
+
+        return "\n".join(release_notes_lines) + ("\n" if release_notes_lines else "")
+
+    def __get_rls_notes_code_rabbit(
+        self, pull: PullRequest, line_marks: list[str], cr_detection_regex: re.Pattern[str]
+    ) -> str:
+        if not pull.body:
+            return ""
+
+        lines = pull.body.splitlines()
+        ignore_groups: list[str] = ActionInputs.get_coderabbit_summary_ignore_groups()
+        release_notes_lines = []
+
+        inside_section = False
+        skipping_group = False
+
+        for line in lines:
+            stripped = line.strip()
+            if not stripped:
+                continue
+
+            if not inside_section:
+                if cr_detection_regex.search(line):
+                    inside_section = True
+                continue
+
+            if inside_section:
+                # Check if this is a bold group heading
+                if line[0] in line_marks and "**" in stripped:
+                    # Group heading – check if it should be skipped
+                    group_name = stripped.split("**")[1]
+                    skipping_group = any(group.lower() == group_name.lower() for group in ignore_groups)
+                    continue
+
+                if skipping_group and line.startswith("  - "):
+                    continue
+
+                if stripped[0] in line_marks and line.startswith("  - "):
+                    release_notes_lines.append(line.rstrip())
+                else:
+                    break
+
+        return "\n".join(release_notes_lines) + ("\n" if release_notes_lines else "")
 
     @property
     def contains_release_notes(self) -> bool:
@@ -178,7 +236,7 @@ class Record:
         if self.__is_release_note_detected:
             return self.__is_release_note_detected
 
-        rls_notes: str = self.get_rls_notes(detection_pattern=ActionInputs.get_release_notes_title())
+        rls_notes: str = self.get_rls_notes()
         if any(mark in rls_notes for mark in RELEASE_NOTE_LINE_MARKS):
             self.__is_release_note_detected = True
 
@@ -311,7 +369,7 @@ class Record:
             row = f"{row_prefix}" + ActionInputs.get_row_format_issue().format(**format_values)
 
         if self.contains_release_notes:
-            row = f"{row}\n{self.get_rls_notes(detection_pattern=ActionInputs.get_release_notes_title())}"
+            row = f"{row}\n{self.get_rls_notes()}"
 
         return row
 

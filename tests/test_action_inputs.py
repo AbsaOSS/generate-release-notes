@@ -23,6 +23,7 @@ from release_notes_generator.action_inputs import ActionInputs
 success_case = {
     "get_github_repository": "owner/repo_name",
     "get_tag_name": "tag_name",
+    "get_from_tag_name": "from_tag_name",
     "get_chapters": [{"title": "Title", "label": "Label"}],
     "get_duplicity_scope": "custom",
     "get_duplicity_icon": "🔁",
@@ -32,6 +33,9 @@ success_case = {
     "get_print_empty_chapters": True,
     "get_verbose": True,
     "get_release_notes_title": "Success value",
+    "is_coderabbit_support_active": "true",
+    "get_coderabbit_release_notes_title": "Another Success value",
+    "get_coderabbit_summary_ignore_groups": "",
 }
 
 failure_cases = [
@@ -49,6 +53,8 @@ failure_cases = [
     ("get_row_format_issue", "", "Issue row format must be a non-empty string."),
     ("get_row_format_pr", "", "PR Row format must be a non-empty string."),
     ("get_release_notes_title", "", "Release Notes title must be a non-empty string and have non-zero length."),
+    ("get_coderabbit_release_notes_title", "", "CodeRabbit Release Notes title must be a non-empty string and have non-zero length."),
+    ("get_coderabbit_summary_ignore_groups", [""], "CodeRabbit summary ignore groups must be a non-empty string and have non-zero length."),
 ]
 
 
@@ -70,9 +76,9 @@ def test_validate_inputs_success(mocker):
     patchers = apply_mocks(success_case, mocker)
     try:
         ActionInputs.validate_inputs()
+        assert ActionInputs.is_from_tag_name_defined()
     finally:
         stop_mocks(patchers)
-
 
 @pytest.mark.parametrize("method, value, expected_error", failure_cases)
 def test_validate_inputs_failure(method, value, expected_error, mocker):
@@ -228,3 +234,40 @@ def test_release_notes_title_default():
 def test_release_notes_title_custom(mocker):
     mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="Custom Title")
     assert ActionInputs.get_release_notes_title() == "Custom Title"
+
+
+def test_coderabbit_support_active_default(mocker):
+    assert not ActionInputs.is_coderabbit_support_active()
+
+
+def test_coderabbit_release_notes_title_default():
+    assert ActionInputs.get_coderabbit_release_notes_title() == "Summary by CodeRabbit"
+
+
+def test_coderabbit_release_notes_title_custom(mocker):
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="Custom Title")
+    assert ActionInputs.get_coderabbit_release_notes_title() == "Custom Title"
+
+
+def test_coderabbit_summary_ignore_groups_default():
+    assert ActionInputs.get_coderabbit_summary_ignore_groups() == []
+
+
+def test_coderabbit_summary_ignore_groups_custom(mocker):
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="Group1\nGroup2")
+    assert ActionInputs.get_coderabbit_summary_ignore_groups() == ["Group1", "Group2"]
+
+
+def test_coderabbit_summary_ignore_groups_int_input(mocker):
+    mock_log_error = mocker.patch("release_notes_generator.action_inputs.logger.error")
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value=1)
+    assert ActionInputs.get_coderabbit_summary_ignore_groups() == []
+    mock_log_error.assert_called_once()
+    assert "coderabbit_summary_ignore_groups' is not a valid string" in mock_log_error.call_args[0][0]
+
+
+def test_coderabbit_summary_ignore_groups_empty_group_input(mocker):
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value=",")
+    # Note: this is not valid input which is catched by the validation_inputs() method
+    assert ActionInputs.get_coderabbit_summary_ignore_groups() == ['', '']
+

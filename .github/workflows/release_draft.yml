@@ -67,6 +67,7 @@ jobs:
           tag-name: ${{ github.event.inputs.tag-name }}
           chapters: |
             - { title: No entry 🚫, label: duplicate }
+            - { title: No entry 🚫, label: no RN }
             - { title: Breaking Changes 💥, label: breaking-change }
             - { title: New Features 🎉, label: enhancement }
             - { title: New Features 🎉, label: feature }
@@ -74,6 +75,9 @@ jobs:
             - { title: Infrastructure ⚙️, label: infrastructure }
             - { title: Silent-live 🤫, label: silent-live }
             - { title: Documentation 📜, label: documentation }
+          coderabbit-support-active: 'true'
+          coderabbit-release-notes-title: 'Summary by CodeRabbit'
+          coderabbit-summary-ignore-groups: 'Documentation, Tests, Chores, Bug Fixes, Refactor'
 
           skip-release-notes-label: 'no RN'
           verbose: true

@@ -39,84 +39,40 @@ Generate Release Notes action is dedicated to enhance the quality and organizati
 - **Python 3.11+**: Ensure you have Python 3.11 installed on your system.
 
 ## Inputs
-### `GITHUB_TOKEN`
-- **Description**: Your GitHub token for authentication. Store it as a secret and reference it in the workflow file as secrets.GITHUB_TOKEN.
-- **Required**: Yes
 
-### `tag-name`
-- **Description**: The name of the tag for which you want to generate release notes. This should be the same as the tag name used in the release workflow.
-- **Required**: Yes
+| Name           | Description                                                                                                                 | Required | Default                                 |
+|----------------|-----------------------------------------------------------------------------------------------------------------------------|----------|-----------------------------------------|
+| `GITHUB_TOKEN` | Your GitHub token for authentication. Store it as a secret and reference it in the workflow file as secrets.GITHUB_TOKEN.   | Yes      |                                         |
+| `tag-name`     | The name of the tag for which you want to generate release notes. This should be the same as the tag name used in the release workflow. | Yes      |                                         | 
+| `from-tag-name` | The name of the tag from which you want to generate release notes. | No | ''                                      |
+| `chapters` | An YAML array defining chapters and corresponding labels for categorization. Each chapter should have a title and a label matching your GitHub issues and PRs. | Yes |                                         | 
+| `row-format-issue` | The format of the row for the issue in the release notes. The format can contain placeholders for the issue `number`, `title`, and issues `pull-requests`. The placeholders are case-sensitive. | No | `"{number} _{title}_ in {pull-requests}"` |  
+| `row-format-pr` | The format of the row for the PR in the release notes. The format can contain placeholders for the PR `number`, and `title`. The placeholders are case-sensitive. | No | `"{number} _{title}_"`                  |  
+| `row-format-link-pr` | If defined `true`, the PR row will begin with a `"PR: "` string. Otherwise, no prefix will be added. | No | true                                    | 
+| `duplicity-scope` | Set to `custom` to allow duplicity issue lines to be shown only in custom chapters. Options: `custom`, `service`, `both`, `none`. | No | `both`                                  |  
+| `duplicity-icon` | The icon used to indicate duplicity issue lines in the release notes. Icon will be placed at the beginning of the line. | No | `🔔` |  
+| `published-at` | Set to true to enable the use of the `published-at` timestamp as the reference point for searching closed issues and PRs, instead of the `created-at` date of the latest release. If first release, repository creation date is used.  | No | false |
+| `skip-release-notes-labels` | List labels used for detection if issues or pull requests are ignored in the Release Notes generation process. Example: `skip-release-notes, question`. | No  | `skip-release-notes` | 
+| `verbose` | Set to true to enable verbose logging for detailed output during the action's execution. | No | false |
+| `release-notes-title` | The title of the release notes section in the PR description. | No | `[Rr]elease [Nn]otes:` |
+| `coderabbit-support-active` | Enable CodeRabbit support. If true, the action will use CodeRabbit to generate release notes. | No | false |
+| `coderabbit-release-notes-title` | The title of the CodeRabbit summary in the PR body. Value supports regex. | No | `Summary by CodeRabbit` |
+| `coderabbit-summary-ignore-groups` | List of "group names" to be ignored by release notes detection logic. Example: `Documentation, Tests, Chores, Bug Fixes`. | No | '' |
 
-### `from-tag-name`
-- **Description**: The name of the tag from which you want to generate release notes.
-- **Required**: No
-- **Default**: ``
-
-### `chapters`
-- **Description**: An YAML array defining chapters and corresponding labels for categorization. Each chapter should have a title and a label matching your GitHub issues and PRs.
-- **Required**: Yes
-
-### `row-format-issue`
-- **Description**: The format of the row for the issue in the release notes. The format can contain placeholders for the issue `number`, `title`, and issues `pull-requests`. The placeholders are case-sensitive.
-- **Required**: No
-- **Default**: `"{number} _{title}_ in {pull-requests}"`
-
-### `row-format-pr`
-- **Description**: The format of the row for the PR in the release notes. The format can contain placeholders for the PR `number`, and `title`. The placeholders are case-sensitive.
-- **Required**: No
-- **Default**: `"{number} _{title}_"`
-
-### `row-format-link-pr`
-- **Description**: If defined `true`, the PR row will begin with a `"PR: "` string. Otherwise, no prefix will be added.
-- **Required**: No
-- **Default**: true
-
-### `duplicity-scope`
-- **Description**: Set to `custom` to allow duplicity issue lines to be shown only in custom chapters. Options: `custom`, `service`, `both`, `none`.
-- **Required**: No
-- **Default**: `both`
-
-### `duplicity-icon`
-- **Description**: The icon used to indicate duplicity issue lines in the release notes. Icon will be placed at the beginning of the line.
-- **Required**: No
-- **Default**: `🔔`
-
-### `published-at`
-- **Description**: Set to true to enable the use of the `published-at` timestamp as the reference point for searching closed issues and PRs, instead of the `created-at` date of the latest release. If first release, repository creation date is used.
-- **Required**: No
-- **Default**: false
-
-### `skip-release-notes-labels`
-- **Description**: List labels used for detection if issues or pull requests are ignored in the Release Notes generation process. Example: `skip-release-notes, question`.
-- **Required**: No
-- **Default**: `skip-release-notes`
-- Notes:
-  - If used on issue then Issue will be skipped during Release Notes generation.
-  - If used on PR with issue then on PR it will be ignored and PR will show as part of issue's release notes.
-  - If used on PR without issue then PR will be skipped during Release Notes generation.
-
-### `verbose`
-- **Description**: Set to true to enable verbose logging for detailed output during the action's execution.
-- **Required**: No
-- **Default**: false
-- **Note**: If workflow run in debug regime, 'verbose' logging is activated.
-
-### `release-notes-title`
-- **Description**: The title of the release notes section in the PR description.
-- **Required**: No
-- **Default**: `[Rr]elease [Nn]otes:`
+> **Notes**
+> - `skip-release-notes-labels`
+>  - If used on issue then Issue will be skipped during Release Notes generation.
+>  - If used on PR with issue then on PR it will be ignored and PR will show as part of issue's release notes.
+>  - If used on PR without issue then PR will be skipped during Release Notes generation.
+> - `verbose`
+>   - If workflow run in debug regime, 'verbose' logging is activated.
 
 ### Feature controls
 
-### `warnings`
-- **Description**: Set to true to print service chapters in the release notes. These warnings identify issues without release notes, without user-defined labels, or without associated pull requests, and PRs without linked issues.
-- **Required**: No
-- **Default**: true (Service chapters are printed.)
-
-### `print-empty-chapters`
-- **Description**: Set it to true to print chapters with no issues or PRs.
-- **Required**: No
-- **Default**: true (Empty chapters are printed.)
+| Name           | Description                                                                                                                 | Required | Default                              |
+|----------------|-----------------------------------------------------------------------------------------------------------------------------|----------|--------------------------------------|
+| `warnings` | Set to true to print service chapters in the release notes. These warnings identify issues without release notes, without user-defined labels, or without associated pull requests, and PRs without linked issues. | No       | true (Service chapters are printed.) |  
+| `print-empty-chapters` | Set it to true to print chapters with no issues or PRs. | No       | true (Empty chapters are printed.) | 
 
 ## Outputs
 The output of the action is a markdown string containing the release notes for the specified tag. This string can be used in subsequent steps to publish the release notes to a file, create a GitHub release, or send notifications.
@@ -154,7 +110,7 @@ Add the following step to your GitHub workflow (in example are used non-default 
 ```yaml
 - name: Generate Release Notes
   id: release_notes_generator
-  uses: AbsaOSS/generate-release-notes@v0.2.0
+  uses: AbsaOSS/generate-release-notes@v0.7.0
   env:
     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
   with:
@@ -173,6 +129,10 @@ Add the following step to your GitHub workflow (in example are used non-default 
     verbose: false
     release-notes-title: '[Rr]elease Notes:'
 
+    coderabbit-support-active: true
+    coderabbit-release-notes-title: 'Summary by CodeRabbit'
+    coderabbit-summary-ignore-groups: 'Documentation, Tests, Chores, Bug Fixes, Refactor'
+
     warnings: false
     print-empty-chapters: false
 ```
@@ -180,31 +140,63 @@ Add the following step to your GitHub workflow (in example are used non-default 
 ## Features
 ### Built-in
 #### Release Notes Extraction Process
-This feature searches for release notes in the description of GitHub pull requests, making it easier for maintainers to track changes and updates.
-- **Format:** 
-  - The release notes section have to begin with the title `Release Notes:` (case-sensitive), followed by the release notes in bullet points. [Markdown formatting is supported](https://www.markdownguide.org/basic-syntax/#unordered-lists).
-  - If no release notes line is detected under the `Release Notes:` title, no release notes will be printed in the output.
+
+This feature automatically extracts release notes from GitHub pull request descriptions to help maintainers track meaningful changes.
+
+##### 🔍 How Detection Works
+
+- The Action looks for a specific section in the PR body, defined by:
+  - `release-notes-title`: A regex pattern to match the release notes section header.
+  - `coderabbit-support-active`: Enables fallback support for CodeRabbit summaries.
+    - ✅ _Used only if no section matching `release-notes-title` is found._
+
+##### 📏 Detection Rules
+- The release notes section:
+  - Can be **anywhere in the PR body**
+  - Must begin with a header that matches either:
+    - `release-notes-title`
+    - or `coderabbit-release-notes-title` (when CodeRabbit support is active)
+  - Supports [Markdown formatting](https://www.markdownguide.org/basic-syntax/#unordered-lists)
+  - Only the **first matching section** is extracted
+  - Is **optional** – the Action will still proceed even if no notes are found
+  - Will be **skipped silently** if the PR has a label listed in `skip-release-notes-labels`
+
+> 🔕 If no valid section is found, the output Release Notes record will not contain any release notes.
+
 - **Example:** 
   - Here are examples of how to structure the release notes:
-```
-Release Notes:
+
+```markdown
+## Release Notes:
 - This update introduces a new caching mechanism that improves performance by 20%.
   - The caching mechanism reduces database queries.
     - Optimized for high-traffic scenarios.
   - Includes support for distributed caching.
   
-Release Notes:
+## Release Notes:
 * This update introduces a new caching mechanism that improves performance by 20%.
   * Affected only specific edge cases.
   
-Release Notes:
+## Release Notes:
 + This update introduces a new caching mechanism that improves performance by 20%.
 
-```
-The extraction process supports all three types of bullet points: `-`, `*`, and `+`, and their combinations. (GitHub documentation do not recommend to mix them.)
+## Summary by CodeRabbit
 
-- **Best Practice:** Select one character from `-`, `*`, `+` for bullet points. The Markdown parser will automatically format them as a list.
-- **Optional usage:** The release notes section is not mandatory for GH action to work.
+- **New Features**
+  - Introduced a new feature.
+  
+- **Documentation**
+  - Added new descriptions.
+
+- **Chores**
+  - Added configuration files for code style.
+
+- **Tests**
+  - Introduced a complete test suite for all classes.
+```
+> The extraction process supports all three types of bullet points: `-`, `*`, and `+`, and their combinations. (GitHub documentation do not recommend to mix them.)
+> 
+> **Best Practice:** Select one character from `-`, `*`, `+` for bullet points. The Markdown parser will automatically format them as a list.
 
 #### Handling Multiple PRs
 If an issue is linked to multiple PRs, the action fetches and aggregates contributions from all linked PRs.
