@@ -33,9 +33,11 @@ from github.Repository import Repository
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class MinedData:
     """Class for keeping track of an item in inventory."""
+
     repository: Repository
     release: GitRelease
     issues: list[Issue]
@@ -56,22 +58,21 @@ class MinedData:
             return True
         return False
 
-    def mock(self, mocker, rls_mock: Optional[GitRelease], mock_repo: Repository) -> 'MinedData':
+    def mock(self, mocker, rls_mock: Optional[GitRelease], mock_repo: Repository) -> "MinedData":
         """Mock method to create a MinedData instance with dummy data."""
         self.repository = mock_repo
         self.release = rls_mock if rls_mock != None else mocker.Mock(spec=GitRelease)
         self.issues = [
             mocker.Mock(spec=Issue, title="Mock Issue 1", number=1),
-            mocker.Mock(spec=Issue, title="Mock Issue 2", number=2)
+            mocker.Mock(spec=Issue, title="Mock Issue 2", number=2),
         ]
         self.pull_requests = [
             mocker.Mock(spec=PullRequest, title="Mock PR 1", number=1),
-            mocker.Mock(spec=PullRequest, title="Mock PR 2", number=2)
+            mocker.Mock(spec=PullRequest, title="Mock PR 2", number=2),
         ]
         self.commits = [
             mocker.Mock(spec=Commit, sha="abc123", commit={"message": "Mock Commit 1"}),
-            mocker.Mock(spec=Commit, sha="def456", commit={"message": "Mock Commit 2"})
+            mocker.Mock(spec=Commit, sha="def456", commit={"message": "Mock Commit 2"}),
         ]
         self.since = datetime.now()
         return self
-

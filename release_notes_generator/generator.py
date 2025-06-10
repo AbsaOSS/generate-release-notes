@@ -64,7 +64,6 @@ class ReleaseNotesGenerator:
         """Getter for the GithubRateLimiter instance."""
         return self._rate_limiter
 
-
     def generate(self) -> Optional[str]:
         """
         Generates the Release Notes for a given repository.
@@ -86,13 +85,19 @@ class ReleaseNotesGenerator:
             logger.debug("Count of issues reduced from %d to %d", len(list(data.issues)), len(issues_filter))
 
             # filter out merged PRs and commits before the date
-            pulls_filter = list(filter(lambda pull: pull.merged_at is not None and pull.merged_at >= data.since, list(data.pull_requests)))
+            pulls_filter = list(
+                filter(
+                    lambda pull: pull.merged_at is not None and pull.merged_at >= data.since, list(data.pull_requests)
+                )
+            )
             logger.debug("Count of pulls reduced from %d to %d", len(list(data.pull_requests)), len(pulls_filter))
 
             commits_filter = list(filter(lambda commit: commit.commit.author.date > data.since, list(data.commits)))
             logger.debug("Count of commits reduced from %d to %d", len(list(data.commits)), len(commits_filter))
 
-        changelog_url: str = get_change_url(tag_name=ActionInputs.get_tag_name(), repository=data.repository, git_release=data.release)
+        changelog_url: str = get_change_url(
+            tag_name=ActionInputs.get_tag_name(), repository=data.repository, git_release=data.release
+        )
 
         rls_notes_records: dict[int, Record] = RecordFactory.generate(
             github=self._github_instance,
@@ -109,4 +114,3 @@ class ReleaseNotesGenerator:
         )
 
         return release_notes_builder.build()
-

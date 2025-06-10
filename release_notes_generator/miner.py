@@ -34,6 +34,7 @@ from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
 
 logger = logging.getLogger(__name__)
 
+
 class DataMiner:
     """
     Class responsible for mining data from GitHub.
@@ -78,7 +79,9 @@ class DataMiner:
             rls = self._safe_call(data.repository.get_release)(ActionInputs.get_from_tag_name())
 
             if rls is None:
-                logger.info("Latest release not found for received from-tag %s. Ending!", ActionInputs.get_from_tag_name())
+                logger.info(
+                    "Latest release not found for received from-tag %s. Ending!", ActionInputs.get_from_tag_name()
+                )
                 sys.exit(1)
 
         else:
