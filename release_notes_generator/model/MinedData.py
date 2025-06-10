@@ -48,4 +48,3 @@ class MinedData:
 
     def is_empty(self):
         return self.repository is None
-
