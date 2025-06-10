@@ -52,7 +52,7 @@ class DataMiner:
             logger.error("Repository not found: %s", ActionInputs.get_github_repository())
             return data
 
-        self._get_latest_release(data)
+        data.release = self._get_latest_release(data)
 
         self._get_issues(data)
 

@@ -19,7 +19,6 @@ from datetime import datetime, timedelta
 
 from github import Github
 
-from release_notes_generator.model.MinedData import MinedData
 from release_notes_generator.generator import ReleaseNotesGenerator
 from release_notes_generator.model.custom_chapters import CustomChapters
 from release_notes_generator.utils.constants import ROW_FORMAT_ISSUE
@@ -66,7 +65,7 @@ def test_generate_release_notes_latest_release_not_found(
     mock_pull_closed_with_rls_notes_101.merged_at = mock_repo.created_at + timedelta(days=2)
     mock_pull_closed_with_rls_notes_102.merged_at = mock_repo.created_at + timedelta(days=7)
 
-    mocker.patch("release_notes_generator.generator.ReleaseNotesGenerator.get_latest_release", return_value=None)
+    mocker.patch("release_notes_generator.miner.DataMiner._get_latest_release", return_value=None)
 
     mock_rate_limit = mocker.Mock()
     mock_rate_limit.core.remaining = 1000
@@ -109,7 +108,7 @@ def test_generate_release_notes_latest_release_found_by_created_at(
 
     mock_git_release.created_at = mock_repo.created_at + timedelta(days=5)
     mock_git_release.published_at = mock_repo.created_at + timedelta(days=5)
-    mocker.patch("release_notes_generator.generator.ReleaseNotesGenerator.get_latest_release", return_value=mock_git_release)
+    mocker.patch("release_notes_generator.miner.DataMiner._get_latest_release", return_value=mock_git_release)
 
 
     mock_rate_limit = mocker.Mock()
@@ -159,7 +158,7 @@ def test_generate_release_notes_latest_release_found_by_published_at(
     github_mock.get_repo().get_latest_release.return_value = mock_git_release
     mock_git_release.created_at = mock_repo.created_at + timedelta(days=5)
     mock_git_release.published_at = mock_repo.created_at + timedelta(days=5)
-    mocker.patch("release_notes_generator.generator.ReleaseNotesGenerator.get_latest_release", return_value=mock_git_release)
+    mocker.patch("release_notes_generator.miner.DataMiner._get_latest_release", return_value=mock_git_release)
 
 
     mock_rate_limit = mocker.Mock()
