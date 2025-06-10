@@ -14,24 +14,50 @@
 # limitations under the License.
 #
 
-import time
-from datetime import datetime, timedelta
-from unittest.mock import MagicMock
+from datetime import datetime
+from typing import Optional
 
 from github import Github
+from github.Commit import Commit
 from github.GitRelease import GitRelease
+from github.Issue import Issue
+from github.PullRequest import PullRequest
+from github.Repository import Repository
 
 from release_notes_generator.miner import DataMiner
 from release_notes_generator.model.MinedData import MinedData
-from release_notes_generator.generator import ReleaseNotesGenerator
-from release_notes_generator.model.custom_chapters import CustomChapters
-from release_notes_generator.utils.constants import ROW_FORMAT_ISSUE
 
 def decorator_mock(func):
     """
     Mock for the decorator to return the function itself.
     """
     return func
+
+class MinedDataMock(MinedData):
+    """
+    Mock class for MinedData to simulate the behavior of the real MinedData class.
+    """
+
+    def __init__(self, mocker, rls_mock: Optional[GitRelease], mock_repo: Repository):
+        super().__init__()
+        self.repository = mock_repo
+        self.release = rls_mock if rls_mock != None else mocker.Mock(spec=GitRelease)
+        self.issues = [
+            mocker.Mock(spec=Issue, title="Mock Issue 1", number=1),
+            mocker.Mock(spec=Issue, title="Mock Issue 2", number=2),
+        ]
+        self.pull_requests = [
+            mocker.Mock(spec=PullRequest, title="Mock PR 1", number=1),
+            mocker.Mock(spec=PullRequest, title="Mock PR 2", number=2),
+        ]
+        self.commits = [
+            mocker.Mock(spec=Commit, sha="abc123", commit={"message": "Mock Commit 1"}),
+            mocker.Mock(spec=Commit, sha="def456", commit={"message": "Mock Commit 2"}),
+        ]
+        self.since = datetime.now()
+
+    def is_empty(self):
+        return self.repository is None
 
 def test_get_latest_release_from_tag_name_not_defined_2_releases_type_error(mocker, mock_repo, mock_git_releases):
     mocker.patch("release_notes_generator.action_inputs.ActionInputs.is_from_tag_name_defined", return_value=False)
@@ -42,7 +68,7 @@ def test_get_latest_release_from_tag_name_not_defined_2_releases_type_error(mock
     github_mock.get_repo.return_value = mock_repo
 
     mock_repo.get_releases.return_value = mock_git_releases
-    data = MinedData().mock(mocker, mock_git_releases, mock_repo)
+    data = MinedDataMock(mocker, mock_git_releases, mock_repo)
 
     mock_rate_limit = mocker.Mock()
     mock_rate_limit.core.remaining = 1000
@@ -71,7 +97,7 @@ def test_get_latest_release_from_tag_name_not_defined_2_releases_value_error(moc
     github_mock.get_repo.return_value = mock_repo
 
     mock_repo.get_releases.return_value = mock_git_releases
-    data = MinedData().mock(mocker, mock_git_releases, mock_repo)
+    data = MinedDataMock(mocker, mock_git_releases, mock_repo)
 
     mock_rate_limit = mocker.Mock()
     mock_rate_limit.core.remaining = 1000
@@ -99,7 +125,7 @@ def test_get_latest_release_from_tag_name_not_defined_2_releases(mocker, mock_re
     github_mock.get_repo.return_value = mock_repo
 
     mock_repo.get_releases.return_value = mock_git_releases
-    data = MinedData().mock(mocker, mock_git_releases, mock_repo)
+    data = MinedDataMock(mocker, mock_git_releases, mock_repo)
 
     mock_rate_limit = mocker.Mock()
     mock_rate_limit.core.remaining = 1000
@@ -121,7 +147,7 @@ def test_get_latest_release_from_tag_name_not_defined_no_release(mocker, mock_re
     github_mock.get_repo.return_value = mock_repo
 
     mock_repo.get_releases.return_value = []
-    data = MinedData().mock(mocker, None, mock_repo)
+    data = MinedDataMock(mocker, None, mock_repo)
 
     mock_rate_limit = mocker.Mock()
     mock_rate_limit.core.remaining = 1000
@@ -147,7 +173,7 @@ def test_get_latest_release_from_tag_name_defined_release_exists(mocker, mock_re
 
     rls_mock = mocker.Mock(spec=GitRelease)
     mock_repo.get_release.return_value = rls_mock
-    data = MinedData().mock(mocker, None, mock_repo)
+    data = MinedDataMock(mocker, None, mock_repo)
 
     mock_rate_limit = mocker.Mock()
     mock_rate_limit.core.remaining = 1000
@@ -174,7 +200,7 @@ def test_get_latest_release_from_tag_name_defined_no_release(mocker, mock_repo):
     github_mock.get_repo.return_value = mock_repo
 
     mock_repo.get_release.return_value = None
-    data = MinedData().mock(mocker, None, mock_repo)
+    data = MinedDataMock(mocker, None, mock_repo)
 
     mock_rate_limit = mocker.Mock()
     mock_rate_limit.core.remaining = 1000

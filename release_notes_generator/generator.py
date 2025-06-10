@@ -99,6 +99,8 @@ class ReleaseNotesGenerator:
             tag_name=ActionInputs.get_tag_name(), repository=data.repository, git_release=data.release
         )
 
+        assert data.repository is not None, "Repository must not be None"
+
         rls_notes_records: dict[int, Record] = RecordFactory.generate(
             github=self._github_instance,
             repo=data.repository,

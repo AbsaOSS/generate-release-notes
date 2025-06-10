@@ -71,6 +71,8 @@ class DataMiner:
         @param repo: The repository to get the latest release from.
         @return: The latest release of the repository, or None if no releases are found.
         """
+        assert data.repository is not None, "Repository must not be None"
+
         rls: Optional[GitRelease] = None
 
         # check if from-tag name is defined
@@ -107,6 +109,7 @@ class DataMiner:
         """
         Fetches issues from the repository and adds them to the mined data.
         """
+        assert data.repository is not None, "Repository must not be None"
         logger.info("Fetching issues from repository...")
         # get all issues
         if data.release is None:
