@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class MinedData:
-    """Class for keeping track of an item in inventory."""
+    """Class for keeping track of mined GitHub data."""
 
     def __init__(self):
         self.repository: Optional[Repository] = None

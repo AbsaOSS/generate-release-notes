@@ -80,7 +80,7 @@ def test_get_latest_release_from_tag_name_not_defined_2_releases_type_error(mock
 
     data.repository.get_releases = mocker.MagicMock(return_value=mock_git_releases)
 
-    latest_release = release_notes_miner._get_latest_release(data)
+    latest_release = release_notes_miner.get_latest_release(data)
 
     assert latest_release is None
     assert ('Getting latest release by semantic ordering (could not be the last one by time).',) == mock_log_info.call_args_list[0][0]
@@ -109,7 +109,7 @@ def test_get_latest_release_from_tag_name_not_defined_2_releases_value_error(moc
 
     data.repository.get_releases = mocker.MagicMock(return_value=mock_git_releases)
 
-    latest_release = release_notes_miner._get_latest_release(data)
+    latest_release = release_notes_miner.get_latest_release(data)
 
     assert latest_release is None
     assert ('Getting latest release by semantic ordering (could not be the last one by time).',) == mock_log_info.call_args_list[0][0]
@@ -134,7 +134,7 @@ def test_get_latest_release_from_tag_name_not_defined_2_releases(mocker, mock_re
     release_notes_miner = DataMiner(github_mock, mock_rate_limit)
     release_notes_miner._safe_call = decorator_mock
 
-    latest_release = release_notes_miner._get_latest_release(data)
+    latest_release = release_notes_miner.get_latest_release(data)
 
     assert latest_release is not None
     assert ('Getting latest release by semantic ordering (could not be the last one by time).',) == mock_log_info.call_args_list[0][0]
@@ -156,7 +156,7 @@ def test_get_latest_release_from_tag_name_not_defined_no_release(mocker, mock_re
     release_notes_miner = DataMiner(github_mock, mock_rate_limit)
     release_notes_miner._safe_call = decorator_mock
 
-    latest_release = release_notes_miner._get_latest_release(data)
+    latest_release = release_notes_miner.get_latest_release(data)
 
     assert latest_release is None
     assert 2 == len(mock_log_info.call_args_list)
@@ -182,7 +182,7 @@ def test_get_latest_release_from_tag_name_defined_release_exists(mocker, mock_re
     release_notes_miner = DataMiner(github_mock, mock_rate_limit)
     release_notes_miner._safe_call = decorator_mock
 
-    latest_release = release_notes_miner._get_latest_release(data)
+    latest_release = release_notes_miner.get_latest_release(data)
 
 
     assert rls_mock == latest_release
@@ -209,7 +209,7 @@ def test_get_latest_release_from_tag_name_defined_no_release(mocker, mock_repo):
     release_notes_miner = DataMiner(github_mock, mock_rate_limit)
     release_notes_miner._safe_call = decorator_mock
 
-    latest_release = release_notes_miner._get_latest_release(data)
+    latest_release = release_notes_miner.get_latest_release(data)
 
     assert latest_release is None
     mock_exit.assert_called_once_with(1)

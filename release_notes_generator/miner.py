@@ -53,7 +53,7 @@ class DataMiner:
             logger.error("Repository not found: %s", ActionInputs.get_github_repository())
             return data
 
-        data.release = self._get_latest_release(data)
+        data.release = self.get_latest_release(data)
 
         self._get_issues(data)
 
@@ -64,7 +64,7 @@ class DataMiner:
         logger.info("Data mining from GitHub completed.")
         return data
 
-    def _get_latest_release(self, data: MinedData) -> Optional[GitRelease]:
+    def get_latest_release(self, data: MinedData) -> Optional[GitRelease]:
         """
         Get the latest release of the repository.
 
