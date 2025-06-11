@@ -25,6 +25,7 @@ from typing import Optional
 
 from github import Github
 
+from model.MinedData import MinedData
 from release_notes_generator.miner import DataMiner
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.builder import ReleaseNotesBuilder
@@ -64,6 +65,36 @@ class ReleaseNotesGenerator:
         """Getter for the GithubRateLimiter instance."""
         return self._rate_limiter
 
+    def _filter_by_release(self, data: MinedData) -> None:
+        """
+        Filters issues, pull requests, and commits based on the latest release date.
+        If the release is not None, it filters out closed issues, merged pull requests, and commits
+        that occurred before the release date.
+        @param data: The mined data containing issues, pull requests, commits, and release information.
+        @return: A tuple containing filtered lists of issues, pull requests, and commits.
+        """
+        issues_list = list(data.issues)
+        pulls_list = list(data.pull_requests)
+        commits_list = list(data.commits)
+
+        if data.release is not None:
+            logger.info("Starting issue, prs and commit reduction by the latest release since time.")
+
+            # filter out closed Issues before the date
+            data.issues = list(
+                filter(lambda issue: issue.closed_at is not None and issue.closed_at >= data.since, issues_list)
+            )
+            logger.debug("Count of issues reduced from %d to %d", len(issues_list), len(data.issues))
+
+            # filter out merged PRs and commits before the date
+            data.pull_requests = list(
+                filter(lambda pull: pull.merged_at is not None and pull.merged_at >= data.since, pulls_list)
+            )
+            logger.debug("Count of pulls reduced from %d to %d", len(pulls_list), len(data.pull_requests))
+
+            data.commits = list(filter(lambda commit: commit.commit.author.date > data.since, commits_list))
+            logger.debug("Count of commits reduced from %d to %d", len(commits_list), len(data.commits))
+
     def generate(self) -> Optional[str]:
         """
         Generates the Release Notes for a given repository.
@@ -75,26 +106,7 @@ class ReleaseNotesGenerator:
         if data.is_empty():
             return None
 
-        issues_filter, pulls_filter, commits_filter = data.issues, data.pull_requests, data.commits
-        if data.release is not None:
-            logger.info("Starting issue, prs and commit reduction by the latest release since time.")
-
-            # filter out closed Issues before the date
-            issues_filter = list(
-                filter(lambda issue: issue.closed_at is not None and issue.closed_at >= data.since, list(data.issues))
-            )
-            logger.debug("Count of issues reduced from %d to %d", len(list(data.issues)), len(issues_filter))
-
-            # filter out merged PRs and commits before the date
-            pulls_filter = list(
-                filter(
-                    lambda pull: pull.merged_at is not None and pull.merged_at >= data.since, list(data.pull_requests)
-                )
-            )
-            logger.debug("Count of pulls reduced from %d to %d", len(list(data.pull_requests)), len(pulls_filter))
-
-            commits_filter = list(filter(lambda commit: commit.commit.author.date > data.since, list(data.commits)))
-            logger.debug("Count of commits reduced from %d to %d", len(list(data.commits)), len(commits_filter))
+        self._filter_by_release(data)
 
         changelog_url: str = get_change_url(
             tag_name=ActionInputs.get_tag_name(), repository=data.repository, git_release=data.release
@@ -105,9 +117,9 @@ class ReleaseNotesGenerator:
         rls_notes_records: dict[int, Record] = RecordFactory.generate(
             github=self._github_instance,
             repo=data.repository,
-            issues=list(issues_filter),  # PaginatedList --> list
-            pulls=list(pulls_filter),  # PaginatedList --> list
-            commits=list(commits_filter),  # PaginatedList --> list
+            issues=data.issues,
+            pulls=data.pull_requests,
+            commits=data.commits,
         )
 
         release_notes_builder = ReleaseNotesBuilder(

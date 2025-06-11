@@ -86,7 +86,7 @@ def test_get_latest_release_from_tag_name_not_defined_2_releases_type_error(mock
 def test_get_latest_release_from_tag_name_not_defined_2_releases_value_error(mocker, mock_repo, mock_git_releases):
     mocker.patch("release_notes_generator.action_inputs.ActionInputs.is_from_tag_name_defined", return_value=False)
     mock_log_info = mocker.patch("release_notes_generator.miner.logger.info")
-    mock_log_debug = mocker.patch("release_notes_generator.miner.logger.debug")
+    mock_log_error = mocker.patch("release_notes_generator.miner.logger.error")
 
     github_mock = mocker.Mock(spec=Github)
     github_mock.get_repo.return_value = mock_repo
@@ -109,8 +109,8 @@ def test_get_latest_release_from_tag_name_not_defined_2_releases_value_error(moc
     assert latest_release is None
     assert ('Getting latest release by semantic ordering (could not be the last one by time).',) == mock_log_info.call_args_list[0][0]
     assert ('Latest release not found for %s. 1st release for repository!', 'org/repo') == mock_log_info.call_args_list[1][0]
-    assert ('Skipping invalid value of version tag: %s', 'v1.0.0') == mock_log_debug.call_args_list[0][0]
-    assert ('Skipping invalid value of version tag: %s', 'v2.0.0') == mock_log_debug.call_args_list[1][0]
+    assert ('Skipping invalid value of version tag: %s', 'v1.0.0') == mock_log_error.call_args_list[0][0]
+    assert ('Skipping invalid value of version tag: %s', 'v2.0.0') == mock_log_error.call_args_list[1][0]
 
 def test_get_latest_release_from_tag_name_not_defined_2_releases(mocker, mock_repo, mock_git_releases):
     mocker.patch("release_notes_generator.action_inputs.ActionInputs.is_from_tag_name_defined", return_value=False)

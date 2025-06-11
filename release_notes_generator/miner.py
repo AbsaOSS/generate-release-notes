@@ -70,10 +70,9 @@ class DataMiner:
         """
         Get the latest release of the repository.
 
-        @param repo: The repository to get the latest release from.
+        @param repository: The repository to get the latest release from.
         @return: The latest release of the repository, or None if no releases are found.
         """
-        assert repository is not None, "Repository must not be None"
 
         rls: Optional[GitRelease] = None
 
@@ -136,7 +135,7 @@ class DataMiner:
                 version_str = release.tag_name.lstrip("v")
                 current_version: Optional[semver.Version] = semver.VersionInfo.parse(version_str)
             except ValueError:
-                logger.debug("Skipping invalid value of version tag: %s", release.tag_name)
+                logger.error("Skipping invalid value of version tag: %s", release.tag_name)
                 continue
             except TypeError as error:
                 logger.error("Skipping invalid type of version tag: %s | Error: %s", release.tag_name, str(error))
