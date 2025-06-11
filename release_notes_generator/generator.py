@@ -25,7 +25,7 @@ from typing import Optional
 
 from github import Github
 
-from model.MinedData import MinedData
+from release_notes_generator.model.MinedData import MinedData
 from release_notes_generator.miner import DataMiner
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.builder import ReleaseNotesBuilder
