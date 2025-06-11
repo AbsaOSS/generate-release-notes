@@ -114,14 +114,14 @@ class DataMiner:
         logger.info("Fetching issues from repository...")
         # get all issues
         if data.release is None:
-            data.issues = self._safe_call(data.repository.get_issues)(state=ISSUE_STATE_ALL)
+            data.issues = list(self._safe_call(data.repository.get_issues)(state=ISSUE_STATE_ALL))
         else:
             # default is repository creation date if no releases OR created_at of latest release
             data.since = data.release.created_at if data.release else data.repository.created_at
             if data.release and ActionInputs.get_published_at():
                 data.since = data.release.published_at
 
-            data.issues = self._safe_call(data.repository.get_issues)(state=ISSUE_STATE_ALL, since=data.since)
+            data.issues = list(self._safe_call(data.repository.get_issues)(state=ISSUE_STATE_ALL, since=data.since))
 
         logger.info("Fetched %d issues", len(data.issues))
 

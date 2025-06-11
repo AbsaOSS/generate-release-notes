@@ -73,7 +73,7 @@ class ReleaseNotesGenerator:
         @param data: The mined data containing issues, pull requests, commits, and release information.
         @return: A tuple containing filtered lists of issues, pull requests, and commits.
         """
-        issues_list = list(data.issues)
+        issues_list = data.issues
         pulls_list = list(data.pull_requests)
         commits_list = list(data.commits)
 
