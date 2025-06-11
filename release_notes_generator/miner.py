@@ -20,11 +20,13 @@ This module contains logic for mining data from GitHub, including issues, pull r
 
 import logging
 import sys
+import traceback
 from typing import Optional
 
 import semver
 from github import Github
 from github.GitRelease import GitRelease
+from github.Repository import Repository
 
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.MinedData import MinedData
@@ -53,7 +55,7 @@ class DataMiner:
             logger.error("Repository not found: %s", ActionInputs.get_github_repository())
             return data
 
-        data.release = self.get_latest_release(data)
+        data.release = self.get_latest_release(data.repository)
 
         self._get_issues(data)
 
@@ -64,21 +66,21 @@ class DataMiner:
         logger.info("Data mining from GitHub completed.")
         return data
 
-    def get_latest_release(self, data: MinedData) -> Optional[GitRelease]:
+    def get_latest_release(self, repository: Repository) -> Optional[GitRelease]:
         """
         Get the latest release of the repository.
 
         @param repo: The repository to get the latest release from.
         @return: The latest release of the repository, or None if no releases are found.
         """
-        assert data.repository is not None, "Repository must not be None"
+        assert repository is not None, "Repository must not be None"
 
         rls: Optional[GitRelease] = None
 
         # check if from-tag name is defined
         if ActionInputs.is_from_tag_name_defined():
             logger.info("Getting latest release by from-tag name %s", ActionInputs.get_from_tag_name())
-            rls = self._safe_call(data.repository.get_release)(ActionInputs.get_from_tag_name())
+            rls = self._safe_call(repository.get_release)(ActionInputs.get_from_tag_name())
 
             if rls is None:
                 logger.info(
@@ -88,11 +90,11 @@ class DataMiner:
 
         else:
             logger.info("Getting latest release by semantic ordering (could not be the last one by time).")
-            gh_releases: list = list(self._safe_call(data.repository.get_releases)())
+            gh_releases: list = list(self._safe_call(repository.get_releases)())
             rls = self.__get_latest_semantic_release(gh_releases)
 
             if rls is None:
-                logger.info("Latest release not found for %s. 1st release for repository!", data.repository.full_name)
+                logger.info("Latest release not found for %s. 1st release for repository!", repository.full_name)
                 return None
 
         if rls is not None:
@@ -136,8 +138,9 @@ class DataMiner:
             except ValueError:
                 logger.debug("Skipping invalid value of version tag: %s", release.tag_name)
                 continue
-            except TypeError:
-                logger.debug("Skipping invalid type of version tag: %s", release.tag_name)
+            except TypeError as error:
+                logger.error("Skipping invalid type of version tag: %s | Error: %s", release.tag_name, str(error))
+                logger.error("Full traceback:\n%s", traceback.format_exc())
                 continue
 
             if latest_version is None or current_version > latest_version:  # type: ignore[operator]

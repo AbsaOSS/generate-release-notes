@@ -74,6 +74,7 @@ class ReleaseNotesGenerator:
         data = miner.mine_data()
         if data.is_empty():
             return None
+
         issues_filter, pulls_filter, commits_filter = data.issues, data.pull_requests, data.commits
         if data.release is not None:
             logger.info("Starting issue, prs and commit reduction by the latest release since time.")

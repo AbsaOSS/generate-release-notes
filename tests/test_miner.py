@@ -41,7 +41,7 @@ class MinedDataMock(MinedData):
     def __init__(self, mocker, rls_mock: Optional[GitRelease], mock_repo: Repository):
         super().__init__()
         self.repository = mock_repo
-        self.release = rls_mock if rls_mock != None else mocker.Mock(spec=GitRelease)
+        self.release = rls_mock if rls_mock is not None else mocker.Mock(spec=GitRelease)
         self.issues = [
             mocker.Mock(spec=Issue, title="Mock Issue 1", number=1),
             mocker.Mock(spec=Issue, title="Mock Issue 2", number=2),
@@ -56,13 +56,10 @@ class MinedDataMock(MinedData):
         ]
         self.since = datetime.now()
 
-    def is_empty(self):
-        return self.repository is None
-
 def test_get_latest_release_from_tag_name_not_defined_2_releases_type_error(mocker, mock_repo, mock_git_releases):
     mocker.patch("release_notes_generator.action_inputs.ActionInputs.is_from_tag_name_defined", return_value=False)
     mock_log_info = mocker.patch("release_notes_generator.miner.logger.info")
-    mock_log_debug = mocker.patch("release_notes_generator.miner.logger.debug")
+    mock_log_error = mocker.patch("release_notes_generator.miner.logger.error")
 
     github_mock = mocker.Mock(spec=Github)
     github_mock.get_repo.return_value = mock_repo
@@ -78,15 +75,13 @@ def test_get_latest_release_from_tag_name_not_defined_2_releases_type_error(mock
     release_notes_miner._safe_call = decorator_mock
     mocker.patch("semver.Version.parse", side_effect=TypeError)
 
-    data.repository.get_releases = mocker.MagicMock(return_value=mock_git_releases)
-
-    latest_release = release_notes_miner.get_latest_release(data)
+    latest_release = release_notes_miner.get_latest_release(data.repository)
 
     assert latest_release is None
     assert ('Getting latest release by semantic ordering (could not be the last one by time).',) == mock_log_info.call_args_list[0][0]
     assert ('Latest release not found for %s. 1st release for repository!', 'org/repo') == mock_log_info.call_args_list[1][0]
-    assert ('Skipping invalid type of version tag: %s', 'v1.0.0') == mock_log_debug.call_args_list[0][0]
-    assert ('Skipping invalid type of version tag: %s', 'v2.0.0') == mock_log_debug.call_args_list[1][0]
+    assert ('Skipping invalid type of version tag: %s | Error: %s', 'v1.0.0', '') == mock_log_error.call_args_list[0][0]
+    assert ('Skipping invalid type of version tag: %s | Error: %s', 'v2.0.0', '') == mock_log_error.call_args_list[2][0]
 
 def test_get_latest_release_from_tag_name_not_defined_2_releases_value_error(mocker, mock_repo, mock_git_releases):
     mocker.patch("release_notes_generator.action_inputs.ActionInputs.is_from_tag_name_defined", return_value=False)
@@ -109,7 +104,7 @@ def test_get_latest_release_from_tag_name_not_defined_2_releases_value_error(moc
 
     data.repository.get_releases = mocker.MagicMock(return_value=mock_git_releases)
 
-    latest_release = release_notes_miner.get_latest_release(data)
+    latest_release = release_notes_miner.get_latest_release(data.repository)
 
     assert latest_release is None
     assert ('Getting latest release by semantic ordering (could not be the last one by time).',) == mock_log_info.call_args_list[0][0]
@@ -134,7 +129,7 @@ def test_get_latest_release_from_tag_name_not_defined_2_releases(mocker, mock_re
     release_notes_miner = DataMiner(github_mock, mock_rate_limit)
     release_notes_miner._safe_call = decorator_mock
 
-    latest_release = release_notes_miner.get_latest_release(data)
+    latest_release = release_notes_miner.get_latest_release(data.repository)
 
     assert latest_release is not None
     assert ('Getting latest release by semantic ordering (could not be the last one by time).',) == mock_log_info.call_args_list[0][0]
@@ -156,7 +151,7 @@ def test_get_latest_release_from_tag_name_not_defined_no_release(mocker, mock_re
     release_notes_miner = DataMiner(github_mock, mock_rate_limit)
     release_notes_miner._safe_call = decorator_mock
 
-    latest_release = release_notes_miner.get_latest_release(data)
+    latest_release = release_notes_miner.get_latest_release(data.repository)
 
     assert latest_release is None
     assert 2 == len(mock_log_info.call_args_list)
@@ -182,8 +177,7 @@ def test_get_latest_release_from_tag_name_defined_release_exists(mocker, mock_re
     release_notes_miner = DataMiner(github_mock, mock_rate_limit)
     release_notes_miner._safe_call = decorator_mock
 
-    latest_release = release_notes_miner.get_latest_release(data)
-
+    latest_release = release_notes_miner.get_latest_release(data.repository)
 
     assert rls_mock == latest_release
     mock_exit.assert_not_called()
@@ -209,7 +203,7 @@ def test_get_latest_release_from_tag_name_defined_no_release(mocker, mock_repo):
     release_notes_miner = DataMiner(github_mock, mock_rate_limit)
     release_notes_miner._safe_call = decorator_mock
 
-    latest_release = release_notes_miner.get_latest_release(data)
+    latest_release = release_notes_miner.get_latest_release(data.repository)
 
     assert latest_release is None
     mock_exit.assert_called_once_with(1)
