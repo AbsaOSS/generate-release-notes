@@ -188,7 +188,8 @@ def test_get_latest_release_from_tag_name_defined_release_exists(mocker, mock_re
 def test_get_latest_release_from_tag_name_defined_no_release(mocker, mock_repo):
     mocker.patch("release_notes_generator.action_inputs.ActionInputs.is_from_tag_name_defined", return_value=True)
     mock_exit = mocker.patch("sys.exit")
-    mock_log_info = mocker.patch("release_notes_generator.miner.logger.error")
+    mock_log_error = mocker.patch("release_notes_generator.miner.logger.error")
+    mock_log_info = mocker.patch("release_notes_generator.miner.logger.info")
 
     github_mock = mocker.Mock(spec=Github)
     github_mock.get_repo.return_value = mock_repo
@@ -207,6 +208,7 @@ def test_get_latest_release_from_tag_name_defined_no_release(mocker, mock_repo):
 
     assert latest_release is None
     mock_exit.assert_called_once_with(1)
-    assert 2 == len(mock_log_info.call_args_list)
+    assert 1 == len(mock_log_info.call_args_list)
+    assert 1 == len(mock_log_error.call_args_list)
     assert ('Getting latest release by from-tag name %s', "") == mock_log_info.call_args_list[0][0]
-    assert ('Latest release not found for received from-tag %s. Ending!', '') == mock_log_info.call_args_list[1][0]
+    assert ('Latest release not found for received from-tag %s. Ending!', '') == mock_log_error.call_args_list[0][0]
