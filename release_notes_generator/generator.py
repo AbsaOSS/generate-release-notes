@@ -71,11 +71,10 @@ class ReleaseNotesGenerator:
         If the release is not None, it filters out closed issues, merged pull requests, and commits
         that occurred before the release date.
         @param data: The mined data containing issues, pull requests, commits, and release information.
-        @return: A tuple containing filtered lists of issues, pull requests, and commits.
         """
         issues_list = data.issues
-        pulls_list = list(data.pull_requests)
-        commits_list = list(data.commits)
+        pulls_list = data.pull_requests
+        commits_list = data.commits
 
         if data.release is not None:
             logger.info("Starting issue, prs and commit reduction by the latest release since time.")

@@ -78,7 +78,6 @@ class ActionInputs:
         """
         Get the GitHub token from the action inputs.
         """
-        print("TOKEN:", get_action_input(GITHUB_TOKEN) or "")
         return get_action_input(GITHUB_TOKEN) or ""
 
     @staticmethod

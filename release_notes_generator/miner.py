@@ -60,7 +60,7 @@ class DataMiner:
         self._get_issues(data)
 
         # pulls and commits, and then reduce them by the latest release since time
-        data.pull_requests = self._safe_call(data.repository.get_pulls)(state=PR_STATE_CLOSED)
+        data.pull_requests = list(self._safe_call(data.repository.get_pulls)(state=PR_STATE_CLOSED))
         data.commits = list(self._safe_call(data.repository.get_commits)())
 
         logger.info("Data mining from GitHub completed.")
@@ -82,7 +82,7 @@ class DataMiner:
             rls = self._safe_call(repository.get_release)(ActionInputs.get_from_tag_name())
 
             if rls is None:
-                logger.info(
+                logger.error(
                     "Latest release not found for received from-tag %s. Ending!", ActionInputs.get_from_tag_name()
                 )
                 sys.exit(1)
