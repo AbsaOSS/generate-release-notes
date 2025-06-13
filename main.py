@@ -29,6 +29,7 @@ from release_notes_generator.model.custom_chapters import CustomChapters
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.utils.gh_action import set_action_output
 from release_notes_generator.utils.logging_config import setup_logging
+from release_notes_generator.filter import FilterByRelease
 
 
 def run() -> None:
@@ -51,7 +52,8 @@ def run() -> None:
     )
 
     generator = ReleaseNotesGenerator(py_github, custom_chapters)
-    rls_notes = generator.generate()
+    filterer = FilterByRelease()
+    rls_notes = generator.generate(filterer)
     logger.debug("Generated release notes: \n%s", rls_notes)
 
     # Set the output for the GitHub Action

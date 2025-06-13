@@ -25,7 +25,7 @@ from typing import Optional
 
 from github import Github
 
-from release_notes_generator.filter import FilterByRelease
+from release_notes_generator.filter import Filter
 from release_notes_generator.miner import DataMiner
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.builder import ReleaseNotesBuilder
@@ -65,7 +65,7 @@ class ReleaseNotesGenerator:
         """Getter for the GithubRateLimiter instance."""
         return self._rate_limiter
 
-    def generate(self) -> Optional[str]:
+    def generate(self, filterer: Filter) -> Optional[str]:
         """
         Generates the Release Notes for a given repository.
 
@@ -76,7 +76,7 @@ class ReleaseNotesGenerator:
         if data.is_empty():
             return None
 
-        FilterByRelease().filter(data=data)
+        filterer.filter(data=data) ## TODO Posible action: add filter type as parametr to actions input
 
         changelog_url: str = get_change_url(
             tag_name=ActionInputs.get_tag_name(), repository=data.repository, git_release=data.release
