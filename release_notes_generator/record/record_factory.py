@@ -26,6 +26,7 @@ from github.PullRequest import PullRequest
 from github.Repository import Repository
 from github.Commit import Commit
 
+from release_notes_generator.model.MinedData import MinedData
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.record import Record
 
@@ -44,20 +45,17 @@ class RecordFactory:
 
     @staticmethod
     def generate(
-        github: Github, repo: Repository, issues: list[Issue], pulls: list[PullRequest], commits: list[Commit]
+        github: Github, data: MinedData
     ) -> dict[int, Record]:
         """
         Generate records for release notes.
 
         @param github: The GitHub instance.
-        @param repo: The repository.
-        @param issues: The list of issues.
-        @param pulls: The list of pull requests.
-        @param commits: The list of commits.
+        @param data: MinedData instance containing repository, issues, pull requests, and commits.
         @return: A dictionary of records.
         """
         records = {}
-        pull_numbers = [pull.number for pull in pulls]
+        pull_numbers = [pull.number for pull in data.pull_requests]
 
         def create_record_for_issue(i: Issue) -> None:
             """
@@ -82,7 +80,7 @@ class RecordFactory:
                         pull.number,
                         parent_issue_number,
                     )
-                    parent_issue = safe_call(repo.get_issue)(parent_issue_number)
+                    parent_issue = safe_call(data.repository.get_issue)(parent_issue_number)
                     if parent_issue is not None:
                         create_record_for_issue(parent_issue)
 
@@ -115,11 +113,11 @@ class RecordFactory:
         rate_limiter = GithubRateLimiter(github)
         safe_call = safe_call_decorator(rate_limiter)
 
-        for issue in issues:
+        for issue in data.issues:
             if issue.number not in pull_numbers:
                 create_record_for_issue(issue)
 
-        for pull in pulls:
+        for pull in data.pull_requests:
             pull_labels = [label.name for label in pull.labels]
             skip_record: bool = any(item in pull_labels for item in ActionInputs.get_skip_release_notes_labels())
 
@@ -130,13 +128,13 @@ class RecordFactory:
             else:
                 register_pull_request(pull, skip_record)
 
-        detected_prs_count = sum(register_commit_to_record(commit) for commit in commits)
+        detected_prs_count = sum(register_commit_to_record(commit) for commit in data.commits)
 
         logger.info(
             "Generated %d records from %d issues and %d PRs, with %d commits detected.",
             len(records),
-            len(issues),
-            len(pulls),
+            len(data.issues),
+            len(data.pull_requests),
             detected_prs_count,
         )
         return records

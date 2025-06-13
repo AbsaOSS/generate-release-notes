@@ -76,7 +76,7 @@ class ReleaseNotesGenerator:
         if data.is_empty():
             return None
 
-        filterer.filter(data=data) ## TODO Posible action: add filter type as parametr to actions input
+        filterer.filter(data=data)
 
         changelog_url: str = get_change_url(
             tag_name=ActionInputs.get_tag_name(), repository=data.repository, git_release=data.release
@@ -86,10 +86,7 @@ class ReleaseNotesGenerator:
 
         rls_notes_records: dict[int, Record] = RecordFactory.generate(
             github=self._github_instance,
-            repo=data.repository,
-            issues=data.issues,
-            pulls=data.pull_requests,
-            commits=data.commits,
+            data=data
         )
 
         release_notes_builder = ReleaseNotesBuilder(
