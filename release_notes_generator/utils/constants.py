@@ -67,3 +67,18 @@ CLOSED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS: str = "Closed PRs without Issu
 MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES: str = "Merged PRs Linked to 'Not Closed' Issue ⚠️"
 
 OTHERS_NO_TOPIC: str = "Others - No Topic ⚠️"
+
+LINKED_ISSUES_MAX = 10
+ISSUES_FOR_PRS: str = """
+query {{
+  repository(owner: "{owner}", name: "{name}") {{
+    pullRequest(number: {number}) {{
+      closingIssuesReferences(userLinkedOnly: false, first: {first}){{
+        nodes{{
+          number
+        }}
+      }}
+    }}
+  }}
+}}
+"""

@@ -65,6 +65,40 @@ class ActionInputs:
     _row_format_issue = None
     _row_format_pr = None
     _row_format_link_pr = None
+    _owner = ""
+    _repo_name = ""
+
+    @staticmethod
+    def get_github_owner() -> str:
+        """
+        Get the GitHub owner from the action inputs.
+        """
+        if ActionInputs._owner:
+            return ActionInputs._owner
+
+        repository_id = get_action_input(GITHUB_REPOSITORY) or ""
+        if "/" in repository_id:
+            ActionInputs._owner, _ = repository_id.split("/", 1)
+        else:
+            ActionInputs._owner = repository_id
+
+        return ActionInputs._owner
+
+    @staticmethod
+    def get_github_repo_name() -> str:
+        """
+        Get the GitHub repository name from the action inputs.
+        """
+        if ActionInputs._repo_name:
+            return ActionInputs._repo_name
+
+        repository_id = get_action_input(GITHUB_REPOSITORY) or ""
+        if "/" in repository_id:
+            _, ActionInputs._repo_name = repository_id.split("/", 1)
+        else:
+            ActionInputs._repo_name = repository_id
+
+        return ActionInputs._repo_name
 
     @staticmethod
     def get_github_repository() -> str:
@@ -298,11 +332,11 @@ class ActionInputs:
             errors.append("Repository ID must be a non-empty string.")
 
         if "/" in repository_id:
-            owner, repo_name = ActionInputs.get_github_repository().split("/")
+            ActionInputs._owner, ActionInputs._repo_name = ActionInputs.get_github_repository().split("/")
         else:
-            owner = repo_name = ""
+            ActionInputs._owner = ActionInputs._repo_name = ""
 
-        if not isinstance(owner, str) or not owner.strip() or not isinstance(repo_name, str) or not repo_name.strip():
+        if not isinstance(ActionInputs._owner, str) or not ActionInputs._owner.strip() or not isinstance(ActionInputs._repo_name, str) or not ActionInputs._repo_name.strip():
             errors.append("Owner and Repo must be a non-empty string.")
 
         tag_name = ActionInputs.get_tag_name()
@@ -373,7 +407,7 @@ class ActionInputs:
                 logger.error(error)
             sys.exit(1)
 
-        logger.debug("Repository: %s/%s", owner, repo_name)
+        logger.debug("Repository: %s/%s", ActionInputs._owner, ActionInputs._repo_name)
         logger.debug("Tag name: %s", tag_name)
         logger.debug("Chapters: %s", chapters)
         logger.debug("Published at: %s", published_at)

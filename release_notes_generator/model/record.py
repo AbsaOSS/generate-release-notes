@@ -34,7 +34,7 @@ from release_notes_generator.utils.constants import (
     ISSUE_STATE_OPEN,
     RELEASE_NOTE_LINE_MARKS,
 )
-from release_notes_generator.utils.pull_reuqest_utils import extract_issue_numbers_from_body
+from release_notes_generator.utils.pull_request_utils import extract_issue_numbers_from_body
 
 logger = logging.getLogger(__name__)
 
@@ -438,3 +438,15 @@ class Record:
         @return: A boolean indicating whether the pull request is merged.
         """
         return pull.state == PR_STATE_CLOSED and pull.merged_at is not None and pull.closed_at is not None
+
+class PullRequestRecord(Record):
+    """
+    A class used to represent a pull request record in the release notes.
+    Inherits from Record and provides additional functionality specific to pull requests.
+    """
+
+    def __init__(self, pull: PullRequest, skip: bool = False):
+        super().__init__(issue=None, skip=skip)
+        self.register_pull_request(pull)
+        self.__is_release_note_detected = self.contains_release_notes
+        # todo

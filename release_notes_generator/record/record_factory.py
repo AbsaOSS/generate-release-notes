@@ -23,7 +23,6 @@ import logging
 from github import Github
 from github.Issue import Issue
 from github.PullRequest import PullRequest
-from github.Repository import Repository
 from github.Commit import Commit
 
 from release_notes_generator.model.MinedData import MinedData
@@ -32,7 +31,7 @@ from release_notes_generator.model.record import Record
 
 from release_notes_generator.utils.decorators import safe_call_decorator
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
-from release_notes_generator.utils.pull_reuqest_utils import extract_issue_numbers_from_body
+from release_notes_generator.utils.pull_request_utils import get_issues_for_pr
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +71,7 @@ class RecordFactory:
             logger.debug("Created record for issue %d: %s", i.number, i.title)
 
         def register_pull_request(pull: PullRequest, skip_record: bool) -> None:
-            for parent_issue_number in extract_issue_numbers_from_body(pull):
+            for parent_issue_number in get_issues_for_pr(pull.number):
                 if parent_issue_number not in records:
                     logger.warning(
                         "Detected PR %d linked to issue %d which is not in the list of received issues. "
@@ -118,15 +117,16 @@ class RecordFactory:
                 create_record_for_issue(issue)
 
         for pull in data.pull_requests:
-            pull_labels = [label.name for label in pull.labels]
+            pull_labels = [label.name for label in pull.labels] # todo  make function for these calls
             skip_record: bool = any(item in pull_labels for item in ActionInputs.get_skip_release_notes_labels())
 
-            if not extract_issue_numbers_from_body(pull):
+            # if not extract_issue_numbers_from_body(pull):
+            if not get_issues_for_pr(pull.number):
                 records[pull.number] = Record(skip=skip_record)
                 records[pull.number].register_pull_request(pull)
                 logger.debug("Created record for PR %d: %s", pull.number, pull.title)
             else:
-                register_pull_request(pull, skip_record)
+                register_pull_request(pull, skip_record) # todo pass extract_issue_numbers_from_body(pull)
 
         detected_prs_count = sum(register_commit_to_record(commit) for commit in data.commits)
 
