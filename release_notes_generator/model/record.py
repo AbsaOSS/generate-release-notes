@@ -21,7 +21,7 @@ This module contains the BaseChapters class which is responsible for representin
 import logging
 import re
 
-from typing import Optional, AnyStr, Any
+from typing import Optional, AnyStr, Any, Dict, List
 
 from github.Issue import Issue
 from github.PullRequest import PullRequest
@@ -250,6 +250,7 @@ class Record:
     @property
     def pr_contains_issue_mentions(self) -> bool:
         """Checks if the pull request contains issue mentions."""
+        # todo call both and merge solve in issue
         return len(extract_issue_numbers_from_body(self.__pulls[0])) > 0
 
     @property
@@ -449,4 +450,26 @@ class PullRequestRecord(Record):
         super().__init__(issue=None, skip=skip)
         self.register_pull_request(pull)
         self.__is_release_note_detected = self.contains_release_notes
-        # todo
+        self.___issues: Dict[int, List[Issue]] = {}
+
+
+class IssueRecord(Record):
+    """
+    A class used to represent an issue record in the release notes.
+    Inherits from Record and provides additional functionality specific to issues.
+    """
+
+    def __init__(self, issue: Issue, skip: bool = False):
+        super().__init__(issue=issue, skip=skip)
+        self.__is_release_note_detected = self.contains_release_notes
+
+class CommitRecord(Record):
+    """
+    A class used to represent a direct commit record in the release notes.
+    Inherits from Record and provides additional functionality specific to direct commits.
+    """
+
+    def __init__(self, commit: Commit, skip: bool = False):
+        super().__init__(issue=None, skip=skip)
+        self.register_commit(commit)
+        self.__is_release_note_detected = self.contains_release_notes

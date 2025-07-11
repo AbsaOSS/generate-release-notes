@@ -25,6 +25,7 @@ from github.Issue import Issue
 from github.PullRequest import PullRequest
 from github.Commit import Commit
 
+from model.record import IssueRecord, PullRequestRecord
 from release_notes_generator.model.MinedData import MinedData
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.record import Record
@@ -53,7 +54,7 @@ class RecordFactory:
         @param data: MinedData instance containing repository, issues, pull requests, and commits.
         @return: A dictionary of records.
         """
-        records = {}
+        records: dict[int, Record] = {}
         pull_numbers = [pull.number for pull in data.pull_requests]
 
         def create_record_for_issue(i: Issue) -> None:
@@ -66,7 +67,7 @@ class RecordFactory:
             # check for skip labels presence and skip when detected
             issue_labels = [label.name for label in i.labels]
             skip_record = any(item in issue_labels for item in ActionInputs.get_skip_release_notes_labels())
-            records[i.number] = Record(i, skip=skip_record)
+            records[i.number] = IssueRecord(issue=i, skip=skip_record)
 
             logger.debug("Created record for issue %d: %s", i.number, i.title)
 
@@ -87,8 +88,7 @@ class RecordFactory:
                     records[parent_issue_number].register_pull_request(pull)
                     logger.debug("Registering PR %d: %s to Issue %d", pull.number, pull.title, parent_issue_number)
                 else:
-                    records[pull.number] = Record(skip=skip_record)
-                    records[pull.number].register_pull_request(pull)
+                    records[pull.number] = PullRequestRecord(pull, skip=skip_record)
                     logger.debug(
                         "Registering stand-alone PR %d: %s as mentioned Issue %d not found.",
                         pull.number,
@@ -117,16 +117,14 @@ class RecordFactory:
                 create_record_for_issue(issue)
 
         for pull in data.pull_requests:
-            pull_labels = [label.name for label in pull.labels] # todo  make function for these calls
+            pull_labels = [label.name for label in pull.labels]
             skip_record: bool = any(item in pull_labels for item in ActionInputs.get_skip_release_notes_labels())
 
-            # if not extract_issue_numbers_from_body(pull):
             if not get_issues_for_pr(pull.number):
-                records[pull.number] = Record(skip=skip_record)
-                records[pull.number].register_pull_request(pull)
+                records[pull.number] = PullRequestRecord(pull, skip=skip_record)
                 logger.debug("Created record for PR %d: %s", pull.number, pull.title)
             else:
-                register_pull_request(pull, skip_record) # todo pass extract_issue_numbers_from_body(pull)
+                register_pull_request(pull, skip_record)
 
         detected_prs_count = sum(register_commit_to_record(commit) for commit in data.commits)
 
