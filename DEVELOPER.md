@@ -146,7 +146,7 @@ open htmlcov/index.html
 ```
 
 ## Run Action Locally
-Create *.sh file and place it in the project root.
+Create run_locally.sh file and place it in the project root.
 
 ```bash
 #!/bin/bash

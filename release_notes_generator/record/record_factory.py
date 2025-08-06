@@ -44,9 +44,7 @@ class RecordFactory:
     """
 
     @staticmethod
-    def generate(
-        github: Github, data: MinedData
-    ) -> dict[int, Record]:
+    def generate(github: Github, data: MinedData) -> dict[int, Record]:
         """
         Generate records for release notes.
 

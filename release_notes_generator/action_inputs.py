@@ -336,7 +336,12 @@ class ActionInputs:
         else:
             ActionInputs._owner = ActionInputs._repo_name = ""
 
-        if not isinstance(ActionInputs._owner, str) or not ActionInputs._owner.strip() or not isinstance(ActionInputs._repo_name, str) or not ActionInputs._repo_name.strip():
+        if (
+            not isinstance(ActionInputs._owner, str)
+            or not ActionInputs._owner.strip()
+            or not isinstance(ActionInputs._repo_name, str)
+            or not ActionInputs._repo_name.strip()
+        ):
             errors.append("Owner and Repo must be a non-empty string.")
 
         tag_name = ActionInputs.get_tag_name()

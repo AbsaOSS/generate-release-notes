@@ -69,6 +69,9 @@ class ReleaseNotesGenerator:
         """
         Generates the Release Notes for a given repository.
 
+        @Parameters:
+        - filterer: An instance of Filter that will be used to filter the mined data.
+
         @return: The generated release notes as a string, or None if the repository could not be found.
         """
         miner = DataMiner(self._github_instance, self._rate_limiter)
@@ -76,18 +79,15 @@ class ReleaseNotesGenerator:
         if data.is_empty():
             return None
 
-        filterer.filter(data=data)
+        filtered_data = filterer.filter(data=data)
 
         changelog_url: str = get_change_url(
-            tag_name=ActionInputs.get_tag_name(), repository=data.repository, git_release=data.release
+            tag_name=ActionInputs.get_tag_name(), repository=filtered_data.repository, git_release=filtered_data.release
         )
 
-        assert data.repository is not None, "Repository must not be None"
+        assert filtered_data.repository is not None, "Repository must not be None"
 
-        rls_notes_records: dict[int, Record] = RecordFactory.generate(
-            github=self._github_instance,
-            data=data
-        )
+        rls_notes_records: dict[int, Record] = RecordFactory.generate(github=self._github_instance, data=filtered_data)
 
         release_notes_builder = ReleaseNotesBuilder(
             records=rls_notes_records,

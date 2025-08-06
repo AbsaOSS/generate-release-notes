@@ -159,4 +159,4 @@ cython_debug/
 .idea/
 
 default_output.txt
-run_localy.sh
+run_locally.sh

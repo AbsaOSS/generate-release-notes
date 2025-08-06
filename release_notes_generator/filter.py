@@ -22,6 +22,7 @@ from release_notes_generator.model.MinedData import MinedData
 
 logger = logging.getLogger(__name__)
 
+
 class Filter:
     """
     Base class for filtering records.
@@ -44,16 +45,21 @@ class FilterByRelease(Filter):
 
     def __init__(self, release_version: Optional[str] = None):
         self.release_version = release_version
+        # TODO - check usage of release_version, as it is not used in the current implementation
+        # it is also part of the MinedData class, so it might be redundant here
 
-    def filter(self, data: MinedData):
+    def filter(self, data: MinedData) -> MinedData:
         """
         Filters issues, pull requests, and commits based on the latest release date.
         If the release is not None, it filters out closed issues, merged pull requests, and commits
         that occurred before the release date.
-        @param data: The mined data containing issues, pull requests, commits, and release information.
-        @return: The filtered mined data.
-        """
 
+        @Parameters:
+        - data (MinedData): The mined data containing issues, pull requests, commits, and release information.
+
+        @Returns:
+        - MinedData: The filtered mined data with issues, pull requests, and commits reduced based on the release date.
+        """
         issues_list = data.issues
         pulls_list = data.pull_requests
         commits_list = data.commits
@@ -75,4 +81,6 @@ class FilterByRelease(Filter):
 
             data.commits = list(filter(lambda commit: commit.commit.author.date > data.since, commits_list))
             logger.debug("Count of commits reduced from %d to %d", len(commits_list), len(data.commits))
+
+        return data
 

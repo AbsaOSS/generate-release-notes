@@ -440,6 +440,7 @@ class Record:
         """
         return pull.state == PR_STATE_CLOSED and pull.merged_at is not None and pull.closed_at is not None
 
+
 class PullRequestRecord(Record):
     """
     A class used to represent a pull request record in the release notes.
@@ -462,6 +463,7 @@ class IssueRecord(Record):
     def __init__(self, issue: Issue, skip: bool = False):
         super().__init__(issue=issue, skip=skip)
         self.__is_release_note_detected = self.contains_release_notes
+
 
 class CommitRecord(Record):
     """
