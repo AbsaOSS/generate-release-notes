@@ -353,7 +353,8 @@ class Record:
         format_values = {}
 
         if isinstance(self, CommitRecord):
-            row = f"{row_prefix}Commit: {self._pull_commits[0][0].sha[:7]} - {self._pull_commits[0][0].commit.message.replace('\n', ' ')}"
+            commit_message = self._pull_commits[0][0].commit.message.replace("\n", " ")
+            row = f"{row_prefix}Commit: {self._pull_commits[0][0].sha[:7]} - {commit_message}"
         elif self._gh_issue is None:
             p = self._pulls[0]
             format_values["number"] = f"#{p.number}"
