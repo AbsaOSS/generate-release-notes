@@ -66,6 +66,8 @@ CLOSED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS: str = "Closed PRs without Issu
 
 MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES: str = "Merged PRs Linked to 'Not Closed' Issue ⚠️"
 
+DIRECT_COMMITS: str = "Direct commits ⚠️"
+
 OTHERS_NO_TOPIC: str = "Others - No Topic ⚠️"
 
 LINKED_ISSUES_MAX = 10

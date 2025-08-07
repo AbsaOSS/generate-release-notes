@@ -87,7 +87,9 @@ class ReleaseNotesGenerator:
 
         assert filtered_data.repository is not None, "Repository must not be None"
 
-        rls_notes_records: dict[int, Record] = RecordFactory.generate(github=self._github_instance, data=filtered_data)
+        rls_notes_records: dict[int | str, Record] = RecordFactory.generate(
+            github=self._github_instance, data=filtered_data
+        )
 
         release_notes_builder = ReleaseNotesBuilder(
             records=rls_notes_records,

@@ -22,7 +22,7 @@ notes.
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.base_chapters import BaseChapters
 from release_notes_generator.model.chapter import Chapter
-from release_notes_generator.model.record import Record
+from release_notes_generator.model.record import Record, CommitRecord
 from release_notes_generator.utils.enums import DuplicityScopeEnum
 
 
@@ -31,30 +31,34 @@ class CustomChapters(BaseChapters):
     A class used to represent the custom chapters in the release notes.
     """
 
-    def populate(self, records: dict[int, Record]) -> None:
+    def populate(self, records: dict[int | str, Record]) -> None:
         """
         Populates the custom chapters with records.
 
         @param records: A dictionary of records where the key is an integer and the value is a Record object.
         @return: None
         """
-        for nr in records:  # iterate all records
+        for id, record in records.items():  # iterate all records
             # check if the record should be skipped
-            if records[nr].skip:
+            if records[id].skip:
+                continue
+
+            # skip direct commits as they do not have labels
+            if isinstance(record, CommitRecord):
                 continue
 
             for ch in self.chapters.values():  # iterate all chapters
-                if nr in self.populated_record_numbers_list and ActionInputs.get_duplicity_scope() not in (
+                if id in self.populated_record_numbers_list and ActionInputs.get_duplicity_scope() not in (
                     DuplicityScopeEnum.CUSTOM,
                     DuplicityScopeEnum.BOTH,
                 ):
                     continue
 
-                for record_label in records[nr].labels:  # iterate all labels of the record (issue, or 1st PR)
-                    if record_label in ch.labels and records[nr].pulls_count > 0:
-                        if not records[nr].is_present_in_chapters:
-                            ch.add_row(nr, records[nr].to_chapter_row())
-                            self.populated_record_numbers_list.append(nr)
+                for record_label in records[id].labels:  # iterate all labels of the record (issue, or 1st PR)
+                    if record_label in ch.labels and records[id].pulls_count > 0:
+                        if not records[id].is_present_in_chapters:
+                            ch.add_row(id, records[id].to_chapter_row())
+                            self.populated_record_numbers_list.append(id)
 
     def from_yaml_array(self, chapters: list[dict[str, str]]) -> "CustomChapters":
         """

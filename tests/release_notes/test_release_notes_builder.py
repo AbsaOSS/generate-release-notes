@@ -109,6 +109,9 @@ All closed PRs are linked to issues.
 ### Merged PRs Linked to 'Not Closed' Issue ⚠️
 All merged PRs are linked to Closed issues.
 
+### Direct commits ⚠️
+All direct commits are linked pull requests.
+
 ### Others - No Topic ⚠️
 Previous filters caught all Issues or Pull Requests.
 

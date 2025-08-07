@@ -29,7 +29,7 @@ from github.GitRelease import GitRelease
 from github.Repository import Repository
 
 from release_notes_generator.action_inputs import ActionInputs
-from release_notes_generator.model.MinedData import MinedData
+from release_notes_generator.model.mined_data import MinedData
 from release_notes_generator.utils.constants import ISSUE_STATE_ALL, PR_STATE_CLOSED
 from release_notes_generator.utils.decorators import safe_call_decorator
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter

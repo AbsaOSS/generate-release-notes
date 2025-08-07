@@ -22,6 +22,12 @@ for the GH Action.
 
 import logging
 
+# TODO - fix certificate verification
+import warnings
+from urllib3.exceptions import InsecureRequestWarning
+
+warnings.filterwarnings("ignore", category=InsecureRequestWarning)
+
 from github import Github, Auth
 
 from release_notes_generator.generator import ReleaseNotesGenerator
@@ -43,7 +49,7 @@ def run() -> None:
     logger.info("Starting 'Release Notes Generator' GitHub Action")
 
     # Authenticate with GitHub
-    py_github = Github(auth=Auth.Token(token=ActionInputs.get_github_token()), per_page=100)
+    py_github = Github(auth=Auth.Token(token=ActionInputs.get_github_token()), per_page=100, verify=False, timeout=60)
 
     ActionInputs.validate_inputs()
     # Load custom chapters configuration

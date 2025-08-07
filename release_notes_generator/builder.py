@@ -39,7 +39,7 @@ class ReleaseNotesBuilder:
 
     def __init__(
         self,
-        records: dict[int, Record],
+        records: dict[int | str, Record],
         changelog_url: str,
         custom_chapters: CustomChapters,
     ):

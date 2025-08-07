@@ -21,7 +21,7 @@ from datetime import datetime
 
 
 from release_notes_generator.filter import FilterByRelease
-from release_notes_generator.model.MinedData import MinedData
+from release_notes_generator.model.mined_data import MinedData
 
 
 def test_filter_no_release(mocker):
@@ -30,6 +30,8 @@ def test_filter_no_release(mocker):
 
     # Mock MinedData
     data = MagicMock(spec=MinedData)
+    data.repository = MagicMock()
+    data.since = datetime(2023, 1, 1)
     data.release = None
     data.issues = [MagicMock(closed_at=None), MagicMock(closed_at=None)]
     data.pull_requests = [MagicMock(merged_at=None), MagicMock(merged_at=None)]
@@ -53,6 +55,7 @@ def test_filter_with_release(mocker):
 
     # Mock MinedData
     data = MagicMock(spec=MinedData)
+    data.repository = MagicMock()
     data.release = MagicMock()
     data.since = datetime(2023, 1, 1)
 
@@ -72,15 +75,15 @@ def test_filter_with_release(mocker):
 
     # Apply filter
     filter_instance = FilterByRelease()
-    filter_instance.filter(data)
+    filtered_data = filter_instance.filter(data)
 
     # Assert filtering occurred
-    assert len(data.issues) == 1
-    assert len(data.pull_requests) == 1
-    assert len(data.commits) == 1
-    assert data.issues[0].closed_at == datetime(2023, 1, 2)
-    assert data.pull_requests[0].merged_at == datetime(2023, 2, 3)
-    assert data.commits[0].commit.author.date == datetime(2024, 1, 4)
+    assert len(filtered_data.issues) == 1
+    assert len(filtered_data.pull_requests) == 1
+    assert len(filtered_data.commits) == 1
+    assert filtered_data.issues[0].closed_at == datetime(2023, 1, 2)
+    assert filtered_data.pull_requests[0].merged_at == datetime(2023, 2, 3)
+    assert filtered_data.commits[0].commit.author.date == datetime(2024, 1, 4)
     assert ('Starting issue, prs and commit reduction by the latest release since time.',) == mock_log_info.call_args_list[0][0]
     assert ('Count of issues reduced from %d to %d', 2, 1) == mock_log_debug.call_args_list[0][0]
     assert ('Count of pulls reduced from %d to %d', 2, 1) == mock_log_debug.call_args_list[1][0]

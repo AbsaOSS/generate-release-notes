@@ -69,6 +69,8 @@ class GithubRateLimiter:
                     datetime.fromtimestamp(reset_time).strftime("%Y-%m-%d %H:%M:%S"),
                 )
                 time.sleep(sleep_time + 5)  # Sleep for the calculated time plus 5 seconds
+            else:
+                logger.debug("Rate limiter: Remaining calls: %s, Reset time: %s", remaining_calls, reset_time)
 
             return method(*args, **kwargs)
 
