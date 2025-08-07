@@ -193,7 +193,6 @@ def test_generate_with_issues_and_pulls_and_commits(mocker, mock_repo):
     assert not records[1].skip
 
     # Verify the record creation
-    print(records[1].__class__ )
     assert records[1].__class__ is IssueRecord
 
     # Verify that PRs are registered

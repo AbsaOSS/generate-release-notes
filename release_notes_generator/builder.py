@@ -29,7 +29,6 @@ from release_notes_generator.action_inputs import ActionInputs
 logger = logging.getLogger(__name__)
 
 
-# pylint: disable=too-few-public-methods
 class ReleaseNotesBuilder:
     """
     A class representing the Release Notes Builder.

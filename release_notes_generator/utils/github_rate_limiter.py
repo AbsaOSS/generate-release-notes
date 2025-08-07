@@ -27,7 +27,6 @@ from github import Github
 logger = logging.getLogger(__name__)
 
 
-# pylint: disable=too-few-public-methods
 class GithubRateLimiter:
     """
     A class used to rate limit the GitHub API calls.

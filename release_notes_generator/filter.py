@@ -87,12 +87,16 @@ class FilterByRelease(Filter):
             md.commits = commits_list
 
             logger.debug(
-                f"Input data. Issues: {len(data.issues)}, "
-                f"Pull Requests: {len(data.pull_requests)}, Commits: {len(data.commits)}"
+                "Input data. Issues: %d, Pull Requests: %d, Commits: %d",
+                len(data.issues),
+                len(data.pull_requests),
+                len(data.commits),
             )
             logger.debug(
-                f"Filtered data. Issues: {len(md.issues)}, "
-                f"Pull Requests: {len(md.pull_requests)}, Commits: {len(md.commits)}"
+                "Filtered data. Issues: %d, Pull Requests: %d, Commits: %d",
+                len(md.issues),
+                len(md.pull_requests),
+                len(md.commits),
             )
         else:
             md.issues = deepcopy(data.issues)

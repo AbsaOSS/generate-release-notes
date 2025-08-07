@@ -228,7 +228,9 @@ class ActionInputs:
         """
         Get the CodeRabbit release notes title from the action inputs.
         """
-        return get_action_input(CODERABBIT_RELEASE_NOTES_TITLE, CODERABBIT_RELEASE_NOTE_TITLE_DEFAULT)  # type: ignore[return-value]
+        return get_action_input(
+            CODERABBIT_RELEASE_NOTES_TITLE, CODERABBIT_RELEASE_NOTE_TITLE_DEFAULT
+        )  # type: ignore[return-value]
 
     @staticmethod
     def get_coderabbit_summary_ignore_groups() -> list[str]:

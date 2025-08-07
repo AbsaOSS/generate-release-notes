@@ -21,7 +21,7 @@ This module contains the BaseChapters class which is responsible for representin
 import logging
 import re
 
-from typing import Optional, AnyStr, Any, Dict, List
+from typing import Optional, Any, Dict, List
 
 from github.Issue import Issue
 from github.PullRequest import PullRequest
@@ -158,7 +158,8 @@ class Record:
             if pull.body and detection_regex.search(pull.body):
                 release_notes += self.__get_rls_notes_default(pull, line_marks, detection_regex)
             elif pull.body and cr_active and cr_detection_regex.search(pull.body):  # type: ignore[union-attr]
-                release_notes += self.__get_rls_notes_code_rabbit(pull, line_marks, cr_detection_regex)  # type: ignore[arg-type]
+                release_notes += self.__get_rls_notes_code_rabbit(pull, line_marks,
+                                                                  cr_detection_regex)  # type: ignore[arg-type]
 
         # Return the concatenated release notes
         return release_notes.rstrip()
@@ -251,7 +252,7 @@ class Record:
     @property
     def pr_contains_issue_mentions(self) -> bool:
         """Checks if the pull request contains issue mentions."""
-        # todo call both and merge solve in issue
+        # TODO call both and merge solve in issue #153
         return len(extract_issue_numbers_from_body(self._pulls[0])) > 0
 
     @property
@@ -346,8 +347,7 @@ class Record:
 
         @return: The record as a row string.
         """
-        # TODO - create a version on child classes
-
+        # TODO - create a version on child classes #152
         self.increment_present_in_chapters()
         row_prefix = f"{ActionInputs.get_duplicity_icon()} " if self.present_in_chapters() > 1 else ""
         format_values = {}
@@ -429,11 +429,7 @@ class Record:
         @param sha: The commit SHA to check for.
         @return: A boolean indicating whether the specified commit SHA is present in the record.
         """
-        for pull in self._pulls:
-            if pull.merge_commit_sha == sha:
-                return True
-
-        return False
+        return any(pull.merge_commit_sha == sha for pull in self._pulls)
 
     @staticmethod
     def is_pull_request_merged(pull: PullRequest) -> bool:
@@ -456,7 +452,7 @@ class PullRequestRecord(Record):
         super().__init__(issue=None, skip=skip)
         self.register_pull_request(pull)
         self.__is_release_note_detected = self.contains_release_notes
-        self.___issues: Dict[int, List[Issue]] = {}
+        self.__issues: Dict[int, List[Issue]] = {}
 
 
 class IssueRecord(Record):

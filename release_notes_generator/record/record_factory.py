@@ -36,7 +36,7 @@ from release_notes_generator.utils.pull_request_utils import get_issues_for_pr
 logger = logging.getLogger(__name__)
 
 
-# pylint: disable=too-few-public-methods, too-many-locals
+# pylint: disable=too-many-locals
 class RecordFactory:
     """
     A class used to generate records for release notes.
@@ -110,7 +110,7 @@ class RecordFactory:
                     return True
 
             records[commit.sha] = CommitRecord(commit=commit)
-            logger.debug(f"Created record for direct commit {commit.sha}: {commit.commit.message}")
+            logger.debug("Created record for direct commit %s: %s", commit.sha, commit.commit.message)
             return False
 
         rate_limiter = GithubRateLimiter(github)
@@ -127,7 +127,6 @@ class RecordFactory:
             pull_labels = [label.name for label in pull.labels]
             skip_record: bool = any(item in pull_labels for item in ActionInputs.get_skip_release_notes_labels())
 
-            # TODO test and read about linking issues to PRs
             if not safe_call(get_issues_for_pr)(pull_number=pull.number):
                 records[pull.number] = PullRequestRecord(pull, skip=skip_record)
                 logger.debug("Created record for PR %d: %s", pull.number, pull.title)

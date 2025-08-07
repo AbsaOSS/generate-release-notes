@@ -39,7 +39,6 @@ from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
 # Test classes
 
 
-# pylint: disable=too-few-public-methods
 class MockLabel:
     def __init__(self, name):
         self.name = name

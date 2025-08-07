@@ -28,7 +28,6 @@ from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.utils.constants import ISSUES_FOR_PRS, LINKED_ISSUES_MAX
 
 
-## todo romove
 def extract_issue_numbers_from_body(pr: PullRequest) -> list[int]:
     """
     Extracts the numbers of the issues mentioned in the body of the pull request.
@@ -62,8 +61,8 @@ def get_issues_for_pr(pull_number: int) -> list[int]:
         "Authorization": f"Bearer {ActionInputs.get_github_token()}",
         "Content-Type": "application/json",
     }
-    # TODO - fix certificate verification
-    response = requests.post(github_api_url, json={"query": query}, headers=headers, verify=False)
+
+    response = requests.post(github_api_url, json={"query": query}, headers=headers, verify=False, timeout=10)
     response.raise_for_status()  # Raise an error for HTTP issues
     numbers = [
         node["number"]

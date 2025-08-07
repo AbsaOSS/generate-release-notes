@@ -38,9 +38,9 @@ class CustomChapters(BaseChapters):
         @param records: A dictionary of records where the key is an integer and the value is a Record object.
         @return: None
         """
-        for id, record in records.items():  # iterate all records
+        for record_id, record in records.items():  # iterate all records
             # check if the record should be skipped
-            if records[id].skip:
+            if records[record_id].skip:
                 continue
 
             # skip direct commits as they do not have labels
@@ -48,17 +48,17 @@ class CustomChapters(BaseChapters):
                 continue
 
             for ch in self.chapters.values():  # iterate all chapters
-                if id in self.populated_record_numbers_list and ActionInputs.get_duplicity_scope() not in (
+                if record_id in self.populated_record_numbers_list and ActionInputs.get_duplicity_scope() not in (
                     DuplicityScopeEnum.CUSTOM,
                     DuplicityScopeEnum.BOTH,
                 ):
                     continue
 
-                for record_label in records[id].labels:  # iterate all labels of the record (issue, or 1st PR)
-                    if record_label in ch.labels and records[id].pulls_count > 0:
-                        if not records[id].is_present_in_chapters:
-                            ch.add_row(id, records[id].to_chapter_row())
-                            self.populated_record_numbers_list.append(id)
+                for record_label in records[record_id].labels:  # iterate all labels of the record (issue, or 1st PR)
+                    if record_label in ch.labels and records[record_id].pulls_count > 0:
+                        if not records[record_id].is_present_in_chapters:
+                            ch.add_row(record_id, records[record_id].to_chapter_row())
+                            self.populated_record_numbers_list.append(record_id)
 
     def from_yaml_array(self, chapters: list[dict[str, str]]) -> "CustomChapters":
         """

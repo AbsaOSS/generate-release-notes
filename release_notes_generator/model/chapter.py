@@ -33,7 +33,7 @@ class Chapter:
         self.rows: dict[int | str, str] = {}
         self.empty_message = empty_message
 
-    def add_row(self, id: int | str, row: str) -> None:
+    def add_row(self, row_id: int | str, row: str) -> None:
         """
         Adds a row to the chapter.
 
@@ -41,7 +41,7 @@ class Chapter:
         @param row: The row to add.
         @return: None
         """
-        self.rows[id] = row
+        self.rows[row_id] = row
 
     def to_string(self, sort_ascending: bool = True, print_empty_chapters: bool = True) -> str:
         """

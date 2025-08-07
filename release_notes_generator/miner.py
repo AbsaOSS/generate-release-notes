@@ -47,6 +47,9 @@ class DataMiner:
         self._safe_call = safe_call_decorator(rate_limiter)
 
     def mine_data(self) -> MinedData:
+        """
+        Mines data from GitHub, including repository information, issues, pull requests, commits, and releases.
+        """
         logger.info("Starting data mining from GitHub...")
         data = MinedData()
 

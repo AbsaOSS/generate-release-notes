@@ -47,4 +47,10 @@ class MinedData:
         self.since = datetime(1970, 1, 1)  # Default to epoch start
 
     def is_empty(self):
+        """
+        Checks if the mined data is empty, meaning no repository has been set.
+
+        Returns:
+            bool: True if the repository is None, False otherwise.
+        """
         return self.repository is None
