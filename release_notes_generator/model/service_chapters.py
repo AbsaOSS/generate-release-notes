@@ -175,8 +175,9 @@ class ServiceChapters(BaseChapters):
                 if self.__is_row_present(record_id) and not self.duplicity_allowed():
                     return
 
-                self.chapters[MERGED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS].add_row(record_id,
-                                                                                        record.to_chapter_row())
+                self.chapters[MERGED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS].add_row(
+                    record_id, record.to_chapter_row()
+                )
                 self.used_record_numbers.append(record_id)
 
             # check record properties if it fits to a chapter: MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES

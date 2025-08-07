@@ -158,8 +158,9 @@ class Record:
             if pull.body and detection_regex.search(pull.body):
                 release_notes += self.__get_rls_notes_default(pull, line_marks, detection_regex)
             elif pull.body and cr_active and cr_detection_regex.search(pull.body):  # type: ignore[union-attr]
-                release_notes += self.__get_rls_notes_code_rabbit(pull, line_marks,
-                                                                  cr_detection_regex)  # type: ignore[arg-type]
+                release_notes += self.__get_rls_notes_code_rabbit(
+                    pull, line_marks, cr_detection_regex  # type: ignore[arg-type]
+                )
 
         # Return the concatenated release notes
         return release_notes.rstrip()
