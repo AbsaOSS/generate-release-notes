@@ -30,18 +30,18 @@ class Chapter:
     ):
         self.title: str = title
         self.labels: list[str] = labels if labels else []
-        self.rows: dict[int, str] = {}
+        self.rows: dict[int | str, str] = {}
         self.empty_message = empty_message
 
-    def add_row(self, number: int, row: str) -> None:
+    def add_row(self, row_id: int | str, row: str) -> None:
         """
         Adds a row to the chapter.
 
-        @param number: The number of the row.
+        @param id: The number or sha of the row.
         @param row: The row to add.
         @return: None
         """
-        self.rows[number] = row
+        self.rows[row_id] = row
 
     def to_string(self, sort_ascending: bool = True, print_empty_chapters: bool = True) -> str:
         """

@@ -32,10 +32,10 @@ class BaseChapters(ABC):
         self.sort_ascending = sort_ascending
         self.print_empty_chapters = print_empty_chapters
         self.chapters: dict[str, Chapter] = {}
-        self.populated_record_numbers: list[int] = []
+        self.populated_record_numbers: list[int | str] = []
 
     @property
-    def populated_record_numbers_list(self) -> list[int]:
+    def populated_record_numbers_list(self) -> list[int | str]:
         """
         Gets the list of populated record numbers.
 
@@ -82,7 +82,7 @@ class BaseChapters(ABC):
         return [chapter.title for chapter in self.chapters.values()]
 
     @abstractmethod
-    def populate(self, records: dict[int, Record]) -> None:
+    def populate(self, records: dict[int | str, Record]) -> None:
         """
         Populates the chapters with records.
 

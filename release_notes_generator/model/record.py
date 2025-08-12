@@ -21,7 +21,7 @@ This module contains the BaseChapters class which is responsible for representin
 import logging
 import re
 
-from typing import Optional, AnyStr, Any
+from typing import Optional, Any, Dict, List
 
 from github.Issue import Issue
 from github.PullRequest import PullRequest
@@ -34,7 +34,7 @@ from release_notes_generator.utils.constants import (
     ISSUE_STATE_OPEN,
     RELEASE_NOTE_LINE_MARKS,
 )
-from release_notes_generator.utils.pull_reuqest_utils import extract_issue_numbers_from_body
+from release_notes_generator.utils.pull_request_utils import extract_issue_numbers_from_body
 
 logger = logging.getLogger(__name__)
 
@@ -46,91 +46,92 @@ class Record:
     """
 
     def __init__(self, issue: Optional[Issue] = None, skip: bool = False):
-        self.__gh_issue: Optional[Issue] = issue
-        self.__pulls: list[PullRequest] = []
-        self.__pull_commits: dict[int, list[Commit]] = {}
+        self._gh_issue: Optional[Issue] = issue
+        self._pulls: list[PullRequest] = []
+        # int - pr.number, list[Commit] - commits in the PR
+        self._pull_commits: dict[int, list[Commit]] = {}
 
-        self.__is_release_note_detected: bool = False
-        self.__present_in_chapters = 0
-        self.__skip = skip
+        self._is_release_note_detected: bool = False
+        self._present_in_chapters = 0
+        self._skip = skip
 
     @property
     def number(self) -> int:
         """Getter for the number of the record."""
-        if self.__gh_issue is None:
-            return self.__pulls[0].number
-        return self.__gh_issue.number
+        if self._gh_issue is None:
+            return self._pulls[0].number
+        return self._gh_issue.number
 
     @property
     def issue(self) -> Optional[Issue]:
         """Getter for the issue of the record."""
-        return self.__gh_issue
+        return self._gh_issue
 
     @property
     def pulls(self) -> list[PullRequest]:
         """Getter for the pull requests of the record."""
-        return self.__pulls
+        return self._pulls
 
     @property
     def commits(self) -> dict:
         """Getter for the commits of the record."""
-        return self.__pull_commits
+        return self._pull_commits
 
     @property
     def is_present_in_chapters(self) -> bool:
         """Check if the record is present in chapters."""
-        return self.__present_in_chapters > 0
+        return self._present_in_chapters > 0
 
     @property
     def skip(self) -> bool:
         """Check if the record should be skipped during output generation process."""
-        return self.__skip
+        return self._skip
 
     @property
     def is_pr(self) -> bool:
         """Check if the record is a pull request."""
-        return self.__gh_issue is None and len(self.__pulls) == 1
+        return self._gh_issue is None and len(self._pulls) == 1
 
     @property
     def is_issue(self) -> bool:
         """Check if the record is an issue."""
-        return self.__gh_issue is not None
+        return self._gh_issue is not None
 
     @property
     def is_closed(self) -> bool:
         """Check if the record is closed."""
-        if self.__gh_issue is None:
+        if self._gh_issue is None:
             # no issue ==> stand-alone PR
-            return self.__pulls[0].state == PR_STATE_CLOSED
+            return self._pulls[0].state == PR_STATE_CLOSED
 
-        return self.__gh_issue.state == ISSUE_STATE_CLOSED
+        return self._gh_issue.state == ISSUE_STATE_CLOSED
 
     @property
     def is_closed_issue(self) -> bool:
         """Check if the record is a closed issue."""
-        return self.is_issue and self.__gh_issue.state == ISSUE_STATE_CLOSED  # type: ignore[union-attr]
+        return self.is_issue and self._gh_issue.state == ISSUE_STATE_CLOSED  # type: ignore[union-attr]
         # mypy: check for None done first
 
     @property
     def is_open_issue(self) -> bool:
         """Check if the record is an open issue."""
-        return self.is_issue and self.__gh_issue.state == ISSUE_STATE_OPEN  # type: ignore[union-attr]
+        return self.is_issue and self._gh_issue.state == ISSUE_STATE_OPEN  # type: ignore[union-attr]
         # mypy: check for None done first
 
     @property
     def is_merged_pr(self) -> bool:
         """Check if the record is a merged pull request."""
-        if self.__gh_issue is None:
-            return self.is_pull_request_merged(self.__pulls[0])
+        if self._gh_issue is None:
+            return self.is_pull_request_merged(self._pulls[0])
         return False
 
     @property
     def labels(self) -> list[str]:
         """Getter for the labels of the record."""
-        if self.__gh_issue is None:
-            return [label.name for label in self.__pulls[0].labels]
+        if self._gh_issue is None:
+            return [label.name for label in self._pulls[0].labels]
 
-        return [label.name for label in self.__gh_issue.labels]
+        return [label.name for label in self._gh_issue.labels]
 
     def get_rls_notes(self, line_marks: Optional[list[str]] = None) -> str:
         """
@@ -153,11 +154,13 @@ class Record:
         )
 
         # Iterate over all PRs
-        for pull in self.__pulls:
+        for pull in self._pulls:
             if pull.body and detection_regex.search(pull.body):
                 release_notes += self.__get_rls_notes_default(pull, line_marks, detection_regex)
             elif pull.body and cr_active and cr_detection_regex.search(pull.body):  # type: ignore[union-attr]
-                release_notes += self.__get_rls_notes_code_rabbit(pull, line_marks, cr_detection_regex)  # type: ignore[arg-type]
+                release_notes += self.__get_rls_notes_code_rabbit(
+                    pull, line_marks, cr_detection_regex  # type: ignore[arg-type]
+                )
 
         # Return the concatenated release notes
         return release_notes.rstrip()
@@ -233,24 +236,25 @@ class Record:
     @property
     def contains_release_notes(self) -> bool:
         """Checks if the record contains release notes."""
-        if self.__is_release_note_detected:
-            return self.__is_release_note_detected
+        if self._is_release_note_detected:
+            return self._is_release_note_detected
 
         rls_notes: str = self.get_rls_notes()
         if any(mark in rls_notes for mark in RELEASE_NOTE_LINE_MARKS):
-            self.__is_release_note_detected = True
+            self._is_release_note_detected = True
 
-        return self.__is_release_note_detected
+        return self._is_release_note_detected
 
     @property
     def pulls_count(self) -> int:
         """Getter for the count of pull requests of the record."""
-        return len(self.__pulls)
+        return len(self._pulls)
 
     @property
     def pr_contains_issue_mentions(self) -> bool:
         """Checks if the pull request contains issue mentions."""
-        return len(extract_issue_numbers_from_body(self.__pulls[0])) > 0
+        # TODO call both and merge solve in issue #153
+        return len(extract_issue_numbers_from_body(self._pulls[0])) > 0
 
     @property
     def authors(self) -> Optional[str]:
@@ -277,11 +281,11 @@ class Record:
     @property
     def pr_links(self) -> Optional[str]:
         """Getter for the pull request links of the record."""
-        if len(self.__pulls) == 0:
+        if len(self._pulls) == 0:
             return None
 
         template = "#{number}"
-        res = [template.format(number=pull.number) for pull in self.__pulls]
+        res = [template.format(number=pull.number) for pull in self._pulls]
 
         return ", ".join(res)
 
@@ -292,10 +296,10 @@ class Record:
         @param pull_number: The number of the pull request.
         @return: The count of commits in the pull request.
         """
-        for pull in self.__pulls:
+        for pull in self._pulls:
             if pull.number == pull_number:
-                if pull.number in self.__pull_commits:
-                    pull_commits = self.__pull_commits.get(pull.number)
+                if pull.number in self._pull_commits:
+                    pull_commits = self._pull_commits.get(pull.number)
                     return len(pull_commits) if pull_commits is not None else 0
 
                 return 0
@@ -309,9 +313,9 @@ class Record:
         @param index: The index of the pull request.
         @return: The PullRequest instance.
         """
-        if index < 0 or index >= len(self.__pulls):
+        if index < 0 or index >= len(self._pulls):
             return None
-        return self.__pulls[index]
+        return self._pulls[index]
 
     def register_pull_request(self, pull) -> None:
         """
@@ -320,7 +324,7 @@ class Record:
         @param pull: The PullRequest object to register.
         @return: None
         """
-        self.__pulls.append(pull)
+        self._pulls.append(pull)
 
     def register_commit(self, commit: Commit) -> None:
         """
@@ -329,11 +333,11 @@ class Record:
         @param commit: The Commit object to register.
         @return: None
         """
-        for pull in self.__pulls:
+        for pull in self._pulls:
             if commit.sha == pull.merge_commit_sha:
-                if self.__pull_commits.get(pull.number) is None:
-                    self.__pull_commits[pull.number] = []
-                self.__pull_commits[pull.number].append(commit)
+                if self._pull_commits.get(pull.number) is None:
+                    self._pull_commits[pull.number] = []
+                self._pull_commits[pull.number].append(commit)
                 return
 
         logger.error("Commit %s not registered in any PR of record %s", commit.sha, self.number)
@@ -344,12 +348,16 @@ class Record:
 
         @return: The record as a row string.
         """
+        # TODO - create a version on child classes #152
         self.increment_present_in_chapters()
         row_prefix = f"{ActionInputs.get_duplicity_icon()} " if self.present_in_chapters() > 1 else ""
         format_values = {}
 
-        if self.__gh_issue is None:
-            p = self.__pulls[0]
+        if isinstance(self, CommitRecord):
+            commit_message = self._pull_commits[0][0].commit.message.replace("\n", " ")
+            row = f"{row_prefix}Commit: {self._pull_commits[0][0].sha[:7]} - {commit_message}"
+        elif self._gh_issue is None:
+            p = self._pulls[0]
             format_values["number"] = f"#{p.number}"
             format_values["title"] = p.title
             format_values["authors"] = self.authors if self.authors is not None else ""
@@ -357,12 +365,11 @@ class Record:
 
             pr_prefix = "PR: " if ActionInputs.get_row_format_link_pr() else ""
             row = f"{row_prefix}{pr_prefix}" + ActionInputs.get_row_format_pr().format(**format_values)
-
         else:
-            format_values["number"] = f"#{self.__gh_issue.number}"
-            format_values["title"] = self.__gh_issue.title
+            format_values["number"] = f"#{self._gh_issue.number}"
+            format_values["title"] = self._gh_issue.title
             pr_links: str = self.pr_links if self.pr_links is not None else ""
-            format_values["pull-requests"] = pr_links if len(self.__pulls) > 0 else ""
+            format_values["pull-requests"] = pr_links if len(self._pulls) > 0 else ""
             format_values["authors"] = self.authors if self.authors is not None else ""
             format_values["contributors"] = self.contributors if self.contributors is not None else ""
 
@@ -406,7 +413,7 @@ class Record:
 
         @return: None
         """
-        self.__present_in_chapters += 1
+        self._present_in_chapters += 1
 
     def present_in_chapters(self) -> int:
         """
@@ -414,7 +421,7 @@ class Record:
 
         @return: The count of chapters in which the record is present.
         """
-        return self.__present_in_chapters
+        return self._present_in_chapters
 
     def is_commit_sha_present(self, sha: str) -> bool:
         """
@@ -423,11 +430,7 @@ class Record:
         @param sha: The commit SHA to check for.
         @return: A boolean indicating whether the specified commit SHA is present in the record.
         """
-        for pull in self.__pulls:
-            if pull.merge_commit_sha == sha:
-                return True
-
-        return False
+        return any(pull.merge_commit_sha == sha for pull in self._pulls)
 
     @staticmethod
     def is_pull_request_merged(pull: PullRequest) -> bool:
@@ -438,3 +441,39 @@ class Record:
         @return: A boolean indicating whether the pull request is merged.
         """
         return pull.state == PR_STATE_CLOSED and pull.merged_at is not None and pull.closed_at is not None
+
+
+class PullRequestRecord(Record):
+    """
+    A class used to represent a pull request record in the release notes.
+    Inherits from Record and provides additional functionality specific to pull requests.
+    """
+
+    def __init__(self, pull: PullRequest, skip: bool = False):
+        super().__init__(issue=None, skip=skip)
+        self.register_pull_request(pull)
+        self.__is_release_note_detected = self.contains_release_notes
+        self.__issues: Dict[int, List[Issue]] = {}
+
+
+class IssueRecord(Record):
+    """
+    A class used to represent an issue record in the release notes.
+    Inherits from Record and provides additional functionality specific to issues.
+    """
+
+    def __init__(self, issue: Issue, skip: bool = False):
+        super().__init__(issue=issue, skip=skip)
+        self.__is_release_note_detected = self.contains_release_notes
+
+
+class CommitRecord(Record):
+    """
+    A class used to represent a direct commit record in the release notes.
+    Inherits from Record and provides additional functionality specific to direct commits.
+    """
+
+    def __init__(self, commit: Commit, skip: bool = False):
+        super().__init__(issue=None, skip=skip)
+        self._pull_commits[0] = [commit]  # Using 0 as a placeholder for direct commits
+        self.__is_release_note_detected = False

@@ -25,7 +25,7 @@ from github.PullRequest import PullRequest
 from github.Repository import Repository
 
 from release_notes_generator.miner import DataMiner
-from release_notes_generator.model.MinedData import MinedData
+from release_notes_generator.model.mined_data import MinedData
 
 def decorator_mock(func):
     """

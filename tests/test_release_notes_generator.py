@@ -23,6 +23,7 @@ from release_notes_generator.generator import ReleaseNotesGenerator
 from release_notes_generator.model.custom_chapters import CustomChapters
 from release_notes_generator.utils.constants import ROW_FORMAT_ISSUE
 
+from release_notes_generator.filter import FilterByRelease
 
 # generate_release_notes tests
 
@@ -38,7 +39,7 @@ def test_generate_release_notes_repository_not_found(mocker):
 
     custom_chapters = CustomChapters(print_empty_chapters=True)
 
-    release_notes = ReleaseNotesGenerator(github_mock, custom_chapters).generate()
+    release_notes = ReleaseNotesGenerator(github_mock, custom_chapters).generate(filterer=FilterByRelease())
 
     assert release_notes is None
 
@@ -66,14 +67,14 @@ def test_generate_release_notes_latest_release_not_found(
     mock_pull_closed_with_rls_notes_102.merged_at = mock_repo.created_at + timedelta(days=7)
 
     mocker.patch("release_notes_generator.miner.DataMiner.get_latest_release", return_value=None)
-
+    mocker.patch("release_notes_generator.record.record_factory.get_issues_for_pr", return_value=[])
     mock_rate_limit = mocker.Mock()
     mock_rate_limit.core.remaining = 1000
     github_mock.get_rate_limit.return_value = mock_rate_limit
 
     custom_chapters = CustomChapters(print_empty_chapters=True)
 
-    release_notes = ReleaseNotesGenerator(github_mock, custom_chapters).generate()
+    release_notes = ReleaseNotesGenerator(github_mock, custom_chapters).generate(filterer=FilterByRelease())
 
     assert release_notes is not None
     assert "- #121 _Fix the bug_" in release_notes
@@ -109,6 +110,7 @@ def test_generate_release_notes_latest_release_found_by_created_at(
     mock_git_release.created_at = mock_repo.created_at + timedelta(days=5)
     mock_git_release.published_at = mock_repo.created_at + timedelta(days=5)
     mocker.patch("release_notes_generator.miner.DataMiner.get_latest_release", return_value=mock_git_release)
+    mocker.patch("release_notes_generator.record.record_factory.get_issues_for_pr", return_value=[])
 
 
     mock_rate_limit = mocker.Mock()
@@ -122,7 +124,7 @@ def test_generate_release_notes_latest_release_found_by_created_at(
 
     custom_chapters = CustomChapters(print_empty_chapters=True)
 
-    release_notes = ReleaseNotesGenerator(github_mock, custom_chapters).generate()
+    release_notes = ReleaseNotesGenerator(github_mock, custom_chapters).generate(filterer=FilterByRelease())
 
     assert release_notes is not None
     assert "- #122 _I1+bug_" in release_notes
@@ -159,6 +161,7 @@ def test_generate_release_notes_latest_release_found_by_published_at(
     mock_git_release.created_at = mock_repo.created_at + timedelta(days=5)
     mock_git_release.published_at = mock_repo.created_at + timedelta(days=5)
     mocker.patch("release_notes_generator.miner.DataMiner.get_latest_release", return_value=mock_git_release)
+    mocker.patch("release_notes_generator.record.record_factory.get_issues_for_pr", return_value=[])
 
 
     mock_rate_limit = mocker.Mock()
@@ -167,7 +170,7 @@ def test_generate_release_notes_latest_release_found_by_published_at(
 
     custom_chapters = CustomChapters(print_empty_chapters=True)
 
-    release_notes = ReleaseNotesGenerator(github_mock, custom_chapters).generate()
+    release_notes = ReleaseNotesGenerator(github_mock, custom_chapters).generate(filterer=FilterByRelease())
 
     assert release_notes is not None
     assert "- #122 _I1+bug_" in release_notes

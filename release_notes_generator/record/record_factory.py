@@ -23,41 +23,38 @@ import logging
 from github import Github
 from github.Issue import Issue
 from github.PullRequest import PullRequest
-from github.Repository import Repository
 from github.Commit import Commit
 
+from release_notes_generator.model.mined_data import MinedData
 from release_notes_generator.action_inputs import ActionInputs
-from release_notes_generator.model.record import Record
+from release_notes_generator.model.record import Record, IssueRecord, PullRequestRecord, CommitRecord
 
 from release_notes_generator.utils.decorators import safe_call_decorator
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
-from release_notes_generator.utils.pull_reuqest_utils import extract_issue_numbers_from_body
+from release_notes_generator.utils.pull_request_utils import get_issues_for_pr
 
 logger = logging.getLogger(__name__)
 
 
-# pylint: disable=too-few-public-methods, too-many-locals
+# pylint: disable=too-many-locals
 class RecordFactory:
     """
     A class used to generate records for release notes.
     """
 
     @staticmethod
-    def generate(
-        github: Github, repo: Repository, issues: list[Issue], pulls: list[PullRequest], commits: list[Commit]
-    ) -> dict[int, Record]:
+    def generate(github: Github, data: MinedData) -> dict[int | str, Record]:
         """
         Generate records for release notes.
 
-        @param github: The GitHub instance.
-        @param repo: The repository.
-        @param issues: The list of issues.
-        @param pulls: The list of pull requests.
-        @param commits: The list of commits.
-        @return: A dictionary of records.
+        Parameters:
+            github (Github): The Github instance to generate records for.
+            data (MinedData): The MinedData instance containing repository, issues, pull requests, and commits.
+
+        Returns:
+            dict[int|str, Record]: A dictionary of records where the key is the issue or pull request number.
         """
-        records = {}
-        pull_numbers = [pull.number for pull in pulls]
+        records: dict[int | str, Record] = {}
 
         def create_record_for_issue(i: Issue) -> None:
             """
@@ -69,12 +66,12 @@ class RecordFactory:
             # check for skip labels presence and skip when detected
             issue_labels = [label.name for label in i.labels]
             skip_record = any(item in issue_labels for item in ActionInputs.get_skip_release_notes_labels())
-            records[i.number] = Record(i, skip=skip_record)
+            records[i.number] = IssueRecord(issue=i, skip=skip_record)
 
             logger.debug("Created record for issue %d: %s", i.number, i.title)
 
         def register_pull_request(pull: PullRequest, skip_record: bool) -> None:
-            for parent_issue_number in extract_issue_numbers_from_body(pull):
+            for parent_issue_number in safe_call(get_issues_for_pr)(pull_number=pull.number):
                 if parent_issue_number not in records:
                     logger.warning(
                         "Detected PR %d linked to issue %d which is not in the list of received issues. "
@@ -82,7 +79,9 @@ class RecordFactory:
                         pull.number,
                         parent_issue_number,
                     )
-                    parent_issue = safe_call(repo.get_issue)(parent_issue_number)
+                    parent_issue = (
+                        safe_call(data.repository.get_issue)(parent_issue_number) if data.repository else None
+                    )
                     if parent_issue is not None:
                         create_record_for_issue(parent_issue)
 
@@ -90,8 +89,7 @@ class RecordFactory:
                     records[parent_issue_number].register_pull_request(pull)
                     logger.debug("Registering PR %d: %s to Issue %d", pull.number, pull.title, parent_issue_number)
                 else:
-                    records[pull.number] = Record(skip=skip_record)
-                    records[pull.number].register_pull_request(pull)
+                    records[pull.number] = PullRequestRecord(pull, skip=skip_record)
                     logger.debug(
                         "Registering stand-alone PR %d: %s as mentioned Issue %d not found.",
                         pull.number,
@@ -110,33 +108,39 @@ class RecordFactory:
                 if record.is_commit_sha_present(commit.sha):
                     record.register_commit(commit)
                     return True
+
+            records[commit.sha] = CommitRecord(commit=commit)
+            logger.debug("Created record for direct commit %s: %s", commit.sha, commit.commit.message)
             return False
 
         rate_limiter = GithubRateLimiter(github)
         safe_call = safe_call_decorator(rate_limiter)
+        pull_numbers = [pull.number for pull in data.pull_requests]
 
-        for issue in issues:
+        logger.debug("Registering issues to records...")
+        for issue in data.issues:
             if issue.number not in pull_numbers:
                 create_record_for_issue(issue)
 
-        for pull in pulls:
+        logger.debug("Registering pull requests to records...")
+        for pull in data.pull_requests:
             pull_labels = [label.name for label in pull.labels]
             skip_record: bool = any(item in pull_labels for item in ActionInputs.get_skip_release_notes_labels())
 
-            if not extract_issue_numbers_from_body(pull):
-                records[pull.number] = Record(skip=skip_record)
-                records[pull.number].register_pull_request(pull)
+            if not safe_call(get_issues_for_pr)(pull_number=pull.number):
+                records[pull.number] = PullRequestRecord(pull, skip=skip_record)
                 logger.debug("Created record for PR %d: %s", pull.number, pull.title)
             else:
                 register_pull_request(pull, skip_record)
 
-        detected_prs_count = sum(register_commit_to_record(commit) for commit in commits)
+        logger.debug("Registering commits to records...")
+        detected_direct_commits_count = sum(not register_commit_to_record(commit) for commit in data.commits)
 
         logger.info(
             "Generated %d records from %d issues and %d PRs, with %d commits detected.",
             len(records),
-            len(issues),
-            len(pulls),
-            detected_prs_count,
+            len(data.issues),
+            len(data.pull_requests),
+            detected_direct_commits_count,
         )
         return records

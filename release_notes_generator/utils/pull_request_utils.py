@@ -19,8 +19,13 @@ This module contains the PullRequestRecord class which is responsible for repres
 """
 
 import re
+from functools import lru_cache
 
+import requests
 from github.PullRequest import PullRequest
+
+from release_notes_generator.action_inputs import ActionInputs
+from release_notes_generator.utils.constants import ISSUES_FOR_PRS, LINKED_ISSUES_MAX
 
 
 def extract_issue_numbers_from_body(pr: PullRequest) -> list[int]:
@@ -40,3 +45,27 @@ def extract_issue_numbers_from_body(pr: PullRequest) -> list[int]:
     issue_numbers = [int(match[-1]) for match in issue_matches]
 
     return issue_numbers
+
+
+@lru_cache(maxsize=None)
+def get_issues_for_pr(pull_number: int) -> list[int]:
+    """Update the placeholder values and formate the graphQL query"""
+    github_api_url = "https://api.github.com/graphql"
+    query = ISSUES_FOR_PRS.format(
+        number=pull_number,
+        owner=ActionInputs.get_github_owner(),
+        name=ActionInputs.get_github_repo_name(),
+        first=LINKED_ISSUES_MAX,
+    )
+    headers = {
+        "Authorization": f"Bearer {ActionInputs.get_github_token()}",
+        "Content-Type": "application/json",
+    }
+
+    response = requests.post(github_api_url, json={"query": query}, headers=headers, verify=False, timeout=10)
+    response.raise_for_status()  # Raise an error for HTTP issues
+    numbers = [
+        node["number"]
+        for node in response.json()["data"]["repository"]["pullRequest"]["closingIssuesReferences"]["nodes"]
+    ]
+    return numbers
