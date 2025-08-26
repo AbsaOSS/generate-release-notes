@@ -220,7 +220,9 @@ class PullRequestRecord(Record):
     def contains_issue_mentions(self) -> bool:
         """
         Checks if the pull request contains issue mentions.
-            bool: True if the pull request contains_issue_mentionscontains issue mentions, False otherwise.
+
+        Returns:
+            bool: True if the pull request contains issue mentions, False otherwise.
         """
         # TODO call both and merge solve in issue #153, both: means - check body and call new feature
         # return len(extract_issue_numbers_from_body(self._pulls[0])) > 0
@@ -267,11 +269,11 @@ class PullRequestRecord(Record):
         """
         Extracts release notes from a pull request body formatted for Code Rabbit.
         Parameters:
-            pull (PullRequestRecord): The pull request from which to extract release notes.
+            pull (PullRequest): The pull request from which to extract release notes.
             line_marks (list[str]): A list of characters that indicate the start of a release notes section.
-            cr_detection_regex (re.Pattern[str]): A regex pattern to detect the start of the Code
+            cr_detection_regex (re.Pattern[str]): A regex pattern to detect the start of the Code Rabbit release notes section.
         Returns:
-            str: The extracted release notes as a string. If no release notes are found, returns
+            str: The extracted release notes as a string. If no release notes are found, returns an empty string.
         """
         # TODO - this code will be changes soon, there is wish from project to manage different release notes
         if not pull.body:
@@ -295,17 +297,18 @@ class PullRequestRecord(Record):
                 continue
 
             if inside_section:
-                # Check if this is a bold group heading
-                if line[0] in line_marks and "**" in stripped:
+                # Check if this is a bold group heading, e.g., "- **Improvements**"
+                first_char = stripped[0]
+                if first_char in line_marks and "**" in stripped:
                     # Group heading – check if it should be skipped
                     group_name = stripped.split("**")[1]
                     skipping_group = any(group.lower() == group_name.lower() for group in ignore_groups)
                     continue
 
-                if skipping_group and line.startswith("  - "):
+                if skipping_group and any(line.startswith(f"  {ch} ") for ch in line_marks):
                     continue
 
-                if stripped[0] in line_marks and line.startswith("  - "):
+                if first_char in line_marks and any(line.startswith(f"  {ch} ") for ch in line_marks):
                     release_notes_lines.append(line.rstrip())
                 else:
                     break

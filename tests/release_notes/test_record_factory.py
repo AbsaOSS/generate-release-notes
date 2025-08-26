@@ -328,7 +328,7 @@ def test_generate_with_no_issues(mocker, request):
 
     # Verify that PRs are registered
     assert 0 == rec_pr1.issues_count()
-    assert 0 == rec_pr1.issues_count()
+    assert 0 == rec_pr2.issues_count()
 
     assert pr1 == rec_pr1.pull_request
     assert pr2 == rec_pr2.pull_request

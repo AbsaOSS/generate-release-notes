@@ -61,7 +61,7 @@ class CommitRecord(Record):
 
         # collecting values for formatting
         commit_message = self._commit.commit.message.replace("\n", " ")
-        row = f"{row_prefix}Commit: {self.commit.commit.sha[:7]} - {commit_message}"
+        row = f"{row_prefix}Commit: {self._commit.sha[:7]} - {commit_message}"
 
         if self.contains_release_notes():
             row = f"{row}\n{self.get_rls_notes()}"

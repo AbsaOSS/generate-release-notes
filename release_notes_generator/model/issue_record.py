@@ -144,8 +144,9 @@ class IssueRecord(Record):
             Optional[Commit]: The commit or None if not found.
         """
         if pr_number in self._pull_requests:
-            if commit_sha in self._commits[pr_number]:
-                return self._commits[pr_number][commit_sha]
+            pr_commits = self._commits.get(pr_number)
+            if pr_commits and commit_sha in pr_commits:
+                return pr_commits[commit_sha]
         return None
 
     def get_pull_request_numbers(self) -> list[int]:
@@ -248,7 +249,7 @@ class IssueRecord(Record):
             line_marks (list[str]): A list of characters that indicate the start of a release notes section.
             cr_detection_regex (re.Pattern[str]): A regex pattern to detect the start of the Code
         Returns:
-            str: The extracted release notes as a string. If no release notes are found, returns
+            str: The extracted release notes as a string. If no release notes are found, returns an empty string.
         """
         # TODO - this code will be changes soon, there is wish from project to manage different release notes
         if not pull.body:

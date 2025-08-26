@@ -799,7 +799,7 @@ def test_build_closed_pr_without_issue_ready_for_review(
     assert expected_release_notes == actual_release_notes
 
 
-def test_build_closed_pr_without_issue_draft(
+def test_build_closed_pr_without_issue_non_draft(
     custom_chapters_not_print_empty_chapters, pull_request_record_closed, mocker
 ):
     expected_release_notes = RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_PR_NO_ISSUE_NO_USER_LABELS
@@ -817,6 +817,8 @@ def test_build_closed_pr_without_issue_draft(
 
     assert expected_release_notes == actual_release_notes
 
+
+# TODO - research situation when PR is not merged and is in draft state
 
 def test_merged_pr_without_issue_with_more_user_labels_duplicity_reduction_on(
     custom_chapters_not_print_empty_chapters, pull_request_record_merged, mocker
