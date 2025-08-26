@@ -3,7 +3,7 @@ A module that defines the IssueRecord class, which represents an issue record in
 """
 
 import re
-from typing import Optional, Any, TYPE_CHECKING
+from typing import Optional, Any
 
 from github.Commit import Commit
 from github.Issue import Issue
@@ -11,11 +11,6 @@ from github.PullRequest import PullRequest
 
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.record import Record
-
-# Use TYPE_CHECKING for imports needed only for type hints
-if TYPE_CHECKING:
-    from release_notes_generator.model.pull_request_record import PullRequestRecord
-
 
 class IssueRecord(Record):
     """

@@ -6,7 +6,6 @@ import re
 from typing import Optional, Any
 
 from github.Commit import Commit
-from github.Issue import Issue
 from github.PullRequest import PullRequest
 
 from release_notes_generator.action_inputs import ActionInputs

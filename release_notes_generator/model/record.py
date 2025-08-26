@@ -174,11 +174,7 @@ class Record(metaclass=ABCMeta):
         Returns:
             bool: True if the record contains release notes, False otherwise.
         """
-        if self._is_release_note_detected is not None and not re_check:
-            return self._is_release_note_detected
-
-        if self._rls_notes is None:
+        if self._rls_notes is None or re_check:
             self._rls_notes = self.get_rls_notes()
-
-        self._is_release_note_detected = self._rls_notes is not None
+        self._is_release_note_detected = bool(self._rls_notes and self._rls_notes.strip())
         return self._is_release_note_detected
