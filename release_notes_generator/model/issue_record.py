@@ -12,6 +12,7 @@ from github.PullRequest import PullRequest
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.record import Record
 
+
 class IssueRecord(Record):
     """
     A class used to represent an issue record in the release notes.
