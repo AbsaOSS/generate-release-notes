@@ -46,14 +46,14 @@ def test_populate_closed_issue(service_chapters, record_with_issue_closed_no_pul
     assert 1 == len(service_chapters.chapters[CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS].rows)
 
 
-def test_populate_merged_pr(service_chapters, record_with_no_issue_one_pull_merged):
-    service_chapters.populate({2: record_with_no_issue_one_pull_merged})
+def test_populate_merged_pr(service_chapters, pull_request_record_merged):
+    service_chapters.populate({123: pull_request_record_merged})
 
     assert 1 == len(service_chapters.chapters[MERGED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS].rows)
 
 
-def test_populate_closed_pr(service_chapters, record_with_no_issue_one_pull_closed):
-    service_chapters.populate({2: record_with_no_issue_one_pull_closed})
+def test_populate_closed_pr(service_chapters, pull_request_record_closed):
+    service_chapters.populate({2: pull_request_record_closed})
 
     assert 1 == len(service_chapters.chapters[CLOSED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS].rows)
 
@@ -77,8 +77,8 @@ def test_populate_not_closed_issue_without_pull(service_chapters, record_with_is
     assert 0 == len(service_chapters.chapters[OTHERS_NO_TOPIC].rows)
 
 
-def test_populate_no_issue_with_pull(service_chapters, record_with_no_issue_one_pull_merged_with_issue_mentioned):
-    service_chapters.populate({1: record_with_no_issue_one_pull_merged_with_issue_mentioned})
+def test_populate_no_issue_with_pull(service_chapters, issue_request_record_with_merged_pr_with_issue_mentioned):
+    service_chapters.populate({1: issue_request_record_with_merged_pr_with_issue_mentioned})
     print(service_chapters.to_string())
 
     assert 1 == len(service_chapters.chapters[MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES].rows)

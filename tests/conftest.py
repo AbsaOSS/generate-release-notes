@@ -21,6 +21,7 @@ from datetime import datetime
 import pytest
 
 from github import Github
+from github.Commit import Commit
 from github.GitRelease import GitRelease
 from github.Issue import Issue
 from github.PullRequest import PullRequest
@@ -28,11 +29,11 @@ from github.Rate import Rate
 from github.RateLimit import RateLimit
 from github.Repository import Repository
 
+from release_notes_generator.model.issue_record import IssueRecord
+from release_notes_generator.model.pull_request_record import PullRequestRecord
 from release_notes_generator.model.service_chapters import ServiceChapters
-from release_notes_generator.model.record import Record
 from release_notes_generator.model.chapter import Chapter
 from release_notes_generator.model.custom_chapters import CustomChapters
-from release_notes_generator.utils.constants import ISSUE_STATE_OPEN, ISSUE_STATE_CLOSED, PR_STATE_CLOSED, PR_STATE_OPEN
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
 
 
@@ -127,7 +128,7 @@ def mock_rate_limiter(mocker):
 @pytest.fixture
 def mock_issue_open(mocker):
     issue = mocker.Mock(spec=Issue)
-    issue.state = ISSUE_STATE_OPEN
+    issue.state = IssueRecord.ISSUE_STATE_OPEN
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
     label2 = mocker.Mock(spec=MockLabel)
@@ -142,7 +143,7 @@ def mock_issue_open(mocker):
 @pytest.fixture
 def mock_issue_open_2(mocker):
     issue = mocker.Mock(spec=Issue)
-    issue.state = ISSUE_STATE_OPEN
+    issue.state = IssueRecord.ISSUE_STATE_OPEN
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
     label2 = mocker.Mock(spec=MockLabel)
@@ -157,7 +158,7 @@ def mock_issue_open_2(mocker):
 @pytest.fixture
 def mock_issue_closed(mocker):
     issue = mocker.Mock(spec=Issue)
-    issue.state = ISSUE_STATE_CLOSED
+    issue.state = IssueRecord.ISSUE_STATE_CLOSED
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
     label2 = mocker.Mock(spec=MockLabel)
@@ -171,7 +172,7 @@ def mock_issue_closed(mocker):
 @pytest.fixture
 def mock_issue_closed_i1_bug(mocker):
     issue = mocker.Mock(spec=Issue)
-    issue.state = ISSUE_STATE_CLOSED
+    issue.state = IssueRecord.ISSUE_STATE_CLOSED
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
     label2 = mocker.Mock(spec=MockLabel)
@@ -185,7 +186,7 @@ def mock_issue_closed_i1_bug(mocker):
 @pytest.fixture
 def mock_issue_closed_i1_bug_and_skip(mocker):
     issue = mocker.Mock(spec=Issue)
-    issue.state = ISSUE_STATE_CLOSED
+    issue.state = IssueRecord.ISSUE_STATE_CLOSED
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "skip-release-notes"
     label2 = mocker.Mock(spec=MockLabel)
@@ -200,7 +201,7 @@ def mock_issue_closed_i1_bug_and_skip(mocker):
 @pytest.fixture
 def mock_pull_closed(mocker):
     pull = mocker.Mock(spec=PullRequest)
-    pull.state = PR_STATE_CLOSED
+    pull.state = PullRequestRecord.PR_STATE_CLOSED
     pull.body = "Release Notes:\n- Fixed bug\n- Improved performance\n+ More nice code\n  * Awesome architecture"
     pull.url = "http://example.com/pull/123"
     label1 = mocker.Mock(spec=MockLabel)
@@ -219,7 +220,7 @@ def mock_pull_closed(mocker):
 @pytest.fixture
 def mock_pull_closed_with_skip_label(mocker):
     pull = mocker.Mock(spec=PullRequest)
-    pull.state = PR_STATE_CLOSED
+    pull.state = PullRequestRecord.PR_STATE_CLOSED
     pull.body = "Release Notes:\n- Fixed bug\n- Improved performance\n+ More nice code\n  * Awesome architecture"
     pull.url = "http://example.com/pull/123"
     label1 = mocker.Mock(spec=MockLabel)
@@ -241,7 +242,7 @@ def mock_pull_closed_with_skip_label(mocker):
 @pytest.fixture
 def mock_pull_closed_with_rls_notes_101(mocker):
     pull = mocker.Mock(spec=PullRequest)
-    pull.state = PR_STATE_CLOSED
+    pull.state = PullRequestRecord.PR_STATE_CLOSED
     pull.body = "Release Notes:\n- PR 101 1st release note\n- PR 101 2nd release note\n"
     pull.url = "http://example.com/pull/101"
     label1 = mocker.Mock(spec=MockLabel)
@@ -260,7 +261,7 @@ def mock_pull_closed_with_rls_notes_101(mocker):
 @pytest.fixture
 def mock_pull_closed_with_rls_notes_102(mocker):
     pull = mocker.Mock(spec=PullRequest)
-    pull.state = PR_STATE_CLOSED
+    pull.state = PullRequestRecord.PR_STATE_CLOSED
     pull.body = "Release Notes:\n- PR 102 1st release note\n- PR 102 2nd release note\n"
     pull.url = "http://example.com/pull/102"
     label1 = mocker.Mock(spec=MockLabel)
@@ -279,7 +280,7 @@ def mock_pull_closed_with_rls_notes_102(mocker):
 @pytest.fixture
 def mock_pull_merged_with_rls_notes_101(mocker):
     pull = mocker.Mock(spec=PullRequest)
-    pull.state = PR_STATE_CLOSED
+    pull.state = PullRequestRecord.PR_STATE_CLOSED
     pull.body = "Closes #122\n\nRelease Notes:\n- PR 101 1st release note\n- PR 101 2nd release note\n"
     pull.url = "http://example.com/pull/101"
     label1 = mocker.Mock(spec=MockLabel)
@@ -298,7 +299,7 @@ def mock_pull_merged_with_rls_notes_101(mocker):
 @pytest.fixture
 def mock_pull_merged_with_rls_notes_102(mocker):
     pull = mocker.Mock(spec=PullRequest)
-    pull.state = PR_STATE_CLOSED
+    pull.state = PullRequestRecord.PR_STATE_CLOSED
     pull.body = "Closes #123\n\nRelease Notes:\n- PR 102 1st release note\n- PR 102 2nd release note\n"
     pull.url = "http://example.com/pull/102"
     label1 = mocker.Mock(spec=MockLabel)
@@ -317,7 +318,7 @@ def mock_pull_merged_with_rls_notes_102(mocker):
 @pytest.fixture
 def mock_pull_merged(mocker):
     pull = mocker.Mock(spec=PullRequest)
-    pull.state = PR_STATE_CLOSED
+    pull.state = PullRequestRecord.PR_STATE_CLOSED
     pull.body = "Release Notes:\n- Fixed bug\n- Improved performance\n"
     pull.url = "http://example.com/pull/123"
     label1 = mocker.Mock(spec=MockLabel)
@@ -336,7 +337,7 @@ def mock_pull_merged(mocker):
 @pytest.fixture
 def mock_pull_open(mocker):
     pull = mocker.Mock(spec=PullRequest)
-    pull.state = PR_STATE_OPEN
+    pull.state = PullRequestRecord.PR_STATE_OPEN
     pull.body = "Release Notes:\n- Fixed bug\n- Improved performance\n"
     pull.url = "http://example.com/pull/123"
     label1 = mocker.Mock(spec=MockLabel)
@@ -355,7 +356,7 @@ def mock_pull_open(mocker):
 @pytest.fixture
 def mock_pull_no_rls_notes(mocker):
     pull = mocker.Mock(spec=PullRequest)
-    pull.state = PR_STATE_CLOSED
+    pull.state = PullRequestRecord.PR_STATE_CLOSED
     pull.body = None
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
@@ -377,41 +378,37 @@ def mock_commit(mocker):
 # Fixtures for Record(s)
 @pytest.fixture
 def record_with_issue_open_no_pull(request):
-    return Record(issue=request.getfixturevalue("mock_issue_open"))
-
+    return IssueRecord(issue=request.getfixturevalue("mock_issue_open"))
 
 @pytest.fixture
 def record_with_issue_closed_no_pull(request):
-    return Record(issue=request.getfixturevalue("mock_issue_closed"))
+    return IssueRecord(issue=request.getfixturevalue("mock_issue_closed"))
 
 
 @pytest.fixture
 def record_with_issue_closed_one_pull(request):
-    rec = Record(issue=request.getfixturevalue("mock_issue_closed"))
+    rec = IssueRecord(issue=request.getfixturevalue("mock_issue_closed"))
     rec.register_pull_request(request.getfixturevalue("mock_pull_closed"))
     return rec
 
 
 @pytest.fixture
 def record_with_issue_closed_one_pull_merged(request):
-    rec = Record(issue=request.getfixturevalue("mock_issue_closed_i1_bug"))
+    rec = IssueRecord(issue=request.getfixturevalue("mock_issue_closed_i1_bug"))
     rec.register_pull_request(request.getfixturevalue("mock_pull_merged"))
     return rec
 
 
 @pytest.fixture
 def record_with_issue_closed_one_pull_merged_skip(request):
-    rec = Record(
-        issue=request.getfixturevalue("mock_issue_closed_i1_bug_and_skip"),
-        skip=True,
-    )
+    rec = IssueRecord(issue=request.getfixturevalue("mock_issue_closed_i1_bug_and_skip"), skip=True)
     rec.register_pull_request(request.getfixturevalue("mock_pull_merged"))
     return rec
 
 
 @pytest.fixture
 def record_with_issue_closed_two_pulls(request):
-    rec = Record(issue=request.getfixturevalue("mock_issue_closed_i1_bug"))
+    rec = IssueRecord(issue=request.getfixturevalue("mock_issue_closed_i1_bug"))        # TODO - renamed from mock_issue_closed_i2_bug
     rec.register_pull_request(request.getfixturevalue("mock_pull_closed_with_rls_notes_101"))
     rec.register_pull_request(request.getfixturevalue("mock_pull_closed_with_rls_notes_102"))
     return rec
@@ -419,14 +416,14 @@ def record_with_issue_closed_two_pulls(request):
 
 @pytest.fixture
 def record_with_issue_open_one_pull_closed(request):
-    rec = Record(issue=request.getfixturevalue("mock_issue_open"))
+    rec = IssueRecord(issue=request.getfixturevalue("mock_issue_open"))
     rec.register_pull_request(request.getfixturevalue("mock_pull_closed"))
     return rec
 
 
 @pytest.fixture
 def record_with_issue_open_two_pulls_closed(request):
-    rec = Record(issue=request.getfixturevalue("mock_issue_open"))
+    rec = IssueRecord(issue=request.getfixturevalue("mock_issue_open"))
     rec.register_pull_request(request.getfixturevalue("mock_pull_closed_with_rls_notes_101"))
     rec.register_pull_request(request.getfixturevalue("mock_pull_closed_with_rls_notes_102"))
     return rec
@@ -434,73 +431,71 @@ def record_with_issue_open_two_pulls_closed(request):
 
 @pytest.fixture
 def record_with_two_issue_open_two_pulls_closed(request):
-    rec1 = Record()
-    rec1.register_pull_request(request.getfixturevalue("mock_pull_merged_with_rls_notes_101"))
+    rec_1 = IssueRecord(issue=request.getfixturevalue("mock_issue_open"))
+    rec_1.register_pull_request(request.getfixturevalue("mock_pull_closed_with_rls_notes_101"))
+    rec_2 = IssueRecord(issue=request.getfixturevalue("mock_issue_open_2"))
+    rec_2.register_pull_request(request.getfixturevalue("mock_pull_closed_with_rls_notes_102"))
 
-    rec2 = Record()
-    rec2.register_pull_request(request.getfixturevalue("mock_pull_merged_with_rls_notes_102"))
-
-    records = {}
-    records[rec1.number] = rec1
-    records[rec2.number] = rec2
+    records = dict()
+    records[rec_1.record_id] = rec_1
+    records[rec_2.record_id] = rec_2
 
     return records
 
 
 @pytest.fixture
-def record_with_issue_closed_one_pull_no_rls_notes(request):
-    rec = Record(issue=request.getfixturevalue("mock_issue_closed"))
+def pull_request_record_no_rls_notes(request):
+    rec = IssueRecord(issue=request.getfixturevalue("mock_issue_closed"))
     rec.register_pull_request(mock_pull_closed_fixture := request.getfixturevalue("mock_pull_no_rls_notes"))
     mock_pull_closed_fixture.body = "Fixed bug"
     return rec
 
 
 @pytest.fixture
-def record_with_no_issue_one_pull_merged(request):
-    record = Record()
-    record.register_pull_request(request.getfixturevalue("mock_pull_merged"))
+def pull_request_record_merged(request):
+    record = PullRequestRecord(pull=request.getfixturevalue("mock_pull_merged"))
     record.register_commit(request.getfixturevalue("mock_commit"))
     return record
 
 
 @pytest.fixture
-def record_with_no_issue_one_pull_open(request):
-    record = Record()
-    record.register_pull_request(request.getfixturevalue("mock_pull_open"))
+def pull_request_record_open(request):
+    record = PullRequestRecord(pull=request.getfixturevalue("mock_pull_open"))
     record.register_commit(request.getfixturevalue("mock_commit"))
     return record
 
 
 @pytest.fixture
-def record_with_no_issue_one_pull_merged_with_issue_mentioned(request):
-    record = Record()
+def issue_request_record_with_merged_pr_with_issue_mentioned(request):
+    mock_issue_open_fixture = request.getfixturevalue("mock_issue_open_2")
+    record = IssueRecord(issue=mock_issue_open_fixture)
     mock_pull_merged_fixture = request.getfixturevalue("mock_pull_merged")
     mock_pull_merged_fixture.body = "Release Notes:\n- Fixed bug\n- Improved performance\n\nFixes #123"
     record.register_pull_request(mock_pull_merged_fixture)
+    record.register_commit(mock_pull_merged_fixture, request.getfixturevalue("mock_commit"))
+    return record
+
+
+@pytest.fixture
+def pull_request_record_closed(request):
+    record = PullRequestRecord(pull=request.getfixturevalue("mock_pull_closed"))
     record.register_commit(request.getfixturevalue("mock_commit"))
     return record
 
 
 @pytest.fixture
-def record_with_no_issue_one_pull_closed(request):
-    record = Record()
-    record.register_pull_request(request.getfixturevalue("mock_pull_closed"))
+def pull_request_record_closed_with_skip_label(request):
+    record = PullRequestRecord(
+        pull=request.getfixturevalue("mock_pull_closed_with_skip_label"),
+        skip=True,
+    )
     record.register_commit(request.getfixturevalue("mock_commit"))
     return record
 
 
 @pytest.fixture
-def record_with_no_issue_one_pull_closed_with_skip_label(request):
-    record = Record(skip=True)
-    record.register_pull_request(request.getfixturevalue("mock_pull_closed_with_skip_label"))
-    record.register_commit(request.getfixturevalue("mock_commit"))
-    return record
-
-
-@pytest.fixture
-def record_with_no_issue_one_pull_closed_no_rls_notes(request):
-    record = Record()
-    record.register_pull_request(request.getfixturevalue("mock_pull_no_rls_notes"))
+def pull_request_record_closed_no_rls_notes(request):
+    record = PullRequestRecord(pull=request.getfixturevalue("mock_pull_no_rls_notes"))
     return record
 
 

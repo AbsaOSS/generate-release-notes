@@ -17,14 +17,17 @@
 import time
 
 from datetime import datetime
+from typing import cast
 
 from github import Github
 from github.Issue import Issue
 from github.PullRequest import PullRequest
 from github.Commit import Commit
 
+from release_notes_generator.model.commit_record import CommitRecord
+from release_notes_generator.model.issue_record import IssueRecord
 from release_notes_generator.model.mined_data import MinedData
-from release_notes_generator.model.record import Record, IssueRecord, PullRequestRecord
+from release_notes_generator.model.pull_request_record import PullRequestRecord
 from release_notes_generator.record.record_factory import RecordFactory
 from tests.conftest import MockLabel
 
@@ -189,18 +192,21 @@ def test_generate_with_issues_and_pulls_and_commits(mocker, mock_repo):
     records = RecordFactory.generate(mock_github_client, data)
 
     # Check if records for issues and PRs were created
+    assert len(records) == 3
+
     assert 1 in records
     assert not records[1].skip
 
     # Verify the record creation
     assert records[1].__class__ is IssueRecord
+    rec_i1 = cast(IssueRecord, records[1])
 
     # Verify that PRs are registered
-    assert 1 == records[1].pulls_count
-    assert pr1 == records[1].pull_request(0)
+    assert 1 == rec_i1.pull_requests_count()
+    assert pr1 == rec_i1.get_pull_request(101)
 
     # Verify that commits are registered
-    assert 1 == records[1].pull_request_commit_count(101)
+    assert commit1 == rec_i1.get_commit(101, 'abc123')
 
 def test_generate_with_issues_and_pulls_and_commits_with_skip_labels(mocker, mock_repo):
     mocker.patch("release_notes_generator.builder.ActionInputs.get_skip_release_notes_labels", return_value=["skip-release-notes"])
@@ -224,26 +230,34 @@ def test_generate_with_issues_and_pulls_and_commits_with_skip_labels(mocker, moc
     records = RecordFactory.generate(mock_github_client,data)
 
     # Check if records for issues and PRs were created
+    assert len(records) == 3
+
     assert 1 in records
     assert 2 in records
+    assert 'ghi789' in records
 
     # Verify the record creation
-    assert isinstance(records[1], Record)
-    assert isinstance(records[2], Record)
+    assert isinstance(records[1], IssueRecord)
+    assert isinstance(records[2], IssueRecord)
+    assert isinstance(records['ghi789'], CommitRecord)
 
-    assert records[1].skip      # skip label appied to issue as the record was created from issue
+    assert records[1].skip      # skip label applied to issue as the record was created from issue
     assert not records[2].skip  # skip label is present only on inner PR but record create from issues (leading)
 
-    # Verify that PRs are registered
-    assert 1 == records[1].pulls_count
-    assert 1 == records[2].pulls_count
+    rec_i1 = cast(IssueRecord, records[1])
+    rec_i2 = cast(IssueRecord, records[2])
 
-    assert pr1 == records[1].pull_request(0)
-    assert pr2 == records[2].pull_request(0)
+    # Verify that PRs are registered
+    assert 1 == rec_i1.pull_requests_count()
+    assert 1 == rec_i2.pull_requests_count()
+
+    assert pr1 == rec_i1.get_pull_request(101)
+    assert pr2 == rec_i2.get_pull_request(102)
 
     # Verify that commits are registered
-    assert 1 == records[1].pull_request_commit_count(101)
-    assert 1 == records[2].pull_request_commit_count(102)
+    assert commit1 == rec_i1.get_commit(101, 'abc123')
+    assert commit2 == rec_i2.get_commit(102, 'def456')
+    assert commit3 == cast(CommitRecord, records['ghi789']).commit
 
 
 def test_generate_with_no_commits(mocker, mock_repo):
@@ -265,19 +279,20 @@ def test_generate_with_no_commits(mocker, mock_repo):
     mocker.patch("release_notes_generator.record.record_factory.get_issues_for_pr", return_value=[2])
     records = RecordFactory.generate(mock_github_client, data)
 
+    assert 2 == len(records)
+
     # Verify the record creation
-    assert isinstance(records[1], Record)
-    assert isinstance(records[2], Record)
+    assert isinstance(records[1], IssueRecord)
+    assert isinstance(records[2], IssueRecord)
+
+    rec_issue1 = cast(IssueRecord,records[1])
+    rec_issue2 = cast(IssueRecord,records[2])
 
     # Verify that PRs are registered
-    assert 0 == records[1].pulls_count
-    assert 1 == records[2].pulls_count
+    assert 0 == rec_issue1.pull_requests_count()
+    assert 1 == rec_issue2.pull_requests_count()
 
-    assert pr1 == records[2].pull_request(0)
-
-    # Verify that commits not present
-    assert 0 == records[1].pull_request_commit_count(1)
-    assert 0 == records[2].pull_request_commit_count(2)
+    assert pr1 == rec_issue2.get_pull_request(101)
 
 def mock_safe_call_decorator_no_issues(_rate_limiter):
     def wrapper(fn):
@@ -300,22 +315,26 @@ def test_generate_with_no_issues(mocker, request):
     data.repository = request.getfixturevalue("mock_repo")
     data.issues = []  # No issues
 
-    records = RecordFactory.generate(mock_github_client,data)
+    records = RecordFactory.generate(mock_github_client, data)
 
     # Verify the record creation
+    assert 2 == len(records)
+
     assert isinstance(records[101], PullRequestRecord)
     assert isinstance(records[102], PullRequestRecord)
 
-    # Verify that PRs are registered
-    assert 1 == records[101].pulls_count
-    assert 1 == records[102].pulls_count
+    rec_pr1 = cast(PullRequestRecord, records[101])
+    rec_pr2 = cast(PullRequestRecord, records[102])
 
-    assert pr1 == records[101].pull_request(0)
-    assert pr2 == records[102].pull_request(0)
+    # Verify that PRs are registered
+    assert pr1 == rec_pr1.pull_request
+    assert pr2 == rec_pr2.pull_request
 
     # Verify that commits are registered
-    assert 1 == records[101].pull_request_commit_count(101)
-    assert 1 == records[102].pull_request_commit_count(102)
+    assert 1 == rec_pr1.commits_count()
+    assert 1 == rec_pr2.commits_count()
+    assert commit1 == rec_pr1.get_commit('abc123')
+    assert commit2 == rec_pr2.get_commit('def456')
 
 def test_generate_with_no_issues_skip_labels(mocker, request):
     mocker.patch("release_notes_generator.builder.ActionInputs.get_skip_release_notes_labels", return_value=["skip-release-notes", "another-skip-label"])
@@ -338,22 +357,23 @@ def test_generate_with_no_issues_skip_labels(mocker, request):
     records = RecordFactory.generate(mock_github_client, data)
 
     # Verify the record creation
-    assert isinstance(records[101], Record)
-    assert isinstance(records[102], Record)
+    assert 2 == len(records)
+
+    assert isinstance(records[101], PullRequestRecord)
+    assert isinstance(records[102], PullRequestRecord)
 
     assert records[101].skip
     assert records[102].skip
 
+    rec_pr1 = cast(PullRequestRecord, records[101])
+    rec_pr2 = cast(PullRequestRecord, records[102])
+
     # Verify that PRs are registered
-    assert 1 == records[101].pulls_count
-    assert 1 == records[102].pulls_count
+    assert 1 == rec_pr1.commits_count()
+    assert 1 == rec_pr2.commits_count()
 
-    assert pr1 == records[101].pull_request(0)
-    assert pr2 == records[102].pull_request(0)
-
-    # Verify that commits are registered
-    assert 1 == records[101].pull_request_commit_count(101)
-    assert 1 == records[102].pull_request_commit_count(102)
+    assert commit1 == rec_pr1.get_commit('abc123')
+    assert commit2 == rec_pr2.get_commit('def456')
 
 
 def test_generate_with_no_pulls(mocker, mock_repo):
@@ -367,12 +387,13 @@ def test_generate_with_no_pulls(mocker, mock_repo):
     records = RecordFactory.generate(mock_github_client, data)
 
     # Verify the record creation
-    assert isinstance(records[1], Record)
-    assert isinstance(records[2], Record)
+    assert 2 == len(records)
+    assert isinstance(records[1], IssueRecord)
+    assert isinstance(records[2], IssueRecord)
 
     # Verify that PRs are registered
-    assert 0 == records[1].pulls_count
-    assert 0 == records[2].pulls_count
+    assert 0 == cast(IssueRecord, records[1]).pull_requests_count()
+    assert 0 == cast(IssueRecord, records[2]).pull_requests_count()
 
 
 def mock_safe_call_decorator_wrong_issue_number(_rate_limiter):
@@ -405,11 +426,13 @@ def test_generate_with_wrong_issue_number_in_pull_body_mention(mocker, mock_repo
 
     # Verify the record creation
     assert 3 == len(records)
-    assert isinstance(records[1], Record)
-    assert isinstance(records[2], Record)
-    assert isinstance(records[101], Record)
+    assert isinstance(records[1], IssueRecord)
+    assert isinstance(records[2], IssueRecord)
+    assert isinstance(records[101], PullRequestRecord)
 
     # Verify that PRs are registered
-    assert 0 == records[1].pulls_count
-    assert 1 == records[2].pulls_count
-    assert 1 == records[101].pulls_count
+    assert 0 == cast(IssueRecord, records[1]).pull_requests_count()
+    assert 1 == cast(IssueRecord, records[2]).pull_requests_count()
+
+    rec_pr1 = cast(PullRequestRecord, records[101])
+    assert 1 == rec_pr1.commits_count()
