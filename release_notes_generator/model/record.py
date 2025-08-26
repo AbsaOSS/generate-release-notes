@@ -38,7 +38,7 @@ class Record(metaclass=ABCMeta):
         self._present_in_chapters = 0
         self._skip = skip
         self._is_release_note_detected: Optional[bool] = None
-        self._rls_notes: Optional[str] = None   # single annotation here
+        self._rls_notes: Optional[str] = None  # single annotation here
 
     # properties
     @property

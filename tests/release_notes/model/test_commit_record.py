@@ -62,7 +62,7 @@ def test_to_chapter_row_with_release_notes_injected(monkeypatch):
     monkeypatch.setattr(
         CommitRecord,
         "contains_release_notes",
-        property(lambda self: True),
+        lambda self: True,
     )
     commit = DummyCommit("aa11bb22cc33", "Add feature")
     rec = CommitRecord(commit)

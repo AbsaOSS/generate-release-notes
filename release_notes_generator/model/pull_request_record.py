@@ -28,6 +28,7 @@ class PullRequestRecord(Record):
         self._pull_request: PullRequest = pull
         self._issues: dict[int, Issue] = {}
         self._commits: dict[str, Commit] = {}
+
     # properties - override Record properties
 
     @property
