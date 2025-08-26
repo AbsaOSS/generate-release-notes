@@ -273,17 +273,18 @@ class IssueRecord(Record):
                 continue
 
             if inside_section:
-                # Check if this is a bold group heading
-                if line[0] in line_marks and "**" in stripped:
+                # Check if this is a bold group heading, e.g.
+                first_char = stripped[0]
+                if first_char in line_marks and "**" in stripped:
                     # Group heading – check if it should be skipped
                     group_name = stripped.split("**")[1]
                     skipping_group = any(group.lower() == group_name.lower() for group in ignore_groups)
                     continue
 
-                if skipping_group and line.startswith("  - "):
+                if skipping_group and any(line.startswith(f"  {ch} ") for ch in line_marks):
                     continue
 
-                if stripped[0] in line_marks and line.startswith("  - "):
+                if first_char in line_marks and any(line.startswith(f"  {ch} ") for ch in line_marks):
                     release_notes_lines.append(line.rstrip())
                 else:
                     break

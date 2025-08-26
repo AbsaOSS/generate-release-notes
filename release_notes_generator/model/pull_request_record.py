@@ -164,15 +164,6 @@ class PullRequestRecord(Record):
             return self._commits[sha]
         return None
 
-    # def register_issue(self, issue: Issue) -> None:
-    #     """
-    #     Registers an Issue associated with the Pull Request.
-    #     Parameters:
-    #         issue (Issue): The issue to register.
-    #     Returns: None
-    #     """
-    #     self._issues[issue.number] = issue
-
     def register_commit(self, commit: Commit) -> None:
         """
         Registers a Commit associated with the Pull Request.
