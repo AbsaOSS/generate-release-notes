@@ -18,12 +18,15 @@
 This module contains the ServiceChapters class which is responsible for representing the service chapters in the release
  notes.
 """
-from typing import Optional
+from typing import Optional, cast
 
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.base_chapters import BaseChapters
 from release_notes_generator.model.chapter import Chapter
-from release_notes_generator.model.record import Record, CommitRecord
+from release_notes_generator.model.commit_record import CommitRecord
+from release_notes_generator.model.issue_record import IssueRecord
+from release_notes_generator.model.pull_request_record import PullRequestRecord
+from release_notes_generator.model.record import Record
 from release_notes_generator.utils.constants import (
     CLOSED_ISSUES_WITHOUT_PULL_REQUESTS,
     CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS,
@@ -106,26 +109,34 @@ class ServiceChapters(BaseChapters):
             if self.__is_row_present(record_id) and not self.duplicity_allowed():
                 continue
 
-            if record.is_closed_issue:
-                self.__populate_closed_issues(record, record_id)
+            if record.is_closed and isinstance(record, IssueRecord):
+                self.__populate_closed_issues(cast(IssueRecord, record), record_id)
 
-            elif record.is_pr:
-                self.__populate_pr(record, record_id)
+            elif isinstance(record, PullRequestRecord):
+                self.__populate_pr(cast(PullRequestRecord, record), record_id)
 
             elif isinstance(record, CommitRecord):
-                self.__populate_direct_commit(record, record_id)
+                self.__populate_direct_commit(cast(CommitRecord, record), record_id)
 
             else:
-                if record.is_open_issue and record.pulls_count == 0:
+                if (
+                    record.is_open
+                    and isinstance(record, IssueRecord)
+                    and cast(IssueRecord, record).pull_requests_count() == 0
+                ):
                     pass
-                elif record.is_open_issue and record.pulls_count > 0:
+                elif (
+                    record.is_open
+                    and isinstance(record, IssueRecord)
+                    and cast(IssueRecord, record).pull_requests_count() > 0
+                ):
                     self.chapters[MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES].add_row(record_id, record.to_chapter_row())
                     self.used_record_numbers.append(record_id)
                 else:
                     self.chapters[OTHERS_NO_TOPIC].add_row(record_id, record.to_chapter_row())
                     self.used_record_numbers.append(record_id)
 
-    def __populate_closed_issues(self, record: Record, record_id: int | str) -> None:
+    def __populate_closed_issues(self, record: IssueRecord, record_id: int | str) -> None:
         """
         Populates the service chapters with closed issues.
 
@@ -135,7 +146,9 @@ class ServiceChapters(BaseChapters):
         """
         # check record properties if it fits to a chapter: CLOSED_ISSUES_WITHOUT_PULL_REQUESTS
         populated = False
-        if record.pulls_count == 0:
+        pulls_count = record.pull_requests_count()
+
+        if pulls_count == 0:
             self.chapters[CLOSED_ISSUES_WITHOUT_PULL_REQUESTS].add_row(record_id, record.to_chapter_row())
             self.used_record_numbers.append(record_id)
             populated = True
@@ -150,7 +163,7 @@ class ServiceChapters(BaseChapters):
             self.used_record_numbers.append(record_id)
             populated = True
 
-        if record.pulls_count > 0:
+        if pulls_count > 0:
             # the record looks to be valid closed issue with 1+ pull requests
             return
 
@@ -161,7 +174,7 @@ class ServiceChapters(BaseChapters):
             self.chapters[OTHERS_NO_TOPIC].add_row(record_id, record.to_chapter_row())
             self.used_record_numbers.append(record_id)
 
-    def __populate_pr(self, record: Record, record_id: int | str) -> None:
+    def __populate_pr(self, record: PullRequestRecord, record_id: int | str) -> None:
         """
         Populates the service chapters with pull requests.
 
@@ -169,9 +182,9 @@ class ServiceChapters(BaseChapters):
         @param nr: The number of the record.
         @return: None
         """
-        if record.is_merged_pr:
+        if record.is_merged:
             # check record properties if it fits to a chapter: MERGED_PRS_WITHOUT_ISSUE
-            if not record.pr_contains_issue_mentions and not record.contains_min_one_label(self.user_defined_labels):
+            if not record.contains_issue_mentions() and not record.contains_min_one_label(self.user_defined_labels):
                 if self.__is_row_present(record_id) and not self.duplicity_allowed():
                     return
 
@@ -181,7 +194,7 @@ class ServiceChapters(BaseChapters):
                 self.used_record_numbers.append(record_id)
 
             # check record properties if it fits to a chapter: MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES
-            if record.pr_contains_issue_mentions:
+            if record.contains_issue_mentions():
                 if self.__is_row_present(record_id) and not self.duplicity_allowed():
                     return
 
@@ -198,7 +211,7 @@ class ServiceChapters(BaseChapters):
         # check record properties if it fits to a chapter: CLOSED_PRS_WITHOUT_ISSUE
         elif (
             record.is_closed
-            and not record.pr_contains_issue_mentions
+            and not record.contains_issue_mentions()
             and not record.contains_min_one_label(self.user_defined_labels)
         ):
             if self.__is_row_present(record_id) and not self.duplicity_allowed():

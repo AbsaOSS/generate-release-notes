@@ -43,19 +43,9 @@ SUPPORTED_ROW_FORMAT_KEYS = ["number", "title", "pull-requests"]
 WARNINGS = "warnings"
 PRINT_EMPTY_CHAPTERS = "print-empty-chapters"
 
-# Pull Request states
-PR_STATE_CLOSED = "closed"
-PR_STATE_OPEN = "open"
-
-# Issue states
-ISSUE_STATE_CLOSED = "closed"
-ISSUE_STATE_OPEN = "open"
-ISSUE_STATE_ALL = "all"
-
 # Release notes comment constants
 RELEASE_NOTE_TITLE_DEFAULT: str = "[Rr]elease [Nn]otes:"
 CODERABBIT_RELEASE_NOTE_TITLE_DEFAULT: str = "Summary by CodeRabbit"
-RELEASE_NOTE_LINE_MARKS: list[str] = ["-", "*", "+"]
 
 # Service chapters titles
 CLOSED_ISSUES_WITHOUT_PULL_REQUESTS: str = "Closed Issues without Pull Request ⚠️"

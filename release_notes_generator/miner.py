@@ -29,8 +29,9 @@ from github.GitRelease import GitRelease
 from github.Repository import Repository
 
 from release_notes_generator.action_inputs import ActionInputs
+from release_notes_generator.model.issue_record import IssueRecord
 from release_notes_generator.model.mined_data import MinedData
-from release_notes_generator.utils.constants import ISSUE_STATE_ALL, PR_STATE_CLOSED
+from release_notes_generator.model.pull_request_record import PullRequestRecord
 from release_notes_generator.utils.decorators import safe_call_decorator
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
 
@@ -63,7 +64,7 @@ class DataMiner:
         self._get_issues(data)
 
         # pulls and commits, and then reduce them by the latest release since time
-        data.pull_requests = list(self._safe_call(data.repository.get_pulls)(state=PR_STATE_CLOSED))
+        data.pull_requests = list(self._safe_call(data.repository.get_pulls)(state=PullRequestRecord.PR_STATE_CLOSED))
         data.commits = list(self._safe_call(data.repository.get_commits)())
 
         logger.info("Data mining from GitHub completed.")
@@ -117,14 +118,16 @@ class DataMiner:
         logger.info("Fetching issues from repository...")
         # get all issues
         if data.release is None:
-            data.issues = list(self._safe_call(data.repository.get_issues)(state=ISSUE_STATE_ALL))
+            data.issues = list(self._safe_call(data.repository.get_issues)(state=IssueRecord.ISSUE_STATE_ALL))
         else:
             # default is repository creation date if no releases OR created_at of latest release
             data.since = data.release.created_at if data.release else data.repository.created_at
             if data.release and ActionInputs.get_published_at():
                 data.since = data.release.published_at
 
-            data.issues = list(self._safe_call(data.repository.get_issues)(state=ISSUE_STATE_ALL, since=data.since))
+            data.issues = list(
+                self._safe_call(data.repository.get_issues)(state=IssueRecord.ISSUE_STATE_ALL, since=data.since)
+            )
 
         logger.info("Fetched %d issues", len(data.issues))
 

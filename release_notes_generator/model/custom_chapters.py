@@ -18,11 +18,14 @@
 This module contains the CustomChapters class which is responsible for representing the custom chapters in the release
 notes.
 """
+from typing import cast
 
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.base_chapters import BaseChapters
 from release_notes_generator.model.chapter import Chapter
-from release_notes_generator.model.record import Record, CommitRecord
+from release_notes_generator.model.commit_record import CommitRecord
+from release_notes_generator.model.issue_record import IssueRecord
+from release_notes_generator.model.record import Record
 from release_notes_generator.utils.enums import DuplicityScopeEnum
 
 
@@ -55,7 +58,11 @@ class CustomChapters(BaseChapters):
                     continue
 
                 for record_label in records[record_id].labels:  # iterate all labels of the record (issue, or 1st PR)
-                    if record_label in ch.labels and records[record_id].pulls_count > 0:
+                    pulls_count = 1
+                    if isinstance(records[record_id], IssueRecord):
+                        pulls_count = cast(IssueRecord, records[record_id]).pull_requests_count()
+
+                    if record_label in ch.labels and pulls_count > 0:
                         if not records[record_id].is_present_in_chapters:
                             ch.add_row(record_id, records[record_id].to_chapter_row())
                             self.populated_record_numbers_list.append(record_id)
