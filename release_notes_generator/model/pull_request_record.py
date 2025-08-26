@@ -26,7 +26,6 @@ class PullRequestRecord(Record):
         super().__init__(skip=skip)
 
         self._pull_request: PullRequest = pull
-        self._issues: dict[int, Issue] = {}
         self._commits: dict[str, Commit] = {}
 
     # properties - override Record properties
@@ -153,18 +152,6 @@ class PullRequestRecord(Record):
 
     # methods - specific to PullRequestRecord
 
-    def get_issue(self, index: int = 0) -> Optional[Issue]:
-        """
-        Gets the issue at the specified index.
-        Parameters:
-            index (int): The index of the issue to retrieve.
-        Returns:
-            Optional[Issue]: The issue at the specified index, or None if the index is out of range.
-        """
-        if index < 0 or index >= len(self._issues):
-            return None
-        return self._issues[index]
-
     def get_commit(self, sha: str = "0") -> Optional[Commit]:
         """
         Gets the commit by the specified sha.
@@ -177,14 +164,14 @@ class PullRequestRecord(Record):
             return self._commits[sha]
         return None
 
-    def register_issue(self, issue: Issue) -> None:
-        """
-        Registers an Issue associated with the Pull Request.
-        Parameters:
-            issue (Issue): The issue to register.
-        Returns: None
-        """
-        self._issues[issue.number] = issue
+    # def register_issue(self, issue: Issue) -> None:
+    #     """
+    #     Registers an Issue associated with the Pull Request.
+    #     Parameters:
+    #         issue (Issue): The issue to register.
+    #     Returns: None
+    #     """
+    #     self._issues[issue.number] = issue
 
     def register_commit(self, commit: Commit) -> None:
         """
@@ -204,12 +191,6 @@ class PullRequestRecord(Record):
             bool: True if the commit SHA is present, False otherwise.
         """
         return self._pull_request.merge_commit_sha == sha
-
-    def issues_count(self) -> int:
-        """
-        Returns the number of issues associated with the pull request.
-        """
-        return len(self._issues)
 
     def commits_count(self) -> int:
         """

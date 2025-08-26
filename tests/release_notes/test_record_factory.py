@@ -327,9 +327,6 @@ def test_generate_with_no_issues(mocker, request):
     rec_pr2 = cast(PullRequestRecord, records[102])
 
     # Verify that PRs are registered
-    assert 0 == rec_pr1.issues_count()
-    assert 0 == rec_pr2.issues_count()
-
     assert pr1 == rec_pr1.pull_request
     assert pr2 == rec_pr2.pull_request
 
@@ -372,8 +369,6 @@ def test_generate_with_no_issues_skip_labels(mocker, request):
     rec_pr2 = cast(PullRequestRecord, records[102])
 
     # Verify that PRs are registered
-    assert 0 == rec_pr1.issues_count()
-    assert 0 == rec_pr2.issues_count()
     assert 1 == rec_pr1.commits_count()
     assert 1 == rec_pr2.commits_count()
 
@@ -440,5 +435,4 @@ def test_generate_with_wrong_issue_number_in_pull_body_mention(mocker, mock_repo
     assert 1 == cast(IssueRecord, records[2]).pull_requests_count()
 
     rec_pr1 = cast(PullRequestRecord, records[101])
-    assert 0 == rec_pr1.issues_count()
     assert 1 == rec_pr1.commits_count()
