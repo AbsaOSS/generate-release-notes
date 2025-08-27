@@ -77,6 +77,9 @@ class FilterByRelease(Filter):
             pulls_list = list(
                 filter(lambda pull: pull.merged_at is not None and pull.merged_at >= data.since, data.pull_requests)
             )
+            pulls_list.extend(
+                filter(lambda pull: pull.closed_at is not None and pull.closed_at >= data.since, data.pull_requests)
+            )
             logger.debug("Count of pulls reduced from %d to %d", len(data.pull_requests), len(pulls_list))
 
             commits_list = list(filter(lambda commit: commit.commit.author.date > data.since, data.commits))
