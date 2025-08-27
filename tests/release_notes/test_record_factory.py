@@ -289,6 +289,41 @@ def test_generate_with_no_commits(mocker, mock_repo):
     rec_issue2 = cast(IssueRecord,records[2])
 
     # Verify that PRs are registered
+    assert 1 == rec_issue1.pull_requests_count()
+    assert 1 == rec_issue2.pull_requests_count()
+
+    assert pr1 == rec_issue2.get_pull_request(101)
+
+def test_generate_with_no_commits_with_wrong_issue_number_in_pull_body_mention(mocker, mock_repo):
+    mock_github_client = mocker.Mock(spec=Github)
+    data = MinedData()
+    # pylint: disable=unused-variable
+    issue1, issue2, pr1, pr2, commit1, commit2 = setup_issues_pulls_commits(mocker)
+    pr1.body = "Closes #100"
+    data.issues = [issue1]
+    data.pull_requests = [pr1]  # PR linked to a non-fetched issues (due to since condition)
+
+    mock_rate_limit = mocker.Mock()
+    mock_rate_limit.core.remaining = 10
+    mock_rate_limit.core.reset.timestamp.return_value = time.time() + 3600
+    mock_github_client.get_rate_limit.return_value = mock_rate_limit
+    mock_repo.get_issue.return_value = issue2
+
+    data.commits = []  # No commits
+    data.repository = mock_repo
+    mocker.patch("release_notes_generator.record.record_factory.get_issues_for_pr", return_value=[2])
+    records = RecordFactory.generate(mock_github_client, data)
+
+    assert 2 == len(records)
+
+    # Verify the record creation
+    assert isinstance(records[1], IssueRecord)
+    assert isinstance(records[2], IssueRecord)
+
+    rec_issue1 = cast(IssueRecord,records[1])
+    rec_issue2 = cast(IssueRecord,records[2])
+
+    # Verify that PRs are registered
     assert 0 == rec_issue1.pull_requests_count()
     assert 1 == rec_issue2.pull_requests_count()
 
@@ -409,30 +444,3 @@ def mock_get_issues_for_pr_with_wrong_issue_number(pull_number: int) -> list[int
     elif pull_number == 102:
         return [2]
     return []
-
-
-def test_generate_with_wrong_issue_number_in_pull_body_mention(mocker, mock_repo):
-    mocker.patch("release_notes_generator.record.record_factory.safe_call_decorator", side_effect=mock_safe_call_decorator_wrong_issue_number)
-    mock_github_client = mocker.Mock(spec=Github)
-    issue1, issue2, pr1, pr2, commit1, commit2 = setup_issues_pulls_commits(mocker)
-    pr1.body = "Closes #100"
-    data = MinedData()
-    data.issues = [issue1, issue2]
-    data.pull_requests = [pr1, pr2]
-    data.commits = [commit1, commit2]
-    data.repository = mock_repo
-
-    records = RecordFactory.generate(mock_github_client, data)
-
-    # Verify the record creation
-    assert 3 == len(records)
-    assert isinstance(records[1], IssueRecord)
-    assert isinstance(records[2], IssueRecord)
-    assert isinstance(records[101], PullRequestRecord)
-
-    # Verify that PRs are registered
-    assert 0 == cast(IssueRecord, records[1]).pull_requests_count()
-    assert 1 == cast(IssueRecord, records[2]).pull_requests_count()
-
-    rec_pr1 = cast(PullRequestRecord, records[101])
-    assert 1 == rec_pr1.commits_count()

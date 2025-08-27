@@ -28,6 +28,7 @@ from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.utils.constants import ISSUES_FOR_PRS, LINKED_ISSUES_MAX
 
 
+@lru_cache(maxsize=None)
 def extract_issue_numbers_from_body(pr: PullRequest) -> list[int]:
     """
     Extracts the numbers of the issues mentioned in the body of the pull request.

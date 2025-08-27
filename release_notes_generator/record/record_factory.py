@@ -35,7 +35,7 @@ from release_notes_generator.model.record import Record
 
 from release_notes_generator.utils.decorators import safe_call_decorator
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
-from release_notes_generator.utils.pull_request_utils import get_issues_for_pr
+from release_notes_generator.utils.pull_request_utils import get_issues_for_pr, extract_issue_numbers_from_body
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +57,10 @@ class RecordFactory:
         """
 
         def register_pull_request(pull: PullRequest, skip_rec: bool) -> None:
-            for parent_issue_number in safe_call(get_issues_for_pr)(pull_number=pull.number):
+            detected_issues = extract_issue_numbers_from_body(pull)
+            detected_issues.extend(safe_call(get_issues_for_pr)(pull_number=pull.number))
+
+            for parent_issue_number in detected_issues:
                 # create an issue record if not present for PR parent
                 if parent_issue_number not in records:
                     logger.warning(
@@ -98,7 +101,7 @@ class RecordFactory:
             pull_labels = [label.name for label in pull.labels]
             skip_record: bool = any(item in pull_labels for item in ActionInputs.get_skip_release_notes_labels())
 
-            if not safe_call(get_issues_for_pr)(pull_number=pull.number):
+            if not safe_call(get_issues_for_pr)(pull_number=pull.number) and not extract_issue_numbers_from_body(pull):
                 records[pull.number] = PullRequestRecord(pull, skip=skip_record)
                 logger.debug("Created record for PR %d: %s", pull.number, pull.title)
             else:
