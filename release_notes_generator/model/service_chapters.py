@@ -105,10 +105,11 @@ class ServiceChapters(BaseChapters):
             if record.skip:
                 continue
 
-            # skip the record when used in used and not allowed to be duplicated in Service chapters
+            # skip the record when already used and not allowed to be duplicated in Service chapters
             if self.__is_row_present(record_id) and not self.duplicity_allowed():
                 continue
 
+            # main three situations:
             if record.is_closed and isinstance(record, IssueRecord):
                 self.__populate_closed_issues(cast(IssueRecord, record), record_id)
 
@@ -118,12 +119,14 @@ class ServiceChapters(BaseChapters):
             elif isinstance(record, CommitRecord):
                 self.__populate_direct_commit(cast(CommitRecord, record), record_id)
 
+            # other edge case situations
             else:
                 if (
                     record.is_open
                     and isinstance(record, IssueRecord)
                     and cast(IssueRecord, record).pull_requests_count() == 0
                 ):
+                    # no change increment delivered
                     pass
                 elif (
                     record.is_open
@@ -164,7 +167,7 @@ class ServiceChapters(BaseChapters):
             populated = True
 
         if pulls_count > 0:
-            # the record looks to be valid closed issue with 1+ pull requests
+            # the record looks to be valid closed issue with 1+ pull requests, no reason to report it
             return
 
         if not populated:

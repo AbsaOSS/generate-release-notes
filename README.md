@@ -74,6 +74,11 @@ Generate Release Notes action is dedicated to enhance the quality and organizati
 | `warnings` | Set to true to print service chapters in the release notes. These warnings identify issues without release notes, without user-defined labels, or without associated pull requests, and PRs without linked issues. | No       | true (Service chapters are printed.) |  
 | `print-empty-chapters` | Set it to true to print chapters with no issues or PRs. | No       | true (Empty chapters are printed.) | 
 
+> [!WARNING]
+> - `warnings`
+>   - **Disabling this feature will hide service chapter showing direct commits!** These cannot be visible in custom chapters as they do not have labels!
+
+
 ## Outputs
 The output of the action is a markdown string containing the release notes for the specified tag. This string can be used in subsequent steps to publish the release notes to a file, create a GitHub release, or send notifications.
 
