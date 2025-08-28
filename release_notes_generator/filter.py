@@ -77,9 +77,8 @@ class FilterByRelease(Filter):
             pulls_seen: set[int] = set()
             pulls_list: list = []
             for pull in data.pull_requests:
-                if (
-                    (pull.merged_at is not None and pull.merged_at >= data.since)
-                    or (pull.closed_at is not None and pull.closed_at >= data.since)
+                if (pull.merged_at is not None and pull.merged_at >= data.since) or (
+                    pull.closed_at is not None and pull.closed_at >= data.since
                 ):
                     if pull.number not in pulls_seen:
                         pulls_seen.add(pull.number)
