@@ -25,7 +25,7 @@ from typing import Optional
 
 from github import Github
 
-from release_notes_generator.filter import Filter, FilterByRelease
+from release_notes_generator.filter import FilterByRelease
 from release_notes_generator.miner import DataMiner
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.builder import ReleaseNotesBuilder
