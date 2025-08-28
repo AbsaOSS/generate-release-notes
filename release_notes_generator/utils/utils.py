@@ -71,7 +71,7 @@ _SEMVER_SHORT_RE = re.compile(
 )
 
 
-def _normalize_version_tag(tag: str) -> str:
+def normalize_version_tag(tag: str) -> str:
     """
     Normalize a tag to full 'vMAJOR.MINOR.PATCH' form.
 

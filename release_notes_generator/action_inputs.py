@@ -52,7 +52,7 @@ from release_notes_generator.utils.constants import (
 )
 from release_notes_generator.utils.enums import DuplicityScopeEnum
 from release_notes_generator.utils.gh_action import get_action_input
-from release_notes_generator.utils.utils import _normalize_version_tag
+from release_notes_generator.utils.utils import normalize_version_tag
 
 logger = logging.getLogger(__name__)
 
@@ -121,7 +121,7 @@ class ActionInputs:
         Get the tag name from the action inputs.
         """
         raw = get_action_input(TAG_NAME) or ""
-        return _normalize_version_tag(raw)
+        return normalize_version_tag(raw)
 
     @staticmethod
     def get_from_tag_name() -> str:
@@ -129,7 +129,7 @@ class ActionInputs:
         Get the from-tag name from the action inputs.
         """
         raw = get_action_input(FROM_TAG_NAME, default="")
-        return _normalize_version_tag(raw)  # type: ignore[arg-type]
+        return normalize_version_tag(raw)  # type: ignore[arg-type]
 
     @staticmethod
     def is_from_tag_name_defined() -> bool:
