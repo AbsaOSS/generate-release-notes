@@ -108,9 +108,58 @@ def test_get_github_token(mocker):
     assert ActionInputs.get_github_token() == "fake-token"
 
 
-def test_get_tag_name(mocker):
+def test_get_tag_name_version_full(mocker):
     mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="v1.0.0")
     assert ActionInputs.get_tag_name() == "v1.0.0"
+
+
+def test_get_tag_name_version_shorted_with_v(mocker):
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="v1.2")
+    assert ActionInputs.get_tag_name() == "v1.2.0"
+
+
+def test_get_tag_name_version_shorted_no_v(mocker):
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="1.2")
+    assert ActionInputs.get_tag_name() == "v1.2.0"
+
+
+def test_get_tag_name_empty(mocker):
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="")
+    assert ActionInputs.get_tag_name() == ""
+
+
+def test_get_tag_name_invalid_format(mocker):
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="v1.2.beta")
+    with pytest.raises(ValueError) as excinfo:
+        ActionInputs.get_tag_name()
+    assert "Invalid version tag format: 'v1.2.beta'. Expected vMAJOR.MINOR[.PATCH], e.g. 'v0.2' or 'v0.2.0'." in str(excinfo.value)
+
+
+def test_get_tag_from_name_version_full(mocker):
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="v1.0.0")
+    assert ActionInputs.get_from_tag_name() == "v1.0.0"
+
+
+def test_get_from_tag_name_version_shorted_with_v(mocker):
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="v1.2")
+    assert ActionInputs.get_from_tag_name() == "v1.2.0"
+
+
+def test_get_from_tag_name_version_shorted_no_v(mocker):
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="1.2")
+    assert ActionInputs.get_from_tag_name() == "v1.2.0"
+
+
+def test_get_from_tag_name_empty(mocker):
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="")
+    assert ActionInputs.get_from_tag_name() == ""
+
+
+def test_get_from_tag_name_invalid_format(mocker):
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="v1.2.beta")
+    with pytest.raises(ValueError) as excinfo:
+        ActionInputs.get_from_tag_name()
+    assert "Invalid version tag format: 'v1.2.beta'. Expected vMAJOR.MINOR[.PATCH], e.g. 'v0.2' or 'v0.2.0'." in str(excinfo.value)
 
 
 def test_get_chapters_success(mocker):

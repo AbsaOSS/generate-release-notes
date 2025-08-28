@@ -52,6 +52,7 @@ from release_notes_generator.utils.constants import (
 )
 from release_notes_generator.utils.enums import DuplicityScopeEnum
 from release_notes_generator.utils.gh_action import get_action_input
+from release_notes_generator.utils.utils import normalize_version_tag
 
 logger = logging.getLogger(__name__)
 
@@ -119,14 +120,16 @@ class ActionInputs:
         """
         Get the tag name from the action inputs.
         """
-        return get_action_input(TAG_NAME) or ""
+        raw = get_action_input(TAG_NAME) or ""
+        return normalize_version_tag(raw)
 
     @staticmethod
     def get_from_tag_name() -> str:
         """
         Get the from-tag name from the action inputs.
         """
-        return get_action_input(FROM_TAG_NAME, default="")  # type: ignore[return-value] # string is returned as default
+        raw = get_action_input(FROM_TAG_NAME, default="")
+        return normalize_version_tag(raw)  # type: ignore[arg-type]
 
     @staticmethod
     def is_from_tag_name_defined() -> bool:
@@ -416,6 +419,7 @@ class ActionInputs:
 
         logger.debug("Repository: %s/%s", ActionInputs._owner, ActionInputs._repo_name)
         logger.debug("Tag name: %s", tag_name)
+        logger.debug("From tag name: %s", from_tag_name)
         logger.debug("Chapters: %s", chapters)
         logger.debug("Published at: %s", published_at)
         logger.debug("Skip release notes labels: %s", ActionInputs.get_skip_release_notes_labels())

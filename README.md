@@ -102,8 +102,8 @@ Add the following step to your GitHub workflow (in example are used non-default 
   env:
     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
   with:
-    tag-name: "v0.2.0"
-    from-tag-name: "v0.1.0"
+    tag-name: "v0.2.0"                        # accepts also v0.2 format when patch version is 0
+    from-tag-name: "v0.1.0"                   # accepts also v0.1 format when patch version is 0
     chapters: |
       - {"title": "Breaking Changes 💥", "label": "breaking-change"}
       - {"title": "New Features 🎉", "label": "enhancement"}
