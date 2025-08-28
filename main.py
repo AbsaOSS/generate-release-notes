@@ -56,8 +56,7 @@ def run() -> None:
     )
 
     generator = ReleaseNotesGenerator(py_github, custom_chapters)
-    filterer = FilterByRelease()
-    rls_notes = generator.generate(filterer)
+    rls_notes = generator.generate()
     logger.debug("Generated release notes: \n%s", rls_notes)
 
     # Set the output for the GitHub Action

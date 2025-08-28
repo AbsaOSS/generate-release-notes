@@ -74,9 +74,15 @@ class FilterByRelease(Filter):
             logger.debug("Count of issues reduced from %d to %d", len(data.issues), len(issues_list))
 
             # filter out merged PRs and commits before the date
-            pulls_list = list(
-                filter(lambda pull: pull.merged_at is not None and pull.merged_at >= data.since, data.pull_requests)
-            )
+            pulls_seen: set[int] = set()
+            pulls_list: list = []
+            for pull in data.pull_requests:
+                if (pull.merged_at is not None and pull.merged_at >= data.since) or (
+                    pull.closed_at is not None and pull.closed_at >= data.since
+                ):
+                    if pull.number not in pulls_seen:
+                        pulls_seen.add(pull.number)
+                        pulls_list.append(pull)
             logger.debug("Count of pulls reduced from %d to %d", len(data.pull_requests), len(pulls_list))
 
             commits_list = list(filter(lambda commit: commit.commit.author.date > data.since, data.commits))

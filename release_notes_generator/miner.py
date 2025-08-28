@@ -68,7 +68,12 @@ class DataMiner:
         data.commits = list(self._safe_call(data.repository.get_commits)())
 
         logger.info("Data mining from GitHub completed.")
-        return data
+
+        logger.info("Filtering duplicated issues from the list of issues...")
+        de_duplicated_data = self.__filter_duplicated_issues(data)
+        logger.info("Filtering duplicated issues from the list of issues finished.")
+
+        return de_duplicated_data
 
     def get_latest_release(self, repository: Repository) -> Optional[GitRelease]:
         """
@@ -154,3 +159,23 @@ class DataMiner:
                 rls = release
 
         return rls
+
+    def __filter_duplicated_issues(self, data: MinedData) -> "MinedData":
+        """
+        Filters out duplicated issues from the list of issues.
+        This method address problem in output of GitHub API where issues list contains PR values.
+
+        Parameters:
+            - data (MinedData): The mined data containing issues and pull requests.
+
+        Returns:
+            - MinedData: The mined data with duplicated issues removed.
+        """
+        pr_numbers = {pr.number for pr in data.pull_requests}
+        filtered_issues = [issue for issue in data.issues if issue.number not in pr_numbers]
+
+        logger.debug("Duplicated issues removed: %s", len(data.issues) - len(filtered_issues))
+
+        data.issues = filtered_issues
+
+        return data

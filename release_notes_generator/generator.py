@@ -25,7 +25,7 @@ from typing import Optional
 
 from github import Github
 
-from release_notes_generator.filter import Filter
+from release_notes_generator.filter import FilterByRelease
 from release_notes_generator.miner import DataMiner
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.builder import ReleaseNotesBuilder
@@ -65,7 +65,7 @@ class ReleaseNotesGenerator:
         """Getter for the GithubRateLimiter instance."""
         return self._rate_limiter
 
-    def generate(self, filterer: Filter) -> Optional[str]:
+    def generate(self) -> Optional[str]:
         """
         Generates the Release Notes for a given repository.
 
@@ -79,16 +79,19 @@ class ReleaseNotesGenerator:
         if data.is_empty():
             return None
 
-        filtered_data = filterer.filter(data=data)
+        filterer = FilterByRelease()
+        data_filtered_by_release = filterer.filter(data=data)
 
         changelog_url: str = get_change_url(
-            tag_name=ActionInputs.get_tag_name(), repository=filtered_data.repository, git_release=filtered_data.release
+            tag_name=ActionInputs.get_tag_name(),
+            repository=data_filtered_by_release.repository,
+            git_release=data_filtered_by_release.release,
         )
 
-        assert filtered_data.repository is not None, "Repository must not be None"
+        assert data_filtered_by_release.repository is not None, "Repository must not be None"
 
         rls_notes_records: dict[int | str, Record] = RecordFactory.generate(
-            github=self._github_instance, data=filtered_data
+            github=self._github_instance, data=data_filtered_by_release
         )
 
         release_notes_builder = ReleaseNotesBuilder(

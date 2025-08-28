@@ -29,7 +29,7 @@ from release_notes_generator.utils.constants import ISSUES_FOR_PRS, LINKED_ISSUE
 
 
 @lru_cache(maxsize=None)
-def extract_issue_numbers_from_body(pr: PullRequest) -> list[int]:
+def extract_issue_numbers_from_body(pr: PullRequest) -> set[int]:
     """
     Extracts the numbers of the issues mentioned in the body of the pull request.
 
@@ -43,7 +43,7 @@ def extract_issue_numbers_from_body(pr: PullRequest) -> list[int]:
     issue_matches = regex_pattern.findall(pr.body if pr.body else "")
 
     # Extract the issue numbers from the matches
-    issue_numbers = [int(match[-1]) for match in issue_matches]
+    issue_numbers = {int(match[-1]) for match in issue_matches}
 
     return issue_numbers
 

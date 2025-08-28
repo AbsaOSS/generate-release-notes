@@ -65,8 +65,8 @@ def test_filter_with_release(mocker):
         MagicMock(closed_at=datetime(2022, 12, 31)),
     ]
     data.pull_requests = [
-        MagicMock(merged_at=datetime(2023, 2, 3)),
-        MagicMock(merged_at=datetime(2022, 12, 30)),
+        MagicMock(merged_at=datetime(2023, 2, 3), closed_at=datetime(2022, 12, 31)),
+        MagicMock(merged_at=datetime(2022, 12, 30), closed_at=datetime(2022, 12, 31)),
     ]
     data.commits = [
         MagicMock(commit=MagicMock(author=MagicMock(date=datetime(2024, 1, 4)))),
