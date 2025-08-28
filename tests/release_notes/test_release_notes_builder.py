@@ -711,7 +711,7 @@ def test_build_closed_issue_with_user_labels_no_prs(
 ):
     expected_release_notes = RELEASE_NOTES_DATA_CLOSED_ISSUE_NO_PR_WITH_USER_LABELS
     rec = record_with_issue_closed_no_pull
-    rec.issue.labels = [MockLabel("bug"), MockLabel("breaking-changes")]
+    rec._labels = {"bug", "breaking-changes"}
     mocker.patch("release_notes_generator.builder.ActionInputs.get_print_empty_chapters", return_value=False)
 
     builder = ReleaseNotesBuilder(
@@ -730,7 +730,7 @@ def test_build_closed_issue_with_prs_without_user_label(
 ):
     expected_release_notes = RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_PR_WITHOUT_USER_LABELS
     rec = record_with_issue_closed_two_pulls
-    rec.issue.labels = [MockLabel("label1"), MockLabel("label2")]
+    rec._labels = {"label1", "label2"}
     rec.issue.title = "I1"
     mocker.patch("release_notes_generator.builder.ActionInputs.get_print_empty_chapters", return_value=False)
 
@@ -825,7 +825,7 @@ def test_merged_pr_without_issue_with_more_user_labels_duplicity_reduction_on(
 ):
     expected_release_notes = RELEASE_NOTES_DATA_MERGED_PR_WITH_USER_LABELS_DUPLICITY_REDUCTION_ON
     rec = pull_request_record_merged
-    rec.pull_request.labels = [MockLabel("bug"), MockLabel("enhancement")]
+    rec._labels = {"bug", "enhancement"}
     mocker.patch("release_notes_generator.builder.ActionInputs.get_print_empty_chapters", return_value=False)
 
     builder = ReleaseNotesBuilder(

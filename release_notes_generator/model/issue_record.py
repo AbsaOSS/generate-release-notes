@@ -27,6 +27,8 @@ class IssueRecord(Record):
         super().__init__(skip=skip)
 
         self._issue: Issue = issue
+        self._labels = {label.name for label in self._issue.labels}
+
         self._pull_requests: dict[int, PullRequest] = {}
         self._commits: dict[int, dict[str, Commit]] = {}
 
@@ -43,10 +45,6 @@ class IssueRecord(Record):
     @property
     def is_open(self) -> bool:
         return self._issue.state == self.ISSUE_STATE_OPEN
-
-    @property
-    def labels(self):
-        return [label.name for label in self._issue.labels]
 
     @property
     def authors(self) -> list[str]:
@@ -161,6 +159,7 @@ class IssueRecord(Record):
         Returns: None
         """
         self._pull_requests[pull.number] = pull
+        self._labels.update({label.name for label in pull.labels})
 
     def register_commit(self, pull: PullRequest, commit: Commit) -> None:
         """

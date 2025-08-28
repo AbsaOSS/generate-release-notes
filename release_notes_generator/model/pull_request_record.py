@@ -25,6 +25,8 @@ class PullRequestRecord(Record):
         super().__init__(skip=skip)
 
         self._pull_request: PullRequest = pull
+        self._labels = {label.name for label in self._pull_request.labels}
+
         self._commits: dict[str, Commit] = {}
 
     # properties - override Record properties
@@ -44,10 +46,6 @@ class PullRequestRecord(Record):
     @property
     def is_open(self) -> bool:
         return self._pull_request.state == self.PR_STATE_OPEN
-
-    @property
-    def labels(self):
-        return [label.name for label in self._pull_request.labels]
 
     @property
     def authors(self) -> list[str]:

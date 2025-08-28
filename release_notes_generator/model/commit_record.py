@@ -36,10 +36,6 @@ class CommitRecord(Record):
         return False
 
     @property
-    def labels(self):
-        return []
-
-    @property
     def authors(self) -> list[str]:
         return [self._commit.author.login] if self._commit.author else []
 
