@@ -83,7 +83,9 @@ class ReleaseNotesGenerator:
         data_filtered_by_release = filterer.filter(data=data)
 
         changelog_url: str = get_change_url(
-            tag_name=ActionInputs.get_tag_name(), repository=data_filtered_by_release.repository, git_release=data_filtered_by_release.release
+            tag_name=ActionInputs.get_tag_name(),
+            repository=data_filtered_by_release.repository,
+            git_release=data_filtered_by_release.release,
         )
 
         assert data_filtered_by_release.repository is not None, "Repository must not be None"

@@ -48,35 +48,35 @@ def test_extract_issue_numbers_from_body_no_issues(mocker):
     mock_pr = mocker.Mock(spec=PullRequest)
     mock_pr.body = "This PR does not fix any issues."
     issue_numbers = extract_issue_numbers_from_body(mock_pr)
-    assert issue_numbers == []
+    assert issue_numbers == set()
 
 
 def test_extract_issue_numbers_from_body_single_issue(mocker):
     mock_pr = mocker.Mock(spec=PullRequest)
     mock_pr.body = "This PR closes #123."
     issue_numbers = extract_issue_numbers_from_body(mock_pr)
-    assert issue_numbers == [123]
+    assert issue_numbers == {123}
 
 
 def test_extract_issue_numbers_from_body_multiple_issues(mocker):
     mock_pr = mocker.Mock(spec=PullRequest)
     mock_pr.body = "This PR fixes #123 and resolves #456."
     issue_numbers = extract_issue_numbers_from_body(mock_pr)
-    assert issue_numbers == [123, 456]
+    assert issue_numbers == {123, 456}
 
 
 def test_extract_issue_numbers_from_body_mixed_case_keywords(mocker):
     mock_pr = mocker.Mock(spec=PullRequest)
     mock_pr.body = "This PR Fixes #123 and Resolves #456."
     issue_numbers = extract_issue_numbers_from_body(mock_pr)
-    assert issue_numbers == [123, 456]
+    assert issue_numbers == {123, 456}
 
 
 def test_extract_issue_numbers_from_body_no_body(mocker):
     mock_pr = mocker.Mock(spec=PullRequest)
     mock_pr.body = None
     issue_numbers = extract_issue_numbers_from_body(mock_pr)
-    assert issue_numbers == []
+    assert issue_numbers == set()
 
 
 def test_extract_issue_numbers_from_body_complex_text_with_wrong_syntax(mocker):
@@ -88,7 +88,7 @@ def test_extract_issue_numbers_from_body_complex_text_with_wrong_syntax(mocker):
     - resolves the bug in #789
     """
     issue_numbers = extract_issue_numbers_from_body(mock_pr)
-    assert issue_numbers == [123]
+    assert issue_numbers == {123}
 
 
 # get_issues_for_pr

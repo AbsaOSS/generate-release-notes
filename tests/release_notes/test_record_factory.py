@@ -299,7 +299,7 @@ def test_generate_with_no_commits_with_wrong_issue_number_in_pull_body_mention(m
     data = MinedData()
     # pylint: disable=unused-variable
     issue1, issue2, pr1, pr2, commit1, commit2 = setup_issues_pulls_commits(mocker)
-    pr1.body = "Closes #100"
+    pr1.body = "Closes #2"
     data.issues = [issue1]
     data.pull_requests = [pr1]  # PR linked to a non-fetched issues (due to since condition)
 
@@ -320,8 +320,8 @@ def test_generate_with_no_commits_with_wrong_issue_number_in_pull_body_mention(m
     assert isinstance(records[1], IssueRecord)
     assert isinstance(records[2], IssueRecord)
 
-    rec_issue1 = cast(IssueRecord,records[1])
-    rec_issue2 = cast(IssueRecord,records[2])
+    rec_issue1 = cast(IssueRecord, records[1])
+    rec_issue2 = cast(IssueRecord, records[2])
 
     # Verify that PRs are registered
     assert 0 == rec_issue1.pull_requests_count()
