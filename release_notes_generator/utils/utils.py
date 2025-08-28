@@ -19,6 +19,7 @@ This module contains utility functions for generating release notes.
 """
 
 import logging
+import re
 
 from typing import Optional
 
@@ -54,3 +55,46 @@ def get_change_url(
         changelog_url = f"https://github.com/{repo.full_name}/compare/{rls.tag_name}...{tag_name}"
 
     return changelog_url
+
+
+_SEMVER_SHORT_RE = re.compile(
+    r"""
+    ^\s*                # optional leading whitespace
+    v?                  # optional leading 'v'
+    (?P<major>\d+)      # major
+    \.                  # dot
+    (?P<minor>\d+)      # minor
+    (?:\.(?P<patch>\d+))?  # optional .patch
+    \s*$                # optional trailing whitespace
+""",
+    re.VERBOSE,
+)
+
+
+def _normalize_version_tag(tag: str) -> str:
+    """
+    Normalize a tag to full 'vMAJOR.MINOR.PATCH' form.
+
+    Accepts:
+      - 'v1.2.3'  -> 'v1.2.3'
+      - 'v1.2'    -> 'v1.2.0'
+      - '1.2.3'   -> 'v1.2.3'
+      - '1.2'     -> 'v1.2.0'
+
+    Returns empty string if input is empty/whitespace.
+    Raises ValueError on malformed versions.
+    """
+    if not tag or tag.strip() == "":
+        return ""
+
+    m = _SEMVER_SHORT_RE.match(tag)
+    if not m:
+        raise ValueError(
+            f"Invalid version tag format: {tag!r}. " "Expected vMAJOR.MINOR[.PATCH], e.g. 'v0.2' or 'v0.2.0'."
+        )
+
+    major = int(m.group("major"))
+    minor = int(m.group("minor"))
+    patch = int(m.group("patch")) if m.group("patch") is not None else 0
+
+    return f"v{major}.{minor}.{patch}"
