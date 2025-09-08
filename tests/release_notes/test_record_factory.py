@@ -177,8 +177,8 @@ def test_generate_with_issues_and_pulls_and_commits(mocker, mock_repo):
     issue1, issue2, pr1, pr2, commit1, commit2 = setup_issues_pulls_commits(mocker)
 
     mock_rate_limit = mocker.Mock()
-    mock_rate_limit.core.remaining = 10
-    mock_rate_limit.core.reset.timestamp.return_value = time.time() + 3600
+    mock_rate_limit.rate.remaining = 10
+    mock_rate_limit.rate.reset.timestamp.return_value = time.time() + 3600
     mock_github_client.get_rate_limit.return_value = mock_rate_limit
 
     data = MinedData()
@@ -271,8 +271,8 @@ def test_generate_with_no_commits(mocker, mock_repo):
     data.pull_requests = [pr1]  # PR linked to a non-fetched issues (due to since condition)
 
     mock_rate_limit = mocker.Mock()
-    mock_rate_limit.core.remaining = 10
-    mock_rate_limit.core.reset.timestamp.return_value = time.time() + 3600
+    mock_rate_limit.rate.remaining = 10
+    mock_rate_limit.rate.reset.timestamp.return_value = time.time() + 3600
     mock_github_client.get_rate_limit.return_value = mock_rate_limit
     mock_repo.get_issue.return_value = issue2
 
@@ -306,8 +306,8 @@ def test_generate_with_no_commits_with_wrong_issue_number_in_pull_body_mention(m
     data.pull_requests = [pr1]  # PR linked to a non-fetched issues (due to since condition)
 
     mock_rate_limit = mocker.Mock()
-    mock_rate_limit.core.remaining = 10
-    mock_rate_limit.core.reset.timestamp.return_value = time.time() + 3600
+    mock_rate_limit.rate.remaining = 10
+    mock_rate_limit.rate.reset.timestamp.return_value = time.time() + 3600
     mock_github_client.get_rate_limit.return_value = mock_rate_limit
     mock_repo.get_issue.return_value = issue2
 

@@ -21,7 +21,7 @@ This module contains the GithubRateLimiter class which is responsible for rate l
 import logging
 import time
 from datetime import datetime
-from typing import Optional, Callable, Any
+from typing import Optional, Callable, Any, cast
 from github import Github
 
 logger = logging.getLogger(__name__)
@@ -33,7 +33,7 @@ class GithubRateLimiter:
     """
 
     def __init__(self, github_client: Github):
-        self.github_client = github_client
+        self.github_client: Github = github_client
 
     def __call__(self, method: Callable) -> Callable:
         """
@@ -44,9 +44,9 @@ class GithubRateLimiter:
         """
 
         def wrapped_method(*args, **kwargs) -> Optional[Any]:
-            # rate_limit = self.github_client.get_rate_limit().core
-            remaining_calls = self.github_client.get_rate_limit().core.remaining
-            reset_time = self.github_client.get_rate_limit().core.reset.timestamp()
+            rate_limit_overview = self.github_client.get_rate_limit()
+            remaining_calls = rate_limit_overview.rate.remaining
+            reset_time = rate_limit_overview.rate.reset.timestamp()
 
             if remaining_calls < 5:
                 logger.info("Rate limit almost reached. Sleeping until reset time.")

@@ -16,7 +16,7 @@
 
 import time
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pytest
 
@@ -26,7 +26,7 @@ from github.GitRelease import GitRelease
 from github.Issue import Issue
 from github.PullRequest import PullRequest
 from github.Rate import Rate
-from github.RateLimit import RateLimit
+from github.RateLimitOverview import RateLimitOverview
 from github.Repository import Repository
 
 from release_notes_generator.model.issue_record import IssueRecord
@@ -112,14 +112,11 @@ def rate_limiter(mocker, request):
 @pytest.fixture
 def mock_rate_limiter(mocker):
     mock_rate = mocker.Mock(spec=Rate)
-    mock_rate.timestamp = mocker.Mock(return_value=time.time() + 3600)
-
-    mock_core = mocker.Mock(spec=RateLimit)
-    mock_core.reset = mock_rate
+    mock_rate.reset = datetime.now() + timedelta(hours=1)
 
     mock = mocker.Mock(spec=GithubRateLimiter)
-    mock.core = mock_core
-    mock.core.remaining = 10
+    mock.rate = mock_rate
+    mock.rate.remaining = 10
 
     return mock
 
