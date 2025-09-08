@@ -31,8 +31,9 @@ Pylint displays a global evaluation score for the code, rated out of a maximum s
 
 ### Set Up Python Environment
 ```shell
-python3 -m venv venv
-source venv/bin/activate
+python3 -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip
 pip install -r requirements.txt
 ```
 

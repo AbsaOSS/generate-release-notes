@@ -25,6 +25,8 @@ class PullRequestRecord(Record):
         super().__init__(skip=skip)
 
         self._pull_request: PullRequest = pull
+        self._labels = {label.name for label in self._pull_request.get_labels()}
+
         self._commits: dict[str, Commit] = {}
 
     # properties - override Record properties
@@ -44,10 +46,6 @@ class PullRequestRecord(Record):
     @property
     def is_open(self) -> bool:
         return self._pull_request.state == self.PR_STATE_OPEN
-
-    @property
-    def labels(self):
-        return [label.name for label in self._pull_request.labels]
 
     @property
     def authors(self) -> list[str]:
@@ -242,7 +240,8 @@ class PullRequestRecord(Record):
         Parameters:
             pull (PullRequest): The pull request from which to extract release notes.
             line_marks (list[str]): A list of characters that indicate the start of a release notes section.
-            cr_detection_regex (re.Pattern[str]): A regex pattern to detect the start of the Code Rabbit release notes section.
+            cr_detection_regex (re.Pattern[str]): A regex pattern to detect the start of the Code Rabbit release notes
+             section.
         Returns:
             str: The extracted release notes as a string. If no release notes are found, returns an empty string.
         """

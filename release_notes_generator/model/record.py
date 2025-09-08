@@ -38,6 +38,7 @@ class Record(metaclass=ABCMeta):
         self._present_in_chapters = 0
         self._skip = skip
         self._is_release_note_detected: Optional[bool] = None
+        self._labels: set[str] = set()
         self._rls_notes: Optional[str] = None  # single annotation here
 
     # properties
@@ -54,6 +55,15 @@ class Record(metaclass=ABCMeta):
     def skip(self) -> bool:
         """Check if the record should be skipped during output generation process."""
         return self._skip
+
+    @property
+    def labels(self) -> list[str]:
+        """
+        Gets the labels of the record.
+        Returns:
+            list[str]: A list of labels associated with the record.
+        """
+        return list(self._labels)
 
     @property
     @abstractmethod
@@ -80,15 +90,6 @@ class Record(metaclass=ABCMeta):
         Checks if the record is open.
         Returns:
             bool: True if the record is open, False otherwise.
-        """
-
-    @property
-    @abstractmethod
-    def labels(self) -> list[str]:
-        """
-        Gets the labels of the record.
-        Returns:
-            list[str]: A list of labels associated with the record.
         """
 
     @property

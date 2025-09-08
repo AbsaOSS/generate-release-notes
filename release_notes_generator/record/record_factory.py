@@ -58,9 +58,9 @@ class RecordFactory:
 
         def register_pull_request(pull: PullRequest, skip_rec: bool) -> None:
             detected_issues = extract_issue_numbers_from_body(pull)
-            logger.debug(f"Detected issues - from body: {detected_issues}")
+            logger.debug("Detected issues - from body: %s", detected_issues)
             detected_issues.update(safe_call(get_issues_for_pr)(pull_number=pull.number))
-            logger.debug(f"Detected issues - final: {detected_issues}")
+            logger.debug("Detected issues - final: %s", detected_issues)
 
             for parent_issue_number in detected_issues:
                 # create an issue record if not present for PR parent
@@ -98,14 +98,14 @@ class RecordFactory:
 
         logger.debug("Registering pull requests to records...")
         for pull in data.pull_requests:
-            pull_labels = [label.name for label in pull.labels]
+            pull_labels = [label.name for label in pull.get_labels()]
             skip_record: bool = any(item in pull_labels for item in ActionInputs.get_skip_release_notes_labels())
 
             if not safe_call(get_issues_for_pr)(pull_number=pull.number) and not extract_issue_numbers_from_body(pull):
                 records[pull.number] = PullRequestRecord(pull, skip=skip_record)
                 logger.debug("Created record for PR %d: %s", pull.number, pull.title)
             else:
-                logger.debug(f"Registering pull number: {pull.number}, title : {pull.title}")
+                logger.debug("Registering pull number: %s, title : %s", pull.number, pull.title)
                 register_pull_request(pull, skip_record)
 
         logger.debug("Registering commits to records...")
@@ -158,7 +158,7 @@ class RecordFactory:
         @return: None
         """
         # check for skip labels presence and skip when detected
-        issue_labels = [label.name for label in i.labels]
+        issue_labels = [label.name for label in i.get_labels()]
         skip_record = any(item in issue_labels for item in ActionInputs.get_skip_release_notes_labels())
         records[i.number] = IssueRecord(issue=i, skip=skip_record)
 
