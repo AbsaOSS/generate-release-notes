@@ -68,7 +68,7 @@ def test_get_latest_release_from_tag_name_not_defined_2_releases_type_error(mock
     data = MinedDataMock(mocker, mock_git_releases, mock_repo)
 
     mock_rate_limit = mocker.Mock()
-    mock_rate_limit.core.remaining = 1000
+    mock_rate_limit.rate.remaining = 1000
     github_mock.get_rate_limit.return_value = mock_rate_limit
 
     release_notes_miner = DataMiner(github_mock, mock_rate_limit)
@@ -95,7 +95,7 @@ def test_get_latest_release_from_tag_name_not_defined_2_releases_value_error(moc
     data = MinedDataMock(mocker, mock_git_releases, mock_repo)
 
     mock_rate_limit = mocker.Mock()
-    mock_rate_limit.core.remaining = 1000
+    mock_rate_limit.rate.remaining = 1000
     github_mock.get_rate_limit.return_value = mock_rate_limit
 
     release_notes_miner = DataMiner(github_mock, mock_rate_limit)

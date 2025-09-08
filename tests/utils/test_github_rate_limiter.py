@@ -15,12 +15,13 @@
 #
 
 import time
+from datetime import datetime, timedelta
 
 
 def test_rate_limiter_extended_sleep_remaining_1(mocker, rate_limiter, mock_rate_limiter):
     # Patch time.sleep to avoid actual delay and track call count
     mock_sleep = mocker.patch("time.sleep", return_value=None)
-    mock_rate_limiter.core.remaining = 1
+    mock_rate_limiter.rate.remaining = 1
 
     # Mock method to be wrapped
     method_mock = mocker.Mock()
@@ -49,8 +50,8 @@ def test_rate_limiter_extended_sleep_remaining_10(mocker, rate_limiter):
 def test_rate_limiter_extended_sleep_remaining_1_negative_reset_time(mocker, rate_limiter, mock_rate_limiter):
     # Patch time.sleep to avoid actual delay and track call count
     mock_sleep = mocker.patch("time.sleep", return_value=None)
-    mock_rate_limiter.core.remaining = 1
-    mock_rate_limiter.core.reset.timestamp = mocker.Mock(return_value=time.time() - 1000)
+    mock_rate_limiter.rate.remaining = 1
+    mock_rate_limiter.rate.reset = datetime.now() + timedelta(hours=1)
 
     # Mock method to be wrapped
     method_mock = mocker.Mock()

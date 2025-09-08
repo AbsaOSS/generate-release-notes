@@ -33,8 +33,8 @@ def test_generate_release_notes_repository_not_found(mocker):
     github_mock.get_repo.return_value = None
 
     mock_rate_limit = mocker.Mock()
-    mock_rate_limit.core.remaining = 10
-    mock_rate_limit.core.reset.timestamp.return_value = time.time() + 3600
+    mock_rate_limit.rate.remaining = 10
+    mock_rate_limit.rate.reset.timestamp.return_value = time.time() + 3600
     github_mock.get_rate_limit.return_value = mock_rate_limit
 
     custom_chapters = CustomChapters(print_empty_chapters=True)
@@ -69,7 +69,7 @@ def test_generate_release_notes_latest_release_not_found(
     mocker.patch("release_notes_generator.miner.DataMiner.get_latest_release", return_value=None)
     mocker.patch("release_notes_generator.record.record_factory.get_issues_for_pr", return_value=[])
     mock_rate_limit = mocker.Mock()
-    mock_rate_limit.core.remaining = 1000
+    mock_rate_limit.rate.remaining = 1000
     github_mock.get_rate_limit.return_value = mock_rate_limit
 
     custom_chapters = CustomChapters(print_empty_chapters=True)
@@ -115,7 +115,7 @@ def test_generate_release_notes_latest_release_found_by_created_at(
     mocker.patch("release_notes_generator.record.record_factory.get_issues_for_pr", return_value=[])
 
     mock_rate_limit = mocker.Mock()
-    mock_rate_limit.core.remaining = 1000
+    mock_rate_limit.rate.remaining = 1000
     github_mock.get_rate_limit.return_value = mock_rate_limit
 
     mock_get_action_input = mocker.patch("release_notes_generator.utils.gh_action.get_action_input")
@@ -166,9 +166,8 @@ def test_generate_release_notes_latest_release_found_by_published_at(
     mocker.patch("release_notes_generator.miner.DataMiner.get_latest_release", return_value=mock_git_release)
     mocker.patch("release_notes_generator.record.record_factory.get_issues_for_pr", return_value=[])
 
-
     mock_rate_limit = mocker.Mock()
-    mock_rate_limit.core.remaining = 1000
+    mock_rate_limit.rate.remaining = 1000
     github_mock.get_rate_limit.return_value = mock_rate_limit
 
     custom_chapters = CustomChapters(print_empty_chapters=True)
