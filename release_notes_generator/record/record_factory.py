@@ -58,9 +58,9 @@ class RecordFactory:
 
         def register_pull_request(pull: PullRequest, skip_rec: bool) -> None:
             detected_issues = extract_issue_numbers_from_body(pull)
-            logger.debug(f"Detected issues - from body: {detected_issues}")
+            logger.debug("Detected issues - from body: %s", detected_issues)
             detected_issues.update(safe_call(get_issues_for_pr)(pull_number=pull.number))
-            logger.debug(f"Detected issues - final: {detected_issues}")
+            logger.debug("Detected issues - final: %s", detected_issues)
 
             for parent_issue_number in detected_issues:
                 # create an issue record if not present for PR parent
@@ -105,7 +105,7 @@ class RecordFactory:
                 records[pull.number] = PullRequestRecord(pull, skip=skip_record)
                 logger.debug("Created record for PR %d: %s", pull.number, pull.title)
             else:
-                logger.debug(f"Registering pull number: {pull.number}, title : {pull.title}")
+                logger.debug("Registering pull number: %s, title : %s", pull.number, pull.title)
                 register_pull_request(pull, skip_record)
 
         logger.debug("Registering commits to records...")

@@ -240,7 +240,8 @@ class PullRequestRecord(Record):
         Parameters:
             pull (PullRequest): The pull request from which to extract release notes.
             line_marks (list[str]): A list of characters that indicate the start of a release notes section.
-            cr_detection_regex (re.Pattern[str]): A regex pattern to detect the start of the Code Rabbit release notes section.
+            cr_detection_regex (re.Pattern[str]): A regex pattern to detect the start of the Code Rabbit release notes
+             section.
         Returns:
             str: The extracted release notes as a string. If no release notes are found, returns an empty string.
         """
