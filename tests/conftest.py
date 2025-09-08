@@ -129,14 +129,16 @@ def mock_rate_limiter(mocker):
 def mock_issue_open(mocker):
     issue = mocker.Mock(spec=Issue)
     issue.state = IssueRecord.ISSUE_STATE_OPEN
+    issue.number = 122
+    issue.title = "I1 open"
+    issue.state_reason = None
+
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
     label2 = mocker.Mock(spec=MockLabel)
     label2.name = "label2"
-    issue.labels = [label1, label2]
-    issue.number = 122
-    issue.title = "I1 open"
-    issue.state_reason = None
+    issue.get_labels.return_value = [label1, label2]
+
     return issue
 
 
@@ -144,14 +146,16 @@ def mock_issue_open(mocker):
 def mock_issue_open_2(mocker):
     issue = mocker.Mock(spec=Issue)
     issue.state = IssueRecord.ISSUE_STATE_OPEN
+    issue.number = 123
+    issue.title = "I2 open"
+    issue.state_reason = None
+
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
     label2 = mocker.Mock(spec=MockLabel)
     label2.name = "label2"
-    issue.labels = [label1, label2]
-    issue.number = 123
-    issue.title = "I2 open"
-    issue.state_reason = None
+    issue.get_labels.return_value = [label1, label2]
+
     return issue
 
 
@@ -159,13 +163,15 @@ def mock_issue_open_2(mocker):
 def mock_issue_closed(mocker):
     issue = mocker.Mock(spec=Issue)
     issue.state = IssueRecord.ISSUE_STATE_CLOSED
+    issue.title = "Fix the bug"
+    issue.number = 121
+
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
     label2 = mocker.Mock(spec=MockLabel)
     label2.name = "label2"
-    issue.labels = [label1, label2]
-    issue.title = "Fix the bug"
-    issue.number = 121
+    issue.get_labels.return_value = [label1, label2]
+
     return issue
 
 
@@ -173,13 +179,15 @@ def mock_issue_closed(mocker):
 def mock_issue_closed_i1_bug(mocker):
     issue = mocker.Mock(spec=Issue)
     issue.state = IssueRecord.ISSUE_STATE_CLOSED
+    issue.title = "I1+bug"
+    issue.number = 122
+
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
     label2 = mocker.Mock(spec=MockLabel)
     label2.name = "bug"
-    issue.labels = [label1, label2]
-    issue.title = "I1+bug"
-    issue.number = 122
+    issue.get_labels.return_value = [label1, label2]
+
     return issue
 
 
@@ -187,13 +195,15 @@ def mock_issue_closed_i1_bug(mocker):
 def mock_issue_closed_i1_bug_and_skip(mocker):
     issue = mocker.Mock(spec=Issue)
     issue.state = IssueRecord.ISSUE_STATE_CLOSED
+    issue.title = "I1+bug"
+    issue.number = 122
+
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "skip-release-notes"
     label2 = mocker.Mock(spec=MockLabel)
     label2.name = "bug"
-    issue.labels = [label1, label2]
-    issue.title = "I1+bug"
-    issue.number = 122
+    issue.get_labels.return_value = [label1, label2]
+
     return issue
 
 
@@ -204,9 +214,6 @@ def mock_pull_closed(mocker):
     pull.state = PullRequestRecord.PR_STATE_CLOSED
     pull.body = "Release Notes:\n- Fixed bug\n- Improved performance\n+ More nice code\n  * Awesome architecture"
     pull.url = "http://example.com/pull/123"
-    label1 = mocker.Mock(spec=MockLabel)
-    label1.name = "label1"
-    pull.labels = [label1]
     pull.number = 123
     pull.merge_commit_sha = "merge_commit_sha"
     pull.title = "Fixed bug"
@@ -214,6 +221,11 @@ def mock_pull_closed(mocker):
     pull.updated_at = datetime.now()
     pull.merged_at = None
     pull.closed_at = datetime.now()
+
+    label1 = mocker.Mock(spec=MockLabel)
+    label1.name = "label1"
+    pull.get_labels.return_value = [label1]
+
     return pull
 
 
@@ -223,12 +235,6 @@ def mock_pull_closed_with_skip_label(mocker):
     pull.state = PullRequestRecord.PR_STATE_CLOSED
     pull.body = "Release Notes:\n- Fixed bug\n- Improved performance\n+ More nice code\n  * Awesome architecture"
     pull.url = "http://example.com/pull/123"
-    label1 = mocker.Mock(spec=MockLabel)
-    label1.name = "skip-release-notes"
-    pull.labels = [label1]
-    label2 = mocker.Mock(spec=MockLabel)
-    label2.name = "another-skip-label"
-    pull.labels = [label2]
     pull.number = 123
     pull.merge_commit_sha = "merge_commit_sha"
     pull.title = "Fixed bug"
@@ -236,6 +242,13 @@ def mock_pull_closed_with_skip_label(mocker):
     pull.updated_at = datetime.now()
     pull.merged_at = None
     pull.closed_at = datetime.now()
+
+    label1 = mocker.Mock(spec=MockLabel)
+    label1.name = "skip-release-notes"
+    label2 = mocker.Mock(spec=MockLabel)
+    label2.name = "another-skip-label"
+    pull.get_labels.return_value = [label1, label2]
+
     return pull
 
 
@@ -245,9 +258,6 @@ def mock_pull_closed_with_rls_notes_101(mocker):
     pull.state = PullRequestRecord.PR_STATE_CLOSED
     pull.body = "Release Notes:\n- PR 101 1st release note\n- PR 101 2nd release note\n"
     pull.url = "http://example.com/pull/101"
-    label1 = mocker.Mock(spec=MockLabel)
-    label1.name = "label1"
-    pull.labels = [label1]
     pull.number = 101
     pull.merge_commit_sha = "merge_commit_sha"
     pull.title = "Fixed bug"
@@ -255,6 +265,11 @@ def mock_pull_closed_with_rls_notes_101(mocker):
     pull.updated_at = datetime.now()
     pull.merged_at = None
     pull.closed_at = datetime.now()
+
+    label1 = mocker.Mock(spec=MockLabel)
+    label1.name = "label1"
+    pull.get_labels.return_value = [label1]
+
     return pull
 
 
@@ -264,9 +279,6 @@ def mock_pull_closed_with_rls_notes_102(mocker):
     pull.state = PullRequestRecord.PR_STATE_CLOSED
     pull.body = "Release Notes:\n- PR 102 1st release note\n- PR 102 2nd release note\n"
     pull.url = "http://example.com/pull/102"
-    label1 = mocker.Mock(spec=MockLabel)
-    label1.name = "label1"
-    pull.labels = [label1]
     pull.number = 102
     pull.merge_commit_sha = "merge_commit_sha"
     pull.title = "Fixed bug"
@@ -274,6 +286,11 @@ def mock_pull_closed_with_rls_notes_102(mocker):
     pull.updated_at = datetime.now()
     pull.merged_at = None
     pull.closed_at = datetime.now()
+
+    label1 = mocker.Mock(spec=MockLabel)
+    label1.name = "label1"
+    pull.get_labels.return_value = [label1]
+
     return pull
 
 
@@ -283,9 +300,6 @@ def mock_pull_merged_with_rls_notes_101(mocker):
     pull.state = PullRequestRecord.PR_STATE_CLOSED
     pull.body = "Closes #122\n\nRelease Notes:\n- PR 101 1st release note\n- PR 101 2nd release note\n"
     pull.url = "http://example.com/pull/101"
-    label1 = mocker.Mock(spec=MockLabel)
-    label1.name = "label1"
-    pull.labels = [label1]
     pull.number = 101
     pull.merge_commit_sha = "merge_commit_sha"
     pull.title = "Fixed bug"
@@ -293,6 +307,11 @@ def mock_pull_merged_with_rls_notes_101(mocker):
     pull.updated_at = datetime.now()
     pull.merged_at = datetime.now()
     pull.closed_at = datetime.now()
+
+    label1 = mocker.Mock(spec=MockLabel)
+    label1.name = "label1"
+    pull.get_labels.return_value = [label1]
+
     return pull
 
 
@@ -302,9 +321,6 @@ def mock_pull_merged_with_rls_notes_102(mocker):
     pull.state = PullRequestRecord.PR_STATE_CLOSED
     pull.body = "Closes #123\n\nRelease Notes:\n- PR 102 1st release note\n- PR 102 2nd release note\n"
     pull.url = "http://example.com/pull/102"
-    label1 = mocker.Mock(spec=MockLabel)
-    label1.name = "label1"
-    pull.labels = [label1]
     pull.number = 102
     pull.merge_commit_sha = "merge_commit_sha"
     pull.title = "Fixed bug"
@@ -312,6 +328,11 @@ def mock_pull_merged_with_rls_notes_102(mocker):
     pull.updated_at = datetime.now()
     pull.merged_at = datetime.now()
     pull.closed_at = datetime.now()
+
+    label1 = mocker.Mock(spec=MockLabel)
+    label1.name = "label1"
+    pull.get_labels.return_value = [label1]
+
     return pull
 
 
@@ -321,9 +342,6 @@ def mock_pull_merged(mocker):
     pull.state = PullRequestRecord.PR_STATE_CLOSED
     pull.body = "Release Notes:\n- Fixed bug\n- Improved performance\n"
     pull.url = "http://example.com/pull/123"
-    label1 = mocker.Mock(spec=MockLabel)
-    label1.name = "label1"
-    pull.labels = [label1]
     pull.number = 123
     pull.merge_commit_sha = "merge_commit_sha"
     pull.title = "Fixed bug"
@@ -331,6 +349,11 @@ def mock_pull_merged(mocker):
     pull.updated_at = datetime.now()
     pull.merged_at = datetime.now()
     pull.closed_at = datetime.now()
+
+    label1 = mocker.Mock(spec=MockLabel)
+    label1.name = "label1"
+    pull.get_labels.return_value = [label1]
+
     return pull
 
 
@@ -340,9 +363,6 @@ def mock_pull_open(mocker):
     pull.state = PullRequestRecord.PR_STATE_OPEN
     pull.body = "Release Notes:\n- Fixed bug\n- Improved performance\n"
     pull.url = "http://example.com/pull/123"
-    label1 = mocker.Mock(spec=MockLabel)
-    label1.name = "label1"
-    pull.labels = [label1]
     pull.number = 123
     pull.merge_commit_sha = None
     pull.title = "Fix bug"
@@ -350,6 +370,11 @@ def mock_pull_open(mocker):
     pull.updated_at = datetime.now()
     pull.merged_at = None
     pull.closed_at = None
+
+    label1 = mocker.Mock(spec=MockLabel)
+    label1.name = "label1"
+    pull.get_labels.return_value = [label1]
+
     return pull
 
 
@@ -358,11 +383,13 @@ def mock_pull_no_rls_notes(mocker):
     pull = mocker.Mock(spec=PullRequest)
     pull.state = PullRequestRecord.PR_STATE_CLOSED
     pull.body = None
-    label1 = mocker.Mock(spec=MockLabel)
-    label1.name = "label1"
-    pull.labels = [label1]
     pull.number = 123
     pull.title = "Fixed bug"
+
+    label1 = mocker.Mock(spec=MockLabel)
+    label1.name = "label1"
+    pull.get_labels.return_value = [label1]
+
     return pull
 
 

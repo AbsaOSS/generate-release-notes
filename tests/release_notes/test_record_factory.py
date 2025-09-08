@@ -45,7 +45,7 @@ def setup_no_issues_pulls_commits(mocker):
     mock_git_pr1.merged_at = None
     mock_git_pr1.assignee = None
     mock_git_pr1.merge_commit_sha = "abc123"
-    mock_git_pr1.labels = []
+    mock_git_pr1.get_labels.return_value = []
 
     mock_git_pr2 = mocker.Mock(spec=PullRequest)
     mock_git_pr2.id = 102
@@ -59,7 +59,7 @@ def setup_no_issues_pulls_commits(mocker):
     mock_git_pr2.merged_at = None
     mock_git_pr2.assignee = None
     mock_git_pr2.merge_commit_sha = "def456"
-    mock_git_pr2.labels = []
+    mock_git_pr2.get_labels.return_value = []
 
     mock_git_commit1 = mocker.Mock(spec=Commit)
     mock_git_commit1.sha = "abc123"
@@ -83,7 +83,7 @@ def setup_issues_no_pulls_no_commits(mocker):
     mock_git_issue1.body = "Body of issue 1"
     mock_git_issue1.state = "open"
     mock_git_issue1.created_at = datetime.now()
-    mock_git_issue1.labels = []
+    mock_git_issue1.get_labels.return_value = []
 
     mock_git_issue2 = mocker.Mock(spec=Issue)
     mock_git_issue2.id = 2
@@ -92,7 +92,7 @@ def setup_issues_no_pulls_no_commits(mocker):
     mock_git_issue2.body = "Body of issue 2"
     mock_git_issue2.state = "closed"
     mock_git_issue2.created_at = datetime.now()
-    mock_git_issue2.labels = []
+    mock_git_issue2.get_labels.return_value = []
 
     return mock_git_issue1, mock_git_issue2
 
@@ -106,7 +106,7 @@ def setup_issues_pulls_commits(mocker):
     mock_git_issue1.body = "Body of issue 1"
     mock_git_issue1.state = "open"
     mock_git_issue1.created_at = datetime.now()
-    mock_git_issue1.labels = []
+    mock_git_issue1.get_labels.return_value = []
 
     mock_git_issue2 = mocker.Mock(spec=Issue)
     mock_git_issue2.id = 2
@@ -115,7 +115,7 @@ def setup_issues_pulls_commits(mocker):
     mock_git_issue2.body = "Body of issue 2"
     mock_git_issue2.state = "closed"
     mock_git_issue2.created_at = datetime.now()
-    mock_git_issue2.labels = []
+    mock_git_issue2.get_labels.return_value = []
 
     mock_git_pr1 = mocker.Mock(spec=PullRequest)
     mock_git_pr1.id = 101
@@ -129,7 +129,7 @@ def setup_issues_pulls_commits(mocker):
     mock_git_pr1.merged_at = None
     mock_git_pr1.assignee = None
     mock_git_pr1.merge_commit_sha = "abc123"
-    mock_git_pr1.labels = []
+    mock_git_pr1.get_labels.return_value = []
 
     mock_git_pr2 = mocker.Mock(spec=PullRequest)
     mock_git_pr2.id = 102
@@ -143,7 +143,7 @@ def setup_issues_pulls_commits(mocker):
     mock_git_pr2.merged_at = None
     mock_git_pr2.assignee = None
     mock_git_pr2.merge_commit_sha = "def456"
-    mock_git_pr2.labels = []
+    mock_git_pr2.get_labels.return_value = []
 
     mock_git_commit1 = mocker.Mock(spec=Commit)
     mock_git_commit1.sha = "abc123"
@@ -214,10 +214,12 @@ def test_generate_with_issues_and_pulls_and_commits_with_skip_labels(mocker, moc
     mock_github_client = mocker.Mock(spec=Github)
     issue1, issue2, pr1, pr2, commit1, commit2 = setup_issues_pulls_commits(mocker)
 
-    mock_label = mocker.Mock(spec=MockLabel)
+    # Define mock labels
+    mock_label = mocker.Mock()
     mock_label.name = "skip-release-notes"
-    issue1.labels = [mock_label]
-    pr2.labels = [mock_label]
+    issue1.get_labels.return_value = [mock_label]
+    pr2.get_labels.return_value = [mock_label]
+
     commit3 = mocker.Mock(spec=Commit)
     commit3.sha = "ghi789"
 
@@ -377,12 +379,15 @@ def test_generate_with_no_issues_skip_labels(mocker, request):
     mock_github_client = mocker.Mock(spec=Github)
     data = MinedData()
     pr1, pr2, commit1, commit2 = setup_no_issues_pulls_commits(mocker)
-    mock_label1 = mocker.Mock(spec=MockLabel)
+
+    # Define mock labels
+    mock_label1 = mocker.Mock()
     mock_label1.name = "skip-release-notes"
-    pr1.labels = [mock_label1]
-    mock_label2 = mocker.Mock(spec=MockLabel)
+    mock_label2 = mocker.Mock()
     mock_label2.name = "another-skip-label"
-    pr2.labels = [mock_label2]
+    pr1.get_labels.return_value = [mock_label1]
+    pr2.get_labels.return_value = [mock_label2]
+
     data.pull_requests = [pr1, pr2]
     data.commits = [commit1, commit2]
 

@@ -25,7 +25,7 @@ class PullRequestRecord(Record):
         super().__init__(skip=skip)
 
         self._pull_request: PullRequest = pull
-        self._labels = {label.name for label in self._pull_request.labels}
+        self._labels = {label.name for label in self._pull_request.get_labels()}
 
         self._commits: dict[str, Commit] = {}
 

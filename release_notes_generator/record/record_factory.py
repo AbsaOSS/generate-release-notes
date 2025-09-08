@@ -98,7 +98,7 @@ class RecordFactory:
 
         logger.debug("Registering pull requests to records...")
         for pull in data.pull_requests:
-            pull_labels = [label.name for label in pull.labels]
+            pull_labels = [label.name for label in pull.get_labels()]
             skip_record: bool = any(item in pull_labels for item in ActionInputs.get_skip_release_notes_labels())
 
             if not safe_call(get_issues_for_pr)(pull_number=pull.number) and not extract_issue_numbers_from_body(pull):
@@ -158,7 +158,7 @@ class RecordFactory:
         @return: None
         """
         # check for skip labels presence and skip when detected
-        issue_labels = [label.name for label in i.labels]
+        issue_labels = [label.name for label in i.get_labels()]
         skip_record = any(item in issue_labels for item in ActionInputs.get_skip_release_notes_labels())
         records[i.number] = IssueRecord(issue=i, skip=skip_record)
 
