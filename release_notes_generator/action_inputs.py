@@ -64,6 +64,7 @@ class ActionInputs:
     """
 
     REGIME_DEFAULT = "default"
+    REGIME_ISSUE_HIERARCHY = "issue-hierarchy"
 
     _row_format_issue = None
     _row_format_pr = None

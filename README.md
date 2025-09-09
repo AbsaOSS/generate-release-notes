@@ -48,7 +48,7 @@ Generate Release Notes action is dedicated to enhance the quality and organizati
 | `tag-name`                         | The name of the tag for which you want to generate release notes. This should be the same as the tag name used in the release workflow.                                                                                               | Yes      |                                           | 
 | `from-tag-name`                    | The name of the tag from which you want to generate release notes.                                                                                                                                                                    | No | ''                                        |
 | `chapters`                         | An YAML array defining chapters and corresponding labels for categorization. Each chapter should have a title and a label matching your GitHub issues and PRs.                                                                        | Yes |                                           | 
-| `regime`                           | Controls the regime of the action. Options: `default`. See more about the [Regimes](#regimes).                                                                                                                                        | No | `default`                                 |
+| `regime`                           | Controls the regime of the action. Options: `default`, `issue-hierarchy`. See more about the [Regimes](#regimes).                                                                                                                     | No | `default`                                 |
 | `row-format-issue`                 | The format of the row for the issue in the release notes. The format can contain placeholders for the issue `number`, `title`, and issues `pull-requests`. The placeholders are case-sensitive.                                       | No | `"{number} _{title}_ in {pull-requests}"` |  
 | `row-format-pr`                    | The format of the row for the PR in the release notes. The format can contain placeholders for the PR `number`, and `title`. The placeholders are case-sensitive.                                                                     | No | `"{number} _{title}_"`                    |  
 | `row-format-link-pr`               | If defined `true`, the PR row will begin with a `"PR: "` string. Otherwise, no prefix will be added.                                                                                                                                  | No | true                                      | 
@@ -95,6 +95,18 @@ The basic regime for this action.
     - Issue with/without linked Pull Request(s).
     - Pull Request without linked Issue.
     - Direct commits (without Issue and Pull Request).
+
+### Issue Hierarchy regime
+
+The regime is designed to handle issues with hierarchical relationships, such as Epics and their associated child issues. It ensures that release notes are organized in a way that reflects these relationships.
+
+- **Data management**
+  - TBD 
+- **Release notes**
+    - Organized by custom chapters defined by user using labels.
+    - Used these `types of rows`:
+      - TBD
+
 
 ## Outputs
 The output of the action is a markdown string containing the release notes for the specified tag. This string can be used in subsequent steps to publish the release notes to a file, create a GitHub release, or send notifications.
