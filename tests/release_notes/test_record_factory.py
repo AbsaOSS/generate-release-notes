@@ -29,7 +29,6 @@ from release_notes_generator.model.issue_record import IssueRecord
 from release_notes_generator.model.mined_data import MinedData
 from release_notes_generator.model.pull_request_record import PullRequestRecord
 from release_notes_generator.record.record_factory import RecordFactory
-from tests.conftest import MockLabel
 
 
 def setup_no_issues_pulls_commits(mocker):
