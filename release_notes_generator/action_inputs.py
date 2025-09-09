@@ -167,7 +167,7 @@ class ActionInputs:
         """
         Get the regime parameter value from the action inputs.
         """
-        return get_action_input("regime", "default")    # type: ignore[return-value]  # default defined
+        return get_action_input("regime", "default")  # type: ignore[return-value]  # default defined
 
     @staticmethod
     def get_duplicity_scope() -> DuplicityScopeEnum:
