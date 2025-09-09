@@ -27,6 +27,11 @@ class IssueRecord(Record):
         super().__init__(skip=skip)
 
         self._issue: Issue = issue
+        self._issue_type: Optional[str] = None
+
+        if issue is not None and issue.type is not None:
+            self._issue_type = issue.type.name
+
         self._labels = {label.name for label in self._issue.get_labels()}
 
         self._pull_requests: dict[int, PullRequest] = {}
@@ -61,6 +66,15 @@ class IssueRecord(Record):
         Returns: The issue associated with the record.
         """
         return self._issue
+
+    @property
+    def issue_type(self) -> Optional[str]:
+        """
+        Gets the type of the issue.
+        Returns:
+            str: The type of the issue.
+        """
+        return self._issue_type
 
     # methods - override Record methods
 
