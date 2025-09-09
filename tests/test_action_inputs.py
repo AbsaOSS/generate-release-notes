@@ -25,6 +25,7 @@ success_case = {
     "get_tag_name": "tag_name",
     "get_from_tag_name": "from_tag_name",
     "get_chapters": [{"title": "Title", "label": "Label"}],
+    "get_regime": "default",
     "get_duplicity_scope": "custom",
     "get_duplicity_icon": "🔁",
     "get_warnings": True,
@@ -55,6 +56,7 @@ failure_cases = [
     ("get_release_notes_title", "", "Release Notes title must be a non-empty string and have non-zero length."),
     ("get_coderabbit_release_notes_title", "", "CodeRabbit Release Notes title must be a non-empty string and have non-zero length."),
     ("get_coderabbit_summary_ignore_groups", [""], "CodeRabbit summary ignore groups must be a non-empty string and have non-zero length."),
+    ("get_regime", "not_supported", "Regime 'not_supported' is not supported."),
 ]
 
 

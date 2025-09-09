@@ -376,6 +376,8 @@ class ActionInputs:
 
         regime = ActionInputs.get_regime()
         ActionInputs.validate_input(regime, str, "Regime must be a string.", errors)
+        if regime not in [ActionInputs.REGIME_DEFAULT]:
+            errors.append(f"Regime '{regime}' is not supported.")
 
         warnings = ActionInputs.get_warnings()
         ActionInputs.validate_input(warnings, bool, "Warnings must be a boolean.", errors)
