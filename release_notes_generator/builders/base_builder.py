@@ -17,19 +17,14 @@
 """
 This module contains the ReleaseNotesBuilder class which is responsible for building of the release notes.
 """
+from abc import ABCMeta, abstractmethod
 
-import logging
-from itertools import chain
-
+from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.custom_chapters import CustomChapters
 from release_notes_generator.model.record import Record
-from release_notes_generator.model.service_chapters import ServiceChapters
-from release_notes_generator.action_inputs import ActionInputs
-
-logger = logging.getLogger(__name__)
 
 
-class ReleaseNotesBuilder:
+class ReleaseNotesBuilder(metaclass=ABCMeta):
     """
     A class representing the Release Notes Builder.
     The class is responsible for building the release notes based on the records, changelog URL, formatter, and custom
@@ -49,38 +44,10 @@ class ReleaseNotesBuilder:
         self.warnings = ActionInputs.get_warnings()
         self.print_empty_chapters = ActionInputs.get_print_empty_chapters()
 
+    @abstractmethod
     def build(self) -> str:
         """
         Build the release notes based on the records, changelog URL, formatter, and custom chapters.
 
         @return: The release notes as a string.
         """
-        logger.info("Building Release Notes")
-        self.custom_chapters.populate(self.records)
-        user_defined_chapters_str = self.custom_chapters.to_string()
-
-        user_defined_labels_nested = [
-            self.custom_chapters.chapters[key].labels for key in self.custom_chapters.chapters
-        ]
-        user_defined_labels = list(chain.from_iterable(user_defined_labels_nested))
-
-        if self.warnings:
-            service_chapters = ServiceChapters(
-                print_empty_chapters=self.print_empty_chapters,
-                user_defined_labels=user_defined_labels,
-                used_record_numbers=self.custom_chapters.populated_record_numbers,
-            )
-            service_chapters.populate(self.records)
-
-            service_chapters_str = service_chapters.to_string()
-            if len(service_chapters_str) > 0:
-                release_notes = (
-                    f"""{user_defined_chapters_str}\n\n{service_chapters_str}\n\n"""
-                    f"""#### Full Changelog\n{self.changelog_url}\n"""
-                )
-            else:
-                release_notes = f"""{user_defined_chapters_str}\n\n#### Full Changelog\n{self.changelog_url}\n"""
-        else:
-            release_notes = f"""{user_defined_chapters_str}\n\n#### Full Changelog\n{self.changelog_url}\n"""
-
-        return release_notes.lstrip()

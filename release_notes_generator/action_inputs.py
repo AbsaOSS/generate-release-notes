@@ -63,6 +63,8 @@ class ActionInputs:
     A class representing the inputs provided to the GH action.
     """
 
+    REGIME_DEFAULT = "default"
+
     _row_format_issue = None
     _row_format_pr = None
     _row_format_link_pr = None
@@ -159,6 +161,13 @@ class ActionInputs:
             return []
 
         return chapters
+
+    @staticmethod
+    def get_regime() -> str:
+        """
+        Get the regime parameter value from the action inputs.
+        """
+        return get_action_input("regime", "default")    # type: ignore[return-value]  # default defined
 
     @staticmethod
     def get_duplicity_scope() -> DuplicityScopeEnum:
@@ -365,6 +374,9 @@ class ActionInputs:
         if not isinstance(duplicity_icon, str) or not duplicity_icon.strip() or len(duplicity_icon) != 1:
             errors.append("Duplicity icon must be a non-empty string and have a length of 1.")
 
+        regime = ActionInputs.get_regime()
+        ActionInputs.validate_input(regime, str, "Regime must be a string.", errors)
+
         warnings = ActionInputs.get_warnings()
         ActionInputs.validate_input(warnings, bool, "Warnings must be a boolean.", errors)
 
@@ -421,6 +433,7 @@ class ActionInputs:
         logger.debug("Tag name: %s", tag_name)
         logger.debug("From tag name: %s", from_tag_name)
         logger.debug("Chapters: %s", chapters)
+        logger.debug("Regime: %s", regime)
         logger.debug("Published at: %s", published_at)
         logger.debug("Skip release notes labels: %s", ActionInputs.get_skip_release_notes_labels())
         logger.debug("Verbose logging: %s", verbose)
