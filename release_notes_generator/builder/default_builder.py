@@ -21,7 +21,7 @@ This module contains the ReleaseNotesBuilder class which is responsible for buil
 import logging
 from itertools import chain
 
-from release_notes_generator.builders.base_builder import ReleaseNotesBuilder
+from release_notes_generator.builder.base_builder import ReleaseNotesBuilder
 from release_notes_generator.model.service_chapters import ServiceChapters
 
 logger = logging.getLogger(__name__)

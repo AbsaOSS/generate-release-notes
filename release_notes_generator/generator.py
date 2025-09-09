@@ -28,8 +28,8 @@ from github import Github
 from release_notes_generator.filter import FilterByRelease
 from release_notes_generator.miner import DataMiner
 from release_notes_generator.action_inputs import ActionInputs
-from release_notes_generator.builders.base_builder import ReleaseNotesBuilder
-from release_notes_generator.builders.default_builder import DefaultReleaseNotesBuilder
+from release_notes_generator.builder.base_builder import ReleaseNotesBuilder
+from release_notes_generator.builder.default_builder import DefaultReleaseNotesBuilder
 from release_notes_generator.model.custom_chapters import CustomChapters
 from release_notes_generator.model.record import Record
 from release_notes_generator.record.default_record_factory import DefaultRecordFactory
