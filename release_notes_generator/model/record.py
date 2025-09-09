@@ -101,14 +101,16 @@ class Record(metaclass=ABCMeta):
             list[str]: A list of authors associated with the record.
         """
 
-    # abstract methods
-
-    @abstractmethod
+    # to be overridden by subclasses and called via super() as the first line
     def to_chapter_row(self) -> str:
         """
         Converts the record to a string row in a chapter.
         @return: The record as a row string.
         """
+        self.added_into_chapters()
+        return ""
+
+    # abstract methods
 
     @abstractmethod
     def get_rls_notes(self, line_marks: Optional[list[str]] = None) -> str:

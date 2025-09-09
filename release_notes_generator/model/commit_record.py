@@ -52,7 +52,7 @@ class CommitRecord(Record):
     # methods - override Record methods
 
     def to_chapter_row(self) -> str:
-        self.added_into_chapters()
+        super().to_chapter_row()
         row_prefix = f"{ActionInputs.get_duplicity_icon()} " if self.present_in_chapters() > 1 else ""
 
         # collecting values for formatting

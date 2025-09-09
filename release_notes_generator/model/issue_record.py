@@ -79,7 +79,7 @@ class IssueRecord(Record):
     # methods - override Record methods
 
     def to_chapter_row(self) -> str:
-        self.added_into_chapters()
+        super().to_chapter_row()
         row_prefix = f"{ActionInputs.get_duplicity_icon()} " if self.present_in_chapters() > 1 else ""
         format_values: dict[str, Any] = {}
 
@@ -114,6 +114,10 @@ class IssueRecord(Record):
 
         # Code Rabbit detection regex
         cr_active: bool = ActionInputs.is_coderabbit_support_active()
+
+        # Get release notes from Issue
+        if self._issue.body and detection_regex.search(self._issue.body):
+            release_notes += self._get_rls_notes_default(self._issue, line_marks, detection_regex)
 
         # Iterate over all PRs
         for pull in self._pull_requests.values():
@@ -213,21 +217,25 @@ class IssueRecord(Record):
 
         return res
 
-    def _get_rls_notes_default(self, pull: PullRequest, line_marks: list[str], detection_regex: re.Pattern[str]) -> str:
+    def _get_rls_notes_default(
+        self, record: Issue | PullRequest, line_marks: list[str], detection_regex: re.Pattern[str]
+    ) -> str:
         """
         Extracts release notes from the pull request body based on the provided line marks and detection regex.
         Parameters:
-            pull (PullRequest): The pull request from which to extract release notes.
+            record (Issue or PullRequest): The issue or pull request from which to extract release notes.
             line_marks (list[str]): A list of characters that indicate the start of a release notes section.
             detection_regex (re.Pattern[str]): A regex pattern to detect the start of the release notes section.
         Returns:
             str: The extracted release notes as a string. If no release notes are found, returns an empty string.
         """
         # TODO - this code will be changes soon, there is wish from project to manage different release notes
-        if not pull.body:
-            return ""
+        match record.body:
+            case None | "":
+                return ""
+            case str() as body:
+                lines = body.splitlines()
 
-        lines = pull.body.splitlines()
         release_notes_lines = []
 
         found_section = False
