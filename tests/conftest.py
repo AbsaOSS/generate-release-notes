@@ -129,6 +129,7 @@ def mock_issue_open(mocker):
     issue.number = 122
     issue.title = "I1 open"
     issue.state_reason = None
+    issue.body = "I1 open"
 
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
@@ -146,6 +147,7 @@ def mock_issue_open_2(mocker):
     issue.number = 123
     issue.title = "I2 open"
     issue.state_reason = None
+    issue.body = "I2 open"
 
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
@@ -162,6 +164,7 @@ def mock_issue_closed(mocker):
     issue.state = IssueRecord.ISSUE_STATE_CLOSED
     issue.title = "Fix the bug"
     issue.number = 121
+    issue.body = "Some issue body text"
 
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
@@ -178,6 +181,7 @@ def mock_issue_closed_i1_bug(mocker):
     issue.state = IssueRecord.ISSUE_STATE_CLOSED
     issue.title = "I1+bug"
     issue.number = 122
+    issue.body = "Some issue body text\nRelease Notes:\n- Fixed bug\n- Improved performance\n+ More nice code\n  * Awesome architecture"
 
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"

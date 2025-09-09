@@ -140,6 +140,10 @@ RELEASE_NOTES_NO_DATA_NO_EMPTY_CHAPTERS = RELEASE_NOTES_NO_DATA_NO_WARNING_NO_EM
 
 RELEASE_NOTES_DATA_CUSTOM_CHAPTERS_ONE_LABEL = """### Chapter 1 🛠
 - #122 _I1+bug_ in #101, #102
+  - Fixed bug
+  - Improved performance
+  + More nice code
+    * Awesome architecture
   - PR 101 1st release note
   - PR 101 2nd release note
   - PR 102 1st release note
@@ -151,6 +155,10 @@ http://example.com/changelog
 
 RELEASE_NOTES_DATA_CUSTOM_CHAPTERS_MORE_LABELS_DUPLICITY_REDUCTION_ON = """### Chapter 1 🛠
 - #122 _I1+bug-enhancement_ in #101, #102
+  - Fixed bug
+  - Improved performance
+  + More nice code
+    * Awesome architecture
   - PR 101 1st release note
   - PR 101 2nd release note
   - PR 102 1st release note
@@ -237,6 +245,10 @@ http://example.com/changelog
 
 RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_PR_WITHOUT_USER_LABELS = """### Closed Issues without User Defined Labels ⚠️
 - #122 _I1_ in #101, #102
+  - Fixed bug
+  - Improved performance
+  + More nice code
+    * Awesome architecture
   - PR 101 1st release note
   - PR 101 2nd release note
   - PR 102 1st release note
@@ -291,6 +303,10 @@ RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_MERGED_PRS_WITH_USER_LABELS_WITH_SKIP_LABEL
 
 RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_MERGED_PRS_WITH_USER_LABELS = """### Chapter 1 🛠
 - #122 _I1+bug_ in #123
+  - Fixed bug
+  - Improved performance
+  + More nice code
+    * Awesome architecture
   - Fixed bug
   - Improved performance
 
