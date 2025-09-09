@@ -28,9 +28,11 @@ from github import Github
 from release_notes_generator.filter import FilterByRelease
 from release_notes_generator.miner import DataMiner
 from release_notes_generator.action_inputs import ActionInputs
-from release_notes_generator.builder import ReleaseNotesBuilder
+from release_notes_generator.builder.base_builder import ReleaseNotesBuilder
+from release_notes_generator.builder.default_builder import DefaultReleaseNotesBuilder
 from release_notes_generator.model.custom_chapters import CustomChapters
 from release_notes_generator.model.record import Record
+from release_notes_generator.record.default_record_factory import DefaultRecordFactory
 from release_notes_generator.record.record_factory import RecordFactory
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
 from release_notes_generator.utils.utils import get_change_url
@@ -90,14 +92,25 @@ class ReleaseNotesGenerator:
 
         assert data_filtered_by_release.repository is not None, "Repository must not be None"
 
-        rls_notes_records: dict[int | str, Record] = RecordFactory.generate(
+        # get record factory instance in dependency on selected regime
+        record_factory: RecordFactory = DefaultRecordFactory()
+        # This is a placeholder for future regimes - will be added in following issue
+        # match ActionInputs.get_regime():
+        #     case "TODO":
+        #         record_factory = TBD
+
+        rls_notes_records: dict[int | str, Record] = record_factory.generate(
             github=self._github_instance, data=data_filtered_by_release
         )
 
-        release_notes_builder = ReleaseNotesBuilder(
-            records=rls_notes_records,
-            custom_chapters=self.custom_chapters,
+        return self._get_rls_notes_builder(rls_notes_records, changelog_url, self.custom_chapters).build()
+
+    def _get_rls_notes_builder(
+        self, records: dict[int | str, Record], changelog_url: str, custom_chapters: CustomChapters
+    ) -> ReleaseNotesBuilder:
+
+        return DefaultReleaseNotesBuilder(
+            records=records,
+            custom_chapters=custom_chapters,
             changelog_url=changelog_url,
         )
-
-        return release_notes_builder.build()
