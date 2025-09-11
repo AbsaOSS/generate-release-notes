@@ -20,10 +20,9 @@ from datetime import datetime, timedelta
 from github import Github
 
 from release_notes_generator.generator import ReleaseNotesGenerator
-from release_notes_generator.model.custom_chapters import CustomChapters
+from release_notes_generator.chapters.custom_chapters import CustomChapters
 from release_notes_generator.utils.constants import ROW_FORMAT_ISSUE
 
-from release_notes_generator.filter import FilterByRelease
 
 # generate_release_notes tests
 

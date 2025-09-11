@@ -23,11 +23,11 @@ class IssueRecord(Record):
     ISSUE_STATE_OPEN = "open"
     ISSUE_STATE_ALL = "all"
 
-    def __init__(self, issue: Issue, skip: bool = False):
+    def __init__(self, issue: Issue, issue_type: Optional[str] = None, skip: bool = False):
         super().__init__(skip=skip)
 
         self._issue: Issue = issue
-        self._issue_type: Optional[str] = None
+        self._issue_type: Optional[str] = issue_type
 
         if issue is not None and issue.type is not None:
             self._issue_type = issue.type.name

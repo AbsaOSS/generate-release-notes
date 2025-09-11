@@ -19,6 +19,10 @@
 import logging
 from copy import deepcopy
 from typing import Optional
+
+from github.Issue import Issue
+
+from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.mined_data import MinedData
 
 logger = logging.getLogger(__name__)
@@ -47,17 +51,18 @@ class FilterByRelease(Filter):
     def __init__(self, release_version: Optional[str] = None):
         self.release_version = release_version
 
-    def filter(self, data: MinedData) -> MinedData:
+    def filter(self, data: MinedData, keep_open_issues: bool = True) -> MinedData:
         """
         Filters issues, pull requests, and commits based on the latest release date.
         If the release is not None, it filters out closed issues, merged pull requests, and commits
         that occurred before the release date.
 
-        @Parameters:
-        - data (MinedData): The mined data containing issues, pull requests, commits, and release information.
+        Parameters:
+            data (MinedData): The mined data containing issues, pull requests, commits, and release information.
+            keep_open_issues (bool): If True, open issues are retained regardless of the release date.
 
-        @Returns:
-        - MinedData: The filtered mined data with issues, pull requests, and commits reduced based on the release date.
+        Returns:
+            MinedData: The filtered mined data.
         """
         md = MinedData()
         md.repository = data.repository
@@ -67,10 +72,7 @@ class FilterByRelease(Filter):
         if data.release is not None:
             logger.info("Starting issue, prs and commit reduction by the latest release since time.")
 
-            # filter out closed Issues before the date
-            issues_list = list(
-                filter(lambda issue: issue.closed_at is not None and issue.closed_at >= data.since, data.issues)
-            )
+            issues_list = self._filter_issues(data)
             logger.debug("Count of issues reduced from %d to %d", len(data.issues), len(issues_list))
 
             # filter out merged PRs and commits before the date
@@ -110,3 +112,52 @@ class FilterByRelease(Filter):
             md.commits = deepcopy(data.commits)
 
         return md
+
+    def _filter_issues(self, data: MinedData) -> list:
+        """
+        Filter issues based on the selected regime.
+
+        @param data: The mined data containing issues.
+        @return: The filtered list of issues.
+        """
+        # Currently, only the default regime is implemented.
+        if ActionInputs.get_regime() == ActionInputs.REGIME_ISSUE_HIERARCHY:
+            return self._filter_issues_issue_hierarchy(data)
+
+        logger.debug("Used default issue filtering regime.")
+        return self._filter_issues_default(data)
+
+    def _filter_issues_default(self, data: MinedData) -> list:
+        """
+        Default filtering for issues: filter out closed issues before the release date.
+
+        @param data: The mined data containing issues.
+        @return: The filtered list of issues.
+        """
+        return list(
+            filter(
+                lambda issue: (issue.closed_at is not None and issue.closed_at >= data.since, data.issues)
+            )
+        )
+
+    def _filter_issues_issue_hierarchy(self, data: MinedData) -> list:
+        """
+        Filtering for issues in the 'issue-hierarchy' regime:
+        - filter out closed issues before the release date
+        - keep open issues
+        - keep issues with types defined in `issue-type-weights`
+
+        @param data: The mined data containing issues.
+        @return: The filtered list of issues.
+        """
+        issue_types = ActionInputs.get_issue_type_weights()
+        return list(
+            filter(
+                lambda issue: (
+                    (issue.closed_at is not None and issue.closed_at >= data.since)
+                    or (issue.state == "open")
+                    or (issue.issue_type in issue_types)
+                ),
+                data.issues,
+            )
+        )

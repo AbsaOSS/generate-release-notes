@@ -48,7 +48,7 @@ from release_notes_generator.utils.constants import (
     CODERABBIT_SUPPORT_ACTIVE,
     CODERABBIT_RELEASE_NOTES_TITLE,
     CODERABBIT_RELEASE_NOTE_TITLE_DEFAULT,
-    CODERABBIT_SUMMARY_IGNORE_GROUPS,
+    CODERABBIT_SUMMARY_IGNORE_GROUPS, ROW_FORMAT_HIERARCHY_ISSUE,
 )
 from release_notes_generator.utils.enums import DuplicityScopeEnum
 from release_notes_generator.utils.gh_action import get_action_input
@@ -66,6 +66,7 @@ class ActionInputs:
     REGIME_DEFAULT = "default"
     REGIME_ISSUE_HIERARCHY = "issue-hierarchy"
 
+    _row_format_hierarchy_issue = None
     _row_format_issue = None
     _row_format_pr = None
     _row_format_link_pr = None
@@ -169,6 +170,14 @@ class ActionInputs:
         Get the regime parameter value from the action inputs.
         """
         return get_action_input("regime", "default")  # type: ignore[return-value]  # default defined
+
+    @staticmethod
+    def get_issue_type_weights() -> list[str]:
+        """
+        Get the issue type weights from the action inputs.
+        """
+        user_input = get_action_input("issue-type-weights", "Epic, Feature")
+        return [item.strip() for item in user_input.split(",")] if user_input else []
 
     @staticmethod
     def get_duplicity_scope() -> DuplicityScopeEnum:
@@ -298,6 +307,22 @@ class ActionInputs:
         return True
 
     @staticmethod
+    def get_row_format_hierarchy_issue() -> str:
+        """
+        Get the hierarchy issue row format for the release notes.
+        """
+        if ActionInputs._row_format_hierarchy_issue is None:
+            # TODO - introduce own list of valid keywords
+            ActionInputs._row_format_hierarchy_issue = ActionInputs._detect_row_format_invalid_keywords(
+                get_action_input(
+                    ROW_FORMAT_HIERARCHY_ISSUE, "{type}: _{title}_ {number} "
+                ).strip(),  # type: ignore[union-attr]
+                clean=True,
+                # mypy: string is returned as default
+            )
+        return ActionInputs._row_format_issue
+
+    @staticmethod
     def get_row_format_issue() -> str:
         """
         Get the issue row format for the release notes.
@@ -377,7 +402,7 @@ class ActionInputs:
 
         regime = ActionInputs.get_regime()
         ActionInputs.validate_input(regime, str, "Regime must be a string.", errors)
-        if regime not in [ActionInputs.REGIME_DEFAULT]:
+        if regime not in [ActionInputs.REGIME_DEFAULT,ActionInputs.REGIME_ISSUE_HIERARCHY]:
             errors.append(f"Regime '{regime}' is not supported.")
 
         warnings = ActionInputs.get_warnings()

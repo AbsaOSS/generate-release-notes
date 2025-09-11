@@ -13,9 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-from release_notes_generator.model.custom_chapters import CustomChapters
-from release_notes_generator.builder.default_builder import DefaultReleaseNotesBuilder
+from release_notes_generator.action_inputs import ActionInputs
+from release_notes_generator.builder.builder import ReleaseNotesBuilder
+from release_notes_generator.chapters.custom_chapters import CustomChapters
 
 # pylint: disable=pointless-string-statement
 """
@@ -146,6 +146,24 @@ RELEASE_NOTES_DATA_CUSTOM_CHAPTERS_ONE_LABEL = """### Chapter 1 🛠
   - PR 101 2nd release note
   - PR 102 1st release note
   - PR 102 2nd release note
+
+#### Full Changelog
+http://example.com/changelog
+"""
+
+RELEASE_NOTES_DATA_CUSTOM_CHAPTERS_ONE_LABEL_HIERARCHY = """### Chapter 1 🛠
+ - #122 _I1+bug_ in #123
+   - Fixed bug
+   - Improved performance
+   + More nice code
+     * Awesome architecture
+   - Fixed bug
+   - Improved performance
+
+
+
+### New Epics
+ - 🔔 _HI200 open_ #200
 
 #### Full Changelog
 http://example.com/changelog
@@ -938,5 +956,32 @@ def test_build_closed_pr_service_chapter_without_issue_with_skip_label_on_pr(
     )
 
     actual_release_notes = builder.build()
+
+    assert expected_release_notes == actual_release_notes
+
+
+def test_build_hierarchy_issue_with_one_custom_label(
+        custom_chapters_not_print_empty_chapters,
+        record_with_two_open_hierarchy_issues_one_closed_issue_two_closed_pulls,
+        record_with_issue_closed_one_pull_merged, mocker
+):
+    expected_release_notes = RELEASE_NOTES_DATA_CUSTOM_CHAPTERS_ONE_LABEL_HIERARCHY
+    rec_1 = record_with_two_open_hierarchy_issues_one_closed_issue_two_closed_pulls
+    rec_2 = record_with_issue_closed_one_pull_merged
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=False)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_regime", return_value=ActionInputs.REGIME_ISSUE_HIERARCHY)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_row_format_hierarchy_issue", return_value="{type}: _{title}_ {number}")
+
+    builder = ReleaseNotesBuilder(
+        records={rec_1.record_id: rec_1, rec_2.record_id: rec_2},
+        changelog_url=DEFAULT_CHANGELOG_URL,
+        custom_chapters=custom_chapters_not_print_empty_chapters,
+    )
+
+    actual_release_notes = builder.build()
+
+    print("XXX - actual release notes")
+    print(actual_release_notes)
+    print("XXX")
 
     assert expected_release_notes == actual_release_notes

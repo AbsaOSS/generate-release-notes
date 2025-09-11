@@ -15,30 +15,32 @@
 #
 
 """
-This module contains the RecordFactory class which is responsible for generating records for release notes.
+This module contains the DefaultRecordFactory class which is responsible for generating
 """
-from abc import ABCMeta, abstractmethod
+import abc
+import logging
 
 from github import Github
-
 from release_notes_generator.model.mined_data import MinedData
 from release_notes_generator.model.record import Record
 
+logger = logging.getLogger(__name__)
 
-class RecordFactory(metaclass=ABCMeta):
+
+class RecordFactory(metaclass=abc.ABCMeta):
     """
     A class used to generate records for release notes.
     """
 
-    @abstractmethod
+    @abc.abstractmethod
     def generate(self, github: Github, data: MinedData) -> dict[int | str, Record]:
         """
         Generate records for release notes.
-
         Parameters:
-            github (Github): GitHub instance.
+            github (GitHub): The GitHub instance to generate records for.
             data (MinedData): The MinedData instance containing repository, issues, pull requests, and commits.
-
         Returns:
             dict[int|str, Record]: A dictionary of records where the key is the issue or pull request number.
         """
+
+    # TODO - do review of children and decide if more useful method could be defined here for inheritation

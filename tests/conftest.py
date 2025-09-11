@@ -14,26 +14,23 @@
 # limitations under the License.
 #
 
-import time
-
 from datetime import datetime, timedelta
 
 import pytest
 
-from github import Github
-from github.Commit import Commit
+from github import Github, IssueType
 from github.GitRelease import GitRelease
 from github.Issue import Issue
 from github.PullRequest import PullRequest
 from github.Rate import Rate
-from github.RateLimitOverview import RateLimitOverview
 from github.Repository import Repository
 
+from release_notes_generator.model.hierarchy_issue_record import HierarchyIssueRecord
 from release_notes_generator.model.issue_record import IssueRecord
 from release_notes_generator.model.pull_request_record import PullRequestRecord
-from release_notes_generator.model.service_chapters import ServiceChapters
+from release_notes_generator.chapters.service_chapters import ServiceChapters
 from release_notes_generator.model.chapter import Chapter
-from release_notes_generator.model.custom_chapters import CustomChapters
+from release_notes_generator.chapters.custom_chapters import CustomChapters
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
 
 
@@ -62,6 +59,9 @@ def custom_chapters_not_print_empty_chapters():
     chapters.chapters = {
         "Chapter 1": Chapter("Chapter 1 🛠", ["bug", "enhancement"]),
         "Chapter 2": Chapter("Chapter 2 🎉", ["feature"]),
+        "New Epics": Chapter("New Epics", []),
+        "Silent Live Epics": Chapter("Silent Live Epics", []),
+        "Closed Epics": Chapter("Closed Epics", []),
     }
     chapters.print_empty_chapters = False
     return chapters
@@ -201,6 +201,96 @@ def mock_issue_closed_i1_bug_and_skip(mocker):
 
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "skip-release-notes"
+    label2 = mocker.Mock(spec=MockLabel)
+    label2.name = "bug"
+    issue.get_labels.return_value = [label1, label2]
+
+    return issue
+
+
+@pytest.fixture
+def mock_open_hierarchy_issue_epic(mocker):
+    issue_type = mocker.Mock(spec=IssueType)
+    issue_type.name = "Epic"
+
+    issue = mocker.Mock(spec=Issue)
+    issue.state = IssueRecord.ISSUE_STATE_OPEN
+    issue.number = 200
+    issue.title = "HI200 open"
+    issue.state_reason = None
+    issue.body = "I200 open/nRelease Notes:\n- Epic level release note"
+    issue.type = issue_type
+    issue.created_at = datetime.now()
+
+    label1 = mocker.Mock(spec=MockLabel)
+    label1.name = "label1"
+    label2 = mocker.Mock(spec=MockLabel)
+    label2.name = "label2"
+    issue.get_labels.return_value = [label1, label2]
+
+    return issue
+
+
+@pytest.fixture
+def mock_open_hierarchy_issue_feature(mocker):
+    issue_type = mocker.Mock(spec=IssueType)
+    issue_type.name = "Feature"
+
+    issue = mocker.Mock(spec=Issue)
+    issue.state = IssueRecord.ISSUE_STATE_OPEN
+    issue.number = 201
+    issue.title = "HI201 open"
+    issue.state_reason = None
+    issue.body = "HI201 open/nRelease Notes:\n- Feature level release note"
+    issue.type = issue_type
+    issue.created_at = datetime.now()
+
+    label1 = mocker.Mock(spec=MockLabel)
+    label1.name = "label1"
+    label2 = mocker.Mock(spec=MockLabel)
+    label2.name = "label2"
+    issue.get_labels.return_value = [label1, label2]
+
+    return issue
+
+
+@pytest.fixture
+def mock_closed_issue_type_task(mocker):
+    issue_type = mocker.Mock(spec=IssueType)
+    issue_type.name = "Task"
+
+    issue = mocker.Mock(spec=Issue)
+    issue.state = IssueRecord.ISSUE_STATE_CLOSED
+    issue.title = "Do this task"
+    issue.number = 202
+    issue.body = "Some issue body text"
+    issue.type = issue_type
+    issue.created_at = datetime.now()
+
+    label1 = mocker.Mock(spec=MockLabel)
+    label1.name = "label1"
+    label2 = mocker.Mock(spec=MockLabel)
+    label2.name = "label2"
+    issue.get_labels.return_value = [label1, label2]
+
+    return issue
+
+
+@pytest.fixture
+def mock_closed_issue_type_bug(mocker):
+    issue_type = mocker.Mock(spec=IssueType)
+    issue_type.name = "Bug"
+
+    issue = mocker.Mock(spec=Issue)
+    issue.state = IssueRecord.ISSUE_STATE_CLOSED
+    issue.title = "Fix the bug"
+    issue.number = 203
+    issue.body = "Some issue body text\nRelease Notes:\n- Fixed bug\n- Improved performance\n+ More nice code\n  * Awesome architecture"
+    issue.type = issue_type
+    issue.created_at = datetime.now()
+
+    label1 = mocker.Mock(spec=MockLabel)
+    label1.name = "label1"
     label2 = mocker.Mock(spec=MockLabel)
     label2.name = "bug"
     issue.get_labels.return_value = [label1, label2]
@@ -439,6 +529,22 @@ def record_with_issue_closed_two_pulls(request):
     rec = IssueRecord(issue=request.getfixturevalue("mock_issue_closed_i1_bug"))        # TODO - renamed from mock_issue_closed_i2_bug
     rec.register_pull_request(request.getfixturevalue("mock_pull_closed_with_rls_notes_101"))
     rec.register_pull_request(request.getfixturevalue("mock_pull_closed_with_rls_notes_102"))
+    return rec
+
+@pytest.fixture
+def record_with_two_open_hierarchy_issues_one_closed_issue_two_closed_pulls(request):
+    rec = HierarchyIssueRecord(issue=request.getfixturevalue("mock_open_hierarchy_issue_epic"))     # nr:200
+    rec_hierarchy_issue = rec.register_hierarchy_issue(request.getfixturevalue("mock_open_hierarchy_issue_feature"))    # nr:201
+
+    issue_task = request.getfixturevalue("mock_closed_issue_type_task") # nr:202
+    rec_issue_task = rec_hierarchy_issue.register_issue(issue_task)
+    issue_bug = request.getfixturevalue("mock_closed_issue_type_bug")   # nr:203
+    rec_issue_bug = rec_hierarchy_issue.register_issue(issue_bug)
+
+    # not description keyword used - registration simulate API way (relation)
+    rec_issue_task.register_pull_request(request.getfixturevalue("mock_pull_closed_with_rls_notes_101"))
+    rec_issue_bug.register_pull_request(request.getfixturevalue("mock_pull_closed_with_rls_notes_102"))
+
     return rec
 
 

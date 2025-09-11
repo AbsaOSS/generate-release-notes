@@ -21,7 +21,7 @@ This module contains the ServiceChapters class which is responsible for represen
 from typing import Optional, cast
 
 from release_notes_generator.action_inputs import ActionInputs
-from release_notes_generator.model.base_chapters import BaseChapters
+from release_notes_generator.chapters.base_chapters import BaseChapters
 from release_notes_generator.model.chapter import Chapter
 from release_notes_generator.model.commit_record import CommitRecord
 from release_notes_generator.model.issue_record import IssueRecord
