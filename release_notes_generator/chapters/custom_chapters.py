@@ -32,6 +32,7 @@ from release_notes_generator.utils.enums import DuplicityScopeEnum
 
 logger = logging.getLogger(__name__)
 
+
 class CustomChapters(BaseChapters):
     """
     A class used to represent the custom chapters in the release notes.
@@ -61,7 +62,11 @@ class CustomChapters(BaseChapters):
                 ):
                     continue
 
-                if hierarchy_active and isinstance(records[record_id], HierarchyIssueRecord) and not records[record_id].is_present_in_chapters:
+                if (
+                    hierarchy_active
+                    and isinstance(records[record_id], HierarchyIssueRecord)
+                    and not records[record_id].is_present_in_chapters
+                ):
                     self._populate_hierarchy_issue(cast(HierarchyIssueRecord, records[record_id]))
                     continue
 

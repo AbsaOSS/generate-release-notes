@@ -43,12 +43,13 @@ from release_notes_generator.utils.constants import (
     SKIP_RELEASE_NOTES_LABELS,
     RELEASE_NOTES_TITLE,
     RELEASE_NOTE_TITLE_DEFAULT,
-    SUPPORTED_ROW_FORMAT_KEYS,
     FROM_TAG_NAME,
     CODERABBIT_SUPPORT_ACTIVE,
     CODERABBIT_RELEASE_NOTES_TITLE,
     CODERABBIT_RELEASE_NOTE_TITLE_DEFAULT,
-    CODERABBIT_SUMMARY_IGNORE_GROUPS, ROW_FORMAT_HIERARCHY_ISSUE,
+    CODERABBIT_SUMMARY_IGNORE_GROUPS,
+    ROW_FORMAT_HIERARCHY_ISSUE, SUPPORTED_ROW_FORMAT_KEYS_ISSUE, SUPPORTED_ROW_FORMAT_KEYS_PULL_REQUEST,
+    SUPPORTED_ROW_FORMAT_KEYS_HIERARCHY_ISSUE,
 )
 from release_notes_generator.utils.enums import DuplicityScopeEnum
 from release_notes_generator.utils.gh_action import get_action_input
@@ -65,6 +66,10 @@ class ActionInputs:
 
     REGIME_DEFAULT = "default"
     REGIME_ISSUE_HIERARCHY = "issue-hierarchy"
+
+    ROW_TYPE_ISSUE = "Issue"
+    ROW_TYPE_PR = "PR"
+    ROW_TYPE_HIERARCHY_ISSUE = "HierarchyIssue"
 
     _row_format_hierarchy_issue = None
     _row_format_issue = None
@@ -312,15 +317,14 @@ class ActionInputs:
         Get the hierarchy issue row format for the release notes.
         """
         if ActionInputs._row_format_hierarchy_issue is None:
-            # TODO - introduce own list of valid keywords
             ActionInputs._row_format_hierarchy_issue = ActionInputs._detect_row_format_invalid_keywords(
                 get_action_input(
                     ROW_FORMAT_HIERARCHY_ISSUE, "{type}: _{title}_ {number} "
                 ).strip(),  # type: ignore[union-attr]
+                row_type=ActionInputs.ROW_TYPE_HIERARCHY_ISSUE,
                 clean=True,
-                # mypy: string is returned as default
             )
-        return ActionInputs._row_format_issue
+        return ActionInputs._row_format_hierarchy_issue
 
     @staticmethod
     def get_row_format_issue() -> str:
@@ -345,6 +349,7 @@ class ActionInputs:
         if ActionInputs._row_format_pr is None:
             ActionInputs._row_format_pr = ActionInputs._detect_row_format_invalid_keywords(
                 get_action_input(ROW_FORMAT_PR, "{number} _{title}_").strip(),  # type: ignore[union-attr]
+                row_type=ActionInputs.ROW_TYPE_PR,
                 clean=True,
                 # mypy: string is returned as default
             )
@@ -402,7 +407,7 @@ class ActionInputs:
 
         regime = ActionInputs.get_regime()
         ActionInputs.validate_input(regime, str, "Regime must be a string.", errors)
-        if regime not in [ActionInputs.REGIME_DEFAULT,ActionInputs.REGIME_ISSUE_HIERARCHY]:
+        if regime not in [ActionInputs.REGIME_DEFAULT, ActionInputs.REGIME_ISSUE_HIERARCHY]:
             errors.append(f"Regime '{regime}' is not supported.")
 
         warnings = ActionInputs.get_warnings()
@@ -482,7 +487,17 @@ class ActionInputs:
         @return: If clean is True, the cleaned row format. Otherwise, the original row format.
         """
         keywords_in_braces = re.findall(r"\{(.*?)\}", row_format)
-        invalid_keywords = [keyword for keyword in keywords_in_braces if keyword not in SUPPORTED_ROW_FORMAT_KEYS]
+
+        supported_row_format_keys = []
+        match row_type:
+            case ActionInputs.ROW_TYPE_ISSUE:
+                supported_row_format_keys = SUPPORTED_ROW_FORMAT_KEYS_ISSUE
+            case ActionInputs.ROW_TYPE_PR:
+                supported_row_format_keys = SUPPORTED_ROW_FORMAT_KEYS_PULL_REQUEST
+            case ActionInputs.ROW_TYPE_HIERARCHY_ISSUE:
+                supported_row_format_keys = SUPPORTED_ROW_FORMAT_KEYS_HIERARCHY_ISSUE
+
+        invalid_keywords = [keyword for keyword in keywords_in_braces if keyword not in supported_row_format_keys]
         cleaned_row_format = row_format
         for invalid_keyword in invalid_keywords:
             logger.error(

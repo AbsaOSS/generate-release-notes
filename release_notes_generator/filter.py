@@ -136,7 +136,10 @@ class FilterByRelease(Filter):
         """
         return list(
             filter(
-                lambda issue: (issue.closed_at is not None and issue.closed_at >= data.since, data.issues)
+                lambda issue: (
+                    issue.closed_at is not None and issue.closed_at >= data.since, data.issues
+                ),
+                data.issues,
             )
         )
 
@@ -156,7 +159,7 @@ class FilterByRelease(Filter):
                 lambda issue: (
                     (issue.closed_at is not None and issue.closed_at >= data.since)
                     or (issue.state == "open")
-                    or (issue.issue_type in issue_types)
+                    or (issue.type.name in issue_types)
                 ),
                 data.issues,
             )

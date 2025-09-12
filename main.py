@@ -35,6 +35,7 @@ from release_notes_generator.utils.logging_config import setup_logging
 
 warnings.filterwarnings("ignore", category=InsecureRequestWarning)
 
+
 def prepare_custom_chapters() -> CustomChapters:
     custom_chapters = CustomChapters(print_empty_chapters=ActionInputs.get_print_empty_chapters()).from_yaml_array(
         ActionInputs.get_chapters()

@@ -33,6 +33,7 @@ from release_notes_generator.model.mined_data import MinedData
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.pull_request_record import PullRequestRecord
 from release_notes_generator.model.record import Record
+from release_notes_generator.record.factory.default_record_factory import DefaultRecordFactory
 
 from release_notes_generator.utils.decorators import safe_call_decorator
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
@@ -41,7 +42,8 @@ from release_notes_generator.utils.pull_request_utils import get_issues_for_pr, 
 logger = logging.getLogger(__name__)
 
 
-class IssueHierarchyRecordFactory:
+# TODO - code review - check if it beneficial to inherit from DefaultRecordFactory
+class IssueHierarchyRecordFactory(DefaultRecordFactory):
     """
     A class used to generate records for release notes.
     """
@@ -113,7 +115,7 @@ class IssueHierarchyRecordFactory:
             if issue.number not in registered_issues:
                 parent_issue = issue.get_sub_issues()
                 if parent_issue is not None:
-                    pass    # TODO - find parent and register to it
+                    pass  # TODO - find parent and register to it
                 else:
                     IssueHierarchyRecordFactory.create_record_for_issue(records, issue)
 
@@ -143,10 +145,15 @@ class IssueHierarchyRecordFactory:
         )
         return records
 
-    def _solve_sub_issues(self, record: IssueRecord | HierarchyIssueRecord, data: MinedData,
-                          registered_issues: list[int], sub_issues: list[SubIssue]) -> None:
-        for sub_issue in sub_issues:     # closed in previous rls, in current one, open ones
-            if sub_issue.number in registered_issues:   # already registered
+    def _solve_sub_issues(
+        self,
+        record: HierarchyIssueRecord,
+        data: MinedData,
+        registered_issues: list[int],
+        sub_issues: list[SubIssue],
+    ) -> None:
+        for sub_issue in sub_issues:  # closed in previous rls, in current one, open ones
+            if sub_issue.number in registered_issues:  # already registered
                 continue
             if sub_issue.number not in data.issues:  # not closed in current rls or not opened == not in mined data
                 continue

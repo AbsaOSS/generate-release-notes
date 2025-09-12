@@ -49,7 +49,7 @@ class BaseChapters(ABC):
         return self.populated_record_numbers
 
     @property
-    def since(self) -> Optional[datetime]:
+    def since(self) -> datetime:
         if self._since is None:
             return datetime.min
         return self._since

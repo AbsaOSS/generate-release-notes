@@ -23,8 +23,8 @@ class HierarchyIssueRecord(IssueRecord):
         super().__init__(issue, issue_type, skip=skip)
 
         self._level: int = level
-        self._sub_issues: dict[int, IssueRecord] = {}   # sub-issues - no more sub-issues
-        self._sub_hierarchy_issues: dict[int, HierarchyIssueRecord] = {}    # sub-hierarchy issues - have sub-issues
+        self._sub_issues: dict[int, IssueRecord] = {}  # sub-issues - no more sub-issues
+        self._sub_hierarchy_issues: dict[int, HierarchyIssueRecord] = {}  # sub-hierarchy issues - have sub-issues
 
     # methods - override ancestor methods
     def to_chapter_row(self) -> str:
@@ -57,7 +57,7 @@ class HierarchyIssueRecord(IssueRecord):
         if self.contains_release_notes():
             sub_indent: str = "  " * (self._level + 1)
             row = f"{row}\n{sub_indent}- _Release Notes_:"
-            sub_indent: str = "  " * (self._level + 2)
+            sub_indent = "  " * (self._level + 2)
             rls_block = "\n".join(f"{sub_indent}{line}" if line else "" for line in self.get_rls_notes().splitlines())
             row = f"{row}\n{rls_block}"
 
@@ -67,10 +67,12 @@ class HierarchyIssueRecord(IssueRecord):
 
         # add sub-issues
         if len(self._sub_issues) > 0:
-            sub_indent: str = "  " * (self._level + 1)
+            sub_indent = "  " * (self._level + 1)
             for sub_issue in self._sub_issues.values():
                 sub_issue_block = "- " + sub_issue.to_chapter_row()
-                ind_child_block = "\n".join(f"{sub_indent}{line}" if line else "" for line in sub_issue_block.splitlines())
+                ind_child_block = "\n".join(
+                    f"{sub_indent}{line}" if line else "" for line in sub_issue_block.splitlines()
+                )
                 row = f"{row}\n{ind_child_block}"
         # else: this will be reported in service chapters as violation of hierarchy in this initial version
         # No data loss - in service chapter there will be all detail not presented here
