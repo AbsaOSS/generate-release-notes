@@ -121,6 +121,7 @@ class FilterByRelease(Filter):
         if ActionInputs.get_regime() == ActionInputs.REGIME_ISSUE_HIERARCHY:
             return self._filter_issues_issue_hierarchy(data)
 
+
         logger.debug("Used default issue filtering regime.")
         return self._filter_issues_default(data)
 
@@ -131,14 +132,11 @@ class FilterByRelease(Filter):
         @param data: The mined data containing issues.
         @return: The filtered list of issues.
         """
-        return list(
-            filter(
-                lambda issue: (
-                    issue.closed_at is not None and issue.closed_at >= data.since, data.issues
-                ),
-                data.issues,
-            )
-        )
+        return [
+            issue
+            for issue in data.issues
+            if (issue.closed_at is None) or (issue.closed_at >= data.since)
+        ]
 
     def _filter_issues_issue_hierarchy(self, data: MinedData) -> list:
         """
