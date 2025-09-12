@@ -18,6 +18,7 @@ class HierarchyIssueRecord(IssueRecord):
     def __init__(self, issue: Issue, issue_type: Optional[str] = None, skip: bool = False, level: int = 0):
         super().__init__(issue, issue_type, skip=skip)
 
+        self.type: Optional[str] = None
         self._level: int = level
         self._sub_issues: dict[int, IssueRecord] = {}  # sub-issues - no more sub-issues
         self._sub_hierarchy_issues: dict[int, HierarchyIssueRecord] = {}  # sub-hierarchy issues - have sub-issues

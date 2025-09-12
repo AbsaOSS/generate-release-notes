@@ -19,7 +19,7 @@ This module contains the DefaultRecordFactory class which is responsible for gen
 """
 
 import logging
-from typing import cast
+from typing import cast, Optional
 
 from github import Github
 from github.Issue import Issue, SubIssue
@@ -102,11 +102,15 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
         #   3. round - the rest (e.g. Bugs, Tasks, etc.) but can be just another hierarchy - depend on configuration
         for hierarchy_issue in ActionInputs.get_issue_type_weights():
             for issue in data.issues:
-                if issue.type is not None and issue.type.name == hierarchy_issue and issue.number not in registered_issues:
-                    self.create_record_for_issue(records, issue)
+                issue_type = self._get_issue_type(issue)
+                if issue_type is not None and issue_type == hierarchy_issue and issue.number not in registered_issues:
+                    sub_issues = list(issue.get_sub_issues())
+                    if len(sub_issues) == 0:
+                        continue    # not a hierarchy issue even if labeled or issue type say so
+
+                    self.create_record_for_hierarchy_issue(records, issue, issue_type)
                     registered_issues.append(issue.number)
                     rec: HierarchyIssueRecord = cast(HierarchyIssueRecord, records[issue.number])
-                    sub_issues = list(rec.issue.get_sub_issues())
                     if len(sub_issues) > 0:
                         self._solve_sub_issues(rec, data, registered_issues, sub_issues)
 
@@ -195,7 +199,7 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
         return False
 
     @staticmethod
-    def create_record_for_issue(records: dict[int | str, Record], i: Issue) -> None:
+    def create_record_for_hierarchy_issue(records: dict[int | str, Record], i: Issue, issue_type: Optional[str]) -> None:
         """
         Create a record for an issue.
 
@@ -205,6 +209,18 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
         # check for skip labels presence and skip when detected
         issue_labels = [label.name for label in i.get_labels()]
         skip_record = any(item in issue_labels for item in ActionInputs.get_skip_release_notes_labels())
-        records[i.number] = IssueRecord(issue=i, skip=skip_record)
+        records[i.number] = HierarchyIssueRecord(issue=i, issue_type=issue_type, skip=skip_record)
 
         logger.debug("Created record for issue %d: %s", i.number, i.title)
+
+    @staticmethod
+    def _get_issue_type(issue: Issue) -> Optional[str]:
+        if issue.type is not None:
+            return issue.type.name
+        if issue.labels is not None:
+            issue_labels = [label.name for label in issue.get_labels()]
+            for label in issue_labels:
+                if label in ActionInputs.get_issue_type_weights():
+                    return label
+                # TODO - check multiple labels, not just first - select the highest weight one
+        return None
