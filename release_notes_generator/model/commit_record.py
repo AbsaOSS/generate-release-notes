@@ -65,7 +65,7 @@ class CommitRecord(Record):
         return row
 
     def get_rls_notes(self, line_marks: Optional[list[str]] = None) -> str:
-        # TODO - in this version - direct commits does not support release notes
+        # Hint: direct commits does not support release notes
         return ""
 
     # methods - specific to CommitRecord

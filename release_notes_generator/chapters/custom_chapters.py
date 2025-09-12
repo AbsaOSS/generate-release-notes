@@ -83,15 +83,15 @@ class CustomChapters(BaseChapters):
     def _populate_hierarchy_issue(self, record: HierarchyIssueRecord) -> None:
         # detect Closed "Epic"
         if record.is_closed and not record.is_present_in_chapters:
-            ch = self.chapters["Closed Epics"]  # TODO - add dynamic usage of 1st most weighted type instead of strings
+            ch = self.chapters[f"Closed {ActionInputs.get_issue_type_first_level()}s"]
 
         # detect New root "Epic"
         elif record.is_open and record.issue.created_at > self.since:
-            ch = self.chapters["New Epics"]
+            ch = self.chapters[f"New {ActionInputs.get_issue_type_first_level()}s"]
 
         # detect Silent living "Epic"
         else:
-            ch = self.chapters["Silent Live Epics"]
+            ch = self.chapters[f"Silent Live {ActionInputs.get_issue_type_first_level()}s"]
 
         ch.add_row(record.record_id, record.to_chapter_row())
         self.populated_record_numbers_list.append(record.record_id)

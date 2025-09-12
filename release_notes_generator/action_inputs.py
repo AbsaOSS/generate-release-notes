@@ -185,6 +185,16 @@ class ActionInputs:
         return [item.strip() for item in user_input.split(",")] if user_input else []
 
     @staticmethod
+    def get_issue_type_first_level() -> str:
+        """
+        Get the issue type first level from the action inputs.
+        """
+        types = ActionInputs.get_issue_type_weights()
+        if len(types) == 0:
+            return "Epic"
+        return types[0]
+
+    @staticmethod
     def get_duplicity_scope() -> DuplicityScopeEnum:
         """
         Get the duplicity scope parameter value from the action inputs.
