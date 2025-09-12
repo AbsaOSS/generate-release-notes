@@ -962,18 +962,23 @@ def test_build_closed_pr_service_chapter_without_issue_with_skip_label_on_pr(
 
 def test_build_hierarchy_issue_with_one_custom_label(
         custom_chapters_not_print_empty_chapters,
-        record_with_two_open_hierarchy_issues_one_closed_issue_two_closed_pulls,
-        record_with_issue_closed_one_pull_merged, mocker
+        record_with_hierarchy_issues,
+        record_with_issue_closed_one_pull_merged,
+        record_with_pr_only,
+        record_with_direct_commit,
+        mocker
 ):
     expected_release_notes = RELEASE_NOTES_DATA_CUSTOM_CHAPTERS_ONE_LABEL_HIERARCHY
-    rec_1 = record_with_two_open_hierarchy_issues_one_closed_issue_two_closed_pulls
+    rec_1 = record_with_hierarchy_issues
     rec_2 = record_with_issue_closed_one_pull_merged
+    rec_3 = record_with_pr_only
+    rec_4 = record_with_direct_commit
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=False)
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_regime", return_value=ActionInputs.REGIME_ISSUE_HIERARCHY)
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_row_format_hierarchy_issue", return_value="{type}: _{title}_ {number}")
 
     builder = ReleaseNotesBuilder(
-        records={rec_1.record_id: rec_1, rec_2.record_id: rec_2},
+        records={rec_1.record_id: rec_1, rec_2.record_id: rec_2, rec_3.record_id: rec_3, rec_4.record_id: rec_4},
         changelog_url=DEFAULT_CHANGELOG_URL,
         custom_chapters=custom_chapters_not_print_empty_chapters,
     )

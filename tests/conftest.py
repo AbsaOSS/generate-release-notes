@@ -25,6 +25,7 @@ from github.PullRequest import PullRequest
 from github.Rate import Rate
 from github.Repository import Repository
 
+from release_notes_generator.model.commit_record import CommitRecord
 from release_notes_generator.model.hierarchy_issue_record import HierarchyIssueRecord
 from release_notes_generator.model.issue_record import IssueRecord
 from release_notes_generator.model.pull_request_record import PullRequestRecord
@@ -277,6 +278,25 @@ def mock_closed_issue_type_task(mocker):
 
 
 @pytest.fixture
+def mock_closed_issue_type_none(mocker):
+    issue = mocker.Mock(spec=Issue)
+    issue.state = IssueRecord.ISSUE_STATE_CLOSED
+    issue.title = "Do this issue"
+    issue.number = 204
+    issue.body = "Some sub issue body text"
+    issue.type = None
+    issue.created_at = datetime.now()
+
+    label1 = mocker.Mock(spec=MockLabel)
+    label1.name = "label1"
+    label2 = mocker.Mock(spec=MockLabel)
+    label2.name = "label2"
+    issue.get_labels.return_value = [label1, label2]
+
+    return issue
+
+
+@pytest.fixture
 def mock_closed_issue_type_bug(mocker):
     issue_type = mocker.Mock(spec=IssueType)
     issue_type.name = "Bug"
@@ -490,8 +510,8 @@ def mock_commit(mocker):
     commit = mocker.Mock()
     commit.author = "author"
     commit.sha = "merge_commit_sha"
+    commit.message = "Fixed bug"
     return commit
-
 
 # Fixtures for Record(s)
 @pytest.fixture
@@ -502,6 +522,13 @@ def record_with_issue_open_no_pull(request):
 def record_with_issue_closed_no_pull(request):
     return IssueRecord(issue=request.getfixturevalue("mock_issue_closed"))
 
+@pytest.fixture
+def record_with_pr_only(request):
+    return PullRequestRecord(pull=request.getfixturevalue("mock_pull_merged_with_rls_notes_101"))
+
+@pytest.fixture
+def record_with_direct_commit(request):
+    return CommitRecord(commit=request.getfixturevalue("mock_commit"))
 
 @pytest.fixture
 def record_with_issue_closed_one_pull(request):
@@ -532,20 +559,30 @@ def record_with_issue_closed_two_pulls(request):
     return rec
 
 @pytest.fixture
-def record_with_two_open_hierarchy_issues_one_closed_issue_two_closed_pulls(request):
-    rec = HierarchyIssueRecord(issue=request.getfixturevalue("mock_open_hierarchy_issue_epic"))     # nr:200
-    rec_hierarchy_issue = rec.register_hierarchy_issue(request.getfixturevalue("mock_open_hierarchy_issue_feature"))    # nr:201
+def record_with_hierarchy_issues(request):
+    rec_epic_issue = HierarchyIssueRecord(issue=request.getfixturevalue("mock_open_hierarchy_issue_epic"))     # nr:200
+    rec_feature_issue = rec_epic_issue.register_hierarchy_issue(request.getfixturevalue("mock_open_hierarchy_issue_feature"))    # nr:201
 
     issue_task = request.getfixturevalue("mock_closed_issue_type_task") # nr:202
-    rec_issue_task = rec_hierarchy_issue.register_issue(issue_task)
+    rec_task_issue = rec_feature_issue.register_hierarchy_issue(issue_task)
+    # add sub_issue
+    sub_issue_no_type = request.getfixturevalue("mock_closed_issue_type_none") # nr:204
+    rec_sub_issue_no_type = rec_task_issue.register_issue(sub_issue_no_type)
+    # add pr to sub_issue
+    sub_issue_merged_pr = request.getfixturevalue("mock_pull_merged_with_rls_notes_102")  # nr:205
+    sub_issue_merged_pr.number = 205   # simulate PR closing sub-issue nr:204
+    sub_issue_merged_pr.body = "Closes #204\n\nRelease Notes:\n- Sub issue 204 closed by merged PR"
+    sub_issue_merged_pr.title = "Sub issue 204 closed by merged PR"
+    rec_sub_issue_no_type.register_pull_request(sub_issue_merged_pr)
+
     issue_bug = request.getfixturevalue("mock_closed_issue_type_bug")   # nr:203
-    rec_issue_bug = rec_hierarchy_issue.register_issue(issue_bug)
+    rec_bug_issue = rec_feature_issue.register_issue(issue_bug)
 
     # not description keyword used - registration simulate API way (relation)
-    rec_issue_task.register_pull_request(request.getfixturevalue("mock_pull_closed_with_rls_notes_101"))
-    rec_issue_bug.register_pull_request(request.getfixturevalue("mock_pull_closed_with_rls_notes_102"))
+    rec_task_issue.register_pull_request(request.getfixturevalue("mock_pull_closed_with_rls_notes_101"))
+    rec_bug_issue.register_pull_request(request.getfixturevalue("mock_pull_closed_with_rls_notes_102"))
 
-    return rec
+    return rec_epic_issue
 
 
 @pytest.fixture

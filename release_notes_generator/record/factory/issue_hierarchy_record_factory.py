@@ -22,11 +22,12 @@ import logging
 from typing import cast
 
 from github import Github
-from github.Issue import Issue
+from github.Issue import Issue, SubIssue
 from github.PullRequest import PullRequest
 from github.Commit import Commit
 
 from release_notes_generator.model.commit_record import CommitRecord
+from release_notes_generator.model.hierarchy_issue_record import HierarchyIssueRecord
 from release_notes_generator.model.issue_record import IssueRecord
 from release_notes_generator.model.mined_data import MinedData
 from release_notes_generator.action_inputs import ActionInputs
@@ -90,19 +91,31 @@ class IssueHierarchyRecordFactory:
         records: dict[int | str, Record] = {}
         rate_limiter = GithubRateLimiter(github)
         safe_call = safe_call_decorator(rate_limiter)
+        registered_issues: list[int] = []
 
         logger.debug("Registering issues to records...")
-
-        # create hierarchy issue records first
+        # create hierarchy issue records first => dict of hierarchy issues with registered sub-issues
+        #   1. round - the most heavy ones  (e.g. Epic)
+        #   2. round - the second most heavy ones   (e.g. Features)
+        #   3. round - the rest (e.g. Bugs, Tasks, etc.) but can be just another hierarchy - depend on configuration
         for hierarchy_issue in ActionInputs.get_issue_type_weights():
             for issue in data.issues:
-                if issue.type.name == hierarchy_issue:
-                    pass
+                if issue.type.name == hierarchy_issue and issue.number not in registered_issues:
+                    self.create_record_for_issue(records, issue)
+                    registered_issues.append(issue.number)
+                    rec: HierarchyIssueRecord = cast(HierarchyIssueRecord, records[issue.number])
+                    sub_issues = list(rec.issue.get_sub_issues())
+                    if len(sub_issues) > 0:
+                        self._solve_sub_issues(rec, data, registered_issues, sub_issues)
 
-        # create ordinary issue records
+        # create or register non-hierarchy issue related records
         for issue in data.issues:
-            # TODO - skip placed ones
-            IssueHierarchyRecordFactory.create_record_for_issue(records, issue)
+            if issue.number not in registered_issues:
+                parent_issue = issue.get_sub_issues()
+                if parent_issue is not None:
+                    pass    # TODO - find parent and register to it
+                else:
+                    IssueHierarchyRecordFactory.create_record_for_issue(records, issue)
 
         logger.debug("Registering pull requests to records...")
         for pull in data.pull_requests:
@@ -129,6 +142,23 @@ class IssueHierarchyRecordFactory:
             detected_direct_commits_count,
         )
         return records
+
+    def _solve_sub_issues(self, record: IssueRecord | HierarchyIssueRecord, data: MinedData,
+                          registered_issues: list[int], sub_issues: list[SubIssue]) -> None:
+        for sub_issue in sub_issues:     # closed in previous rls, in current one, open ones
+            if sub_issue.number in registered_issues:   # already registered
+                continue
+            if sub_issue.number not in data.issues:  # not closed in current rls or not opened == not in mined data
+                continue
+
+            sub_sub_issues = list(sub_issue.get_sub_issues())
+            if len(sub_sub_issues) > 0:
+                rec = record.register_hierarchy_issue(sub_issue)
+                registered_issues.append(sub_issue.number)
+                self._solve_sub_issues(rec, data, registered_issues, sub_sub_issues)
+            else:
+                record.register_issue(sub_issue)
+                registered_issues.append(sub_issue.number)
 
     @staticmethod
     def register_commit_to_record(records: dict[int | str, Record], commit: Commit) -> bool:

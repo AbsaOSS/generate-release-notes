@@ -89,12 +89,7 @@ class CustomChapters(BaseChapters):
             ch = self.chapters["Silent Live Epics"]
 
         ch.add_row(record.record_id, record.to_chapter_row())
-        self._populate_record_numbers_list_by_hierarchy_issue(record)
-
-    def _populate_record_numbers_list_by_hierarchy_issue(self, record: HierarchyIssueRecord) -> None:
-        # TODO
-        ...
-
+        self.populated_record_numbers_list.append(record.record_id)
 
     def from_yaml_array(self, chapters: list[dict[str, str]]) -> "CustomChapters":
         """

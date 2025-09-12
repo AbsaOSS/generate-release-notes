@@ -23,8 +23,8 @@ class HierarchyIssueRecord(IssueRecord):
         super().__init__(issue, issue_type, skip=skip)
 
         self._level: int = level
-        self._issues: dict[int, IssueRecord] = {}   # sub-issues
-        self._hierarchy_issues: dict[int, HierarchyIssueRecord] = {}    # sub-hierarchy issues
+        self._sub_issues: dict[int, IssueRecord] = {}   # sub-issues - no more sub-issues
+        self._sub_hierarchy_issues: dict[int, HierarchyIssueRecord] = {}    # sub-hierarchy issues - have sub-issues
 
     # methods - override ancestor methods
     def to_chapter_row(self) -> str:
@@ -62,13 +62,13 @@ class HierarchyIssueRecord(IssueRecord):
             row = f"{row}\n{rls_block}"
 
         # add sub-hierarchy issues
-        for sub_hierarchy_issue in self._hierarchy_issues.values():
+        for sub_hierarchy_issue in self._sub_hierarchy_issues.values():
             row = f"{row}\n{sub_hierarchy_issue.to_chapter_row()}"
 
         # add sub-issues
-        if len(self._hierarchy_issues) == 0:
+        if len(self._sub_issues) > 0:
             sub_indent: str = "  " * (self._level + 1)
-            for sub_issue in self._issues.values():
+            for sub_issue in self._sub_issues.values():
                 sub_issue_block = "- " + sub_issue.to_chapter_row()
                 ind_child_block = "\n".join(f"{sub_indent}{line}" if line else "" for line in sub_issue_block.splitlines())
                 row = f"{row}\n{ind_child_block}"
@@ -79,10 +79,10 @@ class HierarchyIssueRecord(IssueRecord):
 
     def register_hierarchy_issue(self, issue: Issue) -> "HierarchyIssueRecord":
         sub_rec = HierarchyIssueRecord(issue=issue, issue_type=issue.type.name, level=self._level + 1)
-        self._hierarchy_issues[issue.number] = sub_rec
+        self._sub_hierarchy_issues[issue.number] = sub_rec
         return sub_rec
 
     def register_issue(self, issue: Issue) -> IssueRecord:
         sub_rec = IssueRecord(issue=issue)
-        self._issues[issue.number] = sub_rec
+        self._sub_issues[issue.number] = sub_rec
         return sub_rec
