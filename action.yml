@@ -36,6 +36,10 @@ inputs:
     description: 'Regime of the release notes generation. Options: default.'
     required: false
     default: 'default'
+  issue-type-weights:
+    description: 'A comma-separated list defining the order of issue types by their weight'
+    required: false
+    default: 'Epic, Feature'
   duplicity-icon:
     description: 'Icon to be used for duplicity warning. Icon is placed before the record line.'
     required: false
@@ -76,6 +80,10 @@ inputs:
     description: 'List of "group names" to be ignored by release notes detection logic.'
     required: false
     default: ''
+  row-format-hierarchy-issue:
+    description: 'Format of the hierarchy issue in the release notes. Available placeholders: {number}, {title}. Placeholders are case-insensitive.'
+    required: false
+    default: '{type}: _{title}_ {number}'
   row-format-issue:
     description: 'Format of the issue row in the release notes. Available placeholders: {number}, {title}, {pull-requests}. Placeholders are case-insensitive.'
     required: false
@@ -138,6 +146,7 @@ runs:
         INPUT_CHAPTERS: ${{ inputs.chapters }}
         INPUT_FROM_TAG_NAME: ${{ inputs.from-tag-name }}
         INPUT_REGIME: ${{ inputs.regime }}
+        INPUT_ISSUE_TYPE_WEIGHTS: ${{ inputs.issue-type-weights }}
         INPUT_DUPLICITY_SCOPE: ${{ inputs.duplicity-scope }}
         INPUT_DUPLICITY_ICON: ${{ inputs.duplicity-icon }}
         INPUT_WARNINGS: ${{ inputs.warnings }}
@@ -150,6 +159,7 @@ runs:
         INPUT_CODERABBIT_RELEASE_NOTES_TITLE: ${{ inputs.coderabbit-release-notes-title }}
         INPUT_CODERABBIT_SUMMARY_IGNORE_GROUPS: ${{ inputs.coderabbit-summary-ignore-groups }}
         INPUT_GITHUB_REPOSITORY: ${{ github.repository }}
+        INPUT_ROW_FORMAT_HIERARCHY_ISSUE: ${{ inputs.row-format-hierarchy-issue }}
         INPUT_ROW_FORMAT_ISSUE: ${{ inputs.row-format-issue }}
         INPUT_ROW_FORMAT_PR: ${{ inputs.row-format-pr }}
         INPUT_ROW_FORMAT_LINK_PR: ${{ inputs.row-format-link-pr }}

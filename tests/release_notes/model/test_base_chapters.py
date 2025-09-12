@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-from release_notes_generator.model.base_chapters import BaseChapters
+from release_notes_generator.chapters.base_chapters import BaseChapters
 
 
 # Local Record class for testing

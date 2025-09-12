@@ -17,22 +17,37 @@
 """
 This module contains the ReleaseNotesBuilder class which is responsible for building of the release notes.
 """
-
 import logging
+
 from itertools import chain
 
-from release_notes_generator.builder.base_builder import ReleaseNotesBuilder
-from release_notes_generator.model.service_chapters import ServiceChapters
+from release_notes_generator.action_inputs import ActionInputs
+from release_notes_generator.chapters.custom_chapters import CustomChapters
+from release_notes_generator.model.record import Record
+from release_notes_generator.chapters.service_chapters import ServiceChapters
 
 logger = logging.getLogger(__name__)
 
 
-class DefaultReleaseNotesBuilder(ReleaseNotesBuilder):
+class ReleaseNotesBuilder:
     """
     A class representing the Release Notes Builder.
     The class is responsible for building the release notes based on the records, changelog URL, formatter, and custom
     chapters.
     """
+
+    def __init__(
+        self,
+        records: dict[int | str, Record],
+        changelog_url: str,
+        custom_chapters: CustomChapters,
+    ):
+        self.records = records
+        self.changelog_url = changelog_url
+        self.custom_chapters = custom_chapters
+
+        self.warnings = ActionInputs.get_warnings()
+        self.print_empty_chapters = ActionInputs.get_print_empty_chapters()
 
     def build(self) -> str:
         """

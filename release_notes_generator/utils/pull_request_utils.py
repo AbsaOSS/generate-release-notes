@@ -15,7 +15,7 @@
 #
 
 """
-This module contains the PullRequestRecord class which is responsible for representing a record in the release notes.
+This module contains utility functions for extracting issue numbers from pull request bodies.
 """
 
 import re

@@ -15,7 +15,7 @@
 #
 
 """
-This module contains the RecordFactory class which is responsible for generating records for release notes.
+This module contains the DefaultRecordFactory class which is responsible for generating
 """
 
 import logging
@@ -32,7 +32,7 @@ from release_notes_generator.model.mined_data import MinedData
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.pull_request_record import PullRequestRecord
 from release_notes_generator.model.record import Record
-from release_notes_generator.record.record_factory import RecordFactory
+from release_notes_generator.record.factory.record_factory import RecordFactory
 
 from release_notes_generator.utils.decorators import safe_call_decorator
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
@@ -75,7 +75,7 @@ class DefaultRecordFactory(RecordFactory):
                         safe_call(data.repository.get_issue)(parent_issue_number) if data.repository else None
                     )
                     if parent_issue is not None:
-                        DefaultRecordFactory._create_record_for_issue(records, parent_issue)
+                        DefaultRecordFactory.create_record_for_issue(records, parent_issue)
 
                 if parent_issue_number in records:
                     cast(IssueRecord, records[parent_issue_number]).register_pull_request(pull)
@@ -94,7 +94,7 @@ class DefaultRecordFactory(RecordFactory):
 
         logger.debug("Registering issues to records...")
         for issue in data.issues:
-            DefaultRecordFactory._create_record_for_issue(records, issue)
+            DefaultRecordFactory.create_record_for_issue(records, issue)
 
         logger.debug("Registering pull requests to records...")
         for pull in data.pull_requests:
@@ -110,7 +110,7 @@ class DefaultRecordFactory(RecordFactory):
 
         logger.debug("Registering commits to records...")
         detected_direct_commits_count = sum(
-            not DefaultRecordFactory._register_commit_to_record(records, commit) for commit in data.commits
+            not DefaultRecordFactory.register_commit_to_record(records, commit) for commit in data.commits
         )
 
         logger.info(
@@ -123,7 +123,7 @@ class DefaultRecordFactory(RecordFactory):
         return records
 
     @staticmethod
-    def _register_commit_to_record(records: dict[int | str, Record], commit: Commit) -> bool:
+    def register_commit_to_record(records: dict[int | str, Record], commit: Commit) -> bool:
         """
         Register a commit to a record.
 
@@ -150,7 +150,7 @@ class DefaultRecordFactory(RecordFactory):
         return False
 
     @staticmethod
-    def _create_record_for_issue(records: dict[int | str, Record], i: Issue) -> None:
+    def create_record_for_issue(records: dict[int | str, Record], i: Issue) -> None:
         """
         Create a record for an issue.
 
