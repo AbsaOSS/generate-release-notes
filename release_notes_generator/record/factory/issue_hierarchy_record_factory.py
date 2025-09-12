@@ -102,7 +102,7 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
         #   3. round - the rest (e.g. Bugs, Tasks, etc.) but can be just another hierarchy - depend on configuration
         for hierarchy_issue in ActionInputs.get_issue_type_weights():
             for issue in data.issues:
-                if issue.type.name == hierarchy_issue and issue.number not in registered_issues:
+                if issue.type is not None and issue.type.name == hierarchy_issue and issue.number not in registered_issues:
                     self.create_record_for_issue(records, issue)
                     registered_issues.append(issue.number)
                     rec: HierarchyIssueRecord = cast(HierarchyIssueRecord, records[issue.number])
