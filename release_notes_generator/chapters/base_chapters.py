@@ -50,6 +50,12 @@ class BaseChapters(ABC):
 
     @property
     def since(self) -> datetime:
+        """
+        Gets the since datetime.
+
+        Returns:
+            The since datetime or datetime.min if not set.
+        """
         if self._since is None:
             return datetime.min
         return self._since

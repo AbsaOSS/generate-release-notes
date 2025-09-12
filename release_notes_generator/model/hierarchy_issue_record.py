@@ -2,12 +2,8 @@
 A module that defines the IssueRecord class, which represents an issue record in the release notes.
 """
 
-import re
 from typing import Optional, Any
-
-from github.Commit import Commit
 from github.Issue import Issue
-from github.PullRequest import PullRequest
 
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.issue_record import IssueRecord
@@ -80,11 +76,27 @@ class HierarchyIssueRecord(IssueRecord):
         return row
 
     def register_hierarchy_issue(self, issue: Issue) -> "HierarchyIssueRecord":
+        """
+        Registers a sub-hierarchy issue.
+
+        Parameters:
+            issue: The sub-hierarchy issue to register.
+        Returns:
+            The registered sub-hierarchy issue record.
+        """
         sub_rec = HierarchyIssueRecord(issue=issue, issue_type=issue.type.name, level=self._level + 1)
         self._sub_hierarchy_issues[issue.number] = sub_rec
         return sub_rec
 
     def register_issue(self, issue: Issue) -> IssueRecord:
+        """
+        Registers a sub-issue.
+
+        Parameters:
+            issue: The sub-issue to register.
+        Returns:
+            The registered sub-issue record.
+        """
         sub_rec = IssueRecord(issue=issue)
         self._sub_issues[issue.number] = sub_rec
         return sub_rec

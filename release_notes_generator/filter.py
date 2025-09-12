@@ -20,8 +20,6 @@ import logging
 from copy import deepcopy
 from typing import Optional
 
-from github.Issue import Issue
-
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.mined_data import MinedData
 
@@ -51,7 +49,7 @@ class FilterByRelease(Filter):
     def __init__(self, release_version: Optional[str] = None):
         self.release_version = release_version
 
-    def filter(self, data: MinedData, keep_open_issues: bool = True) -> MinedData:
+    def filter(self, data: MinedData) -> MinedData:
         """
         Filters issues, pull requests, and commits based on the latest release date.
         If the release is not None, it filters out closed issues, merged pull requests, and commits
@@ -59,7 +57,6 @@ class FilterByRelease(Filter):
 
         Parameters:
             data (MinedData): The mined data containing issues, pull requests, commits, and release information.
-            keep_open_issues (bool): If True, open issues are retained regardless of the release date.
 
         Returns:
             MinedData: The filtered mined data.
