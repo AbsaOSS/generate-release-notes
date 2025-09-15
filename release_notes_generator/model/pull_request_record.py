@@ -105,9 +105,8 @@ class PullRequestRecord(Record):
 
     # methods - override Record methods
 
-    @lru_cache(maxsize=None)
-    def get_labels(self) -> set[str]:
-        return {label.name for label in self._pull_request.get_labels()}
+    def get_labels(self) -> list[str]:
+        return [label.name for label in self._pull_request.get_labels()]
 
     def to_chapter_row(self, add_into_chapters: bool = True) -> str:
         if add_into_chapters:

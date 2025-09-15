@@ -69,7 +69,7 @@ class CommitRecord(Record):
         # Hint: direct commits does not support release notes
         return ""
 
-    def get_labels(self) -> set[str]:
-        return set()
+    def get_labels(self) -> list[str]:
+        return []
 
     # methods - specific to CommitRecord

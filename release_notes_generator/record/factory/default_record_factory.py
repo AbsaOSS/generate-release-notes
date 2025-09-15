@@ -171,7 +171,7 @@ class DefaultRecordFactory(RecordFactory):
         """
         # check for skip labels presence and skip when detected
         if issue_labels is None:
-            issue_labels = {label.name for label in i.get_labels()}
+            issue_labels = [label.name for label in i.get_labels()]
         skip_record = any(item in issue_labels for item in ActionInputs.get_skip_release_notes_labels())
         records[i.number] = IssueRecord(issue=i, skip=skip_record)
         logger.debug("Created record for non hierarchy issue %d: %s", i.number, i.title)

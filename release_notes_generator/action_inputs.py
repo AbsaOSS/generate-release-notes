@@ -173,7 +173,10 @@ class ActionInputs:
         """
         Check if the hierarchy release notes structure is enabled.
         """
-        return get_action_input("hierarchy", "false").lower() == "true"
+        val = get_action_input("hierarchy", "false")
+        if val is None:
+            return False
+        return val.lower() == "true"
 
     @staticmethod
     def get_duplicity_scope() -> DuplicityScopeEnum:

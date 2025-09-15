@@ -162,7 +162,7 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
         """
         # check for skip labels presence and skip when detected
         if issue_labels is None:
-            issue_labels: list[str] = self._get_issue_labels_mix_with_type(i)
+            issue_labels = self._get_issue_labels_mix_with_type(i)
         skip_record = any(item in issue_labels for item in ActionInputs.get_skip_release_notes_labels())
 
         self.__records[i.number] = HierarchyIssueRecord(issue=i, skip=skip_record)
