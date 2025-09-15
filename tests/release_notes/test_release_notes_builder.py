@@ -974,7 +974,7 @@ def test_build_hierarchy_issue_with_one_custom_label(
     rec_3 = record_with_pr_only
     rec_4 = record_with_direct_commit
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=False)
-    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_regime", return_value=ActionInputs.REGIME_ISSUE_HIERARCHY)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_hierarchy", return_value=True)
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_row_format_hierarchy_issue", return_value="{type}: _{title}_ {number}")
 
     builder = ReleaseNotesBuilder(

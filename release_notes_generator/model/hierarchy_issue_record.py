@@ -9,6 +9,7 @@ from github.PullRequest import PullRequest
 
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.issue_record import IssueRecord
+from release_notes_generator.model.sub_issue_record import SubIssueRecord
 
 logger = logging.getLogger(__name__)
 
@@ -19,18 +20,43 @@ class HierarchyIssueRecord(IssueRecord):
     Inherits from IssueRecord and provides additional functionality specific to issues.
     """
 
-    def __init__(self, issue: Issue, issue_type: Optional[str] = None, skip: bool = False, level: int = 0):
-        super().__init__(issue, issue_type, skip=skip)
+    def __init__(self, issue: Issue, issue_labels: Optional[list[str]] = None, skip: bool = False):
+        super().__init__(issue, issue_labels, skip)
 
-        self.type: Optional[str] = None
-        self._level: int = level
-        self._sub_issues: dict[int, IssueRecord] = {}  # sub-issues - no more sub-issues
-        self._sub_hierarchy_issues: dict[int, HierarchyIssueRecord] = {}  # sub-hierarchy issues - have sub-issues
+        self._level: int = 0
+        self._sub_issues: dict[int, SubIssueRecord] = {}
+        self._sub_hierarchy_issues: dict[int, HierarchyIssueRecord] = {}
 
-    @lru_cache(maxsize=None)
-    def get_labels(self) -> set[str]:
-        labels = set()
-        labels.update(self._issue.get_labels())
+    @property
+    def level(self) -> int:
+        return self._level
+
+    @level.setter
+    def level(self, value: int) -> None:
+        self._level = value
+
+    @property
+    def sub_issues(self):
+        return self._sub_issues
+
+    @property
+    def sub_hierarchy_issues(self):
+        return self._sub_hierarchy_issues
+
+    def pull_requests_count(self) -> int:
+        count = super().pull_requests_count()
+
+        for sub_issue in self._sub_issues.values():
+            count += sub_issue.pull_requests_count()
+
+        for sub_hierarchy_issue in self._sub_hierarchy_issues.values():
+            count += sub_hierarchy_issue.pull_requests_count()
+
+        return count
+
+    def get_labels(self) -> list[str]:
+        labels: set[str] = set()
+        labels.update(label.name for label in self._issue.get_labels())
 
         for sub_issue in self._sub_issues.values():
             labels.update(sub_issue.labels)
@@ -39,9 +65,9 @@ class HierarchyIssueRecord(IssueRecord):
             labels.update(sub_hierarchy_issue.labels)
 
         for pull in self._pull_requests.values():
-            labels.update(pull.get_labels())
+            labels.update(label.name for label in pull.get_labels())
 
-        return labels
+        return list(labels)
 
     # methods - override ancestor methods
     def to_chapter_row(self, add_into_chapters: bool = False) -> str:
@@ -99,52 +125,3 @@ class HierarchyIssueRecord(IssueRecord):
         # No data loss - in service chapter there will be all detail not presented here
 
         return row
-
-    def register_hierarchy_issue(self, issue: Issue) -> "HierarchyIssueRecord":
-        """
-        Registers a sub-hierarchy issue.
-
-        Parameters:
-            issue: The sub-hierarchy issue to register.
-        Returns:
-            The registered sub-hierarchy issue record.
-        """
-        sub_rec = HierarchyIssueRecord(issue=issue, issue_type=issue.type.name, level=self._level + 1)
-        self._sub_hierarchy_issues[issue.number] = sub_rec
-        logger.debug("Registered sub-hierarchy issue '%d' to parent issue '%d'", issue.number, self.issue.number)
-        return sub_rec
-
-    def register_issue(self, issue: Issue) -> IssueRecord:
-        """
-        Registers a sub-issue.
-
-        Parameters:
-            issue: The sub-issue to register.
-        Returns:
-            The registered sub-issue record.
-        """
-        sub_rec = IssueRecord(issue=issue)
-        self._sub_issues[issue.number] = sub_rec
-        logger.debug("Registered sub-issue '%d' to parent issue '%d'", issue.number, self.issue.number)
-        return sub_rec
-
-    def register_pull_request_in_hierarchy(self, issue_number: int, pull: PullRequest) -> None:
-        if issue_number in self._sub_issues.keys():
-            self._sub_issues[issue_number].register_pull_request(pull)
-            return
-
-        if issue_number in self._sub_hierarchy_issues.keys():
-            self._sub_hierarchy_issues[issue_number].register_pull_request(pull)
-            return
-
-    def find_issue(self, issue_number: int) -> Optional["IssueRecord"]:
-        if issue_number in self._sub_issues.keys():
-            return self._sub_issues[issue_number]
-        elif issue_number in self._sub_hierarchy_issues.keys():
-            return self._sub_hierarchy_issues[issue_number]
-        else:
-            for rec in self._sub_hierarchy_issues.values():
-                found = rec.find_issue(issue_number)
-                if found is not None:
-                    return found
-        return None

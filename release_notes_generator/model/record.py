@@ -33,12 +33,11 @@ class Record(metaclass=ABCMeta):
 
     RELEASE_NOTE_LINE_MARKS: list[str] = ["-", "*", "+"]
 
-    # def __init__(self, issue: Optional[Issue] = None, skip: bool = False):
-    def __init__(self, skip: bool = False):
+    def __init__(self, labels: Optional[list[str]] = None, skip: bool = False):
         self._present_in_chapters = 0
         self._skip = skip
         self._is_release_note_detected: Optional[bool] = None
-        self._labels: set[str] = set()
+        self._labels = labels if labels is not None else []
         self._rls_notes: Optional[str] = None  # single annotation here
 
     # properties
@@ -66,7 +65,7 @@ class Record(metaclass=ABCMeta):
         if len(self._labels) == 0:
             self._labels = self.get_labels()
 
-        return list(self._labels)
+        return self._labels
 
     @property
     @abstractmethod
@@ -114,7 +113,7 @@ class Record(metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def get_labels(self) -> set[str]:
+    def get_labels(self) -> list[str]:
         """
         Gets the labels of the record.
         Returns:

@@ -32,6 +32,7 @@ from release_notes_generator.model.pull_request_record import PullRequestRecord
 from release_notes_generator.chapters.service_chapters import ServiceChapters
 from release_notes_generator.model.chapter import Chapter
 from release_notes_generator.chapters.custom_chapters import CustomChapters
+from release_notes_generator.model.sub_issue_record import SubIssueRecord
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
 
 
@@ -58,11 +59,9 @@ def custom_chapters():
 def custom_chapters_not_print_empty_chapters():
     chapters = CustomChapters()
     chapters.chapters = {
+        "Epics": Chapter("Epics", ["epic"]),
         "Chapter 1": Chapter("Chapter 1 🛠", ["bug", "enhancement"]),
         "Chapter 2": Chapter("Chapter 2 🎉", ["feature"]),
-        "New Epics": Chapter("New Epics", []),
-        "Silent Live Epics": Chapter("Silent Live Epics", []),
-        "Closed Epics": Chapter("Closed Epics", []),
     }
     chapters.print_empty_chapters = False
     return chapters
@@ -249,7 +248,7 @@ def mock_open_hierarchy_issue_feature(mocker):
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
     label2 = mocker.Mock(spec=MockLabel)
-    label2.name = "label2"
+    label2.name = "label3"
     issue.get_labels.return_value = [label1, label2]
 
     return issue
@@ -561,13 +560,18 @@ def record_with_issue_closed_two_pulls(request):
 @pytest.fixture
 def record_with_hierarchy_issues(request):
     rec_epic_issue = HierarchyIssueRecord(issue=request.getfixturevalue("mock_open_hierarchy_issue_epic"))     # nr:200
-    rec_feature_issue = rec_epic_issue.register_hierarchy_issue(request.getfixturevalue("mock_open_hierarchy_issue_feature"))    # nr:201
+    rec_epic_issue._labels = ["epic"]  # override labels to have epic label
+    rec_feature_issue = HierarchyIssueRecord(request.getfixturevalue("mock_open_hierarchy_issue_feature"))    # nr:201
+    rec_feature_issue.level = 1
+    rec_epic_issue.sub_hierarchy_issues[rec_feature_issue.issue.number] = rec_feature_issue
 
-    issue_task = request.getfixturevalue("mock_closed_issue_type_task") # nr:202
-    rec_task_issue = rec_feature_issue.register_hierarchy_issue(issue_task)
+    rec_task_issue = SubIssueRecord(request.getfixturevalue("mock_closed_issue_type_task")) # nr:202
+    rec_feature_issue.sub_issues[rec_task_issue.issue.number] = rec_task_issue
+
     # add sub_issue
-    sub_issue_no_type = request.getfixturevalue("mock_closed_issue_type_none") # nr:204
-    rec_sub_issue_no_type = rec_task_issue.register_issue(sub_issue_no_type)
+    rec_sub_issue_no_type = SubIssueRecord(request.getfixturevalue("mock_closed_issue_type_none")) # nr:204
+    rec_feature_issue.sub_issues[rec_sub_issue_no_type.issue.number] = rec_sub_issue_no_type
+
     # add pr to sub_issue
     sub_issue_merged_pr = request.getfixturevalue("mock_pull_merged_with_rls_notes_102")  # nr:205
     sub_issue_merged_pr.number = 205   # simulate PR closing sub-issue nr:204
@@ -575,8 +579,8 @@ def record_with_hierarchy_issues(request):
     sub_issue_merged_pr.title = "Sub issue 204 closed by merged PR"
     rec_sub_issue_no_type.register_pull_request(sub_issue_merged_pr)
 
-    issue_bug = request.getfixturevalue("mock_closed_issue_type_bug")   # nr:203
-    rec_bug_issue = rec_feature_issue.register_issue(issue_bug)
+    rec_bug_issue = SubIssueRecord(request.getfixturevalue("mock_closed_issue_type_bug"))   # nr:203
+    rec_feature_issue.sub_issues[rec_bug_issue.issue.number] = rec_bug_issue
 
     # not description keyword used - registration simulate API way (relation)
     rec_task_issue.register_pull_request(request.getfixturevalue("mock_pull_closed_with_rls_notes_101"))

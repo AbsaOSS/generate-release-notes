@@ -64,9 +64,6 @@ class ActionInputs:
     A class representing the inputs provided to the GH action.
     """
 
-    REGIME_DEFAULT = "default"
-    REGIME_ISSUE_HIERARCHY = "issue-hierarchy"
-
     ROW_TYPE_ISSUE = "Issue"
     ROW_TYPE_PR = "PR"
     ROW_TYPE_HIERARCHY_ISSUE = "HierarchyIssue"
@@ -170,29 +167,11 @@ class ActionInputs:
         return chapters
 
     @staticmethod
-    def get_regime() -> str:
+    def get_hierarchy() -> bool:
         """
-        Get the regime parameter value from the action inputs.
+        Check if the hierarchy release notes structure is enabled.
         """
-        return get_action_input("regime", "default")  # type: ignore[return-value]  # default defined
-
-    @staticmethod
-    def get_issue_type_weights() -> list[str]:
-        """
-        Get the issue type weights from the action inputs.
-        """
-        user_input = get_action_input("issue-type-weights", "Epic, Feature")
-        return [item.strip() for item in user_input.split(",")] if user_input else []
-
-    @staticmethod
-    def get_issue_type_first_level() -> str:
-        """
-        Get the issue type first level from the action inputs.
-        """
-        types = ActionInputs.get_issue_type_weights()
-        if len(types) == 0:
-            return "Epic"
-        return types[0]
+        return get_action_input("hierarchy", "false").lower() == "true"
 
     @staticmethod
     def get_duplicity_scope() -> DuplicityScopeEnum:
@@ -415,10 +394,8 @@ class ActionInputs:
         if not isinstance(duplicity_icon, str) or not duplicity_icon.strip() or len(duplicity_icon) != 1:
             errors.append("Duplicity icon must be a non-empty string and have a length of 1.")
 
-        regime = ActionInputs.get_regime()
-        ActionInputs.validate_input(regime, str, "Regime must be a string.", errors)
-        if regime not in [ActionInputs.REGIME_DEFAULT, ActionInputs.REGIME_ISSUE_HIERARCHY]:
-            errors.append(f"Regime '{regime}' is not supported.")
+        hierarchy = ActionInputs.get_hierarchy()
+        ActionInputs.validate_input(hierarchy, bool, "Verbose logging must be a boolean.", errors)
 
         warnings = ActionInputs.get_warnings()
         ActionInputs.validate_input(warnings, bool, "Warnings must be a boolean.", errors)
@@ -476,7 +453,7 @@ class ActionInputs:
         logger.debug("Tag name: %s", tag_name)
         logger.debug("From tag name: %s", from_tag_name)
         logger.debug("Chapters: %s", chapters)
-        logger.debug("Regime: %s", regime)
+        logger.debug("Hierarchy: %s", hierarchy)
         logger.debug("Published at: %s", published_at)
         logger.debug("Skip release notes labels: %s", ActionInputs.get_skip_release_notes_labels())
         logger.debug("Verbose logging: %s", verbose)

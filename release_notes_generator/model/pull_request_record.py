@@ -22,8 +22,8 @@ class PullRequestRecord(Record):
     PR_STATE_CLOSED = "closed"
     PR_STATE_OPEN = "open"
 
-    def __init__(self, pull: PullRequest, skip: bool = False):
-        super().__init__(skip=skip)
+    def __init__(self, pull: PullRequest, labels: Optional[list[str]] = None, skip: bool = False):
+        super().__init__(labels, skip)
 
         self._pull_request: PullRequest = pull
         self._commits: dict[str, Commit] = {}

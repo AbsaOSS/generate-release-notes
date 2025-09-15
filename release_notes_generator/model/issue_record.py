@@ -26,14 +26,16 @@ class IssueRecord(Record):
     ISSUE_STATE_OPEN = "open"
     ISSUE_STATE_ALL = "all"
 
-    def __init__(self, issue: Issue, issue_type: Optional[str] = None, skip: bool = False):
+    def __init__(self, issue: Issue, issue_labels: Optional[list[str]] = None, skip: bool = False):
         super().__init__(skip=skip)
 
         self._issue: Issue = issue
-        self._issue_type: Optional[str] = issue_type
+        self._labels = issue_labels if issue_labels is not None else []
 
         if issue is not None and issue.type is not None:
             self._issue_type = issue.type.name
+        else:
+            self._issue_type = None
 
         self._pull_requests: dict[int, PullRequest] = {}
         self._commits: dict[int, dict[str, Commit]] = {}
@@ -79,9 +81,8 @@ class IssueRecord(Record):
 
     # methods - override Record methods
 
-    @lru_cache(maxsize=None)
-    def get_labels(self) -> set[str]:
-        return {label.name for label in self._issue.get_labels()}
+    def get_labels(self) -> list[str]:
+        return [label.name for label in self._issue.get_labels()]
 
     def find_issue(self, issue_number: int) -> Optional["IssueRecord"]:
         if self._issue.number == issue_number:

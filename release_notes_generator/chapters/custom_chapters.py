@@ -28,6 +28,7 @@ from release_notes_generator.model.commit_record import CommitRecord
 from release_notes_generator.model.hierarchy_issue_record import HierarchyIssueRecord
 from release_notes_generator.model.issue_record import IssueRecord
 from release_notes_generator.model.record import Record
+from release_notes_generator.model.sub_issue_record import SubIssueRecord
 from release_notes_generator.utils.enums import DuplicityScopeEnum
 
 logger = logging.getLogger(__name__)
@@ -45,7 +46,6 @@ class CustomChapters(BaseChapters):
         @param records: A dictionary of records where the key is an integer and the value is a Record object.
         @return: None
         """
-        hierarchy_active = ActionInputs.get_regime() == ActionInputs.REGIME_ISSUE_HIERARCHY
         for record_id, record in records.items():  # iterate all records
             # check if the record should be skipped
             if records[record_id].skip:
@@ -62,39 +62,15 @@ class CustomChapters(BaseChapters):
                 ):
                     continue
 
-                if (
-                    hierarchy_active
-                    and isinstance(records[record_id], HierarchyIssueRecord)
-                    and not records[record_id].is_present_in_chapters
-                ):
-                    self._populate_hierarchy_issue(cast(HierarchyIssueRecord, records[record_id]))
-                    continue
+                pulls_count = 1
+                if isinstance(records[record_id], (HierarchyIssueRecord | IssueRecord | SubIssueRecord)):
+                    pulls_count = cast(IssueRecord, records[record_id]).pull_requests_count()
 
                 for record_label in records[record_id].labels:  # iterate all labels of the record (issue, or 1st PR)
-                    pulls_count = 1
-                    if isinstance(records[record_id], IssueRecord):
-                        pulls_count = cast(IssueRecord, records[record_id]).pull_requests_count()
-
                     if record_label in ch.labels and pulls_count > 0:
                         if not records[record_id].is_present_in_chapters:
                             ch.add_row(record_id, records[record_id].to_chapter_row(True))
                             self.populated_record_numbers_list.append(record_id)
-
-    def _populate_hierarchy_issue(self, record: HierarchyIssueRecord) -> None:
-        # detect Closed "Epic"
-        if record.is_closed and not record.is_present_in_chapters:
-            ch = self.chapters[f"Closed {ActionInputs.get_issue_type_first_level()}s"]
-
-        # detect New root "Epic"
-        elif record.is_open and record.issue.created_at > self.since:
-            ch = self.chapters[f"New {ActionInputs.get_issue_type_first_level()}s"]
-
-        # detect Silent living "Epic"
-        else:
-            ch = self.chapters[f"Silent Live {ActionInputs.get_issue_type_first_level()}s"]
-
-        ch.add_row(record.record_id, record.to_chapter_row(True))
-        self.populated_record_numbers_list.append(record.record_id)
 
     def from_yaml_array(self, chapters: list[dict[str, str]]) -> "CustomChapters":
         """

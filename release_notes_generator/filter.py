@@ -112,25 +112,27 @@ class FilterByRelease(Filter):
 
     def _filter_issues(self, data: MinedData) -> list:
         """
-        Filter issues based on the selected regime.
+        Filter issues based on the selected filtering type - default or hierarchy.
 
         @param data: The mined data containing issues.
         @return: The filtered list of issues.
         """
-        # Currently, only the default regime is implemented.
-        if ActionInputs.get_regime() == ActionInputs.REGIME_ISSUE_HIERARCHY:
+        if ActionInputs.get_hierarchy():
+            logger.debug("Used hierarchy issue filtering logic.")
             return self._filter_issues_issue_hierarchy(data)
 
-
-        logger.debug("Used default issue filtering regime.")
+        logger.debug("Used default issue filtering logic.")
         return self._filter_issues_default(data)
 
     def _filter_issues_default(self, data: MinedData) -> list:
         """
         Default filtering for issues: filter out closed issues before the release date.
 
-        @param data: The mined data containing issues.
-        @return: The filtered list of issues.
+        Parameters:
+            data (MinedData): The mined data containing issues and release information.
+
+        Returns:
+            list: The filtered list of issues.
         """
         return [
             issue
@@ -140,21 +142,20 @@ class FilterByRelease(Filter):
 
     def _filter_issues_issue_hierarchy(self, data: MinedData) -> list:
         """
-        Filtering for issues in the 'issue-hierarchy' regime:
-        - filter out closed issues before the release date
-        - keep open issues
-        - keep issues with types defined in `issue-type-weights`
+        Hierarchy filtering for issues: filter out closed issues before the release date,
+        but always include issues of certain types (e.g., "Epic", "Story").
 
-        @param data: The mined data containing issues.
-        @return: The filtered list of issues.
+        Parameters:
+            data (MinedData): The mined data containing issues and release information.
+
+        Returns:
+            list: The filtered list of issues.
         """
-        issue_types = ActionInputs.get_issue_type_weights()
         return list(
             filter(
                 lambda issue: (
-                    (issue.closed_at is not None and issue.closed_at >= data.since)
-                    or (issue.state == "open")
-                    or (issue.type is not None and issue.type.name in issue_types)
+                    (issue.closed_at is not None and issue.closed_at >= data.since)     # closed after the release
+                    or (issue.state == "open")                                          # still open
                 ),
                 data.issues,
             )

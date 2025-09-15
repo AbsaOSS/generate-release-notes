@@ -93,9 +93,8 @@ class ReleaseNotesGenerator:
 
         assert data_filtered_by_release.repository is not None, "Repository must not be None"
 
-        # get record factory instance in dependency on active regime
-        rls_notes_records: dict[int | str, Record] = self._get_record_factory().generate(
-            github=self._github_instance, data=data_filtered_by_release
+        rls_notes_records: dict[int | str, Record] = self._get_record_factory(github=self._github_instance).generate(
+            data=data_filtered_by_release
         )
 
         return ReleaseNotesBuilder(
@@ -104,17 +103,16 @@ class ReleaseNotesGenerator:
             changelog_url=changelog_url,
         ).build()
 
-    def _get_record_factory(self) -> RecordFactory:
+    def _get_record_factory(self, github: Github) -> RecordFactory:
         """
         Determines and returns the appropriate RecordFactory instance based on the action inputs.
 
         Returns:
             RecordFactory: An instance of either IssueHierarchyRecordFactory or RecordFactory.
         """
-        match ActionInputs.get_regime():
-            case ActionInputs.REGIME_ISSUE_HIERARCHY:
-                logger.info("Using IssueHierarchyRecordFactory based on action inputs.")
-                return IssueHierarchyRecordFactory()
-            case _:
-                logger.info("Using default RecordFactory based on action inputs.")
-                return DefaultRecordFactory()
+        if ActionInputs.get_hierarchy():
+            logger.info("Using IssueHierarchyRecordFactory based on action inputs.")
+            return IssueHierarchyRecordFactory(github)
+
+        logger.info("Using default RecordFactory based on action inputs.")
+        return DefaultRecordFactory(github)

@@ -32,14 +32,10 @@ inputs:
     description: 'The tag name of the previous release to use as a start reference point for the current release notes.'
     required: false
     default: ''
-  regime:
-    description: 'Regime of the release notes generation. Options: default.'
+  hierarchy:
+    description: 'Use hierarchy of issues and pull requests.'
     required: false
-    default: 'default'
-  issue-type-weights:
-    description: 'A comma-separated list defining the order of issue types by their weight'
-    required: false
-    default: 'Epic, Feature'
+    default: 'false'
   duplicity-icon:
     description: 'Icon to be used for duplicity warning. Icon is placed before the record line.'
     required: false
@@ -145,8 +141,7 @@ runs:
         INPUT_TAG_NAME: ${{ inputs.tag-name }}
         INPUT_CHAPTERS: ${{ inputs.chapters }}
         INPUT_FROM_TAG_NAME: ${{ inputs.from-tag-name }}
-        INPUT_REGIME: ${{ inputs.regime }}
-        INPUT_ISSUE_TYPE_WEIGHTS: ${{ inputs.issue-type-weights }}
+        INPUT_HIERARCHY: ${{ inputs.hierarchy }}
         INPUT_DUPLICITY_SCOPE: ${{ inputs.duplicity-scope }}
         INPUT_DUPLICITY_ICON: ${{ inputs.duplicity-icon }}
         INPUT_WARNINGS: ${{ inputs.warnings }}
