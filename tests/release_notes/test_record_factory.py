@@ -188,7 +188,7 @@ def test_generate_with_issues_and_pulls_and_commits(mocker, mock_repo):
     data.commits = [commit1, commit2, commit3]
     data.repository = mock_repo
 
-    records = DefaultRecordFactory().generate(mock_github_client, data)
+    records = DefaultRecordFactory(mock_github_client).generate(data)
 
     # Check if records for issues and PRs were created
     assert len(records) == 3
@@ -228,7 +228,7 @@ def test_generate_with_issues_and_pulls_and_commits_with_skip_labels(mocker, moc
     data.pull_requests = [pr1, pr2]
     data.commits = [commit1, commit2, commit3]
 
-    records = DefaultRecordFactory().generate(mock_github_client, data)
+    records = DefaultRecordFactory(mock_github_client).generate(data)
 
     # Check if records for issues and PRs were created
     assert len(records) == 3
@@ -278,7 +278,7 @@ def test_generate_with_no_commits(mocker, mock_repo):
     data.commits = []  # No commits
     data.repository = mock_repo
     mocker.patch("release_notes_generator.record.factory.default_record_factory.get_issues_for_pr", return_value=[2])
-    records = DefaultRecordFactory().generate(mock_github_client, data)
+    records = DefaultRecordFactory(mock_github_client).generate(data)
 
     assert 2 == len(records)
 
@@ -313,7 +313,7 @@ def test_generate_with_no_commits_with_wrong_issue_number_in_pull_body_mention(m
     data.commits = []  # No commits
     data.repository = mock_repo
     mocker.patch("release_notes_generator.record.factory.default_record_factory.get_issues_for_pr", return_value=[2])
-    records = DefaultRecordFactory().generate(mock_github_client, data)
+    records = DefaultRecordFactory(mock_github_client).generate(data)
 
     assert 2 == len(records)
 
@@ -351,7 +351,7 @@ def test_generate_with_no_issues(mocker, request):
     data.repository = request.getfixturevalue("mock_repo")
     data.issues = []  # No issues
 
-    records = DefaultRecordFactory().generate(mock_github_client, data)
+    records = DefaultRecordFactory(mock_github_client).generate(data)
 
     # Verify the record creation
     assert 2 == len(records)
@@ -393,7 +393,7 @@ def test_generate_with_no_issues_skip_labels(mocker, request):
     data.repository = request.getfixturevalue("mock_repo")
     data.issues = []  # No issues
 
-    records = DefaultRecordFactory().generate(mock_github_client, data)
+    records = DefaultRecordFactory(mock_github_client).generate(data)
 
     # Verify the record creation
     assert 2 == len(records)
@@ -423,7 +423,7 @@ def test_generate_with_no_pulls(mocker, mock_repo):
     data.repository = mock_repo
     data.pull_requests = []  # No pull requests
     data.commits = []  # No commits
-    records = DefaultRecordFactory().generate(mock_github_client, data)
+    records = DefaultRecordFactory(mock_github_client).generate(data)
 
     # Verify the record creation
     assert 2 == len(records)

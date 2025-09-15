@@ -48,7 +48,9 @@ from release_notes_generator.utils.constants import (
     CODERABBIT_RELEASE_NOTES_TITLE,
     CODERABBIT_RELEASE_NOTE_TITLE_DEFAULT,
     CODERABBIT_SUMMARY_IGNORE_GROUPS,
-    ROW_FORMAT_HIERARCHY_ISSUE, SUPPORTED_ROW_FORMAT_KEYS_ISSUE, SUPPORTED_ROW_FORMAT_KEYS_PULL_REQUEST,
+    ROW_FORMAT_HIERARCHY_ISSUE,
+    SUPPORTED_ROW_FORMAT_KEYS_ISSUE,
+    SUPPORTED_ROW_FORMAT_KEYS_PULL_REQUEST,
     SUPPORTED_ROW_FORMAT_KEYS_HIERARCHY_ISSUE,
 )
 from release_notes_generator.utils.enums import DuplicityScopeEnum
@@ -394,8 +396,8 @@ class ActionInputs:
         if not isinstance(duplicity_icon, str) or not duplicity_icon.strip() or len(duplicity_icon) != 1:
             errors.append("Duplicity icon must be a non-empty string and have a length of 1.")
 
-        hierarchy = ActionInputs.get_hierarchy()
-        ActionInputs.validate_input(hierarchy, bool, "Verbose logging must be a boolean.", errors)
+        hierarchy: bool = ActionInputs.get_hierarchy()
+        ActionInputs.validate_input(hierarchy, bool, "Hierarchy must be a boolean.", errors)
 
         warnings = ActionInputs.get_warnings()
         ActionInputs.validate_input(warnings, bool, "Warnings must be a boolean.", errors)

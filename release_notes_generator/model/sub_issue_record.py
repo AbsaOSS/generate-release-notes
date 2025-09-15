@@ -1,6 +1,7 @@
 """
 A module that defines the IssueRecord class, which represents an issue record in the release notes.
 """
+
 import logging
 from typing import Optional, cast
 
@@ -38,4 +39,3 @@ class SubIssueRecord(IssueRecord):
         return cast(SubIssue, self._issue)
 
     # properties - specific to IssueRecord
-

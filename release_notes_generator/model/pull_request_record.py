@@ -109,7 +109,7 @@ class PullRequestRecord(Record):
     def get_labels(self) -> set[str]:
         return {label.name for label in self._pull_request.get_labels()}
 
-    def to_chapter_row(self, add_into_chapters: bool = False) -> str:
+    def to_chapter_row(self, add_into_chapters: bool = True) -> str:
         if add_into_chapters:
             self.added_into_chapters()
 

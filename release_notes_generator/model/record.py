@@ -106,10 +106,15 @@ class Record(metaclass=ABCMeta):
     # abstract methods
 
     @abstractmethod
-    def to_chapter_row(self, add_into_chapters: bool = False) -> str:
+    def to_chapter_row(self, add_into_chapters: bool = True) -> str:
         """
         Converts the record to a string row in a chapter.
-        @return: The record as a row string.
+
+        Parameters:
+            add_into_chapters (bool): Whether to increment the chapter count for this record.
+
+        Returns:
+            str: The string representation of the record in a chapter row.
         """
 
     @abstractmethod

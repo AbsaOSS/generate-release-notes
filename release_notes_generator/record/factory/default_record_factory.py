@@ -45,6 +45,7 @@ class DefaultRecordFactory(RecordFactory):
     """
     A class used to generate records for release notes.
     """
+
     def __init__(self, github: Github) -> None:
         self._github: Github = github
         rate_limiter = GithubRateLimiter(github)
@@ -62,7 +63,9 @@ class DefaultRecordFactory(RecordFactory):
         def register_pull_request(pull: PullRequest, skip_rec: bool) -> None:
             detected_issues = extract_issue_numbers_from_body(pull)
             logger.debug("Detected issues - from body: %s", detected_issues)
-            detected_issues.update(safe_call(get_issues_for_pr)(pull_number=pull.number))   # TODO - safe call is now inside
+            detected_issues.update(
+                safe_call(get_issues_for_pr)(pull_number=pull.number)
+            )  # TODO - safe call is now inside
             logger.debug("Detected issues - final: %s", detected_issues)
 
             for parent_issue_number in detected_issues:
@@ -153,7 +156,9 @@ class DefaultRecordFactory(RecordFactory):
         return False
 
     @staticmethod
-    def _create_record_for_issue(records: dict[int | str, Record], i: Issue, issue_labels: Optional[list[str]] = None) -> None:
+    def _create_record_for_issue(
+        records: dict[int | str, Record], i: Issue, issue_labels: Optional[list[str]] = None
+    ) -> None:
         """
         Create a record for an issue.
 

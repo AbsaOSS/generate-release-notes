@@ -25,7 +25,7 @@ success_case = {
     "get_tag_name": "tag_name",
     "get_from_tag_name": "from_tag_name",
     "get_chapters": [{"title": "Title", "label": "Label"}],
-    "get_hierarchy": "false",
+    "get_hierarchy": False,
     "get_duplicity_scope": "custom",
     "get_duplicity_icon": "🔁",
     "get_warnings": True,

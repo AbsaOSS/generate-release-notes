@@ -507,9 +507,9 @@ def mock_pull_no_rls_notes(mocker):
 @pytest.fixture
 def mock_commit(mocker):
     commit = mocker.Mock()
-    commit.author = "author"
+    commit.author.login = "author"
     commit.sha = "merge_commit_sha"
-    commit.message = "Fixed bug"
+    commit.commit.message = "Fixed bug"
     return commit
 
 # Fixtures for Record(s)

@@ -13,12 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from typing import Optional
 
 from release_notes_generator.model.record import Record
 
 class DummyRecord(Record):
-    def __init__(self, skip=False, labels=None, authors=None, closed=True, record_id=1, rls_notes="notes"):
-        super().__init__(skip)
+    def __init__(self, skip=False, labels=None, authors=None, closed=True, record_id=1, rls_notes: Optional[str]="notes"):
+        super().__init__(labels, skip)
         self._labels = labels or ["bug", "feature"]
         self._authors = authors or ["alice", "bob"]
         self._closed = closed
@@ -45,11 +46,14 @@ class DummyRecord(Record):
     def authors(self):
         return self._authors
 
-    def to_chapter_row(self):
+    def to_chapter_row(self, add_into_chapters: bool = True):
         return f"Row for {self._record_id}"
 
     def get_rls_notes(self, line_marks=None):
         return self._rls_notes
+
+    def get_labels(self) -> list[str]:
+        return self._labels
 
 def test_is_present_in_chapters():
     rec = DummyRecord()

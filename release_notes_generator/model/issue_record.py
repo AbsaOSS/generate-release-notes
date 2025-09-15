@@ -1,6 +1,7 @@
 """
 A module that defines the IssueRecord class, which represents an issue record in the release notes.
 """
+
 import logging
 import re
 from functools import lru_cache
@@ -90,7 +91,7 @@ class IssueRecord(Record):
         else:
             return None
 
-    def to_chapter_row(self, add_into_chapters: bool = False) -> str:
+    def to_chapter_row(self, add_into_chapters: bool = True) -> str:
         if add_into_chapters:
             self.added_into_chapters()
         row_prefix = f"{ActionInputs.get_duplicity_icon()} " if self.present_in_chapters() > 1 else ""

@@ -134,11 +134,7 @@ class FilterByRelease(Filter):
         Returns:
             list: The filtered list of issues.
         """
-        return [
-            issue
-            for issue in data.issues
-            if (issue.closed_at is None) or (issue.closed_at >= data.since)
-        ]
+        return [issue for issue in data.issues if (issue.closed_at is None) or (issue.closed_at >= data.since)]
 
     def _filter_issues_issue_hierarchy(self, data: MinedData) -> list:
         """
@@ -154,8 +150,8 @@ class FilterByRelease(Filter):
         return list(
             filter(
                 lambda issue: (
-                    (issue.closed_at is not None and issue.closed_at >= data.since)     # closed after the release
-                    or (issue.state == "open")                                          # still open
+                    (issue.closed_at is not None and issue.closed_at >= data.since)  # closed after the release
+                    or (issue.state == "open")  # still open
                 ),
                 data.issues,
             )

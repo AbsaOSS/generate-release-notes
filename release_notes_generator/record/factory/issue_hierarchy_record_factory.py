@@ -46,6 +46,7 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
     """
     A class used to generate records for release notes.
     """
+
     def __init__(self, github: Github) -> None:
         super().__init__(github)
 
@@ -96,8 +97,9 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
         )
         return self.__records
 
-    def _register_pull_and_its_commits_to_issue(self, pull: PullRequest, data: MinedData,
-                                                records: dict[int | str, Record], registered_commits: list[str]) -> None:
+    def _register_pull_and_its_commits_to_issue(
+        self, pull: PullRequest, data: MinedData, records: dict[int | str, Record], registered_commits: list[str]
+    ) -> None:
         pull_labels = [label.name for label in pull.get_labels()]
         skip_record: bool = any(item in pull_labels for item in ActionInputs.get_skip_release_notes_labels())
         related_commits = [c for c in data.commits if c.sha == pull.merge_commit_sha]
@@ -114,23 +116,23 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
                         pull.number,
                         issue_number,
                     )
-                    parent_issue = (
-                        self._safe_call(data.repository.get_issue)(issue_number) if data.repository else None
-                    )
+                    parent_issue = self._safe_call(data.repository.get_issue)(issue_number) if data.repository else None
                     if parent_issue is not None:
                         self._create_issue_record_using_sub_issues_existence(parent_issue)
 
-                if issue_number in records.keys() and isinstance(records[issue_number], (SubIssueRecord, HierarchyIssueRecord, IssueRecord)):
+                if issue_number in records.keys() and isinstance(
+                    records[issue_number], (SubIssueRecord, HierarchyIssueRecord, IssueRecord)
+                ):
                     rec = cast(IssueRecord, records[issue_number])
                     rec.register_pull_request(pull)
                     logger.debug("Registering pull number: %s, title : %s", pull.number, pull.title)
 
-                    for c in related_commits:   # register commits to the PR record
+                    for c in related_commits:  # register commits to the PR record
                         rec.register_commit(pull, c)
                         logger.debug("Registering commit %s to PR %d", c.sha, pull.number)
 
         pr_rec = PullRequestRecord(pull, pull_labels, skip_record)
-        for c in related_commits:   # register commits to the PR record
+        for c in related_commits:  # register commits to the PR record
             pr_rec.register_commit(c)
         records[pull.number] = pr_rec
         logger.debug("Created record for PR %d: %s", pull.number, pull.title)
@@ -145,7 +147,7 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
             for si in sub_issues:
                 self._create_record_for_sub_issue(si)
                 # register sub-issue and its parent for later hierarchy building
-                self.__sub_issue_parents[si.number] = issue.number     # Note: GitHub now allows only 1 parent
+                self.__sub_issue_parents[si.number] = issue.number  # Note: GitHub now allows only 1 parent
 
     def _create_record_for_hierarchy_issue(self, i: Issue, issue_labels: Optional[list[str]] = None) -> None:
         """
@@ -208,12 +210,12 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
                 sub_rec = self.__records[sub_issue_number]
 
                 if isinstance(sub_rec, SubIssueRecord):
-                    parent_rec.sub_issues.append(sub_rec)           # add to parent as SubIssueRecord
-                    self.__records.pop(sub_issue_number)            # remove from main records as it is sub-one
+                    parent_rec.sub_issues.append(sub_rec)  # add to parent as SubIssueRecord
+                    self.__records.pop(sub_issue_number)  # remove from main records as it is sub-one
                     self.__sub_issue_parents.pop(sub_issue_number)  # remove from sub-parents as it is now sub-one
                 elif isinstance(sub_rec, HierarchyIssueRecord):
-                    parent_rec.sub_issues.append(sub_rec)           # add to parent as 'Sub' HierarchyIssueRecord
-                    self.__records.pop(sub_issue_number)            # remove from main records as it is sub-one
+                    parent_rec.sub_issues.append(sub_rec)  # add to parent as 'Sub' HierarchyIssueRecord
+                    self.__records.pop(sub_issue_number)  # remove from main records as it is sub-one
                     self.__sub_issue_parents.pop(sub_issue_number)  # remove from sub-parents as it is now sub-one
                 else:
                     logger.error("Detected IssueRecord in position of SubIssueRecord - skipping it")

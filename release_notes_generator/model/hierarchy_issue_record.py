@@ -1,6 +1,7 @@
 """
 A module that defines the IssueRecord class, which represents an issue record in the release notes.
 """
+
 import logging
 from functools import lru_cache
 from typing import Optional, Any
@@ -70,7 +71,7 @@ class HierarchyIssueRecord(IssueRecord):
         return list(labels)
 
     # methods - override ancestor methods
-    def to_chapter_row(self, add_into_chapters: bool = False) -> str:
+    def to_chapter_row(self, add_into_chapters: bool = True) -> str:
         if add_into_chapters:
             self.added_into_chapters()
         row_prefix = f"{ActionInputs.get_duplicity_icon()} " if self.present_in_chapters() > 1 else ""
@@ -114,7 +115,7 @@ class HierarchyIssueRecord(IssueRecord):
             sub_indent = "  " * (self._level + 1)
             for sub_issue in self._sub_issues.values():
                 if sub_issue.is_open:
-                    continue    # only closed issues are reported in release notes
+                    continue  # only closed issues are reported in release notes
 
                 sub_issue_block = "- " + sub_issue.to_chapter_row()
                 ind_child_block = "\n".join(
