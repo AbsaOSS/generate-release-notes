@@ -41,9 +41,9 @@ def prepare_custom_chapters() -> CustomChapters:
         ActionInputs.get_chapters()
     )
     if ActionInputs.get_regime() == ActionInputs.REGIME_ISSUE_HIERARCHY:
-        custom_chapters.chapters[f"New {ActionInputs.get_issue_type_first_level()}s"] = Chapter(title="New Epics")
-        custom_chapters.chapters[f"Silent Live {ActionInputs.get_issue_type_first_level()}s"] = Chapter(title="Silent Live")
-        custom_chapters.chapters[f"Closed {ActionInputs.get_issue_type_first_level()}s"] = Chapter(title="Closed Epics")
+        custom_chapters.chapters[f"New {ActionInputs.get_issue_type_first_level()}s"] = Chapter(title=f"New {ActionInputs.get_issue_type_first_level()}s")
+        custom_chapters.chapters[f"Silent Live {ActionInputs.get_issue_type_first_level()}s"] = Chapter(title=f"Silent Live {ActionInputs.get_issue_type_first_level()}s")
+        custom_chapters.chapters[f"Closed {ActionInputs.get_issue_type_first_level()}s"] = Chapter(title=f"Closed {ActionInputs.get_issue_type_first_level()}s")
 
     return custom_chapters
 

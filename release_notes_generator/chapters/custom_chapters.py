@@ -77,7 +77,7 @@ class CustomChapters(BaseChapters):
 
                     if record_label in ch.labels and pulls_count > 0:
                         if not records[record_id].is_present_in_chapters:
-                            ch.add_row(record_id, records[record_id].to_chapter_row())
+                            ch.add_row(record_id, records[record_id].to_chapter_row(True))
                             self.populated_record_numbers_list.append(record_id)
 
     def _populate_hierarchy_issue(self, record: HierarchyIssueRecord) -> None:
@@ -93,7 +93,7 @@ class CustomChapters(BaseChapters):
         else:
             ch = self.chapters[f"Silent Live {ActionInputs.get_issue_type_first_level()}s"]
 
-        ch.add_row(record.record_id, record.to_chapter_row())
+        ch.add_row(record.record_id, record.to_chapter_row(True))
         self.populated_record_numbers_list.append(record.record_id)
 
     def from_yaml_array(self, chapters: list[dict[str, str]]) -> "CustomChapters":

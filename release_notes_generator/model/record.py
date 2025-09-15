@@ -63,6 +63,9 @@ class Record(metaclass=ABCMeta):
         Returns:
             list[str]: A list of labels associated with the record.
         """
+        if len(self._labels) == 0:
+            self._labels = self.get_labels()
+
         return list(self._labels)
 
     @property
@@ -101,16 +104,22 @@ class Record(metaclass=ABCMeta):
             list[str]: A list of authors associated with the record.
         """
 
-    # to be overridden by subclasses and called via super() as the first line
-    def to_chapter_row(self) -> str:
+    # abstract methods
+
+    @abstractmethod
+    def to_chapter_row(self, add_into_chapters: bool = False) -> str:
         """
         Converts the record to a string row in a chapter.
         @return: The record as a row string.
         """
-        self.added_into_chapters()
-        return ""
 
-    # abstract methods
+    @abstractmethod
+    def get_labels(self) -> set[str]:
+        """
+        Gets the labels of the record.
+        Returns:
+            set[str]: A list of labels associated with the record.
+        """
 
     @abstractmethod
     def get_rls_notes(self, line_marks: Optional[list[str]] = None) -> str:

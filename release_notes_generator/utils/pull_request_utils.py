@@ -45,6 +45,9 @@ def extract_issue_numbers_from_body(pr: PullRequest) -> set[int]:
     # Extract the issue numbers from the matches
     issue_numbers = {int(match[-1]) for match in issue_matches}
 
+    if pr.number == 3645:
+        print(f"PR #{pr.number} - Extracted issue numbers from body: {issue_numbers}")
+
     return issue_numbers
 
 
@@ -69,4 +72,8 @@ def get_issues_for_pr(pull_number: int) -> list[int]:
         node["number"]
         for node in response.json()["data"]["repository"]["pullRequest"]["closingIssuesReferences"]["nodes"]
     ]
+
+    if pull_number == 3645:
+        print(f"PR #{pull_number} - Extracted issue numbers from GitHub API: {numbers}")
+
     return numbers

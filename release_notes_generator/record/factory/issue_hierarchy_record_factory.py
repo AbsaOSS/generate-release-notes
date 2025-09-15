@@ -23,8 +23,8 @@ from typing import cast, Optional
 
 from github import Github
 from github.Issue import Issue, SubIssue
+from github.Label import Label
 from github.PullRequest import PullRequest
-from github.Commit import Commit
 
 from release_notes_generator.model.commit_record import CommitRecord
 from release_notes_generator.model.hierarchy_issue_record import HierarchyIssueRecord
@@ -58,15 +58,35 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
             dict[int|str, Record]: A dictionary of records where the key is the issue or pull request number.
         """
 
-        def register_pull_request(pull: PullRequest, skip_rec: bool) -> None:
+        def register_pull_request(pull: PullRequest, skip_rec: bool) -> Optional["IssueRecord"]:
             detected_issues = extract_issue_numbers_from_body(pull)
             logger.debug("Detected issues - from body: %s", detected_issues)
             detected_issues.update(safe_call(get_issues_for_pr)(pull_number=pull.number))
             logger.debug("Detected issues - final: %s", detected_issues)
 
             for parent_issue_number in detected_issues:
-                # create an issue record if not present for PR parent
-                if parent_issue_number not in records:
+                # try to find an issue record if not present for PR parent
+                if parent_issue_number in data_issue_numbers:
+                    # find it and register
+                    rec = records.get(parent_issue_number)
+                    if rec is None:
+                        # the parent issue is sub-issue of some hierarchy issue - find the hierarchy issue and register to it
+                        for r in records.values():
+                            if isinstance(r, HierarchyIssueRecord):
+                                rec = cast(HierarchyIssueRecord, r).find_issue(parent_issue_number)
+                                if rec is not None:
+                                    break
+
+                    if rec is not None and isinstance(rec, PullRequestRecord):
+                        continue
+                    elif rec is not None and isinstance(rec, IssueRecord):
+                        rec.register_pull_request(pull)
+                        return rec
+                    elif rec is not None and  isinstance(rec, HierarchyIssueRecord):
+                        rec.register_pull_request_in_hierarchy(parent_issue_number, pull)
+                        return rec
+
+                else:   # parent_issue_number not in data_issue_numbers:
                     logger.warning(
                         "Detected PR %d linked to issue %d which is not in the list of received issues. "
                         "Fetching ...",
@@ -78,43 +98,51 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
                     )
                     if parent_issue is not None:
                         IssueHierarchyRecordFactory.create_record_for_issue(records, parent_issue)
+                        data_issue_numbers.append(parent_issue_number)
+                        rec = cast(IssueRecord, records[parent_issue_number])
+                        rec.register_pull_request(pull)
+                        logger.debug("Registering PR %d: %s to Issue %d", pull.number, pull.title, parent_issue_number)
+                        return rec
 
-                if parent_issue_number in records:
-                    cast(IssueRecord, records[parent_issue_number]).register_pull_request(pull)
-                    logger.debug("Registering PR %d: %s to Issue %d", pull.number, pull.title, parent_issue_number)
-                else:
+                # solo PR found (no linked issue found)
+                if parent_issue_number not in data_issue_numbers:
                     logger.debug(
                         "Registering stand-alone PR %d: %s as mentioned Issue %d not found.",
                         pull.number,
                         pull.title,
                         parent_issue_number,
                     )
+                return None
 
         records: dict[int | str, Record] = {}
         rate_limiter = GithubRateLimiter(github)
         safe_call = safe_call_decorator(rate_limiter)
         registered_issues: list[int] = []
+        data_issue_numbers = [issue.number for issue in data.issues]
 
-        logger.debug("Registering issues to records...")
+        logger.debug("Registering hierarchy issues to records...")
         # create hierarchy issue records first => dict of hierarchy issues with registered sub-issues
         #   1. round - the most heavy ones  (e.g. Epic)
         #   2. round - the second most heavy ones   (e.g. Features)
         #   3. round - the rest (e.g. Bugs, Tasks, etc.) but can be just another hierarchy - depend on configuration
         for hierarchy_issue in ActionInputs.get_issue_type_weights():
+            logger.debug("Registering hierarchy issues of type: %s", hierarchy_issue)
             for issue in data.issues:
-                issue_type = self._get_issue_type(issue)
+                issue_labels: list[Label] = list(issue.get_labels())
+                issue_type = self._get_issue_type(issue, issue_labels)
                 if issue_type is not None and issue_type == hierarchy_issue and issue.number not in registered_issues:
                     sub_issues = list(issue.get_sub_issues())
                     if len(sub_issues) == 0:
                         continue    # not a hierarchy issue even if labeled or issue type say so
 
-                    self.create_record_for_hierarchy_issue(records, issue, issue_type)
+                    self.create_record_for_hierarchy_issue(records, issue, issue_type, issue_labels)
                     registered_issues.append(issue.number)
                     rec: HierarchyIssueRecord = cast(HierarchyIssueRecord, records[issue.number])
                     if len(sub_issues) > 0:
-                        self._solve_sub_issues(rec, data, registered_issues, sub_issues)
+                        self._solve_sub_issues(rec, data, data_issue_numbers, registered_issues, sub_issues)
 
         # create or register non-hierarchy issue related records
+        logger.debug("Registering issues to records...")
         for issue in data.issues:
             if issue.number not in registered_issues:
                 parent_issue = issue.get_sub_issues()
@@ -123,29 +151,39 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
                 else:
                     IssueHierarchyRecordFactory.create_record_for_issue(records, issue)
 
-        logger.debug("Registering pull requests to records...")
+        logger.debug("Registering pull requests to records and commit to Pull Requests...")
+        registered_commits: list[str] = []
         for pull in data.pull_requests:
             pull_labels = [label.name for label in pull.get_labels()]
             skip_record: bool = any(item in pull_labels for item in ActionInputs.get_skip_release_notes_labels())
+            related_commits = [c for c in data.commits if c.sha == pull.merge_commit_sha]
+            registered_commits.extend(c.sha for c in related_commits)
 
             if not safe_call(get_issues_for_pr)(pull_number=pull.number) and not extract_issue_numbers_from_body(pull):
-                records[pull.number] = PullRequestRecord(pull, skip=skip_record)
+                pr_rec = PullRequestRecord(pull, skip=skip_record)
+                for c in related_commits:   # register commits to the PR record
+                    pr_rec.register_commit(c)
+                records[pull.number] = pr_rec
                 logger.debug("Created record for PR %d: %s", pull.number, pull.title)
+
             else:
                 logger.debug("Registering pull number: %s, title : %s", pull.number, pull.title)
-                register_pull_request(pull, skip_record)
+                rec: IssueRecord = register_pull_request(pull, skip_record)
+                for c in related_commits:   # register commits to the PR record
+                    if rec is not None:
+                        rec.register_commit(pull, c)
 
-        logger.debug("Registering commits to records...")
-        detected_direct_commits_count = sum(
-            not IssueHierarchyRecordFactory.register_commit_to_record(records, commit) for commit in data.commits
-        )
+        logger.debug("Registering direct commits to records...")
+        for commit in data.commits:
+            if commit.sha not in registered_commits:
+                records[commit.sha] = CommitRecord(commit)
 
         logger.info(
             "Generated %d records from %d issues and %d PRs, with %d commits detected.",
             len(records),
             len(data.issues),
             len(data.pull_requests),
-            detected_direct_commits_count,
+            len(data.commits),
         )
         return records
 
@@ -153,74 +191,68 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
         self,
         record: HierarchyIssueRecord,
         data: MinedData,
+        data_issue_numbers: list[int],
         registered_issues: list[int],
         sub_issues: list[SubIssue],
     ) -> None:
+        logger.debug("Solving sub issues for hierarchy issue record %d", record.issue.number)
+
         for sub_issue in sub_issues:  # closed in previous rls, in current one, open ones
+            logger.debug("Processing sub-issue %d", sub_issue.number)
+
             if sub_issue.number in registered_issues:  # already registered
+                logger.debug("Sub-issue %d already registered, skipping", sub_issue.number)
                 continue
-            if sub_issue.number not in data.issues:  # not closed in current rls or not opened == not in mined data
+            if sub_issue.number not in data_issue_numbers:  # not closed in current rls or not opened == not in mined data
+                logger.debug("Sub-issue %d not registered, skipping", sub_issue.number)
                 continue
 
             sub_sub_issues = list(sub_issue.get_sub_issues())
             if len(sub_sub_issues) > 0:
+                logger.debug("Solving sub issues for sub-issue: %s", sub_issue.number)
                 rec = record.register_hierarchy_issue(sub_issue)
                 registered_issues.append(sub_issue.number)
-                self._solve_sub_issues(rec, data, registered_issues, sub_sub_issues)
+                self._solve_sub_issues(rec, data, data_issue_numbers, registered_issues, sub_sub_issues)
             else:
+                logger.debug("Solving sub issues for sub-issue: %s", sub_issue.number)
                 record.register_issue(sub_issue)
                 registered_issues.append(sub_issue.number)
 
     @staticmethod
-    def register_commit_to_record(records: dict[int | str, Record], commit: Commit) -> bool:
-        """
-        Register a commit to a record.
-
-        @param commit: The commit to register.
-        @return: True if the commit was registered to a record, False otherwise
-        """
-        for record in records.values():
-            if isinstance(record, IssueRecord):
-                rec_i = cast(IssueRecord, record)
-                for number in rec_i.get_pull_request_numbers():
-                    pr = rec_i.get_pull_request(number)
-                    if pr and pr.merge_commit_sha == commit.sha:
-                        rec_i.register_commit(pr, commit)
-                        return True
-
-            elif isinstance(record, PullRequestRecord):
-                rec_pr = cast(PullRequestRecord, record)
-                if rec_pr.is_commit_sha_present(commit.sha):
-                    rec_pr.register_commit(commit)
-                    return True
-
-        records[commit.sha] = CommitRecord(commit=commit)
-        logger.debug("Created record for direct commit %s: %s", commit.sha, commit.commit.message)
-        return False
-
-    @staticmethod
-    def create_record_for_hierarchy_issue(records: dict[int | str, Record], i: Issue, issue_type: Optional[str]) -> None:
+    def create_record_for_hierarchy_issue(records: dict[int | str, Record], i: Issue, issue_type: Optional[str],
+                                          issue_labels: list[Label]) -> None:
         """
         Create a record for an issue.
 
-        @param i: Issue instance.
-        @return: None
+        Parameters:
+            records: The records to create the record for.
+            i: Issue instance.
+            issue_type: The type of the issue.
+            issue_labels: The labels of the issue.
+
+        Returns:
+            None
         """
         # check for skip labels presence and skip when detected
-        issue_labels = [label.name for label in i.get_labels()]
-        skip_record = any(item in issue_labels for item in ActionInputs.get_skip_release_notes_labels())
+        issue_labels_names = [label.name for label in issue_labels]
+        skip_record = any(item in issue_labels_names for item in ActionInputs.get_skip_release_notes_labels())
         records[i.number] = HierarchyIssueRecord(issue=i, issue_type=issue_type, skip=skip_record)
-
-        logger.debug("Created record for issue %d: %s", i.number, i.title)
+        logger.debug("Created record for hierarchy issue %d: %s (type: %s)", i.number, i.title, issue_type)
 
     @staticmethod
-    def _get_issue_type(issue: Issue) -> Optional[str]:
+    def _get_issue_type(issue: Issue, issue_labels: list[Label]) -> Optional[str]:
         if issue.type is not None:
             return issue.type.name
-        if issue.labels is not None:
-            issue_labels = [label.name for label in issue.get_labels()]
-            for label in issue_labels:
-                if label in ActionInputs.get_issue_type_weights():
-                    return label
-                # TODO - check multiple labels, not just first - select the highest weight one
+
+        if len(issue_labels) > 0:
+            issue_labels_lower = [label.name.lower() for label in issue_labels]
+            issue_types = [issue_type.lower() for issue_type in ActionInputs.get_issue_type_weights()]
+            # Find all matching types and their indices in the original list
+            matching_indices = [
+                idx for idx, t in enumerate(issue_types) if t in issue_labels_lower
+            ]
+            if matching_indices:
+                # Return the type from the original list with the lowest index
+                return ActionInputs.get_issue_type_weights()[min(matching_indices)]
+
         return None

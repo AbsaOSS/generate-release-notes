@@ -1,12 +1,16 @@
 """
 A module that defines the IssueRecord class, which represents an issue record in the release notes.
 """
-
+import logging
+from functools import lru_cache
 from typing import Optional, Any
 from github.Issue import Issue
+from github.PullRequest import PullRequest
 
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.issue_record import IssueRecord
+
+logger = logging.getLogger(__name__)
 
 
 class HierarchyIssueRecord(IssueRecord):
@@ -23,16 +27,36 @@ class HierarchyIssueRecord(IssueRecord):
         self._sub_issues: dict[int, IssueRecord] = {}  # sub-issues - no more sub-issues
         self._sub_hierarchy_issues: dict[int, HierarchyIssueRecord] = {}  # sub-hierarchy issues - have sub-issues
 
+    @lru_cache(maxsize=None)
+    def get_labels(self) -> set[str]:
+        labels = set()
+        labels.update(self._issue.get_labels())
+
+        for sub_issue in self._sub_issues.values():
+            labels.update(sub_issue.labels)
+
+        for sub_hierarchy_issue in self._sub_hierarchy_issues.values():
+            labels.update(sub_hierarchy_issue.labels)
+
+        for pull in self._pull_requests.values():
+            labels.update(pull.get_labels())
+
+        return labels
+
     # methods - override ancestor methods
-    def to_chapter_row(self) -> str:
-        self.added_into_chapters()
+    def to_chapter_row(self, add_into_chapters: bool = False) -> str:
+        if add_into_chapters:
+            self.added_into_chapters()
         row_prefix = f"{ActionInputs.get_duplicity_icon()} " if self.present_in_chapters() > 1 else ""
         format_values: dict[str, Any] = {}
 
         # collect format values
-        format_values["number"] = f"#{self._issue.number}"
-        format_values["title"] = self._issue.title
-        format_values["type"] = self._issue.type.name
+        format_values["number"] = f"#{self.issue.number}"
+        format_values["title"] = self.issue.title
+        if self.issue_type is not None:
+            format_values["type"] = self.issue_type
+        else:
+            format_values["type"] = "None"
 
         list_pr_links = self.get_pr_links()
         if len(list_pr_links) > 0:
@@ -45,9 +69,6 @@ class HierarchyIssueRecord(IssueRecord):
             indent += "- "
 
         # create first issue row
-        # TODO/Another Issue - add new service chapter for:
-        #   - hierarchy issue which contains other hierarchy issues and normal issues or PRs
-        #   Reason: hierarchy regime should improve readability of complex topics
         row = f"{indent}{row_prefix}" + ActionInputs.get_row_format_hierarchy_issue().format(**format_values)
 
         # add extra section with release notes if detected
@@ -66,6 +87,9 @@ class HierarchyIssueRecord(IssueRecord):
         if len(self._sub_issues) > 0:
             sub_indent = "  " * (self._level + 1)
             for sub_issue in self._sub_issues.values():
+                if sub_issue.is_open:
+                    continue    # only closed issues are reported in release notes
+
                 sub_issue_block = "- " + sub_issue.to_chapter_row()
                 ind_child_block = "\n".join(
                     f"{sub_indent}{line}" if line else "" for line in sub_issue_block.splitlines()
@@ -87,6 +111,7 @@ class HierarchyIssueRecord(IssueRecord):
         """
         sub_rec = HierarchyIssueRecord(issue=issue, issue_type=issue.type.name, level=self._level + 1)
         self._sub_hierarchy_issues[issue.number] = sub_rec
+        logger.debug("Registered sub-hierarchy issue '%d' to parent issue '%d'", issue.number, self.issue.number)
         return sub_rec
 
     def register_issue(self, issue: Issue) -> IssueRecord:
@@ -100,4 +125,26 @@ class HierarchyIssueRecord(IssueRecord):
         """
         sub_rec = IssueRecord(issue=issue)
         self._sub_issues[issue.number] = sub_rec
+        logger.debug("Registered sub-issue '%d' to parent issue '%d'", issue.number, self.issue.number)
         return sub_rec
+
+    def register_pull_request_in_hierarchy(self, issue_number: int, pull: PullRequest) -> None:
+        if issue_number in self._sub_issues.keys():
+            self._sub_issues[issue_number].register_pull_request(pull)
+            return
+
+        if issue_number in self._sub_hierarchy_issues.keys():
+            self._sub_hierarchy_issues[issue_number].register_pull_request(pull)
+            return
+
+    def find_issue(self, issue_number: int) -> Optional["IssueRecord"]:
+        if issue_number in self._sub_issues.keys():
+            return self._sub_issues[issue_number]
+        elif issue_number in self._sub_hierarchy_issues.keys():
+            return self._sub_hierarchy_issues[issue_number]
+        else:
+            for rec in self._sub_hierarchy_issues.values():
+                found = rec.find_issue(issue_number)
+                if found is not None:
+                    return found
+        return None

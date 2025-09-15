@@ -3,6 +3,7 @@ A module that defines the PullRequestRecord class, which represents a pull reque
 """
 
 import re
+from functools import lru_cache
 from typing import Optional, Any
 
 from github.Commit import Commit
@@ -25,8 +26,6 @@ class PullRequestRecord(Record):
         super().__init__(skip=skip)
 
         self._pull_request: PullRequest = pull
-        self._labels = {label.name for label in self._pull_request.get_labels()}
-
         self._commits: dict[str, Commit] = {}
 
     # properties - override Record properties
@@ -106,8 +105,14 @@ class PullRequestRecord(Record):
 
     # methods - override Record methods
 
-    def to_chapter_row(self) -> str:
-        super().to_chapter_row()
+    @lru_cache(maxsize=None)
+    def get_labels(self) -> set[str]:
+        return {label.name for label in self._pull_request.get_labels()}
+
+    def to_chapter_row(self, add_into_chapters: bool = False) -> str:
+        if add_into_chapters:
+            self.added_into_chapters()
+
         row_prefix = f"{ActionInputs.get_duplicity_icon()} " if self.present_in_chapters() > 1 else ""
         format_values: dict[str, Any] = {}
 

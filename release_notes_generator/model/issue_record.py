@@ -1,8 +1,9 @@
 """
 A module that defines the IssueRecord class, which represents an issue record in the release notes.
 """
-
+import logging
 import re
+from functools import lru_cache
 from typing import Optional, Any
 
 from github.Commit import Commit
@@ -11,6 +12,8 @@ from github.PullRequest import PullRequest
 
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.record import Record
+
+logger = logging.getLogger(__name__)
 
 
 class IssueRecord(Record):
@@ -31,8 +34,6 @@ class IssueRecord(Record):
 
         if issue is not None and issue.type is not None:
             self._issue_type = issue.type.name
-
-        self._labels = {label.name for label in self._issue.get_labels()}
 
         self._pull_requests: dict[int, PullRequest] = {}
         self._commits: dict[int, dict[str, Commit]] = {}
@@ -78,8 +79,19 @@ class IssueRecord(Record):
 
     # methods - override Record methods
 
-    def to_chapter_row(self) -> str:
-        super().to_chapter_row()
+    @lru_cache(maxsize=None)
+    def get_labels(self) -> set[str]:
+        return {label.name for label in self._issue.get_labels()}
+
+    def find_issue(self, issue_number: int) -> Optional["IssueRecord"]:
+        if self._issue.number == issue_number:
+            return self
+        else:
+            return None
+
+    def to_chapter_row(self, add_into_chapters: bool = False) -> str:
+        if add_into_chapters:
+            self.added_into_chapters()
         row_prefix = f"{ActionInputs.get_duplicity_icon()} " if self.present_in_chapters() > 1 else ""
         format_values: dict[str, Any] = {}
 
@@ -177,7 +189,6 @@ class IssueRecord(Record):
         Returns: None
         """
         self._pull_requests[pull.number] = pull
-        self._labels.update({label.name for label in pull.get_labels()})
 
     def register_commit(self, pull: PullRequest, commit: Commit) -> None:
         """
@@ -209,7 +220,7 @@ class IssueRecord(Record):
         Returns:
             list[str]: A list of pull request links associated with the issue.
         """
-        if len(self._pull_requests) == 0:
+        if len(self._pull_requests.values()) == 0:
             return []
 
         template = "#{number}"
