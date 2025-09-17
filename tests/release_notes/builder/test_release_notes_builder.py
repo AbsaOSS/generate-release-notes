@@ -13,7 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from release_notes_generator.action_inputs import ActionInputs
+import pytest
+
 from release_notes_generator.builder.builder import ReleaseNotesBuilder
 from release_notes_generator.chapters.custom_chapters import CustomChapters
 
@@ -68,12 +69,10 @@ from release_notes_generator.chapters.custom_chapters import CustomChapters
             - Without linked Issue
 """
 
-
 # pylint: disable=too-few-public-methods
 class MockLabel:
     def __init__(self, name):
         self.name = name
-
 
 DEFAULT_CHANGELOG_URL = "http://example.com/changelog"
 default_chapters = [
@@ -333,7 +332,9 @@ http://example.com/changelog
 # build
 
 
-def test_build_no_data():
+@pytest.mark.parametrize("hierarchy_value", [True, False])
+def test_build_no_data(mocker, hierarchy_value):
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_hierarchy", return_value=hierarchy_value)
     custom_chapters = CustomChapters()
     custom_chapters.from_yaml_array(default_chapters)
 
@@ -349,7 +350,9 @@ def test_build_no_data():
     assert expected_release_notes == actual_release_notes
 
 
-def test_build_no_data_no_warnings(mocker):
+@pytest.mark.parametrize("hierarchy_value", [True, False])
+def test_build_no_data_no_warnings(mocker, hierarchy_value):
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_hierarchy", return_value=hierarchy_value)
     custom_chapters = CustomChapters()
     custom_chapters.from_yaml_array(default_chapters)
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_warnings", return_value=False)
@@ -366,7 +369,9 @@ def test_build_no_data_no_warnings(mocker):
     assert expected_release_notes == actual_release_notes
 
 
-def test_build_no_data_no_warnings_no_empty_chapters(mocker):
+@pytest.mark.parametrize("hierarchy_value", [True, False])
+def test_build_no_data_no_warnings_no_empty_chapters(mocker, hierarchy_value):
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_hierarchy", return_value=hierarchy_value)
     custom_chapters_no_empty_chapters = CustomChapters()
     custom_chapters_no_empty_chapters.from_yaml_array(default_chapters)
     custom_chapters_no_empty_chapters.print_empty_chapters = False
@@ -385,7 +390,9 @@ def test_build_no_data_no_warnings_no_empty_chapters(mocker):
     assert expected_release_notes == actual_release_notes
 
 
-def test_build_no_data_no_empty_chapters(mocker):
+@pytest.mark.parametrize("hierarchy_value", [True, False])
+def test_build_no_data_no_empty_chapters(mocker, hierarchy_value):
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_hierarchy", return_value=hierarchy_value)
     custom_chapters_no_empty_chapters = CustomChapters()
     custom_chapters_no_empty_chapters.from_yaml_array(default_chapters)
     custom_chapters_no_empty_chapters.print_empty_chapters = False
@@ -558,11 +565,13 @@ def test_build_no_data_no_empty_chapters(mocker):
 #   - covered in 'test_build_merged_pr_service_chapter_without_issue_and_user_labels'
 
 
+@pytest.mark.parametrize("hierarchy_value", [True, False])
 def test_build_closed_issue_with_one_custom_label(
-    custom_chapters_not_print_empty_chapters, record_with_issue_closed_two_pulls, mocker
+    custom_chapters_not_print_empty_chapters, record_with_issue_closed_two_pulls, mocker, hierarchy_value
 ):
     expected_release_notes = RELEASE_NOTES_DATA_CUSTOM_CHAPTERS_ONE_LABEL
     rec = record_with_issue_closed_two_pulls
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_hierarchy", return_value=hierarchy_value)
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=False)
 
     builder = ReleaseNotesBuilder(
@@ -576,14 +585,16 @@ def test_build_closed_issue_with_one_custom_label(
     assert expected_release_notes == actual_release_notes
 
 
+@pytest.mark.parametrize("hierarchy_value", [True, False])
 def test_build_closed_issue_with_more_custom_labels_duplicity_reduction_on(
-    custom_chapters_not_print_empty_chapters, record_with_issue_closed_two_pulls, mocker
+    custom_chapters_not_print_empty_chapters, record_with_issue_closed_two_pulls, mocker, hierarchy_value
 ):
     expected_release_notes = RELEASE_NOTES_DATA_CUSTOM_CHAPTERS_MORE_LABELS_DUPLICITY_REDUCTION_ON
     rec = record_with_issue_closed_two_pulls
     rec.issue.labels.append(MockLabel("enhancement"))
     rec.issue.title = "I1+bug-enhancement"
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=False)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_hierarchy", return_value=hierarchy_value)
 
     builder = ReleaseNotesBuilder(
         records={rec.record_id: rec},
@@ -596,12 +607,14 @@ def test_build_closed_issue_with_more_custom_labels_duplicity_reduction_on(
     assert expected_release_notes == actual_release_notes
 
 
+@pytest.mark.parametrize("hierarchy_value", [True, False])
 def test_build_closed_issue_service_chapter_without_pull_request_and_user_defined_label(
-    custom_chapters_not_print_empty_chapters, record_with_issue_closed_no_pull, mocker
+    custom_chapters_not_print_empty_chapters, record_with_issue_closed_no_pull, mocker, hierarchy_value
 ):
     expected_release_notes = RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_ISSUE_NO_PR_NO_USER_LABELS
     rec = record_with_issue_closed_no_pull
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=False)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_hierarchy", return_value=hierarchy_value)
 
     builder = ReleaseNotesBuilder(
         records={rec.record_id: rec},
@@ -614,12 +627,14 @@ def test_build_closed_issue_service_chapter_without_pull_request_and_user_define
     assert expected_release_notes == actual_release_notes
 
 
+@pytest.mark.parametrize("hierarchy_value", [True, False])
 def test_build_merged_pr_service_chapter_without_issue_and_user_labels(
-    custom_chapters_not_print_empty_chapters, pull_request_record_merged, mocker
+    custom_chapters_not_print_empty_chapters, pull_request_record_merged, mocker, hierarchy_value
 ):
     expected_release_notes = RELEASE_NOTES_DATA_SERVICE_CHAPTERS_MERGED_PR_NO_ISSUE_NO_USER_LABELS
     rec = pull_request_record_merged
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=False)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_hierarchy", return_value=hierarchy_value)
 
     builder = ReleaseNotesBuilder(
         records={rec.record_id: rec},
@@ -632,12 +647,14 @@ def test_build_merged_pr_service_chapter_without_issue_and_user_labels(
     assert expected_release_notes == actual_release_notes
 
 
+@pytest.mark.parametrize("hierarchy_value", [True, False])
 def test_build_closed_pr_service_chapter_without_issue_and_user_labels(
-    custom_chapters_not_print_empty_chapters, pull_request_record_closed, mocker
+    custom_chapters_not_print_empty_chapters, pull_request_record_closed, mocker, hierarchy_value
 ):
     expected_release_notes = RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_PR_NO_ISSUE_NO_USER_LABELS
     rec = pull_request_record_closed
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=False)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_hierarchy", return_value=hierarchy_value)
 
     builder = ReleaseNotesBuilder(
         records={rec.record_id: rec},
@@ -650,12 +667,14 @@ def test_build_closed_pr_service_chapter_without_issue_and_user_labels(
     assert expected_release_notes == actual_release_notes
 
 
+@pytest.mark.parametrize("hierarchy_value", [True, False])
 def test_build_open_issue_with_merged_pr_service_chapter_linked_to_not_closed_issue(
-    custom_chapters_not_print_empty_chapters, record_with_issue_open_two_pulls_closed, mocker
+    custom_chapters_not_print_empty_chapters, record_with_issue_open_two_pulls_closed, mocker, hierarchy_value
 ):
     expected_release_notes = RELEASE_NOTES_DATA_SERVICE_CHAPTERS_OPEN_ISSUE_AND_MERGED_PR_NO_USER_LABELS
     rec = record_with_issue_open_two_pulls_closed
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=False)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_hierarchy", return_value=hierarchy_value)
 
     builder = ReleaseNotesBuilder(
         records={rec.record_id: rec},
@@ -668,10 +687,12 @@ def test_build_open_issue_with_merged_pr_service_chapter_linked_to_not_closed_is
     assert expected_release_notes == actual_release_notes
 
 
-def test_build_open_issue(custom_chapters_not_print_empty_chapters, record_with_issue_open_no_pull, mocker):
+@pytest.mark.parametrize("hierarchy_value", [True, False])
+def test_build_open_issue(custom_chapters_not_print_empty_chapters, record_with_issue_open_no_pull, mocker, hierarchy_value):
     expected_release_notes = RELEASE_NOTES_NO_DATA_NO_WARNING_NO_EMPTY_CHAPTERS
     rec = record_with_issue_open_no_pull
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=False)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_hierarchy", return_value=hierarchy_value)
 
     builder = ReleaseNotesBuilder(
         records={rec.record_id: rec},
@@ -684,10 +705,12 @@ def test_build_open_issue(custom_chapters_not_print_empty_chapters, record_with_
     assert expected_release_notes == actual_release_notes
 
 
-def test_build_closed_issue(custom_chapters_not_print_empty_chapters, record_with_issue_closed_no_pull, mocker):
+@pytest.mark.parametrize("hierarchy_value", [True, False])
+def test_build_closed_issue(custom_chapters_not_print_empty_chapters, record_with_issue_closed_no_pull, mocker, hierarchy_value):
     expected_release_notes = RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_ISSUE_NO_PR_NO_USER_LABELS
     rec = record_with_issue_closed_no_pull
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=False)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_hierarchy", return_value=hierarchy_value)
 
     builder = ReleaseNotesBuilder(
         records={rec.record_id: rec},
@@ -702,11 +725,13 @@ def test_build_closed_issue(custom_chapters_not_print_empty_chapters, record_wit
     assert expected_release_notes == actual_release_notes
 
 
-def test_build_reopened_issue(custom_chapters_not_print_empty_chapters, record_with_issue_open_no_pull, mocker):
+@pytest.mark.parametrize("hierarchy_value", [True, False])
+def test_build_reopened_issue(custom_chapters_not_print_empty_chapters, record_with_issue_open_no_pull, mocker, hierarchy_value):
     expected_release_notes = RELEASE_NOTES_NO_DATA_NO_WARNING_NO_EMPTY_CHAPTERS
     rec = record_with_issue_open_no_pull
     rec.issue.state_reason = "reopened"
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=False)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_hierarchy", return_value=hierarchy_value)
 
     builder = ReleaseNotesBuilder(
         records={rec.record_id: rec},
@@ -719,13 +744,15 @@ def test_build_reopened_issue(custom_chapters_not_print_empty_chapters, record_w
     assert expected_release_notes == actual_release_notes
 
 
+@pytest.mark.parametrize("hierarchy_value", [True, False])
 def test_build_closed_not_planned_issue(
-    custom_chapters_not_print_empty_chapters, record_with_issue_closed_no_pull, mocker
+    custom_chapters_not_print_empty_chapters, record_with_issue_closed_no_pull, mocker, hierarchy_value
 ):
     expected_release_notes = RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_ISSUE_NO_PR_NO_USER_LABELS
     rec = record_with_issue_closed_no_pull
     rec.issue.state_reason = "not_planned"
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=False)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_hierarchy", return_value=hierarchy_value)
 
     builder = ReleaseNotesBuilder(
         records={rec.record_id: rec},
@@ -738,13 +765,15 @@ def test_build_closed_not_planned_issue(
     assert expected_release_notes == actual_release_notes
 
 
+@pytest.mark.parametrize("hierarchy_value", [True, False])
 def test_build_closed_issue_with_user_labels_no_prs(
-    custom_chapters_not_print_empty_chapters, record_with_issue_closed_no_pull, mocker
+    custom_chapters_not_print_empty_chapters, record_with_issue_closed_no_pull, mocker, hierarchy_value
 ):
     expected_release_notes = RELEASE_NOTES_DATA_CLOSED_ISSUE_NO_PR_WITH_USER_LABELS
     rec = record_with_issue_closed_no_pull
     rec._labels = {"bug", "breaking-changes"}
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=False)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_hierarchy", return_value=hierarchy_value)
 
     builder = ReleaseNotesBuilder(
         records={rec.record_id: rec},
@@ -757,14 +786,16 @@ def test_build_closed_issue_with_user_labels_no_prs(
     assert expected_release_notes == actual_release_notes
 
 
+@pytest.mark.parametrize("hierarchy_value", [True, False])
 def test_build_closed_issue_with_prs_without_user_label(
-    custom_chapters_not_print_empty_chapters, record_with_issue_closed_two_pulls, mocker
+    custom_chapters_not_print_empty_chapters, record_with_issue_closed_two_pulls, mocker, hierarchy_value
 ):
     expected_release_notes = RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_PR_WITHOUT_USER_LABELS
     rec = record_with_issue_closed_two_pulls
     rec._labels = {"label1", "label2"}
     rec.issue.title = "I1"
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=False)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_hierarchy", return_value=hierarchy_value)
 
     builder = ReleaseNotesBuilder(
         records={rec.record_id: rec},
@@ -777,12 +808,14 @@ def test_build_closed_issue_with_prs_without_user_label(
     assert expected_release_notes == actual_release_notes
 
 
+@pytest.mark.parametrize("hierarchy_value", [True, False])
 def test_build_open_pr_without_issue(
-    custom_chapters_not_print_empty_chapters, pull_request_record_open, mocker
+    custom_chapters_not_print_empty_chapters, pull_request_record_open, mocker, hierarchy_value
 ):
     expected_release_notes = RELEASE_NOTES_DATA_OPEN_PR_WITHOUT_ISSUE
     rec = pull_request_record_open
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=False)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_hierarchy", return_value=hierarchy_value)
 
     builder = ReleaseNotesBuilder(
         records={rec.record_id: rec},
@@ -795,12 +828,14 @@ def test_build_open_pr_without_issue(
     assert expected_release_notes == actual_release_notes
 
 
+@pytest.mark.parametrize("hierarchy_value", [True, False])
 def test_build_merged_pr_without_issue_ready_for_review(
-    custom_chapters_not_print_empty_chapters, pull_request_record_merged, mocker
+    custom_chapters_not_print_empty_chapters, pull_request_record_merged, mocker, hierarchy_value
 ):
     expected_release_notes = RELEASE_NOTES_DATA_SERVICE_CHAPTERS_MERGED_PR_NO_ISSUE_NO_USER_LABELS
     rec = pull_request_record_merged
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=False)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_hierarchy", return_value=hierarchy_value)
 
     builder = ReleaseNotesBuilder(
         records={rec.record_id: rec},
@@ -813,12 +848,14 @@ def test_build_merged_pr_without_issue_ready_for_review(
     assert expected_release_notes == actual_release_notes
 
 
+@pytest.mark.parametrize("hierarchy_value", [True, False])
 def test_build_closed_pr_without_issue_ready_for_review(
-    custom_chapters_not_print_empty_chapters, pull_request_record_closed, mocker
+    custom_chapters_not_print_empty_chapters, pull_request_record_closed, mocker, hierarchy_value
 ):
     expected_release_notes = RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_PR_NO_ISSUE_NO_USER_LABELS
     rec = pull_request_record_closed
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=False)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_hierarchy", return_value=hierarchy_value)
 
     builder = ReleaseNotesBuilder(
         records={rec.record_id: rec},
@@ -831,13 +868,15 @@ def test_build_closed_pr_without_issue_ready_for_review(
     assert expected_release_notes == actual_release_notes
 
 
+@pytest.mark.parametrize("hierarchy_value", [True, False])
 def test_build_closed_pr_without_issue_non_draft(
-    custom_chapters_not_print_empty_chapters, pull_request_record_closed, mocker
+    custom_chapters_not_print_empty_chapters, pull_request_record_closed, mocker, hierarchy_value
 ):
     expected_release_notes = RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_PR_NO_ISSUE_NO_USER_LABELS
     rec = pull_request_record_closed
     rec.pull_request.draft = False
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=False)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_hierarchy", return_value=hierarchy_value)
 
     builder = ReleaseNotesBuilder(
         records={rec.record_id: rec},
@@ -852,13 +891,15 @@ def test_build_closed_pr_without_issue_non_draft(
 
 # TODO - research situation when PR is not merged and is in draft state
 
+@pytest.mark.parametrize("hierarchy_value", [True, False])
 def test_merged_pr_without_issue_with_more_user_labels_duplicity_reduction_on(
-    custom_chapters_not_print_empty_chapters, pull_request_record_merged, mocker
+    custom_chapters_not_print_empty_chapters, pull_request_record_merged, mocker, hierarchy_value
 ):
     expected_release_notes = RELEASE_NOTES_DATA_MERGED_PR_WITH_USER_LABELS_DUPLICITY_REDUCTION_ON
     rec = pull_request_record_merged
     rec._labels = {"bug", "enhancement"}
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=False)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_hierarchy", return_value=hierarchy_value)
 
     builder = ReleaseNotesBuilder(
         records={rec.record_id: rec},
@@ -871,12 +912,14 @@ def test_merged_pr_without_issue_with_more_user_labels_duplicity_reduction_on(
     assert expected_release_notes == actual_release_notes
 
 
+@pytest.mark.parametrize("hierarchy_value", [True, False])
 def test_merged_pr_with_open_init_issue_mention(
-    custom_chapters_not_print_empty_chapters, record_with_two_issue_open_two_pulls_closed, mocker
+    custom_chapters_not_print_empty_chapters, record_with_two_issue_open_two_pulls_closed, mocker, hierarchy_value
 ):
     expected_release_notes = RELEASE_NOTES_DATA_MERGED_PRS_WITH_OPEN_ISSUES
     records = record_with_two_issue_open_two_pulls_closed
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=False)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_hierarchy", return_value=hierarchy_value)
 
     builder = ReleaseNotesBuilder(
         records=records,
@@ -889,12 +932,14 @@ def test_merged_pr_with_open_init_issue_mention(
     assert expected_release_notes == actual_release_notes
 
 
+@pytest.mark.parametrize("hierarchy_value", [True, False])
 def test_merged_pr_with_closed_issue_mention_without_user_labels(
-    custom_chapters_not_print_empty_chapters, record_with_issue_closed_one_pull, mocker
+    custom_chapters_not_print_empty_chapters, record_with_issue_closed_one_pull, mocker, hierarchy_value
 ):
     expected_release_notes = RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_MERGED_PRS_WITHOUT_USER_LABELS
     rec = record_with_issue_closed_one_pull
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=False)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_hierarchy", return_value=hierarchy_value)
 
     builder = ReleaseNotesBuilder(
         records={rec.record_id: rec},
@@ -907,12 +952,14 @@ def test_merged_pr_with_closed_issue_mention_without_user_labels(
     assert expected_release_notes == actual_release_notes
 
 
+@pytest.mark.parametrize("hierarchy_value", [True, False])
 def test_merged_pr_with_closed_issue_mention_with_user_labels(
-    custom_chapters_not_print_empty_chapters, record_with_issue_closed_one_pull_merged, mocker
+    custom_chapters_not_print_empty_chapters, record_with_issue_closed_one_pull_merged, mocker, hierarchy_value
 ):
     expected_release_notes = RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_MERGED_PRS_WITH_USER_LABELS
     rec = record_with_issue_closed_one_pull_merged
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=False)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_hierarchy", return_value=hierarchy_value)
 
     builder = ReleaseNotesBuilder(
         records={rec.record_id: rec},
@@ -924,12 +971,15 @@ def test_merged_pr_with_closed_issue_mention_with_user_labels(
 
     assert expected_release_notes == actual_release_notes
 
+
+@pytest.mark.parametrize("hierarchy_value", [True, False])
 def test_merged_pr_with_closed_issue_mention_with_user_labels_with_skip_label_on_issue(
-    custom_chapters_not_print_empty_chapters, record_with_issue_closed_one_pull_merged_skip, mocker
+    custom_chapters_not_print_empty_chapters, record_with_issue_closed_one_pull_merged_skip, mocker, hierarchy_value
 ):
     expected_release_notes = RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_MERGED_PRS_WITH_USER_LABELS_WITH_SKIP_LABEL
     rec = record_with_issue_closed_one_pull_merged_skip
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=False)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_hierarchy", return_value=hierarchy_value)
 
     builder = ReleaseNotesBuilder(
         records={rec.record_id: rec},
@@ -942,12 +992,14 @@ def test_merged_pr_with_closed_issue_mention_with_user_labels_with_skip_label_on
     assert expected_release_notes == actual_release_notes
 
 
+@pytest.mark.parametrize("hierarchy_value", [True, False])
 def test_build_closed_pr_service_chapter_without_issue_with_skip_label_on_pr(
-        custom_chapters_not_print_empty_chapters, pull_request_record_closed_with_skip_label, mocker
+        custom_chapters_not_print_empty_chapters, pull_request_record_closed_with_skip_label, mocker, hierarchy_value
 ):
     expected_release_notes = RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_PR_NO_ISSUE_SKIP_USER_LABELS
     rec = pull_request_record_closed_with_skip_label
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=False)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_hierarchy", return_value=hierarchy_value)
 
     builder = ReleaseNotesBuilder(
         records={rec.record_id: rec},
