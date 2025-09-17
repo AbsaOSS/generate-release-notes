@@ -4,7 +4,6 @@ A module that defines the IssueRecord class, which represents an issue record in
 
 import logging
 import re
-from functools import lru_cache
 from typing import Optional, Any
 
 from github.Commit import Commit
@@ -86,6 +85,15 @@ class IssueRecord(Record):
         return [label.name for label in self._issue.get_labels()]
 
     def find_issue(self, issue_number: int) -> Optional["IssueRecord"]:
+        """
+        Finds an issue record by its number.
+
+        Parameters:
+            issue_number (int): The number of the issue.
+
+        Returns:
+            IssueRecord: The issue record with that number.
+        """
         if self._issue.number == issue_number:
             return self
         else:

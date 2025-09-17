@@ -3,7 +3,6 @@ A module that defines the PullRequestRecord class, which represents a pull reque
 """
 
 import re
-from functools import lru_cache
 from typing import Optional, Any
 
 from github.Commit import Commit

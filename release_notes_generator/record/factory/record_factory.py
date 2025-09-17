@@ -20,7 +20,6 @@ This module contains the DefaultRecordFactory class which is responsible for gen
 import abc
 import logging
 
-from github import Github
 from release_notes_generator.model.mined_data import MinedData
 from release_notes_generator.model.record import Record
 

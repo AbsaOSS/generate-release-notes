@@ -23,7 +23,6 @@ from typing import cast, Optional
 
 from github import Github
 from github.Issue import Issue, SubIssue
-from github.Label import Label
 from github.PullRequest import PullRequest
 
 from release_notes_generator.model.commit_record import CommitRecord
@@ -41,7 +40,6 @@ from release_notes_generator.utils.pull_request_utils import get_issues_for_pr, 
 logger = logging.getLogger(__name__)
 
 
-# TODO - code review - check if it beneficial to inherit from DefaultRecordFactory
 class IssueHierarchyRecordFactory(DefaultRecordFactory):
     """
     A class used to generate records for release notes.
@@ -50,7 +48,6 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
     def __init__(self, github: Github) -> None:
         super().__init__(github)
 
-        self.__records: dict[int | str, Record] = {}
         self.__registered_issues: list[int] = []
         self.__sub_issue_parents: dict[int, int] = {}
         self.__registered_commits: list[str] = []
@@ -178,16 +175,16 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
 
         return labels
 
-    def _create_record_for_issue(self, issue: Issue, issue_labels: Optional[list[Label]] = None) -> None:
+    def _create_record_for_issue(self, issue: Issue, issue_labels: Optional[list[str]] = None) -> None:
         if issue_labels is None:
-            issue_labels: list[str] = self._get_issue_labels_mix_with_type(issue)
+            issue_labels = self._get_issue_labels_mix_with_type(issue)
 
-        super()._create_record_for_issue(self.__records, issue, issue_labels)
+        super()._create_record_for_issue(issue, issue_labels)
         self.__registered_issues.append(issue.number)
 
-    def _create_record_for_sub_issue(self, sub_issue: SubIssue, issue_labels: Optional[list[Label]] = None) -> None:
+    def _create_record_for_sub_issue(self, sub_issue: SubIssue, issue_labels: Optional[list[str]] = None) -> None:
         if issue_labels is None:
-            issue_labels: list[str] = self._get_issue_labels_mix_with_type(sub_issue)
+            issue_labels = self._get_issue_labels_mix_with_type(sub_issue)
 
         skip_record = any(item in issue_labels for item in ActionInputs.get_skip_release_notes_labels())
         logger.debug("Created record for sub issue %d: %s", sub_issue.number, sub_issue.title)
@@ -203,28 +200,34 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
             # but do it only for issue where parent issue number is not in _sub_issue_parents keys
             #   Why? We building hierarchy from bottom. Access in records is very easy.
             parent_issue_nr: int = self.__sub_issue_parents[sub_issue_number]
-            if parent_issue_nr in self.__sub_issue_parents.keys():
+            if parent_issue_nr in self.__sub_issue_parents:
                 continue
-            else:
-                parent_rec = cast(HierarchyIssueRecord, self.__sub_issue_parents[parent_issue_nr])
-                sub_rec = self.__records[sub_issue_number]
 
-                if isinstance(sub_rec, SubIssueRecord):
-                    parent_rec.sub_issues.append(sub_rec)  # add to parent as SubIssueRecord
-                    self.__records.pop(sub_issue_number)  # remove from main records as it is sub-one
-                    self.__sub_issue_parents.pop(sub_issue_number)  # remove from sub-parents as it is now sub-one
-                elif isinstance(sub_rec, HierarchyIssueRecord):
-                    parent_rec.sub_issues.append(sub_rec)  # add to parent as 'Sub' HierarchyIssueRecord
-                    self.__records.pop(sub_issue_number)  # remove from main records as it is sub-one
-                    self.__sub_issue_parents.pop(sub_issue_number)  # remove from sub-parents as it is now sub-one
-                else:
-                    logger.error("Detected IssueRecord in position of SubIssueRecord - skipping it")
-                    # Dev note: IssueRecord is expected to be stand-alone - not sub-issue
+            parent_rec = cast(HierarchyIssueRecord, self.__sub_issue_parents[parent_issue_nr])
+            sub_rec = self.__records[sub_issue_number]
+
+            if isinstance(sub_rec, SubIssueRecord):
+                parent_rec.sub_issues.append(sub_rec)  # add to parent as SubIssueRecord
+                self.__records.pop(sub_issue_number)  # remove from main records as it is sub-one
+                self.__sub_issue_parents.pop(sub_issue_number)  # remove from sub-parents as it is now sub-one
+            elif isinstance(sub_rec, HierarchyIssueRecord):
+                parent_rec.sub_issues.append(sub_rec)  # add to parent as 'Sub' HierarchyIssueRecord
+                self.__records.pop(sub_issue_number)  # remove from main records as it is sub-one
+                self.__sub_issue_parents.pop(sub_issue_number)  # remove from sub-parents as it is now sub-one
+            else:
+                logger.error("Detected IssueRecord in position of SubIssueRecord - skipping it")
+                # Dev note: IssueRecord is expected to be stand-alone - not sub-issue
 
         if len(self.__sub_issue_parents.items()) > 0:
             self._re_register_hierarchy_issues()
 
-    def order_hierarchy_levels(self, level: int = 0):
+    def order_hierarchy_levels(self, level: int = 0) -> None:
+        """
+        Order hierarchy levels for proper rendering.
+
+        Parameters:
+            level (int): The current level in the hierarchy. Default is 0.
+        """
         # we have now all hierarchy issues in records - but levels are not set
         #   we need to set levels for proper rendering
         #   This have to be done from up to down

@@ -3,10 +3,8 @@ A module that defines the IssueRecord class, which represents an issue record in
 """
 
 import logging
-from functools import lru_cache
 from typing import Optional, Any
 from github.Issue import Issue
-from github.PullRequest import PullRequest
 
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.issue_record import IssueRecord
@@ -30,18 +28,33 @@ class HierarchyIssueRecord(IssueRecord):
 
     @property
     def level(self) -> int:
+        """
+        The level of the hierarchy issue.
+        """
         return self._level
 
     @level.setter
     def level(self, value: int) -> None:
+        """
+        Sets the level of the hierarchy issue.
+
+        Parameters:
+            value (int): The level of the hierarchy issue.
+        """
         self._level = value
 
     @property
     def sub_issues(self):
+        """
+        The list of sub-issues for the hierarchy issue.
+        """
         return self._sub_issues
 
     @property
     def sub_hierarchy_issues(self):
+        """
+        The list of sub-hierarchy issues for the hierarchy issue.
+        """
         return self._sub_hierarchy_issues
 
     def pull_requests_count(self) -> int:
