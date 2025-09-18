@@ -51,7 +51,7 @@ class DefaultRecordFactory(RecordFactory):
         rate_limiter = GithubRateLimiter(github)
         self._safe_call = safe_call_decorator(rate_limiter)
 
-        self.__records: dict[int | str, Record] = {}
+        self._records: dict[int | str, Record] = {}
 
     def generate(self, data: MinedData) -> dict[int | str, Record]:
         """
@@ -72,7 +72,7 @@ class DefaultRecordFactory(RecordFactory):
 
             for parent_issue_number in detected_issues:
                 # create an issue record if not present for PR parent
-                if parent_issue_number not in self.__records:
+                if parent_issue_number not in self._records:
                     logger.warning(
                         "Detected PR %d linked to issue %d which is not in the list of received issues. "
                         "Fetching ...",
@@ -85,8 +85,8 @@ class DefaultRecordFactory(RecordFactory):
                     if parent_issue is not None:
                         self._create_record_for_issue(parent_issue)
 
-                if parent_issue_number in self.__records:
-                    cast(IssueRecord, self.__records[parent_issue_number]).register_pull_request(pull)
+                if parent_issue_number in self._records:
+                    cast(IssueRecord, self._records[parent_issue_number]).register_pull_request(pull)
                     logger.debug("Registering PR %d: %s to Issue %d", pull.number, pull.title, parent_issue_number)
                 else:
                     logger.debug(
@@ -109,7 +109,7 @@ class DefaultRecordFactory(RecordFactory):
             skip_record: bool = any(item in pull_labels for item in ActionInputs.get_skip_release_notes_labels())
 
             if not safe_call(get_issues_for_pr)(pull_number=pull.number) and not extract_issue_numbers_from_body(pull):
-                self.__records[pull.number] = PullRequestRecord(pull, skip=skip_record)
+                self._records[pull.number] = PullRequestRecord(pull, skip=skip_record)
                 logger.debug("Created record for PR %d: %s", pull.number, pull.title)
             else:
                 logger.debug("Registering pull number: %s, title : %s", pull.number, pull.title)
@@ -120,12 +120,12 @@ class DefaultRecordFactory(RecordFactory):
 
         logger.info(
             "Generated %d records from %d issues and %d PRs, with %d commits detected.",
-            len(self.__records),
+            len(self._records),
             len(data.issues),
             len(data.pull_requests),
             detected_direct_commits_count,
         )
-        return self.__records
+        return self._records
 
     def register_commit_to_record(self, commit: Commit) -> bool:
         """
@@ -134,7 +134,7 @@ class DefaultRecordFactory(RecordFactory):
         @param commit: The commit to register.
         @return: True if the commit was registered to a record, False otherwise
         """
-        for record in self.__records.values():
+        for record in self._records.values():
             if isinstance(record, IssueRecord):
                 rec_i = cast(IssueRecord, record)
                 for number in rec_i.get_pull_request_numbers():
@@ -149,7 +149,7 @@ class DefaultRecordFactory(RecordFactory):
                     rec_pr.register_commit(commit)
                     return True
 
-        self.__records[commit.sha] = CommitRecord(commit=commit)
+        self._records[commit.sha] = CommitRecord(commit=commit)
         logger.debug("Created record for direct commit %s: %s", commit.sha, commit.commit.message)
         return False
 
@@ -169,5 +169,5 @@ class DefaultRecordFactory(RecordFactory):
         if issue_labels is None:
             issue_labels = [label.name for label in issue.get_labels()]
         skip_record = any(item in issue_labels for item in ActionInputs.get_skip_release_notes_labels())
-        self.__records[issue.number] = IssueRecord(issue=issue, skip=skip_record)
+        self._records[issue.number] = IssueRecord(issue=issue, skip=skip_record)
         logger.debug("Created record for non hierarchy issue %d: %s", issue.number, issue.title)

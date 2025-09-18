@@ -72,12 +72,12 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
 
         logger.debug("Registering Commits to Pull Requests and Pull Requests to Issues...")
         for pull in data.pull_requests:
-            self._register_pull_and_its_commits_to_issue(pull, data, self.__records, self.__registered_commits)
+            self._register_pull_and_its_commits_to_issue(pull, data)
 
         logger.debug("Registering direct commits to records...")
         for commit in data.commits:
             if commit.sha not in self.__registered_commits:
-                self.__records[commit.sha] = CommitRecord(commit)
+                self._records[commit.sha] = CommitRecord(commit)
 
         # dev note: now we have all PRs and commits registered to issues or as stand-alone records
         #   let build hierarchy
@@ -87,26 +87,25 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
 
         logger.info(
             "Generated %d records from %d issues and %d PRs, with %d commits detected.",
-            len(self.__records),
+            len(self._records),
             len(data.issues),
             len(data.pull_requests),
             len(data.commits),
         )
-        return self.__records
+        return self._records
 
-    def _register_pull_and_its_commits_to_issue(
-        self, pull: PullRequest, data: MinedData, records: dict[int | str, Record], registered_commits: list[str]
-    ) -> None:
+    def _register_pull_and_its_commits_to_issue(self, pull: PullRequest, data: MinedData) -> None:
         pull_labels = [label.name for label in pull.get_labels()]
         skip_record: bool = any(item in pull_labels for item in ActionInputs.get_skip_release_notes_labels())
         related_commits = [c for c in data.commits if c.sha == pull.merge_commit_sha]
-        registered_commits.extend(c.sha for c in related_commits)
+        self.__registered_commits.extend(c.sha for c in related_commits)
 
-        pull_issues = self._safe_call(get_issues_for_pr)(pull_number=pull.number)
-        pull_issues.update(extract_issue_numbers_from_body(pull))
+        pull_issues_set: set[int] = self._safe_call(get_issues_for_pr)(pull_number=pull.number)
+        pull_issues_set.update(extract_issue_numbers_from_body(pull))
+        pull_issues: list[int] = list(pull_issues_set)
         if len(pull_issues) > 0:
             for issue_number in pull_issues:
-                if issue_number not in records.keys():
+                if issue_number not in self._records.keys():
                     logger.warning(
                         "Detected PR %d linked to issue %d which is not in the list of received issues. "
                         "Fetching ...",
@@ -116,11 +115,12 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
                     parent_issue = self._safe_call(data.repository.get_issue)(issue_number) if data.repository else None
                     if parent_issue is not None:
                         self._create_issue_record_using_sub_issues_existence(parent_issue)
+                        return
 
-                if issue_number in records.keys() and isinstance(
-                    records[issue_number], (SubIssueRecord, HierarchyIssueRecord, IssueRecord)
+                if issue_number in self._records.keys() and isinstance(
+                    self._records[issue_number], (SubIssueRecord, HierarchyIssueRecord, IssueRecord)
                 ):
-                    rec = cast(IssueRecord, records[issue_number])
+                    rec = cast(IssueRecord, self._records[issue_number])
                     rec.register_pull_request(pull)
                     logger.debug("Registering pull number: %s, title : %s", pull.number, pull.title)
 
@@ -128,10 +128,12 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
                         rec.register_commit(pull, c)
                         logger.debug("Registering commit %s to PR %d", c.sha, pull.number)
 
+                    return
+
         pr_rec = PullRequestRecord(pull, pull_labels, skip_record)
         for c in related_commits:  # register commits to the PR record
             pr_rec.register_commit(c)
-        records[pull.number] = pr_rec
+        self._records[pull.number] = pr_rec
         logger.debug("Created record for PR %d: %s", pull.number, pull.title)
 
     def _create_issue_record_using_sub_issues_existence(self, issue: Issue) -> None:
@@ -162,7 +164,7 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
             issue_labels = self._get_issue_labels_mix_with_type(i)
         skip_record = any(item in issue_labels for item in ActionInputs.get_skip_release_notes_labels())
 
-        self.__records[i.number] = HierarchyIssueRecord(issue=i, skip=skip_record)
+        self._records[i.number] = HierarchyIssueRecord(issue=i, skip=skip_record)
         logger.debug("Created record for hierarchy issue %d: %s", i.number, i.title)
 
     def _get_issue_labels_mix_with_type(self, issue: Issue) -> list[str]:
@@ -189,7 +191,7 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
         skip_record = any(item in issue_labels for item in ActionInputs.get_skip_release_notes_labels())
         logger.debug("Created record for sub issue %d: %s", sub_issue.number, sub_issue.title)
         self.__registered_issues.append(sub_issue.number)
-        self.__records[sub_issue.number] = SubIssueRecord(sub_issue, issue_labels, skip_record)
+        self._records[sub_issue.number] = SubIssueRecord(sub_issue, issue_labels, skip_record)
 
     def _re_register_hierarchy_issues(self):
         sub_issues_numbers = list(self.__sub_issue_parents.keys())
@@ -203,17 +205,17 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
             if parent_issue_nr in self.__sub_issue_parents:
                 continue
 
-            parent_rec = cast(HierarchyIssueRecord, self.__sub_issue_parents[parent_issue_nr])
-            sub_rec = self.__records[sub_issue_number]
+            parent_rec = cast(HierarchyIssueRecord, self._records[parent_issue_nr])
+            sub_rec = self._records[sub_issue_number]
 
             if isinstance(sub_rec, SubIssueRecord):
-                parent_rec.sub_issues.append(sub_rec)  # add to parent as SubIssueRecord
-                self.__records.pop(sub_issue_number)  # remove from main records as it is sub-one
-                self.__sub_issue_parents.pop(sub_issue_number)  # remove from sub-parents as it is now sub-one
+                parent_rec.sub_issues[sub_issue_number] = sub_rec   # add to parent as SubIssueRecord
+                self._records.pop(sub_issue_number)                 # remove from main records as it is sub-one
+                self.__sub_issue_parents.pop(sub_issue_number)      # remove from sub-parents as it is now sub-one
             elif isinstance(sub_rec, HierarchyIssueRecord):
-                parent_rec.sub_issues.append(sub_rec)  # add to parent as 'Sub' HierarchyIssueRecord
-                self.__records.pop(sub_issue_number)  # remove from main records as it is sub-one
-                self.__sub_issue_parents.pop(sub_issue_number)  # remove from sub-parents as it is now sub-one
+                parent_rec.sub_issues[sub_issue_number] = sub_rec   # add to parent as 'Sub' HierarchyIssueRecord
+                self._records.pop(sub_issue_number)                 # remove from main records as it is sub-one
+                self.__sub_issue_parents.pop(sub_issue_number)      # remove from sub-parents as it is now sub-one
             else:
                 logger.error("Detected IssueRecord in position of SubIssueRecord - skipping it")
                 # Dev note: IssueRecord is expected to be stand-alone - not sub-issue
@@ -231,7 +233,7 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
         # we have now all hierarchy issues in records - but levels are not set
         #   we need to set levels for proper rendering
         #   This have to be done from up to down
-        top_hierarchy_records = [rec for rec in self.__records.values() if isinstance(rec, HierarchyIssueRecord)]
+        top_hierarchy_records = [rec for rec in self._records.values() if isinstance(rec, HierarchyIssueRecord)]
         for rec in top_hierarchy_records:
             rec.level = level
             for sub_hierarchy_record in rec.sub_hierarchy_issues.values():

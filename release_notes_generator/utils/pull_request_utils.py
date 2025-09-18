@@ -52,7 +52,7 @@ def extract_issue_numbers_from_body(pr: PullRequest) -> set[int]:
 
 
 @lru_cache(maxsize=None)
-def get_issues_for_pr(pull_number: int) -> list[int]:
+def get_issues_for_pr(pull_number: int) -> set[int]:
     """Update the placeholder values and formate the graphQL query"""
     github_api_url = "https://api.github.com/graphql"
     query = ISSUES_FOR_PRS.format(
@@ -68,10 +68,10 @@ def get_issues_for_pr(pull_number: int) -> list[int]:
 
     response = requests.post(github_api_url, json={"query": query}, headers=headers, verify=False, timeout=10)
     response.raise_for_status()  # Raise an error for HTTP issues
-    numbers = [
+    numbers = {
         node["number"]
         for node in response.json()["data"]["repository"]["pullRequest"]["closingIssuesReferences"]["nodes"]
-    ]
+    }
 
     if pull_number == 3645:
         print(f"PR #{pull_number} - Extracted issue numbers from GitHub API: {numbers}")
