@@ -575,6 +575,7 @@ def mined_data_isolated_record_types_no_labels_no_type_defined(
     #   - single hierarchy issue record - two sub-issues without PRs
     #   - single hierarchy issue record - two sub-issues with PRs - no commits
     #   - single hierarchy issue record - two sub-issues with PRs - with commits
+    #   - single hierarchy issue record - one sub hierarchy issues - two sub-issues with PRs - with commits
     #   - single pull request record (closed, merged)
     #   - single direct commit record
     data = MinedData()
@@ -637,6 +638,35 @@ def mined_data_isolated_record_types_no_labels_no_type_defined(
     mock_commit_1.message = "Fixed bug in PR 151"
     hi_two_sub_issues_with_prs_with_commit.get_sub_issues.return_value = [sub_issue_5, sub_issue_6]
 
+    # single hierarchy issue record - one sub hierarchy issues - two sub-issues with PRs - with commits
+    hi_one_sub_hierarchy_two_sub_issues_with_prs_with_commit = copy.deepcopy(mock_open_hierarchy_issue)
+    hi_one_sub_hierarchy_two_sub_issues_with_prs_with_commit.number = 304
+    hi_one_sub_hierarchy_two_sub_issues_with_prs_with_commit.title = "HI304 open"
+    hi_one_sub_hierarchy_two_sub_issues_with_prs_with_commit.body = "I304 open/nRelease Notes:\n- Hierarchy level release note"
+    sub_hierarchy_issue = copy.deepcopy(mock_open_hierarchy_issue)
+    sub_hierarchy_issue.number = 350
+    sub_hierarchy_issue.title = "HI350 open"
+    sub_hierarchy_issue.body = "I350 open/nRelease Notes:\n- Sub-hierarchy level release note"
+    sub_issue_7 = copy.deepcopy(mock_open_sub_issue)
+    sub_issue_7.number = 403
+    sub_issue_7.title = "SI403 open"
+    sub_issue_7.body = "I403 open/nRelease Notes:\n- Hierarchy level release note"
+    sub_issue_8 = copy.deepcopy(mock_closed_sub_issue)
+    sub_issue_8.number = 453
+    sub_issue_8.title = "SI453 open"
+    sub_issue_8.body = "I453 open/nRelease Notes:\n- Hierarchy level release note"
+    mock_pr_closed_4 = copy.deepcopy(mock_pull_closed)
+    mock_pr_closed_4.url = "http://example.com/pull/152"
+    mock_pr_closed_4.number = 152
+    mock_pr_closed_4.merge_commit_sha = "merge_commit_sha_152"
+    mock_pr_closed_4.get_labels.return_value = []
+    mock_pr_closed_4.body += "\nCloses #453"
+    mock_commit_2 = copy.deepcopy(mock_commit)
+    mock_commit_2.sha = "merge_commit_sha_152"
+    mock_commit_2.message = "Fixed bug in PR 152"
+    sub_hierarchy_issue.get_sub_issues.return_value = [sub_issue_7, sub_issue_8]
+    hi_one_sub_hierarchy_two_sub_issues_with_prs_with_commit.get_sub_issues.return_value = [sub_hierarchy_issue]
+
     # single pull request record (closed, merged)
     mock_pr_closed_1 = copy.deepcopy(mock_pull_closed)
     mock_pr_closed_1.get_labels.return_value = []
@@ -644,16 +674,18 @@ def mined_data_isolated_record_types_no_labels_no_type_defined(
     mock_pr_merged_1.get_labels.return_value = []
 
     # single direct commit record
-    mock_commit_2 = copy.deepcopy(mock_commit)
-    mock_commit_2.sha = "merge_commit_sha_direct"
-    mock_commit_2.message = "Direct commit example"
+    mock_commit_3 = copy.deepcopy(mock_commit)
+    mock_commit_3.sha = "merge_commit_sha_direct"
+    mock_commit_3.message = "Direct commit example"
 
     data.issues = [solo_closed_issue,
                    hi_two_sub_issues_no_prs, sub_issue_1, sub_issue_2,
                    hi_two_sub_issues_with_prs, sub_issue_3, sub_issue_4,
-                   hi_two_sub_issues_with_prs_with_commit, sub_issue_5, sub_issue_6]
-    data.pull_requests = [mock_pr_closed_1, mock_pr_merged_1, mock_pr_closed_2, mock_pr_closed_3]
-    data.commits = [mock_commit_1, mock_commit_2]
+                   hi_two_sub_issues_with_prs_with_commit, sub_issue_5, sub_issue_6,
+                   hi_one_sub_hierarchy_two_sub_issues_with_prs_with_commit, sub_hierarchy_issue, sub_issue_7,
+                   sub_issue_8]
+    data.pull_requests = [mock_pr_closed_1, mock_pr_merged_1, mock_pr_closed_2, mock_pr_closed_3, mock_pr_closed_4]
+    data.commits = [mock_commit_1, mock_commit_2, mock_commit_3]
 
     return data
 

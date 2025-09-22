@@ -50,7 +50,13 @@ def test_generate_no_input_data(mocker):
 
     assert 0 == len(result.values())
 
-
+#   - single issue record (closed)
+#   - single hierarchy issue record - two sub-issues without PRs
+#   - single hierarchy issue record - two sub-issues with PRs - no commits
+#   - single hierarchy issue record - two sub-issues with PRs - with commits
+#   - single hierarchy issue record - one sub hierarchy issues - two sub-issues with PRs - with commits
+#   - single pull request record (closed, merged)
+#   - single direct commit record
 def test_generate_isolated_record_types_no_labels_no_type_defined(mocker, mined_data_isolated_record_types_no_labels_no_type_defined):
     mocker.patch("release_notes_generator.record.factory.default_record_factory.safe_call_decorator", side_effect=mock_safe_call_decorator)
     mock_github_client = mocker.Mock(spec=Github)
@@ -64,13 +70,14 @@ def test_generate_isolated_record_types_no_labels_no_type_defined(mocker, mined_
 
     result = factory.generate(mined_data_isolated_record_types_no_labels_no_type_defined)
 
-    assert 7 == len(result)
-    assert {121, 301, 302, 303, 123, 124, "merge_commit_sha_direct"}.issubset(result.keys())
+    assert 8 == len(result)
+    assert {121, 301, 302, 303, 304, 123, 124, "merge_commit_sha_direct"}.issubset(result.keys())
 
     assert isinstance(result[121], IssueRecord)
     assert isinstance(result[301], HierarchyIssueRecord)
     assert isinstance(result[302], HierarchyIssueRecord)
     assert isinstance(result[303], HierarchyIssueRecord)
+    assert isinstance(result[304], HierarchyIssueRecord)
     assert isinstance(result[123], PullRequestRecord)
     assert isinstance(result[124], PullRequestRecord)
     assert isinstance(result["merge_commit_sha_direct"], CommitRecord)
@@ -97,35 +104,39 @@ def test_generate_isolated_record_types_no_labels_no_type_defined(mocker, mined_
     assert 1 == rec_hi_3.sub_issues[452].pull_requests_count()
     assert "Fixed bug in PR 151" == rec_hi_3.sub_issues[452].get_commit(151, "merge_commit_sha_151").message
 
+    rec_hi_4 = cast(HierarchyIssueRecord, result[304])
+    assert 1 == rec_hi_4.pull_requests_count()
+    assert 1 == len(rec_hi_4.sub_hierarchy_issues.values())
+    assert 0 == len(rec_hi_4.sub_issues.values())
+    assert 1 == rec_hi_4.pull_requests_count()
+    assert "Fixed bug in PR 152" == rec_hi_4.sub_hierarchy_issues[350].sub_issues[453].get_commit(152, "merge_commit_sha_152").message
+
 
 # def test_generate_isolated_record_types_with_labels_no_type_defined()
-#   - single issue record
-#   - single hierarchy issue record - no sub-issues
+#   - single issue record (closed)
 #   - single hierarchy issue record - two sub-issues without PRs
 #   - single hierarchy issue record - two sub-issues with PRs - no commits
 #   - single hierarchy issue record - two sub-issues with PRs - with commits
-#   - single pull request record
+#   - single hierarchy issue record - one sub hierarchy issues - two sub-issues with PRs - with commits
+#   - single pull request record (closed, merged)
 #   - single direct commit record
 
 
 # def test_generate_isolated_record_types_no_labels_with_type_defined()
-#   - single issue record
-#   - single hierarchy issue record - no sub-issues
+#   - single issue record (closed)
 #   - single hierarchy issue record - two sub-issues without PRs
 #   - single hierarchy issue record - two sub-issues with PRs - no commits
 #   - single hierarchy issue record - two sub-issues with PRs - with commits
-#   - single pull request record
+#   - single hierarchy issue record - one sub hierarchy issues - two sub-issues with PRs - with commits
+#   - single pull request record (closed, merged)
 #   - single direct commit record
 
 
 # def test_generate_isolated_record_types_with_labels_with_type_defined()
-#   - single issue record
-#   - single hierarchy issue record - no sub-issues
+#   - single issue record (closed)
 #   - single hierarchy issue record - two sub-issues without PRs
 #   - single hierarchy issue record - two sub-issues with PRs - no commits
 #   - single hierarchy issue record - two sub-issues with PRs - with commits
-#   - single pull request record
+#   - single hierarchy issue record - one sub hierarchy issues - two sub-issues with PRs - with commits
+#   - single pull request record (closed, merged)
 #   - single direct commit record
-
-
-# def test_generate_records_with_deep_hierarchy_nesting()

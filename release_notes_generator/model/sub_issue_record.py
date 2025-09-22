@@ -6,7 +6,7 @@ import logging
 from typing import Optional, cast
 
 from github.Commit import Commit
-from github.Issue import SubIssue
+from github.Issue import SubIssue, Issue
 from github.PullRequest import PullRequest
 
 from release_notes_generator.model.issue_record import IssueRecord
@@ -20,7 +20,7 @@ class SubIssueRecord(IssueRecord):
     Inherits from Record and provides additional functionality specific to issues.
     """
 
-    def __init__(self, sub_issue: SubIssue, issue_labels: Optional[list[str]] = None, skip: bool = False):
+    def __init__(self, sub_issue: SubIssue | Issue, issue_labels: Optional[list[str]] = None, skip: bool = False):
         super().__init__(sub_issue, issue_labels, skip)
 
         self._labels = issue_labels if issue_labels is not None else []

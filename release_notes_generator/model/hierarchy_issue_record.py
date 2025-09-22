@@ -139,3 +139,8 @@ class HierarchyIssueRecord(IssueRecord):
         # No data loss - in service chapter there will be all detail not presented here
 
         return row
+
+    def order_hierarchy_levels(self, level: int = 0) -> None:
+        self._level = level
+        for sub_hierarchy_record in self.sub_hierarchy_issues.values():
+            sub_hierarchy_record.order_hierarchy_levels(level=level + 1)
