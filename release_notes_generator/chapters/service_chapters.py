@@ -136,8 +136,9 @@ class ServiceChapters(BaseChapters):
                     self.chapters[MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES].add_row(record_id, record.to_chapter_row())
                     self.used_record_numbers.append(record_id)
                 else:
-                    self.chapters[OTHERS_NO_TOPIC].add_row(record_id, record.to_chapter_row())
-                    self.used_record_numbers.append(record_id)
+                    if record_id not in self.used_record_numbers:
+                        self.chapters[OTHERS_NO_TOPIC].add_row(record_id, record.to_chapter_row())
+                        self.used_record_numbers.append(record_id)
 
     def __populate_closed_issues(self, record: IssueRecord, record_id: int | str) -> None:
         """
@@ -174,6 +175,9 @@ class ServiceChapters(BaseChapters):
             if self.__is_row_present(record_id) and not self.duplicity_allowed():
                 return
 
+            if record_id in self.used_record_numbers:
+                return
+
             self.chapters[OTHERS_NO_TOPIC].add_row(record_id, record.to_chapter_row())
             self.used_record_numbers.append(record_id)
 
@@ -208,6 +212,9 @@ class ServiceChapters(BaseChapters):
                 if self.__is_row_present(record_id) and not self.duplicity_allowed():
                     return
 
+                if record_id in self.used_record_numbers:
+                    return
+
                 self.chapters[OTHERS_NO_TOPIC].add_row(record_id, record.to_chapter_row())
                 self.used_record_numbers.append(record_id)
 
@@ -225,6 +232,9 @@ class ServiceChapters(BaseChapters):
 
         else:
             if self.__is_row_present(record_id) and not self.duplicity_allowed():
+                return
+
+            if record_id in self.used_record_numbers:
                 return
 
             # not record.is_present_in_chapters:

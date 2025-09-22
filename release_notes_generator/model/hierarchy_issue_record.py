@@ -115,7 +115,6 @@ class HierarchyIssueRecord(IssueRecord):
         if self.contains_release_notes():
             sub_indent: str = "  " * (self._level + 1)
             row = f"{row}\n{sub_indent}- _Release Notes_:"
-            sub_indent = "  " * (self._level + 2)
             rls_block = "\n".join(f"{sub_indent}{line}" if line else "" for line in self.get_rls_notes().splitlines())
             row = f"{row}\n{rls_block}"
 

@@ -14,9 +14,14 @@
 # limitations under the License.
 #
 import pytest
+import time
+from github import Github
 
 from release_notes_generator.builder.builder import ReleaseNotesBuilder
 from release_notes_generator.chapters.custom_chapters import CustomChapters
+from release_notes_generator.record.factory.default_record_factory import DefaultRecordFactory
+from release_notes_generator.record.factory.issue_hierarchy_record_factory import IssueHierarchyRecordFactory
+from tests.conftest import mock_safe_call_decorator
 
 # pylint: disable=pointless-string-statement
 """
@@ -145,6 +150,578 @@ RELEASE_NOTES_DATA_CUSTOM_CHAPTERS_ONE_LABEL = """### Chapter 1 🛠
   - PR 101 2nd release note
   - PR 102 1st release note
   - PR 102 2nd release note
+
+#### Full Changelog
+http://example.com/changelog
+"""
+
+RELEASE_NOTES_DATA_HIERARCHY_NO_LABELS_NO_TYPE = """### Closed Issues without Pull Request ⚠️
+- #121 _Fix the bug_ in 
+  - Solo issue release note
+
+### Closed Issues without User Defined Labels ⚠️
+- 🔔 #121 _Fix the bug_ in 
+  - Solo issue release note
+
+### Merged PRs without Issue and User Defined Labels ⚠️
+- PR: #124 _Fixed bug_
+  - Fixed bug
+  - Improved performance
+
+### Closed PRs without Issue and User Defined Labels ⚠️
+- PR: #123 _Fixed bug_
+  - Fixed bug
+  - Improved performance
+  + More nice code
+    * Awesome architecture
+
+### Merged PRs Linked to 'Not Closed' Issue ⚠️
+- None: _HI302 open_ #302
+  - _Release Notes_:
+    - Hierarchy level release note
+  - #451 _SI451 closed_ in #150
+    - Hierarchy level release note
+    - Fixed bug
+    - Improved performance
+    + More nice code
+      * Awesome architecture
+- None: _HI303 open_ #303
+  - _Release Notes_:
+    - Hierarchy level release note
+  - #452 _SI452 closed_ in #151
+    - Hierarchy level release note
+    - Fixed bug
+    - Improved performance
+    + More nice code
+      * Awesome architecture
+- None: _HI304 open_ #304
+  - _Release Notes_:
+    - Hierarchy level release note
+  - None: _HI350 open_ #350
+    - _Release Notes_:
+      - Sub-hierarchy level release note
+    - #453 _SI453 closed_ in #152
+      - Hierarchy level release note
+      - Fixed bug
+      - Improved performance
+      + More nice code
+        * Awesome architecture
+
+### Direct commits ⚠️
+- Commit: merge_c... - Fixed bug
+
+### Others - No Topic ⚠️
+Previous filters caught all Issues or Pull Requests.
+
+#### Full Changelog
+http://example.com/changelog
+"""
+
+
+RELEASE_NOTES_DATA_HIERARCHY_WITH_LABELS_NO_TYPE = """### Epics
+- None: _HI302 open_ #302
+  - _Release Notes_:
+    - Hierarchy level release note
+  - #451 _SI451 closed_ in #150
+    - Hierarchy level release note
+    - Fixed bug
+    - Improved performance
+    + More nice code
+      * Awesome architecture
+- None: _HI303 open_ #303
+  - _Release Notes_:
+    - Hierarchy level release note
+  - #452 _SI452 closed_ in #151
+    - Hierarchy level release note
+    - Fixed bug
+    - Improved performance
+    + More nice code
+      * Awesome architecture
+- None: _HI304 open_ #304
+  - _Release Notes_:
+    - Hierarchy level release note
+  - None: _HI350 open_ #350
+    - _Release Notes_:
+      - Sub-hierarchy level release note
+    - #453 _SI453 closed_ in #152
+      - Hierarchy level release note
+      - Fixed bug
+      - Improved performance
+      + More nice code
+        * Awesome architecture
+
+### Chapter 1 🛠
+- PR: #123 _Fixed bug_
+  - Fixed bug
+  - Improved performance
+  + More nice code
+    * Awesome architecture
+
+### Closed Issues without Pull Request ⚠️
+- #121 _Fix the bug_ in 
+  - Solo issue release note
+
+### Closed Issues without User Defined Labels ⚠️
+All closed issues contain at least one of user defined labels.
+
+### Merged PRs without Issue and User Defined Labels ⚠️
+- PR: #124 _Fixed bug_
+  - Fixed bug
+  - Improved performance
+
+### Closed PRs without Issue and User Defined Labels ⚠️
+All closed PRs are linked to issues.
+
+### Merged PRs Linked to 'Not Closed' Issue ⚠️
+- 🔔 None: _HI302 open_ #302
+  - _Release Notes_:
+    - Hierarchy level release note
+  - 🔔 #451 _SI451 closed_ in #150
+    - Hierarchy level release note
+    - Fixed bug
+    - Improved performance
+    + More nice code
+      * Awesome architecture
+- 🔔 None: _HI303 open_ #303
+  - _Release Notes_:
+    - Hierarchy level release note
+  - 🔔 #452 _SI452 closed_ in #151
+    - Hierarchy level release note
+    - Fixed bug
+    - Improved performance
+    + More nice code
+      * Awesome architecture
+- 🔔 None: _HI304 open_ #304
+  - _Release Notes_:
+    - Hierarchy level release note
+  - 🔔 None: _HI350 open_ #350
+    - _Release Notes_:
+      - Sub-hierarchy level release note
+    - 🔔 #453 _SI453 closed_ in #152
+      - Hierarchy level release note
+      - Fixed bug
+      - Improved performance
+      + More nice code
+        * Awesome architecture
+
+### Direct commits ⚠️
+- Commit: merge_c... - Fixed bug
+
+### Others - No Topic ⚠️
+Previous filters caught all Issues or Pull Requests.
+
+#### Full Changelog
+http://example.com/changelog
+"""
+
+RELEASE_NOTES_DATA_HIERARCHY_NO_LABELS_WITH_TYPE = """### Epics
+- Epic: _HI302 open_ #302
+  - _Release Notes_:
+    - Hierarchy level release note
+  - #451 _SI451 closed_ in #150
+    - Hierarchy level release note
+    - Fixed bug
+    - Improved performance
+    + More nice code
+      * Awesome architecture
+- Epic: _HI303 open_ #303
+  - _Release Notes_:
+    - Hierarchy level release note
+  - #452 _SI452 closed_ in #151
+    - Hierarchy level release note
+    - Fixed bug
+    - Improved performance
+    + More nice code
+      * Awesome architecture
+- Epic: _HI304 open_ #304
+  - _Release Notes_:
+    - Hierarchy level release note
+  - Feature: _HI350 open_ #350
+    - _Release Notes_:
+      - Sub-hierarchy level release note
+    - #453 _SI453 closed_ in #152
+      - Hierarchy level release note
+      - Fixed bug
+      - Improved performance
+      + More nice code
+        * Awesome architecture
+
+### Closed Issues without Pull Request ⚠️
+- #121 _Fix the bug_ in 
+  - Solo issue release note
+
+### Closed Issues without User Defined Labels ⚠️
+All closed issues contain at least one of user defined labels.
+
+### Merged PRs without Issue and User Defined Labels ⚠️
+- PR: #124 _Fixed bug_
+  - Fixed bug
+  - Improved performance
+
+### Closed PRs without Issue and User Defined Labels ⚠️
+- PR: #123 _Fixed bug_
+  - Fixed bug
+  - Improved performance
+  + More nice code
+    * Awesome architecture
+
+### Merged PRs Linked to 'Not Closed' Issue ⚠️
+- 🔔 Epic: _HI302 open_ #302
+  - _Release Notes_:
+    - Hierarchy level release note
+  - 🔔 #451 _SI451 closed_ in #150
+    - Hierarchy level release note
+    - Fixed bug
+    - Improved performance
+    + More nice code
+      * Awesome architecture
+- 🔔 Epic: _HI303 open_ #303
+  - _Release Notes_:
+    - Hierarchy level release note
+  - 🔔 #452 _SI452 closed_ in #151
+    - Hierarchy level release note
+    - Fixed bug
+    - Improved performance
+    + More nice code
+      * Awesome architecture
+- 🔔 Epic: _HI304 open_ #304
+  - _Release Notes_:
+    - Hierarchy level release note
+  - 🔔 Feature: _HI350 open_ #350
+    - _Release Notes_:
+      - Sub-hierarchy level release note
+    - 🔔 #453 _SI453 closed_ in #152
+      - Hierarchy level release note
+      - Fixed bug
+      - Improved performance
+      + More nice code
+        * Awesome architecture
+
+### Direct commits ⚠️
+- Commit: merge_c... - Fixed bug
+
+### Others - No Topic ⚠️
+Previous filters caught all Issues or Pull Requests.
+
+#### Full Changelog
+http://example.com/changelog
+"""
+
+RELEASE_NOTES_DATA_HIERARCHY_WITH_LABELS_WITH_TYPE = """### Epics
+- Epic: _HI302 open_ #302
+  - _Release Notes_:
+    - Hierarchy level release note
+  - #451 _SI451 closed_ in #150
+    - Hierarchy level release note
+    - Fixed bug
+    - Improved performance
+    + More nice code
+      * Awesome architecture
+- Epic: _HI303 open_ #303
+  - _Release Notes_:
+    - Hierarchy level release note
+  - #452 _SI452 closed_ in #151
+    - Hierarchy level release note
+    - Fixed bug
+    - Improved performance
+    + More nice code
+      * Awesome architecture
+- Epic: _HI304 open_ #304
+  - _Release Notes_:
+    - Hierarchy level release note
+  - feature: _HI350 open_ #350
+    - _Release Notes_:
+      - Sub-hierarchy level release note
+    - #453 _SI453 closed_ in #152
+      - Hierarchy level release note
+      - Fixed bug
+      - Improved performance
+      + More nice code
+        * Awesome architecture
+
+### Chapter 1 🛠
+- PR: #123 _Fixed bug_
+  - Fixed bug
+  - Improved performance
+  + More nice code
+    * Awesome architecture
+
+### Closed Issues without Pull Request ⚠️
+- #121 _Fix the bug_ in 
+  - Solo issue release note
+
+### Closed Issues without User Defined Labels ⚠️
+All closed issues contain at least one of user defined labels.
+
+### Merged PRs without Issue and User Defined Labels ⚠️
+- PR: #124 _Fixed bug_
+  - Fixed bug
+  - Improved performance
+
+### Closed PRs without Issue and User Defined Labels ⚠️
+All closed PRs are linked to issues.
+
+### Merged PRs Linked to 'Not Closed' Issue ⚠️
+- 🔔 Epic: _HI302 open_ #302
+  - _Release Notes_:
+    - Hierarchy level release note
+  - 🔔 #451 _SI451 closed_ in #150
+    - Hierarchy level release note
+    - Fixed bug
+    - Improved performance
+    + More nice code
+      * Awesome architecture
+- 🔔 Epic: _HI303 open_ #303
+  - _Release Notes_:
+    - Hierarchy level release note
+  - 🔔 #452 _SI452 closed_ in #151
+    - Hierarchy level release note
+    - Fixed bug
+    - Improved performance
+    + More nice code
+      * Awesome architecture
+- 🔔 Epic: _HI304 open_ #304
+  - _Release Notes_:
+    - Hierarchy level release note
+  - 🔔 feature: _HI350 open_ #350
+    - _Release Notes_:
+      - Sub-hierarchy level release note
+    - 🔔 #453 _SI453 closed_ in #152
+      - Hierarchy level release note
+      - Fixed bug
+      - Improved performance
+      + More nice code
+        * Awesome architecture
+
+### Direct commits ⚠️
+- Commit: merge_c... - Fixed bug
+
+### Others - No Topic ⚠️
+Previous filters caught all Issues or Pull Requests.
+
+#### Full Changelog
+http://example.com/changelog
+"""
+
+
+RELEASE_NOTES_NO_DATA_HIERARCHY_NO_LABELS_NO_TYPE = """### Closed Issues without Pull Request ⚠️
+- #121 _Fix the bug_ in 
+  - Solo issue release note
+- #450 _SI450 closed_ in 
+  - Hierarchy level release note
+
+### Closed Issues without User Defined Labels ⚠️
+- 🔔 #121 _Fix the bug_ in 
+  - Solo issue release note
+- 🔔 #450 _SI450 closed_ in 
+  - Hierarchy level release note
+- #451 _SI451 closed_ in #150
+  - Hierarchy level release note
+  - Fixed bug
+  - Improved performance
+  + More nice code
+    * Awesome architecture
+- #452 _SI452 closed_ in #151
+  - Hierarchy level release note
+  - Fixed bug
+  - Improved performance
+  + More nice code
+    * Awesome architecture
+- #453 _SI453 closed_ in #152
+  - Hierarchy level release note
+  - Fixed bug
+  - Improved performance
+  + More nice code
+    * Awesome architecture
+
+### Merged PRs without Issue and User Defined Labels ⚠️
+- PR: #124 _Fixed bug_
+  - Fixed bug
+  - Improved performance
+
+### Closed PRs without Issue and User Defined Labels ⚠️
+- PR: #123 _Fixed bug_
+  - Fixed bug
+  - Improved performance
+  + More nice code
+    * Awesome architecture
+
+### Merged PRs Linked to 'Not Closed' Issue ⚠️
+All merged PRs are linked to Closed issues.
+
+### Direct commits ⚠️
+- Commit: merge_c... - Fixed bug
+
+### Others - No Topic ⚠️
+Previous filters caught all Issues or Pull Requests.
+
+#### Full Changelog
+http://example.com/changelog
+"""
+
+
+RELEASE_NOTES_NO_DATA_HIERARCHY_WITH_LABELS_NO_TYPE = """### Chapter 1 🛠
+- PR: #123 _Fixed bug_
+  - Fixed bug
+  - Improved performance
+  + More nice code
+    * Awesome architecture
+
+### Closed Issues without Pull Request ⚠️
+- #121 _Fix the bug_ in 
+  - Solo issue release note
+- #450 _SI450 closed_ in 
+  - Hierarchy level release note
+
+### Closed Issues without User Defined Labels ⚠️
+- 🔔 #450 _SI450 closed_ in 
+  - Hierarchy level release note
+- #451 _SI451 closed_ in #150
+  - Hierarchy level release note
+  - Fixed bug
+  - Improved performance
+  + More nice code
+    * Awesome architecture
+- #452 _SI452 closed_ in #151
+  - Hierarchy level release note
+  - Fixed bug
+  - Improved performance
+  + More nice code
+    * Awesome architecture
+- #453 _SI453 closed_ in #152
+  - Hierarchy level release note
+  - Fixed bug
+  - Improved performance
+  + More nice code
+    * Awesome architecture
+
+### Merged PRs without Issue and User Defined Labels ⚠️
+- PR: #124 _Fixed bug_
+  - Fixed bug
+  - Improved performance
+
+### Closed PRs without Issue and User Defined Labels ⚠️
+All closed PRs are linked to issues.
+
+### Merged PRs Linked to 'Not Closed' Issue ⚠️
+All merged PRs are linked to Closed issues.
+
+### Direct commits ⚠️
+- Commit: merge_c... - Fixed bug
+
+### Others - No Topic ⚠️
+Previous filters caught all Issues or Pull Requests.
+
+#### Full Changelog
+http://example.com/changelog
+"""
+
+
+RELEASE_NOTES_NO_DATA_HIERARCHY_NO_LABELS_WITH_TYPE = """### Closed Issues without Pull Request ⚠️
+- #121 _Fix the bug_ in 
+  - Solo issue release note
+- #450 _SI450 closed_ in 
+  - Hierarchy level release note
+
+### Closed Issues without User Defined Labels ⚠️
+- 🔔 #450 _SI450 closed_ in 
+  - Hierarchy level release note
+- #451 _SI451 closed_ in #150
+  - Hierarchy level release note
+  - Fixed bug
+  - Improved performance
+  + More nice code
+    * Awesome architecture
+- #452 _SI452 closed_ in #151
+  - Hierarchy level release note
+  - Fixed bug
+  - Improved performance
+  + More nice code
+    * Awesome architecture
+- #453 _SI453 closed_ in #152
+  - Hierarchy level release note
+  - Fixed bug
+  - Improved performance
+  + More nice code
+    * Awesome architecture
+
+### Merged PRs without Issue and User Defined Labels ⚠️
+- PR: #124 _Fixed bug_
+  - Fixed bug
+  - Improved performance
+
+### Closed PRs without Issue and User Defined Labels ⚠️
+- PR: #123 _Fixed bug_
+  - Fixed bug
+  - Improved performance
+  + More nice code
+    * Awesome architecture
+
+### Merged PRs Linked to 'Not Closed' Issue ⚠️
+All merged PRs are linked to Closed issues.
+
+### Direct commits ⚠️
+- Commit: merge_c... - Fixed bug
+
+### Others - No Topic ⚠️
+Previous filters caught all Issues or Pull Requests.
+
+#### Full Changelog
+http://example.com/changelog
+"""
+
+
+RELEASE_NOTES_NO_DATA_HIERARCHY_WITH_LABELS_WITH_TYPE = """### Chapter 1 🛠
+- PR: #123 _Fixed bug_
+  - Fixed bug
+  - Improved performance
+  + More nice code
+    * Awesome architecture
+
+### Closed Issues without Pull Request ⚠️
+- #121 _Fix the bug_ in 
+  - Solo issue release note
+- #450 _SI450 closed_ in 
+  - Hierarchy level release note
+
+### Closed Issues without User Defined Labels ⚠️
+- 🔔 #450 _SI450 closed_ in 
+  - Hierarchy level release note
+- #451 _SI451 closed_ in #150
+  - Hierarchy level release note
+  - Fixed bug
+  - Improved performance
+  + More nice code
+    * Awesome architecture
+- #452 _SI452 closed_ in #151
+  - Hierarchy level release note
+  - Fixed bug
+  - Improved performance
+  + More nice code
+    * Awesome architecture
+- #453 _SI453 closed_ in #152
+  - Hierarchy level release note
+  - Fixed bug
+  - Improved performance
+  + More nice code
+    * Awesome architecture
+
+### Merged PRs without Issue and User Defined Labels ⚠️
+- PR: #124 _Fixed bug_
+  - Fixed bug
+  - Improved performance
+
+### Closed PRs without Issue and User Defined Labels ⚠️
+All closed PRs are linked to issues.
+
+### Merged PRs Linked to 'Not Closed' Issue ⚠️
+All merged PRs are linked to Closed issues.
+
+### Direct commits ⚠️
+- Commit: merge_c... - Fixed bug
+
+### Others - No Topic ⚠️
+Previous filters caught all Issues or Pull Requests.
 
 #### Full Changelog
 http://example.com/changelog
@@ -1012,32 +1589,250 @@ def test_build_closed_pr_service_chapter_without_issue_with_skip_label_on_pr(
     assert expected_release_notes == actual_release_notes
 
 
-def test_build_hierarchy_issue_with_one_custom_label(
-        custom_chapters_not_print_empty_chapters,
-        record_with_hierarchy_issues,
-        record_with_issue_closed_one_pull_merged,
-        record_with_pr_only,
-        record_with_direct_commit,
-        mocker
+def test_build_hierarchy_rls_notes_no_labels_no_type(
+        mocker, custom_chapters_not_print_empty_chapters, mined_data_isolated_record_types_no_labels_no_type_defined
 ):
-    expected_release_notes = RELEASE_NOTES_DATA_CUSTOM_CHAPTERS_ONE_LABEL_HIERARCHY
-    rec_1 = record_with_hierarchy_issues
-    rec_2 = record_with_issue_closed_one_pull_merged
-    rec_3 = record_with_pr_only
-    rec_4 = record_with_direct_commit
-    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=False)
+    expected_release_notes = RELEASE_NOTES_DATA_HIERARCHY_NO_LABELS_NO_TYPE
+
+    mocker.patch("release_notes_generator.record.factory.default_record_factory.safe_call_decorator", side_effect=mock_safe_call_decorator)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=True)
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_hierarchy", return_value=True)
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_row_format_hierarchy_issue", return_value="{type}: _{title}_ {number}")
 
+    mock_github_client = mocker.Mock(spec=Github)
+
+    mock_rate_limit = mocker.Mock()
+    mock_rate_limit.rate.remaining = 10
+    mock_rate_limit.rate.reset.timestamp.return_value = time.time() + 3600
+    mock_github_client.get_rate_limit.return_value = mock_rate_limit
+
+    factory = IssueHierarchyRecordFactory(github=mock_github_client)
+    records = factory.generate(mined_data_isolated_record_types_no_labels_no_type_defined)
+
     builder = ReleaseNotesBuilder(
-        records={rec_1.record_id: rec_1, rec_2.record_id: rec_2, rec_3.record_id: rec_3, rec_4.record_id: rec_4},
+        records=records,
         changelog_url=DEFAULT_CHANGELOG_URL,
         custom_chapters=custom_chapters_not_print_empty_chapters,
     )
 
     actual_release_notes = builder.build()
 
-    print("XXX - actual release notes")
+    assert expected_release_notes == actual_release_notes
+
+
+def test_build_hierarchy_rls_notes_with_labels_no_type(
+        mocker, custom_chapters_not_print_empty_chapters, mined_data_isolated_record_types_with_labels_no_type_defined
+):
+    expected_release_notes = RELEASE_NOTES_DATA_HIERARCHY_WITH_LABELS_NO_TYPE
+
+    mocker.patch("release_notes_generator.record.factory.default_record_factory.safe_call_decorator", side_effect=mock_safe_call_decorator)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=True)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_hierarchy", return_value=True)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_row_format_hierarchy_issue", return_value="{type}: _{title}_ {number}")
+
+    mock_github_client = mocker.Mock(spec=Github)
+
+    mock_rate_limit = mocker.Mock()
+    mock_rate_limit.rate.remaining = 10
+    mock_rate_limit.rate.reset.timestamp.return_value = time.time() + 3600
+    mock_github_client.get_rate_limit.return_value = mock_rate_limit
+
+    factory = IssueHierarchyRecordFactory(github=mock_github_client)
+    records = factory.generate(mined_data_isolated_record_types_with_labels_no_type_defined)
+
+    builder = ReleaseNotesBuilder(
+        records=records,
+        changelog_url=DEFAULT_CHANGELOG_URL,
+        custom_chapters=custom_chapters_not_print_empty_chapters,
+    )
+
+    actual_release_notes = builder.build()
+
+    assert expected_release_notes == actual_release_notes
+
+
+def test_build_hierarchy_rls_notes_no_labels_with_type(
+        mocker, custom_chapters_not_print_empty_chapters, mined_data_isolated_record_types_no_labels_with_type_defined
+):
+    expected_release_notes = RELEASE_NOTES_DATA_HIERARCHY_NO_LABELS_WITH_TYPE
+
+    mocker.patch("release_notes_generator.record.factory.default_record_factory.safe_call_decorator", side_effect=mock_safe_call_decorator)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=True)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_hierarchy", return_value=True)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_row_format_hierarchy_issue", return_value="{type}: _{title}_ {number}")
+
+    mock_github_client = mocker.Mock(spec=Github)
+
+    mock_rate_limit = mocker.Mock()
+    mock_rate_limit.rate.remaining = 10
+    mock_rate_limit.rate.reset.timestamp.return_value = time.time() + 3600
+    mock_github_client.get_rate_limit.return_value = mock_rate_limit
+
+    factory = IssueHierarchyRecordFactory(github=mock_github_client)
+    records = factory.generate(mined_data_isolated_record_types_no_labels_with_type_defined)
+
+    builder = ReleaseNotesBuilder(
+        records=records,
+        changelog_url=DEFAULT_CHANGELOG_URL,
+        custom_chapters=custom_chapters_not_print_empty_chapters,
+    )
+
+    actual_release_notes = builder.build()
+
+    assert expected_release_notes == actual_release_notes
+
+def test_build_hierarchy_rls_notes_with_labels_with_type(
+        mocker, custom_chapters_not_print_empty_chapters, mined_data_isolated_record_types_with_labels_with_type_defined
+):
+    expected_release_notes = RELEASE_NOTES_DATA_HIERARCHY_WITH_LABELS_WITH_TYPE
+
+    mocker.patch("release_notes_generator.record.factory.default_record_factory.safe_call_decorator", side_effect=mock_safe_call_decorator)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=True)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_hierarchy", return_value=True)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_row_format_hierarchy_issue", return_value="{type}: _{title}_ {number}")
+
+    mock_github_client = mocker.Mock(spec=Github)
+
+    mock_rate_limit = mocker.Mock()
+    mock_rate_limit.rate.remaining = 10
+    mock_rate_limit.rate.reset.timestamp.return_value = time.time() + 3600
+    mock_github_client.get_rate_limit.return_value = mock_rate_limit
+
+    factory = IssueHierarchyRecordFactory(github=mock_github_client)
+    records = factory.generate(mined_data_isolated_record_types_with_labels_with_type_defined)
+
+    builder = ReleaseNotesBuilder(
+        records=records,
+        changelog_url=DEFAULT_CHANGELOG_URL,
+        custom_chapters=custom_chapters_not_print_empty_chapters,
+    )
+
+    actual_release_notes = builder.build()
+
+    assert expected_release_notes == actual_release_notes
+
+
+def test_build_no_hierarchy_rls_notes_no_labels_no_type_with_hierarchy_data(
+        mocker, custom_chapters_not_print_empty_chapters, mined_data_isolated_record_types_no_labels_no_type_defined
+):
+    expected_release_notes = RELEASE_NOTES_NO_DATA_HIERARCHY_NO_LABELS_NO_TYPE
+
+    mocker.patch("release_notes_generator.record.factory.default_record_factory.safe_call_decorator", side_effect=mock_safe_call_decorator)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=True)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_hierarchy", return_value=False)
+    # mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_row_format_hierarchy_issue", return_value="{type}: _{title}_ {number}")
+
+    mock_github_client = mocker.Mock(spec=Github)
+
+    mock_rate_limit = mocker.Mock()
+    mock_rate_limit.rate.remaining = 10
+    mock_rate_limit.rate.reset.timestamp.return_value = time.time() + 3600
+    mock_github_client.get_rate_limit.return_value = mock_rate_limit
+
+    factory = DefaultRecordFactory(github=mock_github_client)
+    records = factory.generate(mined_data_isolated_record_types_no_labels_no_type_defined)
+
+    builder = ReleaseNotesBuilder(
+        records=records,
+        changelog_url=DEFAULT_CHANGELOG_URL,
+        custom_chapters=custom_chapters_not_print_empty_chapters,
+    )
+
+    actual_release_notes = builder.build()
+
+    assert expected_release_notes == actual_release_notes
+
+def test_build_no_hierarchy_rls_notes_with_labels_no_type_with_hierarchy_data(
+        mocker, custom_chapters_not_print_empty_chapters, mined_data_isolated_record_types_with_labels_no_type_defined
+):
+    expected_release_notes = RELEASE_NOTES_NO_DATA_HIERARCHY_WITH_LABELS_NO_TYPE
+
+    mocker.patch("release_notes_generator.record.factory.default_record_factory.safe_call_decorator", side_effect=mock_safe_call_decorator)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=True)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_hierarchy", return_value=False)
+    # mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_row_format_hierarchy_issue", return_value="{type}: _{title}_ {number}")
+
+    mock_github_client = mocker.Mock(spec=Github)
+
+    mock_rate_limit = mocker.Mock()
+    mock_rate_limit.rate.remaining = 10
+    mock_rate_limit.rate.reset.timestamp.return_value = time.time() + 3600
+    mock_github_client.get_rate_limit.return_value = mock_rate_limit
+
+    factory = DefaultRecordFactory(github=mock_github_client)
+    records = factory.generate(mined_data_isolated_record_types_with_labels_no_type_defined)
+
+    builder = ReleaseNotesBuilder(
+        records=records,
+        changelog_url=DEFAULT_CHANGELOG_URL,
+        custom_chapters=custom_chapters_not_print_empty_chapters,
+    )
+
+    actual_release_notes = builder.build()
+
+    assert expected_release_notes == actual_release_notes
+
+
+def test_build_no_hierarchy_rls_notes_no_labels_with_type_with_hierarchy_data(
+        mocker, custom_chapters_not_print_empty_chapters, mined_data_isolated_record_types_no_labels_with_type_defined
+):
+    expected_release_notes = RELEASE_NOTES_NO_DATA_HIERARCHY_NO_LABELS_WITH_TYPE
+
+    mocker.patch("release_notes_generator.record.factory.default_record_factory.safe_call_decorator", side_effect=mock_safe_call_decorator)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=True)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_hierarchy", return_value=False)
+    # mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_row_format_hierarchy_issue", return_value="{type}: _{title}_ {number}")
+
+    mock_github_client = mocker.Mock(spec=Github)
+
+    mock_rate_limit = mocker.Mock()
+    mock_rate_limit.rate.remaining = 10
+    mock_rate_limit.rate.reset.timestamp.return_value = time.time() + 3600
+    mock_github_client.get_rate_limit.return_value = mock_rate_limit
+
+    factory = DefaultRecordFactory(github=mock_github_client)
+    records = factory.generate(mined_data_isolated_record_types_no_labels_with_type_defined)
+
+    builder = ReleaseNotesBuilder(
+        records=records,
+        changelog_url=DEFAULT_CHANGELOG_URL,
+        custom_chapters=custom_chapters_not_print_empty_chapters,
+    )
+
+    actual_release_notes = builder.build()
+
+    assert expected_release_notes == actual_release_notes
+
+
+def test_build_no_hierarchy_rls_notes_with_labels_with_type_with_hierarchy_data(
+        mocker, custom_chapters_not_print_empty_chapters, mined_data_isolated_record_types_with_labels_with_type_defined
+):
+    expected_release_notes = RELEASE_NOTES_NO_DATA_HIERARCHY_WITH_LABELS_WITH_TYPE
+
+    mocker.patch("release_notes_generator.record.factory.default_record_factory.safe_call_decorator", side_effect=mock_safe_call_decorator)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=True)
+    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_hierarchy", return_value=False)
+    # mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_row_format_hierarchy_issue", return_value="{type}: _{title}_ {number}")
+
+    mock_github_client = mocker.Mock(spec=Github)
+
+    mock_rate_limit = mocker.Mock()
+    mock_rate_limit.rate.remaining = 10
+    mock_rate_limit.rate.reset.timestamp.return_value = time.time() + 3600
+    mock_github_client.get_rate_limit.return_value = mock_rate_limit
+
+    factory = DefaultRecordFactory(github=mock_github_client)
+    records = factory.generate(mined_data_isolated_record_types_with_labels_with_type_defined)
+
+    builder = ReleaseNotesBuilder(
+        records=records,
+        changelog_url=DEFAULT_CHANGELOG_URL,
+        custom_chapters=custom_chapters_not_print_empty_chapters,
+    )
+
+    actual_release_notes = builder.build()
+
+    print("XXX")
     print(actual_release_notes)
     print("XXX")
 

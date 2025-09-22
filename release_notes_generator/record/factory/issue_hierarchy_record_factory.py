@@ -249,4 +249,4 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
         #   This have to be done from up to down
         top_hierarchy_records = [rec for rec in self._records.values() if isinstance(rec, HierarchyIssueRecord)]
         for rec in top_hierarchy_records:
-            rec.order_hierarchy_levels(level=level + 1)
+            rec.order_hierarchy_levels(level=level)
