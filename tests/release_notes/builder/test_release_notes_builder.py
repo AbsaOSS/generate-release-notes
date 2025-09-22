@@ -208,7 +208,7 @@ http://example.com/changelog
 
 # pylint: disable=line-too-long
 RELEASE_NOTES_DATA_SERVICE_CHAPTERS_MERGED_PR_NO_ISSUE_NO_USER_LABELS = """### Merged PRs without Issue and User Defined Labels ⚠️
-- PR: #123 _Fixed bug_
+- PR: #124 _Fixed bug_
   - Fixed bug
   - Improved performance
 
@@ -283,7 +283,7 @@ http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_MERGED_PR_WITH_USER_LABELS_DUPLICITY_REDUCTION_ON = """### Chapter 1 🛠
-- PR: #123 _Fixed bug_
+- PR: #124 _Fixed bug_
   - Fixed bug
   - Improved performance
 
@@ -317,7 +317,7 @@ http://example.com/changelog
 RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_MERGED_PRS_WITH_USER_LABELS_WITH_SKIP_LABEL = RELEASE_NOTES_NO_DATA_NO_WARNING_NO_EMPTY_CHAPTERS
 
 RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_MERGED_PRS_WITH_USER_LABELS = """### Chapter 1 🛠
-- #122 _I1+bug_ in #123
+- #122 _I1+bug_ in #124
   - Fixed bug
   - Improved performance
   + More nice code
