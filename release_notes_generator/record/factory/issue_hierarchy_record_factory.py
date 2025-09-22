@@ -22,7 +22,7 @@ import logging
 from typing import cast, Optional
 
 from github import Github
-from github.Issue import Issue, SubIssue
+from github.Issue import Issue
 from github.PullRequest import PullRequest
 
 from release_notes_generator.model.commit_record import CommitRecord
@@ -112,8 +112,10 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
         pull_issues_set.update(extract_issue_numbers_from_body(pull))
         pull_issues: list[int] = list(pull_issues_set)
         if len(pull_issues) > 0:
+            record_keys = self._records.keys()
+
             for issue_number in pull_issues:
-                if issue_number not in self._records.keys():
+                if issue_number not in record_keys:
                     logger.warning(
                         "Detected PR %d linked to issue %d which is not in the list of received issues. "
                         "Fetching ...",
@@ -125,7 +127,7 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
                         self._create_issue_record_using_sub_issues_existence(parent_issue)
                         return
 
-                if issue_number in self._records.keys() and isinstance(
+                if issue_number in record_keys and isinstance(
                     self._records[issue_number], (SubIssueRecord, HierarchyIssueRecord, IssueRecord)
                 ):
                     rec = cast(IssueRecord, self._records[issue_number])
@@ -156,7 +158,7 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
 
     def _create_issue_record_using_sub_issues_not_existence(self, issue: Issue) -> None:
         # Expected to run after all issue with sub-issues are registered
-        if issue.number in self.__sub_issue_parents.keys():
+        if issue.number in self.__sub_issue_parents.keys():  # pylint: disable=consider-iterating-dictionary
             self._create_record_for_sub_issue(issue)
         else:
             self._create_record_for_issue(issue)
@@ -223,13 +225,15 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
             sub_rec = self._records[sub_issue_number]
 
             if isinstance(sub_rec, SubIssueRecord):
-                parent_rec.sub_issues[sub_issue_number] = sub_rec   # add to parent as SubIssueRecord
-                self._records.pop(sub_issue_number)                 # remove from main records as it is sub-one
-                self.__sub_issue_parents.pop(sub_issue_number)      # remove from sub-parents as it is now sub-one
+                parent_rec.sub_issues[sub_issue_number] = sub_rec  # add to parent as SubIssueRecord
+                self._records.pop(sub_issue_number)  # remove from main records as it is sub-one
+                self.__sub_issue_parents.pop(sub_issue_number)  # remove from sub-parents as it is now sub-one
             elif isinstance(sub_rec, HierarchyIssueRecord):
-                parent_rec.sub_hierarchy_issues[sub_issue_number] = sub_rec   # add to parent as 'Sub' HierarchyIssueRecord
-                self._records.pop(sub_issue_number)                 # remove from main records as it is sub-one
-                self.__sub_issue_parents.pop(sub_issue_number)      # remove from sub-parents as it is now sub-one
+                parent_rec.sub_hierarchy_issues[sub_issue_number] = (
+                    sub_rec  # add to parent as 'Sub' HierarchyIssueRecord
+                )
+                self._records.pop(sub_issue_number)  # remove from main records as it is sub-one
+                self.__sub_issue_parents.pop(sub_issue_number)  # remove from sub-parents as it is now sub-one
             else:
                 logger.error("Detected IssueRecord in position of SubIssueRecord - skipping it")
                 # Dev note: IssueRecord is expected to be stand-alone - not sub-issue

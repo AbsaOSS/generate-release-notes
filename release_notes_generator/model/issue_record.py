@@ -96,8 +96,8 @@ class IssueRecord(Record):
         """
         if self._issue.number == issue_number:
             return self
-        else:
-            return None
+
+        return None
 
     def to_chapter_row(self, add_into_chapters: bool = True) -> str:
         if add_into_chapters:

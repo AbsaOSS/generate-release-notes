@@ -140,6 +140,15 @@ class HierarchyIssueRecord(IssueRecord):
         return row
 
     def order_hierarchy_levels(self, level: int = 0) -> None:
+        """
+        Orders the hierarchy levels of the issue and its sub-issues recursively.
+
+        Parameters:
+            level (int): The starting level for the hierarchy. Default is 0.
+
+        Returns:
+            None
+        """
         self._level = level
         for sub_hierarchy_record in self.sub_hierarchy_issues.values():
             sub_hierarchy_record.order_hierarchy_levels(level=level + 1)
