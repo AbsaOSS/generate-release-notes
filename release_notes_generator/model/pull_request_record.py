@@ -105,7 +105,8 @@ class PullRequestRecord(Record):
     # methods - override Record methods
 
     def get_labels(self) -> list[str]:
-        return [label.name for label in self._pull_request.get_labels()]
+        self._labels = [label.name for label in list(self._pull_request.get_labels())]
+        return self.labels
 
     def to_chapter_row(self, add_into_chapters: bool = True) -> str:
         if add_into_chapters:

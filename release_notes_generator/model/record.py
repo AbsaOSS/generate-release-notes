@@ -172,13 +172,7 @@ class Record(metaclass=ABCMeta):
         Returns:
             bool: True if the record contains all of the specified labels, False otherwise.
         """
-        if len(self.labels) != len(labels):
-            return False
-
-        for lbl in self.labels:
-            if lbl not in labels:
-                return False
-        return True
+        return all(lbl in self.labels for lbl in labels)
 
     def contains_release_notes(self, re_check: bool = False) -> bool:
         """

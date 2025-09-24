@@ -67,12 +67,12 @@ def get_issues_for_pr(pull_number: int) -> set[int]:
 
     response = requests.post(github_api_url, json={"query": query}, headers=headers, verify=False, timeout=10)
     response.raise_for_status()  # Raise an error for HTTP issues
+    data = response.json()
+    if "errors" in data and data["errors"]:
+        raise RuntimeError(f"GitHub GraphQL errors: {data['errors']}")
     numbers = {
         node["number"]
-        for node in response.json()["data"]["repository"]["pullRequest"]["closingIssuesReferences"]["nodes"]
+        for node in data["data"]["repository"]["pullRequest"]["closingIssuesReferences"]["nodes"]
     }
-
-    if pull_number == 3645:
-        print(f"PR #{pull_number} - Extracted issue numbers from GitHub API: {numbers}")
 
     return numbers

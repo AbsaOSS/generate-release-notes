@@ -214,6 +214,7 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
     def _re_register_hierarchy_issues(self):
         sub_issues_numbers = list(self.__sub_issue_parents.keys())
 
+        made_progress = False
         for sub_issue_number in sub_issues_numbers:
             # remove issue(sub_issue_number) from current records and add it to parent
             #   as sub-issue or sub-hierarchy-issue
@@ -230,17 +231,20 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
                 parent_rec.sub_issues[sub_issue_number] = sub_rec  # add to parent as SubIssueRecord
                 self._records.pop(sub_issue_number)  # remove from main records as it is sub-one
                 self.__sub_issue_parents.pop(sub_issue_number)  # remove from sub-parents as it is now sub-one
+                made_progress = True
             elif isinstance(sub_rec, HierarchyIssueRecord):
                 parent_rec.sub_hierarchy_issues[sub_issue_number] = (
                     sub_rec  # add to parent as 'Sub' HierarchyIssueRecord
                 )
                 self._records.pop(sub_issue_number)  # remove from main records as it is sub-one
                 self.__sub_issue_parents.pop(sub_issue_number)  # remove from sub-parents as it is now sub-one
+                made_progress = True
             else:
-                logger.error("Detected IssueRecord in position of SubIssueRecord - skipping it")
-                # Dev note: IssueRecord is expected to be stand-alone - not sub-issue
+                logger.error("Detected IssueRecord in position of SubIssueRecord - leaving as standalone and dropping mapping")
+                # Avoid infinite recursion by removing the unresolved mapping
+                self.__sub_issue_parents.pop(sub_issue_number, None)
 
-        if len(self.__sub_issue_parents.items()) > 0:
+        if self.__sub_issue_parents.items() and made_progress:
             self._re_register_hierarchy_issues()
 
     def order_hierarchy_levels(self, level: int = 0) -> None:

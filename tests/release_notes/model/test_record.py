@@ -83,7 +83,7 @@ def test_contain_all_labels():
     rec = DummyRecord(labels=["bug", "feature"])
     assert rec.contain_all_labels(["bug", "feature"])
     assert not rec.contain_all_labels(["bug", "other"])
-    assert not rec.contain_all_labels(["bug"])
+    assert rec.contain_all_labels(["bug"])
 
 def test_contains_release_notes_true():
     rec = DummyRecord(rls_notes="Some notes")
