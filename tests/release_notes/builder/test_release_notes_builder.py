@@ -208,7 +208,7 @@ RELEASE_NOTES_DATA_HIERARCHY_NO_LABELS_NO_TYPE = """### Closed Issues without Pu
         * Awesome architecture
 
 ### Direct commits ⚠️
-- Commit: merge_c... - Fixed bug
+- Commit: merge_c... - Direct commit example
 
 ### Others - No Topic ⚠️
 Previous filters caught all Issues or Pull Requests.
@@ -305,7 +305,7 @@ All closed PRs are linked to issues.
         * Awesome architecture
 
 ### Direct commits ⚠️
-- Commit: merge_c... - Fixed bug
+- Commit: merge_c... - Direct commit example
 
 ### Others - No Topic ⚠️
 Previous filters caught all Issues or Pull Requests.
@@ -398,7 +398,7 @@ All closed issues contain at least one of user defined labels.
         * Awesome architecture
 
 ### Direct commits ⚠️
-- Commit: merge_c... - Fixed bug
+- Commit: merge_c... - Direct commit example
 
 ### Others - No Topic ⚠️
 Previous filters caught all Issues or Pull Requests.
@@ -494,7 +494,7 @@ All closed PRs are linked to issues.
         * Awesome architecture
 
 ### Direct commits ⚠️
-- Commit: merge_c... - Fixed bug
+- Commit: merge_c... - Direct commit example
 
 ### Others - No Topic ⚠️
 Previous filters caught all Issues or Pull Requests.
@@ -550,7 +550,7 @@ RELEASE_NOTES_NO_DATA_HIERARCHY_NO_LABELS_NO_TYPE = """### Closed Issues without
 All merged PRs are linked to Closed issues.
 
 ### Direct commits ⚠️
-- Commit: merge_c... - Fixed bug
+- Commit: merge_c... - Direct commit example
 
 ### Others - No Topic ⚠️
 Previous filters caught all Issues or Pull Requests.
@@ -607,7 +607,7 @@ All closed PRs are linked to issues.
 All merged PRs are linked to Closed issues.
 
 ### Direct commits ⚠️
-- Commit: merge_c... - Fixed bug
+- Commit: merge_c... - Direct commit example
 
 ### Others - No Topic ⚠️
 Previous filters caught all Issues or Pull Requests.
@@ -661,7 +661,7 @@ RELEASE_NOTES_NO_DATA_HIERARCHY_NO_LABELS_WITH_TYPE = """### Closed Issues witho
 All merged PRs are linked to Closed issues.
 
 ### Direct commits ⚠️
-- Commit: merge_c... - Fixed bug
+- Commit: merge_c... - Direct commit example
 
 ### Others - No Topic ⚠️
 Previous filters caught all Issues or Pull Requests.
@@ -718,7 +718,7 @@ All closed PRs are linked to issues.
 All merged PRs are linked to Closed issues.
 
 ### Direct commits ⚠️
-- Commit: merge_c... - Fixed bug
+- Commit: merge_c... - Direct commit example
 
 ### Others - No Topic ⚠️
 Previous filters caught all Issues or Pull Requests.
@@ -1750,7 +1750,6 @@ def test_build_no_hierarchy_rls_notes_with_labels_no_type_with_hierarchy_data(
     mocker.patch("release_notes_generator.record.factory.default_record_factory.safe_call_decorator", side_effect=mock_safe_call_decorator)
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=True)
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_hierarchy", return_value=False)
-    # mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_row_format_hierarchy_issue", return_value="{type}: _{title}_ {number}")
 
     mock_github_client = mocker.Mock(spec=Github)
 

@@ -8,6 +8,7 @@ from typing import Optional, Any
 
 from github.Commit import Commit
 from github.Issue import Issue
+from github.Label import Label
 from github.PullRequest import PullRequest
 
 from release_notes_generator.action_inputs import ActionInputs
@@ -30,7 +31,7 @@ class IssueRecord(Record):
         super().__init__(skip=skip)
 
         self._issue: Issue = issue
-        self._labels = issue_labels if issue_labels is not None else []
+        self._labels: Optional[list[Label]] = issue_labels if issue_labels is not None else None
 
         if issue is not None and issue.type is not None:
             self._issue_type = issue.type.name
@@ -82,7 +83,8 @@ class IssueRecord(Record):
     # methods - override Record methods
 
     def get_labels(self) -> list[str]:
-        return [label.name for label in self._issue.get_labels()]
+        self._labels = [label.name for label in list(self._issue.get_labels())]
+        return self.labels
 
     def find_issue(self, issue_number: int) -> Optional["IssueRecord"]:
         """

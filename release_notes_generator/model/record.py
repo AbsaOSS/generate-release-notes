@@ -37,7 +37,7 @@ class Record(metaclass=ABCMeta):
         self._present_in_chapters = 0
         self._skip = skip
         self._is_release_note_detected: Optional[bool] = None
-        self._labels = labels if labels is not None else []
+        self._labels: Optional[list[str]] = labels if labels is not None else None
         self._rls_notes: Optional[str] = None  # single annotation here
 
     # properties
@@ -62,7 +62,7 @@ class Record(metaclass=ABCMeta):
         Returns:
             list[str]: A list of labels associated with the record.
         """
-        if len(self._labels) == 0:
+        if self._labels is None:
             self._labels = self.get_labels()
 
         return self._labels

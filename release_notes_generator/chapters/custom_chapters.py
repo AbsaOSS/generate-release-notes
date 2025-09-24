@@ -63,7 +63,7 @@ class CustomChapters(BaseChapters):
                     continue
 
                 pulls_count = 1
-                if isinstance(records[record_id], (HierarchyIssueRecord | IssueRecord | SubIssueRecord)):
+                if isinstance(records[record_id], (HierarchyIssueRecord, IssueRecord, SubIssueRecord)):
                     pulls_count = cast(IssueRecord, records[record_id]).pull_requests_count()
 
                 for record_label in records[record_id].labels:  # iterate all labels of the record (issue, or 1st PR)

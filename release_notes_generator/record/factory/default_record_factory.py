@@ -65,8 +65,10 @@ class DefaultRecordFactory(RecordFactory):
         def register_pull_request(pull: PullRequest, skip_rec: bool) -> None:
             detected_issues = extract_issue_numbers_from_body(pull)
             logger.debug("Detected issues - from body: %s", detected_issues)
-            detected_issues.update(self._safe_call(get_issues_for_pr)(pull_number=pull.number))
-            logger.debug("Detected issues - final: %s", detected_issues)
+            linked = self._safe_call(get_issues_for_pr)(pull_number=pull.number)
+            if linked:
+                detected_issues.update(linked)
+            logger.debug("Detected issues - merged: %s", detected_issues)
 
             for parent_issue_number in detected_issues:
                 # create an issue record if not present for PR parent
@@ -103,9 +105,9 @@ class DefaultRecordFactory(RecordFactory):
             pull_labels = [label.name for label in pull.get_labels()]
             skip_record: bool = any(item in pull_labels for item in ActionInputs.get_skip_release_notes_labels())
 
-            if not self._safe_call(get_issues_for_pr)(pull_number=pull.number) and not extract_issue_numbers_from_body(
-                pull
-            ):
+            linked_from_api = self._safe_call(get_issues_for_pr)(pull_number=pull.number) or set()
+            linked_from_body = extract_issue_numbers_from_body(pull)
+            if not linked_from_api and not linked_from_body:
                 self._records[pull.number] = PullRequestRecord(pull, skip=skip_record)
                 logger.debug("Created record for PR %d: %s", pull.number, pull.title)
             else:

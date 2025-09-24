@@ -92,7 +92,7 @@ def test_generate_isolated_record_types_no_labels_no_type_defined(mocker, mined_
     assert 0 == len(rec_hi_3.sub_hierarchy_issues.values())
     assert 2 == len(rec_hi_3.sub_issues.values())
     assert 1 == rec_hi_3.sub_issues[452].pull_requests_count()
-    assert "Fixed bug in PR 151" == rec_hi_3.sub_issues[452].get_commit(151, "merge_commit_sha_151").message
+    assert "Fixed bug in PR 151" == rec_hi_3.sub_issues[452].get_commit(151, "merge_commit_sha_151").commit.message
     assert 0 == rec_hi_3.level
 
     rec_hi_4 = cast(HierarchyIssueRecord, result[304])
@@ -100,7 +100,7 @@ def test_generate_isolated_record_types_no_labels_no_type_defined(mocker, mined_
     assert 1 == len(rec_hi_4.sub_hierarchy_issues.values())
     assert 0 == len(rec_hi_4.sub_issues.values())
     assert 1 == rec_hi_4.pull_requests_count()
-    assert "Fixed bug in PR 152" == rec_hi_4.sub_hierarchy_issues[350].sub_issues[453].get_commit(152, "merge_commit_sha_152").message
+    assert "Fixed bug in PR 152" == rec_hi_4.sub_hierarchy_issues[350].sub_issues[453].get_commit(152, "merge_commit_sha_152").commit.message
     assert 0 == rec_hi_4.level
 
     rec_hi_5 = cast(HierarchyIssueRecord, result[304])
@@ -159,14 +159,14 @@ def test_generate_isolated_record_types_with_labels_no_type_defined(mocker, mine
     assert 0 == len(rec_hi_3.sub_hierarchy_issues.values())
     assert 2 == len(rec_hi_3.sub_issues.values())
     assert 1 == rec_hi_3.sub_issues[452].pull_requests_count()
-    assert "Fixed bug in PR 151" == rec_hi_3.sub_issues[452].get_commit(151, "merge_commit_sha_151").message
+    assert "Fixed bug in PR 151" == rec_hi_3.sub_issues[452].get_commit(151, "merge_commit_sha_151").commit.message
 
     rec_hi_4 = cast(HierarchyIssueRecord, result[304])
     assert 1 == rec_hi_4.pull_requests_count()
     assert 1 == len(rec_hi_4.sub_hierarchy_issues.values())
     assert 0 == len(rec_hi_4.sub_issues.values())
     assert 1 == rec_hi_4.pull_requests_count()
-    assert "Fixed bug in PR 152" == rec_hi_4.sub_hierarchy_issues[350].sub_issues[453].get_commit(152, "merge_commit_sha_152").message
+    assert "Fixed bug in PR 152" == rec_hi_4.sub_hierarchy_issues[350].sub_issues[453].get_commit(152, "merge_commit_sha_152").commit.message
 
 
 #   - single issue record (closed)
@@ -221,14 +221,14 @@ def test_generate_isolated_record_types_no_labels_with_type_defined(mocker, mine
     assert 0 == len(rec_hi_3.sub_hierarchy_issues.values())
     assert 2 == len(rec_hi_3.sub_issues.values())
     assert 1 == rec_hi_3.sub_issues[452].pull_requests_count()
-    assert "Fixed bug in PR 151" == rec_hi_3.sub_issues[452].get_commit(151, "merge_commit_sha_151").message
+    assert "Fixed bug in PR 151" == rec_hi_3.sub_issues[452].get_commit(151, "merge_commit_sha_151").commit.message
 
     rec_hi_4 = cast(HierarchyIssueRecord, result[304])
     assert 1 == rec_hi_4.pull_requests_count()
     assert 1 == len(rec_hi_4.sub_hierarchy_issues.values())
     assert 0 == len(rec_hi_4.sub_issues.values())
     assert 1 == rec_hi_4.pull_requests_count()
-    assert "Fixed bug in PR 152" == rec_hi_4.sub_hierarchy_issues[350].sub_issues[453].get_commit(152, "merge_commit_sha_152").message
+    assert "Fixed bug in PR 152" == rec_hi_4.sub_hierarchy_issues[350].sub_issues[453].get_commit(152, "merge_commit_sha_152").commit.message
 
 
 #   - single issue record (closed)
@@ -283,11 +283,11 @@ def test_generate_isolated_record_types_with_labels_with_type_defined(mocker, mi
     assert 0 == len(rec_hi_3.sub_hierarchy_issues.values())
     assert 2 == len(rec_hi_3.sub_issues.values())
     assert 1 == rec_hi_3.sub_issues[452].pull_requests_count()
-    assert "Fixed bug in PR 151" == rec_hi_3.sub_issues[452].get_commit(151, "merge_commit_sha_151").message
+    assert "Fixed bug in PR 151" == rec_hi_3.sub_issues[452].get_commit(151, "merge_commit_sha_151").commit.message
 
     rec_hi_4 = cast(HierarchyIssueRecord, result[304])
     assert 1 == rec_hi_4.pull_requests_count()
     assert 1 == len(rec_hi_4.sub_hierarchy_issues.values())
     assert 0 == len(rec_hi_4.sub_issues.values())
     assert 1 == rec_hi_4.pull_requests_count()
-    assert "Fixed bug in PR 152" == rec_hi_4.sub_hierarchy_issues[350].sub_issues[453].get_commit(152, "merge_commit_sha_152").message
+    assert "Fixed bug in PR 152" == rec_hi_4.sub_hierarchy_issues[350].sub_issues[453].get_commit(152, "merge_commit_sha_152").commit.message

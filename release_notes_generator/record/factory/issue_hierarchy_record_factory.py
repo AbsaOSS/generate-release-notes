@@ -108,9 +108,10 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
         related_commits = [c for c in data.commits if c.sha == pull.merge_commit_sha]
         self.__registered_commits.extend(c.sha for c in related_commits)
 
-        pull_issues_set: set[int] = self._safe_call(get_issues_for_pr)(pull_number=pull.number)
-        pull_issues_set.update(extract_issue_numbers_from_body(pull))
-        pull_issues: list[int] = list(pull_issues_set)
+        linked_from_api = self._safe_call(get_issues_for_pr)(pull_number=pull.number) or set()
+        linked_from_body = extract_issue_numbers_from_body(pull)
+        pull_issues: list[int] = list(linked_from_api.union(linked_from_body))
+        attached_any = False
         if len(pull_issues) > 0:
             record_keys = self._records.keys()
 
@@ -125,7 +126,7 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
                     parent_issue = self._safe_call(data.repository.get_issue)(issue_number) if data.repository else None
                     if parent_issue is not None:
                         self._create_issue_record_using_sub_issues_existence(parent_issue)
-                        return
+                        record_keys = self._records.keys()
 
                 if issue_number in record_keys and isinstance(
                     self._records[issue_number], (SubIssueRecord, HierarchyIssueRecord, IssueRecord)
@@ -138,13 +139,15 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
                         rec.register_commit(pull, c)
                         logger.debug("Registering commit %s to PR %d", c.sha, pull.number)
 
-                    return
+                    attached_any = True
 
-        pr_rec = PullRequestRecord(pull, pull_labels, skip_record)
-        for c in related_commits:  # register commits to the PR record
-            pr_rec.register_commit(c)
-        self._records[pull.number] = pr_rec
-        logger.debug("Created record for PR %d: %s", pull.number, pull.title)
+        if not attached_any:
+            pr_rec = PullRequestRecord(pull, pull_labels, skip_record)
+            for c in related_commits:  # register commits to the PR record
+                pr_rec.register_commit(c)
+            self._records[pull.number] = pr_rec
+            logger.debug("Created record for PR %d: %s", pull.number, pull.title)
+
 
     def _create_issue_record_using_sub_issues_existence(self, issue: Issue) -> None:
         # use presence of sub-issues as a hint for hierarchy issue or non hierarchy issue

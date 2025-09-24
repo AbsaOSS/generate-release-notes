@@ -133,10 +133,12 @@ class DataMiner:
             return
 
         # Derive 'since' from release
-        data.since = data.release.created_at
-        if ActionInputs.get_published_at():
-            data.since = data.release.published_at
-
+        prefer_published = ActionInputs.get_published_at()
+        data.since = (
+            data.release.published_at
+            if prefer_published and getattr(data.release, "published_at", None)
+            else data.release.created_at
+        )
         issues_since = self._safe_call(data.repository.get_issues)(
             state=IssueRecord.ISSUE_STATE_ALL,
             since=data.since,

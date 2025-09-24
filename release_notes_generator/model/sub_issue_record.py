@@ -23,11 +23,6 @@ class SubIssueRecord(IssueRecord):
     def __init__(self, sub_issue: SubIssue | Issue, issue_labels: Optional[list[str]] = None, skip: bool = False):
         super().__init__(sub_issue, issue_labels, skip)
 
-        self._labels = issue_labels if issue_labels is not None else []
-
-        self._pull_requests: dict[int, PullRequest] = {}
-        self._commits: dict[int, dict[str, Commit]] = {}
-
     # properties - override IssueRecord properties
 
     @property
@@ -36,6 +31,8 @@ class SubIssueRecord(IssueRecord):
         Gets the issue associated with the record.
         Returns: The issue associated with the record.
         """
-        return cast(SubIssue, self._issue)
+        if not isinstance(self._issue, SubIssue):
+            raise TypeError("SubIssueRecord.issue is expected to be a SubIssue")
+        return self._issue
 
     # properties - specific to IssueRecord

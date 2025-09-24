@@ -648,7 +648,7 @@ def mined_data_isolated_record_types_no_labels_no_type_defined(
     mock_pr_closed_3.body += "\nCloses #452"
     mock_commit_1 = copy.deepcopy(mock_commit)
     mock_commit_1.sha = "merge_commit_sha_151"
-    mock_commit_1.message = "Fixed bug in PR 151"
+    mock_commit_1.commit.message = "Fixed bug in PR 151"
     hi_two_sub_issues_with_prs_with_commit.get_sub_issues.return_value = [sub_issue_5, sub_issue_6]
 
     # single hierarchy issue record - one sub hierarchy issues - two sub-issues with PRs - with commits
@@ -676,7 +676,7 @@ def mined_data_isolated_record_types_no_labels_no_type_defined(
     mock_pr_closed_4.body += "\nCloses #453"
     mock_commit_2 = copy.deepcopy(mock_commit)
     mock_commit_2.sha = "merge_commit_sha_152"
-    mock_commit_2.message = "Fixed bug in PR 152"
+    mock_commit_2.commit.message = "Fixed bug in PR 152"
     sub_hierarchy_issue.get_sub_issues.return_value = [sub_issue_7, sub_issue_8]
     hi_one_sub_hierarchy_two_sub_issues_with_prs_with_commit.get_sub_issues.return_value = [sub_hierarchy_issue]
 
@@ -689,7 +689,7 @@ def mined_data_isolated_record_types_no_labels_no_type_defined(
     # single direct commit record
     mock_commit_3 = copy.deepcopy(mock_commit)
     mock_commit_3.sha = "merge_commit_sha_direct"
-    mock_commit_3.message = "Direct commit example"
+    mock_commit_3.commit.message = "Direct commit example"
 
     data.issues = [solo_closed_issue,
                    hi_two_sub_issues_no_prs,
