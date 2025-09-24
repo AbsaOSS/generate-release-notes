@@ -52,7 +52,7 @@ def extract_issue_numbers_from_body(pr: PullRequest) -> set[int]:
 
 @lru_cache(maxsize=1024)
 def get_issues_for_pr(pull_number: int) -> set[int]:
-    """Update the placeholder values and format the graphQL query"""
+    """Fetch closing issue numbers for a PR via GitHub GraphQL and return them as a set."""
     github_api_url = "https://api.github.com/graphql"
     query = ISSUES_FOR_PRS.format(
         number=pull_number,

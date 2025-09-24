@@ -126,7 +126,6 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
                     parent_issue = self._safe_call(data.repository.get_issue)(issue_number) if data.repository else None
                     if parent_issue is not None:
                         self._create_issue_record_using_sub_issues_existence(parent_issue)
-                        record_keys = self._records.keys()
 
                 if issue_number in record_keys and isinstance(
                     self._records[issue_number], (SubIssueRecord, HierarchyIssueRecord, IssueRecord)
@@ -240,7 +239,8 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
                 self.__sub_issue_parents.pop(sub_issue_number)  # remove from sub-parents as it is now sub-one
                 made_progress = True
             else:
-                logger.error("Detected IssueRecord in position of SubIssueRecord - leaving as standalone and dropping mapping")
+                logger.error("Detected IssueRecord in position of SubIssueRecord - leaving as standalone"
+                             " and dropping mapping")
                 # Avoid infinite recursion by removing the unresolved mapping
                 self.__sub_issue_parents.pop(sub_issue_number, None)
 

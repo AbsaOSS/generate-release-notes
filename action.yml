@@ -128,7 +128,7 @@ runs:
         pip install -r ${{ github.action_path }}/requirements.txt
       shell: bash
 
-    - name: Set PROJECT_ROOT and update PYTHONPATH
+    - name: Update PYTHONPATH
       run: |
         ACTION_ROOT="${{ github.action_path }}"
         echo PYTHONPATH="${PYTHONPATH}:${ACTION_ROOT}/release_notes_generator" >> $GITHUB_ENV

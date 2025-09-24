@@ -45,12 +45,14 @@ class MockLabel:
     def __init__(self, name):
         self.name = name
 
+
 def mock_safe_call_decorator(_rate_limiter):
     def wrapper(fn):
         if fn.__name__ == "get_issues_for_pr":
             return mock_get_issues_for_pr
         return fn
     return wrapper
+
 
 def mock_get_issues_for_pr(pull_number: int) -> set[int]:
     # if pull_number == 150:

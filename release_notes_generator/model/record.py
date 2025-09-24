@@ -122,7 +122,7 @@ class Record(metaclass=ABCMeta):
         """
         Gets the labels of the record.
         Returns:
-            set[str]: A list of labels associated with the record.
+            list[str]: A list of labels associated with the record.
         """
 
     @abstractmethod

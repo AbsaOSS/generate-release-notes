@@ -47,7 +47,6 @@ class DefaultRecordFactory(RecordFactory):
     """
 
     def __init__(self, github: Github) -> None:
-        self._github: Github = github
         rate_limiter = GithubRateLimiter(github)
         self._safe_call = safe_call_decorator(rate_limiter)
 
@@ -108,7 +107,7 @@ class DefaultRecordFactory(RecordFactory):
             linked_from_api = self._safe_call(get_issues_for_pr)(pull_number=pull.number) or set()
             linked_from_body = extract_issue_numbers_from_body(pull)
             if not linked_from_api and not linked_from_body:
-                self._records[pull.number] = PullRequestRecord(pull, skip=skip_record)
+                self._records[pull.number] = PullRequestRecord(pull, pull_labels, skip=skip_record)
                 logger.debug("Created record for PR %d: %s", pull.number, pull.title)
             else:
                 logger.debug("Registering pull number: %s, title : %s", pull.number, pull.title)

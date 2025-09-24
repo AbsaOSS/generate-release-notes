@@ -1,5 +1,4 @@
 from release_notes_generator.model.commit_record import CommitRecord
-from tests.conftest import mock_commit
 
 
 def test_basic_properties(mock_commit):
@@ -49,7 +48,7 @@ def test_to_chapter_row_with_release_notes_injected(monkeypatch, mock_commit):
         lambda _: True,
     )
     rec = CommitRecord(mock_commit)
-    monkeypatch.setattr(rec, "get_rls_notes", lambda line_marks=None: "Extra release notes.")
+    monkeypatch.setattr(rec, "get_rls_notes", lambda _line_marks=None: "Extra release notes.")
     row = rec.to_chapter_row()
     assert "\nExtra release notes." in row
 

@@ -174,7 +174,7 @@ class ActionInputs:
         Check if the hierarchy release notes structure is enabled.
         """
         val = get_action_input("hierarchy", "false")
-        return str(val).strip().lower() == "true"
+        return str(val).strip().lower() in ("true", "1", "yes", "y", "on")
 
     @staticmethod
     def get_duplicity_scope() -> DuplicityScopeEnum:
@@ -485,20 +485,18 @@ class ActionInputs:
         """
         keywords_in_braces = re.findall(r"\{(.*?)\}", row_format)
 
-        supported_row_format_keys = []
-        match row_type:
-            case ActionInputs.ROW_TYPE_ISSUE:
-                supported_row_format_keys = SUPPORTED_ROW_FORMAT_KEYS_ISSUE
-            case ActionInputs.ROW_TYPE_PR:
-                supported_row_format_keys = SUPPORTED_ROW_FORMAT_KEYS_PULL_REQUEST
-            case ActionInputs.ROW_TYPE_HIERARCHY_ISSUE:
-                supported_row_format_keys = SUPPORTED_ROW_FORMAT_KEYS_HIERARCHY_ISSUE
-            case _:
-                logger.warning(
-                    "Unknown row_type '%s' in _detect_row_format_invalid_keywords; defaulting to Issue keys.",
-                    row_type,
-                )
-                supported_row_format_keys = SUPPORTED_ROW_FORMAT_KEYS_ISSUE
+        mapping = {
+            ActionInputs.ROW_TYPE_ISSUE: SUPPORTED_ROW_FORMAT_KEYS_ISSUE,
+            ActionInputs.ROW_TYPE_PR: SUPPORTED_ROW_FORMAT_KEYS_PULL_REQUEST,
+            ActionInputs.ROW_TYPE_HIERARCHY_ISSUE: SUPPORTED_ROW_FORMAT_KEYS_HIERARCHY_ISSUE,
+        }
+        supported_row_format_keys = mapping.get(row_type)
+        if supported_row_format_keys is None:
+            logger.warning(
+                "Unknown row_type '%s' in _detect_row_format_invalid_keywords; defaulting to Issue keys.",
+                row_type,
+            )
+            supported_row_format_keys = SUPPORTED_ROW_FORMAT_KEYS_ISSUE
 
         invalid_keywords = [keyword for keyword in keywords_in_braces if keyword not in supported_row_format_keys]
         cleaned_row_format = row_format

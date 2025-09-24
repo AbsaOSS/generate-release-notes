@@ -188,9 +188,12 @@ class ServiceChapters(BaseChapters):
         """
         Populates the service chapters with pull requests.
 
-        @param record: The Record object representing the pull request.
-        @param nr: The number of the record.
-        @return: None
+        Parameters:
+            record: The record to populate.
+            record_id: The ID of the record.
+
+        Returns:
+            None
         """
         if record.is_merged:
             # check record properties if it fits to a chapter: MERGED_PRS_WITHOUT_ISSUE
