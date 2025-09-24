@@ -2,13 +2,11 @@
 A module that defines the IssueRecord class, which represents an issue record in the release notes.
 """
 
-import logging
 import re
 from typing import Optional, Any
 
 from github.Commit import Commit
 from github.Issue import Issue
-from github.Label import Label
 from github.PullRequest import PullRequest
 
 from release_notes_generator.action_inputs import ActionInputs
@@ -29,7 +27,7 @@ class IssueRecord(Record):
         super().__init__(skip=skip)
 
         self._issue: Issue = issue
-        self._labels: Optional[list[Label]] = issue_labels if issue_labels is not None else None
+        self._labels: Optional[list[str]] = issue_labels if issue_labels is not None else None
 
         if issue is not None and issue.type is not None:
             self._issue_type = issue.type.name

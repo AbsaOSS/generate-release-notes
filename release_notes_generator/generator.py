@@ -33,7 +33,6 @@ from release_notes_generator.chapters.custom_chapters import CustomChapters
 from release_notes_generator.model.record import Record
 from release_notes_generator.record.factory.default_record_factory import DefaultRecordFactory
 from release_notes_generator.record.factory.issue_hierarchy_record_factory import IssueHierarchyRecordFactory
-from release_notes_generator.record.factory.record_factory import RecordFactory
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
 from release_notes_generator.utils.utils import get_change_url
 

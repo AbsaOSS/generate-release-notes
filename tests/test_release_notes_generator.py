@@ -58,6 +58,8 @@ def test_generate_release_notes_latest_release_not_found(
     mock_repo.get_issues.return_value = [mock_issue_closed, mock_issue_closed_i1_bug]
     mock_repo.get_pulls.return_value = [mock_pull_closed_with_rls_notes_101, mock_pull_closed_with_rls_notes_102]
     mock_repo.get_commits.return_value = [mock_commit]
+    mock_repo.get_release.return_value = None
+    mock_repo.get_releases.return_value = []
 
     mock_issue_closed.created_at = mock_repo.created_at + timedelta(days=2)
     mock_issue_closed_i1_bug.created_at = mock_repo.created_at + timedelta(days=7)
@@ -65,10 +67,11 @@ def test_generate_release_notes_latest_release_not_found(
     mock_pull_closed_with_rls_notes_101.merged_at = mock_repo.created_at + timedelta(days=2)
     mock_pull_closed_with_rls_notes_102.merged_at = mock_repo.created_at + timedelta(days=7)
 
-    mocker.patch("release_notes_generator.miner.DataMiner.get_latest_release", return_value=None)
     mock_rate_limit = mocker.Mock()
     mock_rate_limit.rate.remaining = 1000
     github_mock.get_rate_limit.return_value = mock_rate_limit
+
+    mocker.patch("release_notes_generator.record.factory.default_record_factory.get_issues_for_pr", return_value=None)
 
     custom_chapters = CustomChapters(print_empty_chapters=True)
 
@@ -99,6 +102,8 @@ def test_generate_release_notes_latest_release_found_by_created_at(
     mock_repo.get_pulls.return_value = [mock_pull_closed_with_rls_notes_101, mock_pull_closed_with_rls_notes_102]
     mock_repo.get_commits.return_value = [mock_commit]
     mock_commit.commit.author.date = mock_repo.created_at + timedelta(days=1)
+    mock_repo.get_release.return_value = None
+    mock_repo.get_releases.return_value = []
 
     mock_issue_closed_i1_bug.created_at = mock_repo.created_at + timedelta(days=7)
     mock_issue_closed_i1_bug.closed_at = mock_repo.created_at + timedelta(days=6)
@@ -119,6 +124,8 @@ def test_generate_release_notes_latest_release_found_by_created_at(
     mock_get_action_input.side_effect = lambda first_arg, **kwargs: (
         "{number} _{title}_ in {pull-requests} {unknown} {another-unknown}" if first_arg == ROW_FORMAT_ISSUE else None
     )
+
+    mocker.patch("release_notes_generator.record.factory.default_record_factory.get_issues_for_pr", return_value=None)
 
     custom_chapters = CustomChapters(print_empty_chapters=True)
 
@@ -149,6 +156,8 @@ def test_generate_release_notes_latest_release_found_by_published_at(
     mock_repo.get_pulls.return_value = [mock_pull_closed_with_rls_notes_101, mock_pull_closed_with_rls_notes_102]
     mock_repo.get_commits.return_value = [mock_commit]
     mock_commit.commit.author.date = mock_repo.created_at + timedelta(days=1)
+    mock_repo.get_release.return_value = None
+    mock_repo.get_releases.return_value = []
 
     mock_issue_closed_i1_bug.created_at = mock_repo.created_at + timedelta(days=7)
     mock_issue_closed_i1_bug.closed_at = mock_repo.created_at + timedelta(days=8)
@@ -165,6 +174,8 @@ def test_generate_release_notes_latest_release_found_by_published_at(
     mock_rate_limit = mocker.Mock()
     mock_rate_limit.rate.remaining = 1000
     github_mock.get_rate_limit.return_value = mock_rate_limit
+
+    mocker.patch("release_notes_generator.record.factory.default_record_factory.get_issues_for_pr", return_value=None)
 
     custom_chapters = CustomChapters(print_empty_chapters=True)
 

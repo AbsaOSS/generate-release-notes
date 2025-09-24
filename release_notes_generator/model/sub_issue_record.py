@@ -3,11 +3,9 @@ A module that defines the IssueRecord class, which represents an issue record in
 """
 
 import logging
-from typing import Optional, cast
+from typing import Optional
 
-from github.Commit import Commit
 from github.Issue import SubIssue, Issue
-from github.PullRequest import PullRequest
 
 from release_notes_generator.model.issue_record import IssueRecord
 
