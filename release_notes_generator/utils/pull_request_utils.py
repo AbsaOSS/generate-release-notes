@@ -70,9 +70,6 @@ def get_issues_for_pr(pull_number: int) -> set[int]:
     data = response.json()
     if "errors" in data and data["errors"]:
         raise RuntimeError(f"GitHub GraphQL errors: {data['errors']}")
-    numbers = {
-        node["number"]
-        for node in data["data"]["repository"]["pullRequest"]["closingIssuesReferences"]["nodes"]
-    }
+    numbers = {node["number"] for node in data["data"]["repository"]["pullRequest"]["closingIssuesReferences"]["nodes"]}
 
     return numbers

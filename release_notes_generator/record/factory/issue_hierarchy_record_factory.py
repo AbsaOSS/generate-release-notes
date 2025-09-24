@@ -239,8 +239,9 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
                 self.__sub_issue_parents.pop(sub_issue_number)  # remove from sub-parents as it is now sub-one
                 made_progress = True
             else:
-                logger.error("Detected IssueRecord in position of SubIssueRecord - leaving as standalone"
-                             " and dropping mapping")
+                logger.error(
+                    "Detected IssueRecord in position of SubIssueRecord - leaving as standalone" " and dropping mapping"
+                )
                 # Avoid infinite recursion by removing the unresolved mapping
                 self.__sub_issue_parents.pop(sub_issue_number, None)
 
