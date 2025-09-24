@@ -14,8 +14,6 @@ from github.PullRequest import PullRequest
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.record import Record
 
-logger = logging.getLogger(__name__)
-
 
 class IssueRecord(Record):
     """

@@ -174,9 +174,7 @@ class ActionInputs:
         Check if the hierarchy release notes structure is enabled.
         """
         val = get_action_input("hierarchy", "false")
-        if val is None:
-            return False
-        return val.lower() == "true"
+        return str(val).strip().lower() == "true"
 
     @staticmethod
     def get_duplicity_scope() -> DuplicityScopeEnum:
@@ -313,7 +311,7 @@ class ActionInputs:
         if ActionInputs._row_format_hierarchy_issue is None:
             ActionInputs._row_format_hierarchy_issue = ActionInputs._detect_row_format_invalid_keywords(
                 get_action_input(
-                    ROW_FORMAT_HIERARCHY_ISSUE, "{type}: _{title}_ {number} "
+                    ROW_FORMAT_HIERARCHY_ISSUE, "{type}: _{title}_ {number}"
                 ).strip(),  # type: ignore[union-attr]
                 row_type=ActionInputs.ROW_TYPE_HIERARCHY_ISSUE,
                 clean=True,
@@ -439,7 +437,14 @@ class ActionInputs:
         if not isinstance(row_format_pr, str) or not row_format_pr.strip():
             errors.append("PR Row format must be a non-empty string.")
 
-        ActionInputs._detect_row_format_invalid_keywords(row_format_pr, row_type="PR")
+        ActionInputs._detect_row_format_invalid_keywords(row_format_pr, row_type=ActionInputs.ROW_TYPE_PR)
+
+        row_format_hier_issue = ActionInputs.get_row_format_hierarchy_issue()
+        if not isinstance(row_format_hier_issue, str) or not row_format_hier_issue.strip():
+            errors.append("Hierarchy Issue row format must be a non-empty string.")
+        ActionInputs._detect_row_format_invalid_keywords(
+            row_format_hier_issue, row_type=ActionInputs.ROW_TYPE_HIERARCHY_ISSUE
+        )
 
         row_format_link_pr = ActionInputs.get_row_format_link_pr()
         ActionInputs.validate_input(row_format_link_pr, bool, "'row-format-link-pr' value must be a boolean.", errors)
@@ -488,6 +493,12 @@ class ActionInputs:
                 supported_row_format_keys = SUPPORTED_ROW_FORMAT_KEYS_PULL_REQUEST
             case ActionInputs.ROW_TYPE_HIERARCHY_ISSUE:
                 supported_row_format_keys = SUPPORTED_ROW_FORMAT_KEYS_HIERARCHY_ISSUE
+            case _:
+                logger.warning(
+                    "Unknown row_type '%s' in _detect_row_format_invalid_keywords; defaulting to Issue keys.",
+                    row_type,
+                )
+                supported_row_format_keys = SUPPORTED_ROW_FORMAT_KEYS_ISSUE
 
         invalid_keywords = [keyword for keyword in keywords_in_braces if keyword not in supported_row_format_keys]
         cleaned_row_format = row_format

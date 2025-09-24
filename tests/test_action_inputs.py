@@ -56,6 +56,7 @@ failure_cases = [
     ("get_release_notes_title", "", "Release Notes title must be a non-empty string and have non-zero length."),
     ("get_coderabbit_release_notes_title", "", "CodeRabbit Release Notes title must be a non-empty string and have non-zero length."),
     ("get_coderabbit_summary_ignore_groups", [""], "CodeRabbit summary ignore groups must be a non-empty string and have non-zero length."),
+    ("get_hierarchy", "not_bool", "Hierarchy must be a boolean."),
 ]
 
 
@@ -262,6 +263,16 @@ def test_detect_row_format_invalid_keywords_with_invalid_keywords(caplog):
     ]
     actual_errors = [record.getMessage() for record in caplog.records]
     assert actual_errors == expected_errors
+
+
+def test_get_row_format_hierarchy_issue_cleans_invalid_keywords(mocker, caplog):
+    caplog.set_level(logging.ERROR)
+    mocker.patch(
+        "release_notes_generator.action_inputs.get_action_input",
+        return_value="{type}: _{title}_ {number} {invalid}",
+    )
+    fmt = ActionInputs.get_row_format_hierarchy_issue()
+    assert "{invalid}" not in fmt
 
 
 def test_clean_row_format_invalid_keywords_no_keywords():

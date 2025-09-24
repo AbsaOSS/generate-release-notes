@@ -16,6 +16,7 @@
 
 from release_notes_generator.model.chapter import Chapter
 from release_notes_generator.chapters.custom_chapters import CustomChapters
+from release_notes_generator.model.issue_record import IssueRecord
 from release_notes_generator.model.record import Record
 from release_notes_generator.utils.enums import DuplicityScopeEnum
 
@@ -71,7 +72,7 @@ def test_populate(custom_chapters, mocker):
 
 
 def test_populate_no_pulls_count(custom_chapters, mocker):
-    record1 = mocker.Mock(spec=Record)
+    record1 = mocker.Mock(spec=IssueRecord)
     record1.labels = ["bug"]
     record1.pulls_count = 0
     record1.is_present_in_chapters = False

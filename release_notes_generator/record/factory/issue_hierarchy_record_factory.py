@@ -148,7 +148,6 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
             self._records[pull.number] = pr_rec
             logger.debug("Created record for PR %d: %s", pull.number, pull.title)
 
-
     def _create_issue_record_using_sub_issues_existence(self, issue: Issue) -> None:
         # use presence of sub-issues as a hint for hierarchy issue or non hierarchy issue
         sub_issues = list(issue.get_sub_issues())

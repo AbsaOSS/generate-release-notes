@@ -37,7 +37,7 @@ class Record(metaclass=ABCMeta):
         self._present_in_chapters = 0
         self._skip = skip
         self._is_release_note_detected: Optional[bool] = None
-        self._labels: Optional[list[str]] = labels if labels is not None else None
+        self._labels: Optional[list[str]] = labels
         self._rls_notes: Optional[str] = None  # single annotation here
 
     # properties

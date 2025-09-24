@@ -15,7 +15,7 @@
 #
 
 """
-This module contains the DefaultRecordFactory class which is responsible for generating
+This module contains the RecordFactory base class used to generate records.
 """
 import abc
 import logging

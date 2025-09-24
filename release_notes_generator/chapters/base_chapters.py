@@ -88,7 +88,7 @@ class BaseChapters(ABC):
             chapter_string = chapter.to_string(
                 sort_ascending=self.sort_ascending, print_empty_chapters=self.print_empty_chapters
             )
-            if len(chapter_string) > 0:
+            if chapter_string:
                 result += chapter_string + "\n\n"
 
         # Note: strip is required to remove leading newline chars when empty chapters are not printed option
