@@ -159,9 +159,10 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
 
     def _create_issue_record_using_sub_issues_not_existence(self, issue: Issue) -> None:
         # Expected to run after all issue with sub-issues are registered
-        if issue.number in self.__sub_issue_parents:  # already handled as SubIssue
-            return
-        self._create_record_for_issue(issue)
+        if issue.number in self.__sub_issue_parents.keys():  # pylint: disable=consider-iterating-dictionary
+            self._create_record_for_sub_issue(issue)
+        else:
+            self._create_record_for_issue(issue)
 
     def _create_record_for_hierarchy_issue(self, i: Issue, issue_labels: Optional[list[str]] = None) -> None:
         """
