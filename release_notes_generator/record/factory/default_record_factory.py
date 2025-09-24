@@ -15,7 +15,7 @@
 #
 
 """
-This module contains the DefaultRecordFactory class which is responsible for generating
+DefaultRecordFactory builds Record objects (issues, pulls, commits) from mined GitHub data.
 """
 
 import logging
@@ -157,7 +157,6 @@ class DefaultRecordFactory(RecordFactory):
         Create a record for an issue.
 
         Parameters:
-            records (dict[int|str, Record]): The dictionary of records to add the issue record to.
             issue (Issue): The issue to create a record for.
             issue_labels (Optional[list[str]]): Optional set of labels for the issue. If not provided, labels will be
                 fetched from the issue.

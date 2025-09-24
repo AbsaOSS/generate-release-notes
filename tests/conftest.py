@@ -230,7 +230,7 @@ def mock_open_sub_issue(mocker):
     issue.number = 400
     issue.title = "SI400 open"
     issue.state_reason = None
-    issue.body = "I400 open/nRelease Notes:\n- Hierarchy level release note"
+    issue.body = "I400 open\nRelease Notes:\n- Hierarchy level release note"
     issue.type = None
     issue.created_at = datetime.now()
 
@@ -247,7 +247,7 @@ def mock_closed_sub_issue(mocker):
     issue.number = 450
     issue.title = "SI450 closed"
     issue.state_reason = None
-    issue.body = "I450 closed/nRelease Notes:\n- Hierarchy level release note"
+    issue.body = "I450 closed\nRelease Notes:\n- Hierarchy level release note"
     issue.type = None
     issue.created_at = datetime.now()
 
@@ -264,7 +264,7 @@ def mock_open_hierarchy_issue(mocker):
     issue.number = 300
     issue.title = "HI300 open"
     issue.state_reason = None
-    issue.body = "I300 open/nRelease Notes:\n- Hierarchy level release note"
+    issue.body = "I300 open\nRelease Notes:\n- Hierarchy level release note"
     issue.type = None
     issue.created_at = datetime.now()
 
@@ -283,7 +283,7 @@ def mock_open_hierarchy_issue_epic(mocker):
     issue.number = 200
     issue.title = "HI200 open"
     issue.state_reason = None
-    issue.body = "I200 open/nRelease Notes:\n- Epic level release note"
+    issue.body = "I200 open\nRelease Notes:\n- Epic level release note"
     issue.type = issue_type
     issue.created_at = datetime.now()
 
@@ -306,7 +306,7 @@ def mock_open_hierarchy_issue_feature(mocker):
     issue.number = 201
     issue.title = "HI201 open"
     issue.state_reason = None
-    issue.body = "HI201 open/nRelease Notes:\n- Feature level release note"
+    issue.body = "HI201 open\nRelease Notes:\n- Feature level release note"
     issue.type = issue_type
     issue.created_at = datetime.now()
 
@@ -601,7 +601,7 @@ def mined_data_isolated_record_types_no_labels_no_type_defined(
     hi_two_sub_issues_no_prs = copy.deepcopy(mock_open_hierarchy_issue)
     hi_two_sub_issues_no_prs.number = 301
     hi_two_sub_issues_no_prs.title = "HI301 open"
-    hi_two_sub_issues_no_prs.body = "I301 open/nRelease Notes:\n- Hierarchy level release note"
+    hi_two_sub_issues_no_prs.body = "I301 open\nRelease Notes:\n- Hierarchy level release note"
     sub_issue_1 = copy.deepcopy(mock_open_sub_issue)
     sub_issue_2 = copy.deepcopy(mock_closed_sub_issue)
     hi_two_sub_issues_no_prs.get_sub_issues.return_value = [sub_issue_1, sub_issue_2]
@@ -610,15 +610,15 @@ def mined_data_isolated_record_types_no_labels_no_type_defined(
     hi_two_sub_issues_with_prs = copy.deepcopy(mock_open_hierarchy_issue)
     hi_two_sub_issues_with_prs.number = 302
     hi_two_sub_issues_with_prs.title = "HI302 open"
-    hi_two_sub_issues_with_prs.body = "I302 open/nRelease Notes:\n- Hierarchy level release note"
+    hi_two_sub_issues_with_prs.body = "I302 open\nRelease Notes:\n- Hierarchy level release note"
     sub_issue_3 = copy.deepcopy(mock_open_sub_issue)
     sub_issue_3.number = 401
     sub_issue_3.title = "SI401 open"
-    sub_issue_3.body = "I401 open/nRelease Notes:\n- Hierarchy level release note"
+    sub_issue_3.body = "I401 open\nRelease Notes:\n- Hierarchy level release note"
     sub_issue_4 = copy.deepcopy(mock_closed_sub_issue)
     sub_issue_4.number = 451
     sub_issue_4.title = "SI451 closed"
-    sub_issue_4.body = "I451 open/nRelease Notes:\n- Hierarchy level release note"
+    sub_issue_4.body = "I451 open\nRelease Notes:\n- Hierarchy level release note"
     mock_pr_closed_2 = copy.deepcopy(mock_pull_closed)
     mock_pr_closed_2.url = "http://example.com/pull/150"
     mock_pr_closed_2.number = 150
@@ -631,15 +631,15 @@ def mined_data_isolated_record_types_no_labels_no_type_defined(
     hi_two_sub_issues_with_prs_with_commit = copy.deepcopy(mock_open_hierarchy_issue)
     hi_two_sub_issues_with_prs_with_commit.number = 303
     hi_two_sub_issues_with_prs_with_commit.title = "HI303 open"
-    hi_two_sub_issues_with_prs_with_commit.body = "I303 open/nRelease Notes:\n- Hierarchy level release note"
+    hi_two_sub_issues_with_prs_with_commit.body = "I303 open\nRelease Notes:\n- Hierarchy level release note"
     sub_issue_5 = copy.deepcopy(mock_open_sub_issue)
     sub_issue_5.number = 402
     sub_issue_5.title = "SI402 open"
-    sub_issue_5.body = "I402 open/nRelease Notes:\n- Hierarchy level release note"
+    sub_issue_5.body = "I402 open\nRelease Notes:\n- Hierarchy level release note"
     sub_issue_6 = copy.deepcopy(mock_closed_sub_issue)
     sub_issue_6.number = 452
     sub_issue_6.title = "SI452 closed"
-    sub_issue_6.body = "I452 open/nRelease Notes:\n- Hierarchy level release note"
+    sub_issue_6.body = "I452 open\nRelease Notes:\n- Hierarchy level release note"
     mock_pr_closed_3 = copy.deepcopy(mock_pull_closed)
     mock_pr_closed_3.url = "http://example.com/pull/151"
     mock_pr_closed_3.number = 151
@@ -655,19 +655,19 @@ def mined_data_isolated_record_types_no_labels_no_type_defined(
     hi_one_sub_hierarchy_two_sub_issues_with_prs_with_commit = copy.deepcopy(mock_open_hierarchy_issue)
     hi_one_sub_hierarchy_two_sub_issues_with_prs_with_commit.number = 304
     hi_one_sub_hierarchy_two_sub_issues_with_prs_with_commit.title = "HI304 open"
-    hi_one_sub_hierarchy_two_sub_issues_with_prs_with_commit.body = "I304 open/nRelease Notes:\n- Hierarchy level release note"
+    hi_one_sub_hierarchy_two_sub_issues_with_prs_with_commit.body = "I304 open\nRelease Notes:\n- Hierarchy level release note"
     sub_hierarchy_issue = copy.deepcopy(mock_open_hierarchy_issue)
     sub_hierarchy_issue.number = 350
     sub_hierarchy_issue.title = "HI350 open"
-    sub_hierarchy_issue.body = "I350 open/nRelease Notes:\n- Sub-hierarchy level release note"
+    sub_hierarchy_issue.body = "I350 open\nRelease Notes:\n- Sub-hierarchy level release note"
     sub_issue_7 = copy.deepcopy(mock_open_sub_issue)
     sub_issue_7.number = 403
     sub_issue_7.title = "SI403 open"
-    sub_issue_7.body = "I403 open/nRelease Notes:\n- Hierarchy level release note"
+    sub_issue_7.body = "I403 open\nRelease Notes:\n- Hierarchy level release note"
     sub_issue_8 = copy.deepcopy(mock_closed_sub_issue)
     sub_issue_8.number = 453
     sub_issue_8.title = "SI453 closed"
-    sub_issue_8.body = "I453 open/nRelease Notes:\n- Hierarchy level release note"
+    sub_issue_8.body = "I453 open\nRelease Notes:\n- Hierarchy level release note"
     mock_pr_closed_4 = copy.deepcopy(mock_pull_closed)
     mock_pr_closed_4.url = "http://example.com/pull/152"
     mock_pr_closed_4.number = 152
@@ -711,14 +711,6 @@ def mined_data_isolated_record_types_no_labels_no_type_defined(
 def mined_data_isolated_record_types_with_labels_no_type_defined(mocker, mined_data_isolated_record_types_no_labels_no_type_defined):
     data = mined_data_isolated_record_types_no_labels_no_type_defined
 
-    # add labels to issues
-    #   - Epic to root one
-    #   - Feature to level 1 hierarchy issue
-    #   - Task to sub-issue
-    #   - enhancement to solo closed issue
-    #   - bug to one of the PRs
-    #   - enhancement to one of the PRs
-
     l_enh = mocker.Mock(spec=MockLabel)
     l_enh.name = "enhancement"
     l_epic = mocker.Mock(spec=MockLabel)
@@ -757,14 +749,6 @@ def mined_data_isolated_record_types_with_labels_no_type_defined(mocker, mined_d
 @pytest.fixture
 def mined_data_isolated_record_types_no_labels_with_type_defined(mocker, mined_data_isolated_record_types_no_labels_no_type_defined):
     data = mined_data_isolated_record_types_no_labels_no_type_defined
-
-    # add types to issues
-    #   - Epic to root one
-    #   - Feature to level 1 hierarchy issue
-    #   - Task to sub-issue
-    #   - enhancement to solo closed issue
-    #   - bug to one of the PRs
-    #   - enhancement to one of the PRs
 
     t_epic = mocker.Mock(spec=IssueType)
     t_epic.name = "Epic"
@@ -820,14 +804,6 @@ def mined_data_isolated_record_types_no_labels_with_type_defined(mocker, mined_d
 @pytest.fixture
 def mined_data_isolated_record_types_with_labels_with_type_defined(mocker, mined_data_isolated_record_types_with_labels_no_type_defined):
     data = mined_data_isolated_record_types_with_labels_no_type_defined
-
-    # add types to issues
-    #   - Epic to root one
-    #   - Feature to level 1 hierarchy issue
-    #   - Task to sub-issue
-    #   - enhancement to solo closed issue
-    #   - bug to one of the PRs
-    #   - enhancement to one of the PRs
 
     t_epic = mocker.Mock(spec=IssueType)
     t_epic.name = "Epic"
@@ -906,8 +882,11 @@ def record_with_issue_closed_two_pulls(request):
 
 @pytest.fixture
 def record_with_hierarchy_issues(request):
-    rec_epic_issue = HierarchyIssueRecord(issue=request.getfixturevalue("mock_open_hierarchy_issue_epic"))     # nr:200
-    rec_epic_issue._labels = ["epic"]  # override labels to have epic label
+    rec_epic_issue = HierarchyIssueRecord(
+        issue=request.getfixturevalue("mock_open_hierarchy_issue_epic"),
+        issue_labels=["epic"]
+    )  # nr:200
+
     rec_feature_issue = HierarchyIssueRecord(request.getfixturevalue("mock_open_hierarchy_issue_feature"))    # nr:201
     rec_feature_issue.level = 1
     rec_epic_issue.sub_hierarchy_issues[rec_feature_issue.issue.number] = rec_feature_issue

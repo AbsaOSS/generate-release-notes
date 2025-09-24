@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-name: 'Release notes scrapper'
+name: 'Release notes scraper'
 description: 'Automatically generates release notes for a given release tag, categorized into chapters based on labels.'
 inputs:
   tag-name:
@@ -77,7 +77,7 @@ inputs:
     required: false
     default: ''
   row-format-hierarchy-issue:
-    description: 'Format of the hierarchy issue in the release notes. Available placeholders: {number}, {title}. Placeholders are case-insensitive.'
+    description: 'Format of the hierarchy issue in the release notes. Available placeholders: {number}, {title}, {type}. Placeholders are case-insensitive.'
     required: false
     default: '{type}: _{title}_ {number}'
   row-format-issue:
@@ -85,7 +85,7 @@ inputs:
     required: false
     default: '{number} _{title}_ in {pull-requests}'
   row-format-pr:
-    description: 'Format of the pr row in the release notes. Available placeholders: {number}, {title}, {pull-requests}. Placeholders are case-insensitive.'
+    description: 'Format of the pr row in the release notes. Available placeholders: {number}, {title}. Placeholders are case-insensitive.'
     required: false
     default: '{number} _{title}_'
   row-format-link-pr:
@@ -131,7 +131,7 @@ runs:
     - name: Set PROJECT_ROOT and update PYTHONPATH
       run: |
         ACTION_ROOT="${{ github.action_path }}"
-        export PYTHONPATH="${PYTHONPATH}:${ACTION_ROOT}/release_notes_generator"
+        echo PYTHONPATH="${PYTHONPATH}:${ACTION_ROOT}/release_notes_generator" >> $GITHUB_ENV
       shell: bash
 
     - name: Call Release Notes Generator

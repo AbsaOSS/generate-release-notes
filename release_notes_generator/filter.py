@@ -138,8 +138,8 @@ class FilterByRelease(Filter):
 
     def _filter_issues_issue_hierarchy(self, data: MinedData) -> list:
         """
-        Hierarchy filtering for issues: filter out closed issues before the release date,
-        but always include issues of certain types (e.g., "Epic", "Story").
+        Hierarchy filtering for issues: include issues closed since the release date
+        or still open at generation time.
 
         Parameters:
             data (MinedData): The mined data containing issues and release information.

@@ -21,7 +21,7 @@ from release_notes_generator.builder.builder import ReleaseNotesBuilder
 from release_notes_generator.chapters.custom_chapters import CustomChapters
 from release_notes_generator.record.factory.default_record_factory import DefaultRecordFactory
 from release_notes_generator.record.factory.issue_hierarchy_record_factory import IssueHierarchyRecordFactory
-from tests.conftest import mock_safe_call_decorator
+from tests.conftest import mock_safe_call_decorator, MockLabel
 
 # pylint: disable=pointless-string-statement
 """
@@ -75,9 +75,6 @@ from tests.conftest import mock_safe_call_decorator
 """
 
 # pylint: disable=too-few-public-methods
-class MockLabel:
-    def __init__(self, name):
-        self.name = name
 
 DEFAULT_CHANGELOG_URL = "http://example.com/changelog"
 default_chapters = [
@@ -1297,8 +1294,6 @@ def test_build_closed_issue(custom_chapters_not_print_empty_chapters, record_wit
 
     actual_release_notes = builder.build()
 
-    print("Actual:\n%s", actual_release_notes)
-    print("Expected:\n%s", expected_release_notes)
     assert expected_release_notes == actual_release_notes
 
 
@@ -1830,9 +1825,5 @@ def test_build_no_hierarchy_rls_notes_with_labels_with_type_with_hierarchy_data(
     )
 
     actual_release_notes = builder.build()
-
-    print("XXX")
-    print(actual_release_notes)
-    print("XXX")
 
     assert expected_release_notes == actual_release_notes

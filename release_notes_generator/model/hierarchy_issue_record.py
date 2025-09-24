@@ -1,5 +1,5 @@
 """
-A module that defines the IssueRecord class, which represents an issue record in the release notes.
+A module that defines the HierarchyIssueRecord class for hierarchical issue rendering.
 """
 
 import logging
@@ -24,7 +24,7 @@ class HierarchyIssueRecord(IssueRecord):
 
         self._level: int = 0
         self._sub_issues: dict[int, SubIssueRecord] = {}
-        self._sub_hierarchy_issues: dict[int, HierarchyIssueRecord] = {}
+        self._sub_hierarchy_issues: dict[int, "HierarchyIssueRecord"] = {}
 
     @property
     def level(self) -> int:

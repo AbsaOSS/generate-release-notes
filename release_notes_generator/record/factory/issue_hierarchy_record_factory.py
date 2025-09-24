@@ -15,7 +15,7 @@
 #
 
 """
-This module contains the DefaultRecordFactory class which is responsible for generating
+IssueHierarchyRecordFactory builds hierarchical issue records (Epics/Features/Tasks) and associates PRs/commits.
 """
 
 import logging
