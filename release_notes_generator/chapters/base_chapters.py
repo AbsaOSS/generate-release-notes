@@ -34,7 +34,7 @@ class BaseChapters(ABC):
         self.sort_ascending = sort_ascending
         self.print_empty_chapters = print_empty_chapters
         self.chapters: dict[str, Chapter] = {}
-        self.populated_record_numbers: list[int | str] = []
+        self._populated_record_numbers: list[int | str] = []
 
         # datetime point in time used as begin of release
         self._since: Optional[datetime] = None
@@ -46,7 +46,7 @@ class BaseChapters(ABC):
 
         @return: A list of populated record numbers.
         """
-        return self.populated_record_numbers
+        return self._populated_record_numbers
 
     @property
     def since(self) -> datetime:

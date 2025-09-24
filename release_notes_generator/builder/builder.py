@@ -68,7 +68,7 @@ class ReleaseNotesBuilder:
             service_chapters = ServiceChapters(
                 print_empty_chapters=self.print_empty_chapters,
                 user_defined_labels=user_defined_labels,
-                used_record_numbers=self.custom_chapters.populated_record_numbers,
+                used_record_numbers=self.custom_chapters.populated_record_numbers_list,
             )
             service_chapters.populate(self.records)
 

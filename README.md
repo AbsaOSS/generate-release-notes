@@ -129,6 +129,7 @@ Add the following step to your GitHub workflow (in example are used non-default 
       - {"title": "New Features 🎉", "label": "feature"}
       - {"title": "Bugfixes 🛠", "label": "bug"}
 
+    hierarchy: true
     duplicity-scope: 'service'
     duplicity-icon: '🔁'
     published-at: true
