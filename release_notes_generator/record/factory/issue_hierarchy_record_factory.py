@@ -113,10 +113,8 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
         pull_issues: list[int] = list(linked_from_api.union(linked_from_body))
         attached_any = False
         if len(pull_issues) > 0:
-            record_keys = self._records.keys()
-
             for issue_number in pull_issues:
-                if issue_number not in record_keys:
+                if issue_number not in self._records:
                     logger.warning(
                         "Detected PR %d linked to issue %d which is not in the list of received issues. "
                         "Fetching ...",
@@ -127,7 +125,7 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
                     if parent_issue is not None:
                         self._create_issue_record_using_sub_issues_existence(parent_issue)
 
-                if issue_number in record_keys and isinstance(
+                if issue_number in self._records and isinstance(
                     self._records[issue_number], (SubIssueRecord, HierarchyIssueRecord, IssueRecord)
                 ):
                     rec = cast(IssueRecord, self._records[issue_number])
