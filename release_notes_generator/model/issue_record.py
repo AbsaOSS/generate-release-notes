@@ -230,7 +230,7 @@ class IssueRecord(Record):
         Returns:
             list[str]: A list of pull request links associated with the issue.
         """
-        if len(self._pull_requests.values()) == 0:
+        if not self._pull_requests:
             return []
 
         template = "#{number}"

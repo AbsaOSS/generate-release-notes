@@ -144,9 +144,12 @@ class ServiceChapters(BaseChapters):
         """
         Populates the service chapters with closed issues.
 
-        @param record: The Record object representing the closed issue.
-        @param nr: The number of the record.
-        @return: None
+        Parameters:
+            record: The record to populate.
+            record_id: The ID of the record.
+
+        Returns:
+            None
         """
         # check record properties if it fits to a chapter: CLOSED_ISSUES_WITHOUT_PULL_REQUESTS
         populated = False

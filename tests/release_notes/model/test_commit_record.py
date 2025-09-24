@@ -1,13 +1,6 @@
-import types
-
 from release_notes_generator.model.commit_record import CommitRecord
 from tests.conftest import mock_commit
 
-
-class DummyInnerCommit:
-    def __init__(self, sha: str, message: str):
-        self.sha = sha
-        self.message = message
 
 def test_basic_properties(mock_commit):
     rec = CommitRecord(mock_commit)
@@ -53,7 +46,7 @@ def test_to_chapter_row_with_release_notes_injected(monkeypatch, mock_commit):
     monkeypatch.setattr(
         CommitRecord,
         "contains_release_notes",
-        lambda self: True,
+        lambda _: True,
     )
     rec = CommitRecord(mock_commit)
     monkeypatch.setattr(rec, "get_rls_notes", lambda line_marks=None: "Extra release notes.")

@@ -103,12 +103,12 @@ class ReleaseNotesGenerator:
             changelog_url=changelog_url,
         ).build()
 
-    def _get_record_factory(self, github: Github) -> RecordFactory:
+    def _get_record_factory(self, github: Github) -> DefaultRecordFactory:
         """
         Determines and returns the appropriate RecordFactory instance based on the action inputs.
 
         Returns:
-            RecordFactory: An instance of either IssueHierarchyRecordFactory or RecordFactory.
+            DefaultRecordFactory: An instance of either IssueHierarchyRecordFactory or RecordFactory.
         """
         if ActionInputs.get_hierarchy():
             logger.info("Using IssueHierarchyRecordFactory based on action inputs.")

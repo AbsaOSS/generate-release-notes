@@ -32,8 +32,11 @@ def extract_issue_numbers_from_body(pr: PullRequest) -> set[int]:
     """
     Extracts the numbers of the issues mentioned in the body of the pull request.
 
-    @param pr: The pull request to extract the issue numbers from.
-    @return: The numbers of the issues mentioned in the body of the pull request as a list of integers.
+    Parameters:
+        pr (PullRequest): The pull request to extract numbers from.
+
+    Returns:
+        Set of issue numbers mentioned in the pull request body.
     """
     # Regex pattern to match issue numbers following keywords like "Close", "Fix", "Resolve"
     regex_pattern = re.compile(r"([Cc]los(e|es|ed)|[Ff]ix(es|ed)?|[Rr]esolv(e|es|ed))\s*#\s*([0-9]+)")
@@ -44,15 +47,12 @@ def extract_issue_numbers_from_body(pr: PullRequest) -> set[int]:
     # Extract the issue numbers from the matches
     issue_numbers = {int(match[-1]) for match in issue_matches}
 
-    if pr.number == 3645:
-        print(f"PR #{pr.number} - Extracted issue numbers from body: {issue_numbers}")
-
     return issue_numbers
 
 
-@lru_cache(maxsize=None)
+@lru_cache(maxsize=1024)
 def get_issues_for_pr(pull_number: int) -> set[int]:
-    """Update the placeholder values and formate the graphQL query"""
+    """Update the placeholder values and format the graphQL query"""
     github_api_url = "https://api.github.com/graphql"
     query = ISSUES_FOR_PRS.format(
         number=pull_number,
