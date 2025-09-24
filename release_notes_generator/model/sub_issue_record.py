@@ -14,8 +14,8 @@ logger = logging.getLogger(__name__)
 
 class SubIssueRecord(IssueRecord):
     """
-    A class used to represent an issue record in the release notes.
-    Inherits from Record and provides additional functionality specific to issues.
+    Represents a sub-issue record in the release notes.
+    Inherits from IssueRecord and specializes behavior for sub-issues.
     """
 
     def __init__(self, sub_issue: SubIssue | Issue, issue_labels: Optional[list[str]] = None, skip: bool = False):
@@ -30,7 +30,7 @@ class SubIssueRecord(IssueRecord):
         Returns: The issue associated with the record.
         """
         if not isinstance(self._issue, SubIssue):
-            raise TypeError("SubIssueRecord.issue is expected to be a SubIssue")
+            raise TypeError("Expected SubIssue")
         return self._issue
 
     # properties - specific to IssueRecord

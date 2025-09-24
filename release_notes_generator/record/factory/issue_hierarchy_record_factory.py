@@ -48,9 +48,9 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
     def __init__(self, github: Github) -> None:
         super().__init__(github)
 
-        self.__registered_issues: list[int] = []
+        self.__registered_issues: set[int] = set()
         self.__sub_issue_parents: dict[int, int] = {}
-        self.__registered_commits: list[str] = []
+        self.__registered_commits: set[str] = set()
 
     def generate(self, data: MinedData) -> dict[int | str, Record]:
         """
@@ -106,7 +106,7 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
         pull_labels = [label.name for label in pull.get_labels()]
         skip_record: bool = any(item in pull_labels for item in ActionInputs.get_skip_release_notes_labels())
         related_commits = [c for c in data.commits if c.sha == pull.merge_commit_sha]
-        self.__registered_commits.extend(c.sha for c in related_commits)
+        self.__registered_commits.update(c.sha for c in related_commits)
 
         linked_from_api = self._safe_call(get_issues_for_pr)(pull_number=pull.number) or set()
         linked_from_body = extract_issue_numbers_from_body(pull)
@@ -159,10 +159,9 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
 
     def _create_issue_record_using_sub_issues_not_existence(self, issue: Issue) -> None:
         # Expected to run after all issue with sub-issues are registered
-        if issue.number in self.__sub_issue_parents.keys():  # pylint: disable=consider-iterating-dictionary
-            self._create_record_for_sub_issue(issue)
-        else:
-            self._create_record_for_issue(issue)
+        if issue.number in self.__sub_issue_parents:  # already handled as SubIssue
+            return
+        self._create_record_for_issue(issue)
 
     def _create_record_for_hierarchy_issue(self, i: Issue, issue_labels: Optional[list[str]] = None) -> None:
         """
@@ -181,7 +180,7 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
         skip_record = any(item in issue_labels for item in ActionInputs.get_skip_release_notes_labels())
 
         self._records[i.number] = HierarchyIssueRecord(issue=i, skip=skip_record)
-        self.__registered_issues.append(i.number)
+        self.__registered_issues.add(i.number)
         logger.debug("Created record for hierarchy issue %d: %s", i.number, i.title)
 
     def _get_issue_labels_mix_with_type(self, issue: Issue) -> list[str]:
@@ -199,7 +198,7 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
             issue_labels = self._get_issue_labels_mix_with_type(issue)
 
         super()._create_record_for_issue(issue, issue_labels)
-        self.__registered_issues.append(issue.number)
+        self.__registered_issues.add(issue.number)
 
     def _create_record_for_sub_issue(self, issue: Issue, issue_labels: Optional[list[str]] = None) -> None:
         if issue_labels is None:
@@ -207,7 +206,7 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
 
         skip_record = any(item in issue_labels for item in ActionInputs.get_skip_release_notes_labels())
         logger.debug("Created record for sub issue %d: %s", issue.number, issue.title)
-        self.__registered_issues.append(issue.number)
+        self.__registered_issues.add(issue.number)
         self._records[issue.number] = SubIssueRecord(issue, issue_labels, skip_record)
 
     def _re_register_hierarchy_issues(self):
@@ -245,7 +244,7 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
                 # Avoid infinite recursion by removing the unresolved mapping
                 self.__sub_issue_parents.pop(sub_issue_number, None)
 
-        if self.__sub_issue_parents.items() and made_progress:
+        if self.__sub_issue_parents and made_progress:
             self._re_register_hierarchy_issues()
 
     def order_hierarchy_levels(self, level: int = 0) -> None:

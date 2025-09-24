@@ -15,7 +15,7 @@
 #
 
 """
-This module contains utility functions for extracting issue numbers from pull request bodies.
+This module contains utility functions for extracting and fetching issue numbers from pull requests.
 """
 
 import re
@@ -68,8 +68,7 @@ def get_issues_for_pr(pull_number: int) -> set[int]:
     response = requests.post(github_api_url, json={"query": query}, headers=headers, verify=False, timeout=10)
     response.raise_for_status()  # Raise an error for HTTP issues
     data = response.json()
-    if "errors" in data and data["errors"]:
+    if data.get("errors"):
         raise RuntimeError(f"GitHub GraphQL errors: {data['errors']}")
-    numbers = {node["number"] for node in data["data"]["repository"]["pullRequest"]["closingIssuesReferences"]["nodes"]}
 
-    return numbers
+    return {node["number"] for node in data["data"]["repository"]["pullRequest"]["closingIssuesReferences"]["nodes"]}
