@@ -33,12 +33,11 @@ class Record(metaclass=ABCMeta):
 
     RELEASE_NOTE_LINE_MARKS: list[str] = ["-", "*", "+"]
 
-    # def __init__(self, issue: Optional[Issue] = None, skip: bool = False):
-    def __init__(self, skip: bool = False):
+    def __init__(self, labels: Optional[list[str]] = None, skip: bool = False):
         self._present_in_chapters = 0
         self._skip = skip
         self._is_release_note_detected: Optional[bool] = None
-        self._labels: set[str] = set()
+        self._labels: Optional[list[str]] = labels
         self._rls_notes: Optional[str] = None  # single annotation here
 
     # properties
@@ -63,7 +62,10 @@ class Record(metaclass=ABCMeta):
         Returns:
             list[str]: A list of labels associated with the record.
         """
-        return list(self._labels)
+        if self._labels is None:
+            self._labels = self.get_labels()
+
+        return self._labels
 
     @property
     @abstractmethod
@@ -101,16 +103,27 @@ class Record(metaclass=ABCMeta):
             list[str]: A list of authors associated with the record.
         """
 
-    # to be overridden by subclasses and called via super() as the first line
-    def to_chapter_row(self) -> str:
+    # abstract methods
+
+    @abstractmethod
+    def to_chapter_row(self, add_into_chapters: bool = True) -> str:
         """
         Converts the record to a string row in a chapter.
-        @return: The record as a row string.
-        """
-        self.added_into_chapters()
-        return ""
 
-    # abstract methods
+        Parameters:
+            add_into_chapters (bool): Whether to increment the chapter count for this record.
+
+        Returns:
+            str: The string representation of the record in a chapter row.
+        """
+
+    @abstractmethod
+    def get_labels(self) -> list[str]:
+        """
+        Gets the labels of the record.
+        Returns:
+            list[str]: A list of labels associated with the record.
+        """
 
     @abstractmethod
     def get_rls_notes(self, line_marks: Optional[list[str]] = None) -> str:
@@ -159,13 +172,7 @@ class Record(metaclass=ABCMeta):
         Returns:
             bool: True if the record contains all of the specified labels, False otherwise.
         """
-        if len(self.labels) != len(labels):
-            return False
-
-        for lbl in self.labels:
-            if lbl not in labels:
-                return False
-        return True
+        return all(lbl in self.labels for lbl in labels)
 
     def contains_release_notes(self, re_check: bool = False) -> bool:
         """

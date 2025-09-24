@@ -18,15 +18,20 @@
 This module contains the CustomChapters class which is responsible for representing the custom chapters in the release
 notes.
 """
+import logging
 from typing import cast
 
 from release_notes_generator.action_inputs import ActionInputs
-from release_notes_generator.model.base_chapters import BaseChapters
+from release_notes_generator.chapters.base_chapters import BaseChapters
 from release_notes_generator.model.chapter import Chapter
 from release_notes_generator.model.commit_record import CommitRecord
+from release_notes_generator.model.hierarchy_issue_record import HierarchyIssueRecord
 from release_notes_generator.model.issue_record import IssueRecord
 from release_notes_generator.model.record import Record
+from release_notes_generator.model.sub_issue_record import SubIssueRecord
 from release_notes_generator.utils.enums import DuplicityScopeEnum
+
+logger = logging.getLogger(__name__)
 
 
 class CustomChapters(BaseChapters):
@@ -57,14 +62,14 @@ class CustomChapters(BaseChapters):
                 ):
                     continue
 
-                for record_label in records[record_id].labels:  # iterate all labels of the record (issue, or 1st PR)
-                    pulls_count = 1
-                    if isinstance(records[record_id], IssueRecord):
-                        pulls_count = cast(IssueRecord, records[record_id]).pull_requests_count()
+                pulls_count = 1
+                if isinstance(records[record_id], (HierarchyIssueRecord, IssueRecord, SubIssueRecord)):
+                    pulls_count = cast(IssueRecord, records[record_id]).pull_requests_count()
 
+                for record_label in records[record_id].labels:  # iterate all labels of the record (issue, or 1st PR)
                     if record_label in ch.labels and pulls_count > 0:
                         if not records[record_id].is_present_in_chapters:
-                            ch.add_row(record_id, records[record_id].to_chapter_row())
+                            ch.add_row(record_id, records[record_id].to_chapter_row(True))
                             self.populated_record_numbers_list.append(record_id)
 
     def from_yaml_array(self, chapters: list[dict[str, str]]) -> "CustomChapters":

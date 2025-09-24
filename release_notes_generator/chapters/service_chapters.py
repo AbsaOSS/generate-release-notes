@@ -21,7 +21,7 @@ This module contains the ServiceChapters class which is responsible for represen
 from typing import Optional, cast
 
 from release_notes_generator.action_inputs import ActionInputs
-from release_notes_generator.model.base_chapters import BaseChapters
+from release_notes_generator.chapters.base_chapters import BaseChapters
 from release_notes_generator.model.chapter import Chapter
 from release_notes_generator.model.commit_record import CommitRecord
 from release_notes_generator.model.issue_record import IssueRecord
@@ -136,16 +136,20 @@ class ServiceChapters(BaseChapters):
                     self.chapters[MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES].add_row(record_id, record.to_chapter_row())
                     self.used_record_numbers.append(record_id)
                 else:
-                    self.chapters[OTHERS_NO_TOPIC].add_row(record_id, record.to_chapter_row())
-                    self.used_record_numbers.append(record_id)
+                    if record_id not in self.used_record_numbers:
+                        self.chapters[OTHERS_NO_TOPIC].add_row(record_id, record.to_chapter_row())
+                        self.used_record_numbers.append(record_id)
 
     def __populate_closed_issues(self, record: IssueRecord, record_id: int | str) -> None:
         """
         Populates the service chapters with closed issues.
 
-        @param record: The Record object representing the closed issue.
-        @param nr: The number of the record.
-        @return: None
+        Parameters:
+            record: The record to populate.
+            record_id: The ID of the record.
+
+        Returns:
+            None
         """
         # check record properties if it fits to a chapter: CLOSED_ISSUES_WITHOUT_PULL_REQUESTS
         populated = False
@@ -174,6 +178,9 @@ class ServiceChapters(BaseChapters):
             if self.__is_row_present(record_id) and not self.duplicity_allowed():
                 return
 
+            if record_id in self.used_record_numbers:
+                return
+
             self.chapters[OTHERS_NO_TOPIC].add_row(record_id, record.to_chapter_row())
             self.used_record_numbers.append(record_id)
 
@@ -181,9 +188,12 @@ class ServiceChapters(BaseChapters):
         """
         Populates the service chapters with pull requests.
 
-        @param record: The Record object representing the pull request.
-        @param nr: The number of the record.
-        @return: None
+        Parameters:
+            record: The record to populate.
+            record_id: The ID of the record.
+
+        Returns:
+            None
         """
         if record.is_merged:
             # check record properties if it fits to a chapter: MERGED_PRS_WITHOUT_ISSUE
@@ -208,6 +218,9 @@ class ServiceChapters(BaseChapters):
                 if self.__is_row_present(record_id) and not self.duplicity_allowed():
                     return
 
+                if record_id in self.used_record_numbers:
+                    return
+
                 self.chapters[OTHERS_NO_TOPIC].add_row(record_id, record.to_chapter_row())
                 self.used_record_numbers.append(record_id)
 
@@ -225,6 +238,9 @@ class ServiceChapters(BaseChapters):
 
         else:
             if self.__is_row_present(record_id) and not self.duplicity_allowed():
+                return
+
+            if record_id in self.used_record_numbers:
                 return
 
             # not record.is_present_in_chapters:

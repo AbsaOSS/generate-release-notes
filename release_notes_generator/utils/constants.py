@@ -34,10 +34,13 @@ CODERABBIT_SUPPORT_ACTIVE = "coderabbit-support-active"
 CODERABBIT_RELEASE_NOTES_TITLE = "coderabbit-release-notes-title"
 CODERABBIT_SUMMARY_IGNORE_GROUPS = "coderabbit-summary-ignore-groups"
 RUNNER_DEBUG = "RUNNER_DEBUG"
+ROW_FORMAT_HIERARCHY_ISSUE = "row-format-hierarchy-issue"
 ROW_FORMAT_ISSUE = "row-format-issue"
 ROW_FORMAT_PR = "row-format-pr"
 ROW_FORMAT_LINK_PR = "row-format-link-pr"
-SUPPORTED_ROW_FORMAT_KEYS = ["number", "title", "pull-requests"]
+SUPPORTED_ROW_FORMAT_KEYS_HIERARCHY_ISSUE = ["type", "number", "title"]
+SUPPORTED_ROW_FORMAT_KEYS_ISSUE = ["number", "title", "pull-requests"]
+SUPPORTED_ROW_FORMAT_KEYS_PULL_REQUEST = ["number", "title"]
 
 # Features
 WARNINGS = "warnings"

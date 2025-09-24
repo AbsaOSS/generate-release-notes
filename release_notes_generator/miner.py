@@ -117,24 +117,51 @@ class DataMiner:
 
     def _get_issues(self, data: MinedData):
         """
-        Fetches issues from the repository and adds them to the mined data.
+        Populate data.issues.
+
+        Logic:
+          - If no release: fetch all issues.
+          - If release exists: fetch issues updated since the release timestamp AND all currently open issues
+            (to include long-lived open issues not updated recently). De-duplicate by issue.number.
         """
         assert data.repository is not None, "Repository must not be None"
         logger.info("Fetching issues from repository...")
-        # get all issues
+
         if data.release is None:
             data.issues = list(self._safe_call(data.repository.get_issues)(state=IssueRecord.ISSUE_STATE_ALL))
-        else:
-            # default is repository creation date if no releases OR created_at of latest release
-            data.since = data.release.created_at if data.release else data.repository.created_at
-            if data.release and ActionInputs.get_published_at():
-                data.since = data.release.published_at
+            logger.info("Fetched %d issues", len(data.issues))
+            return
 
-            data.issues = list(
-                self._safe_call(data.repository.get_issues)(state=IssueRecord.ISSUE_STATE_ALL, since=data.since)
-            )
+        # Derive 'since' from release
+        prefer_published = ActionInputs.get_published_at()
+        data.since = (
+            data.release.published_at
+            if prefer_published and getattr(data.release, "published_at", None)
+            else data.release.created_at
+        )
+        issues_since = self._safe_call(data.repository.get_issues)(
+            state=IssueRecord.ISSUE_STATE_ALL,
+            since=data.since,
+        )
+        open_issues = self._safe_call(data.repository.get_issues)(
+            state=IssueRecord.ISSUE_STATE_OPEN,
+        )
 
-        logger.info("Fetched %d issues", len(data.issues))
+        issues_since = list(issues_since or [])
+        open_issues = list(open_issues or [])
+
+        by_number = {}
+        for issue in issues_since:
+            num = getattr(issue, "number", None)
+            if num is not None and num not in by_number:
+                by_number[num] = issue
+        for issue in open_issues:
+            num = getattr(issue, "number", None)
+            if num is not None and num not in by_number:
+                by_number[num] = issue
+
+        data.issues = list(by_number.values())
+        logger.info("Fetched %d issues (deduplicated).", len(data.issues))
 
     def __get_latest_semantic_release(self, releases) -> Optional[GitRelease]:
         published_releases = [release for release in releases if not release.draft and not release.prerelease]

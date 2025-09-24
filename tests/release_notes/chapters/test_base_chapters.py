@@ -14,7 +14,9 @@
 # limitations under the License.
 #
 
-from release_notes_generator.model.base_chapters import BaseChapters
+from datetime import datetime
+
+from release_notes_generator.chapters.base_chapters import BaseChapters
 
 
 # Local Record class for testing
@@ -27,6 +29,15 @@ class Record:
 class Chapters(BaseChapters):
     def populate(self, records: dict[int, Record]):
         pass  # Implement a minimal populate method for testing
+
+
+def test_since_default_and_setter():
+    chapters = Chapters()
+    assert chapters.since == datetime.min
+
+    now = datetime(2024, 1, 1, 0, 0, 0)
+    chapters.since = now
+    assert chapters.since == now
 
 
 def test_add_row():

@@ -27,7 +27,7 @@ from github import Github, Auth
 from urllib3.exceptions import InsecureRequestWarning
 
 from release_notes_generator.generator import ReleaseNotesGenerator
-from release_notes_generator.model.custom_chapters import CustomChapters
+from release_notes_generator.chapters.custom_chapters import CustomChapters
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.utils.gh_action import set_action_output
 from release_notes_generator.utils.logging_config import setup_logging
@@ -49,7 +49,7 @@ def run() -> None:
     py_github = Github(auth=Auth.Token(token=ActionInputs.get_github_token()), per_page=100, verify=False, timeout=60)
 
     ActionInputs.validate_inputs()
-    # Load custom chapters configuration
+
     custom_chapters = CustomChapters(print_empty_chapters=ActionInputs.get_print_empty_chapters()).from_yaml_array(
         ActionInputs.get_chapters()
     )

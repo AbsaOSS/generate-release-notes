@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-name: 'Release notes scrapper'
+name: 'Release notes scraper'
 description: 'Automatically generates release notes for a given release tag, categorized into chapters based on labels.'
 inputs:
   tag-name:
@@ -32,10 +32,10 @@ inputs:
     description: 'The tag name of the previous release to use as a start reference point for the current release notes.'
     required: false
     default: ''
-  regime:
-    description: 'Regime of the release notes generation. Options: default.'
+  hierarchy:
+    description: 'Use hierarchy of issues and pull requests.'
     required: false
-    default: 'default'
+    default: 'false'
   duplicity-icon:
     description: 'Icon to be used for duplicity warning. Icon is placed before the record line.'
     required: false
@@ -76,12 +76,16 @@ inputs:
     description: 'List of "group names" to be ignored by release notes detection logic.'
     required: false
     default: ''
+  row-format-hierarchy-issue:
+    description: 'Format of the hierarchy issue in the release notes. Available placeholders: {number}, {title}, {type}. Placeholders are case-insensitive.'
+    required: false
+    default: '{type}: _{title}_ {number}'
   row-format-issue:
     description: 'Format of the issue row in the release notes. Available placeholders: {number}, {title}, {pull-requests}. Placeholders are case-insensitive.'
     required: false
     default: '{number} _{title}_ in {pull-requests}'
   row-format-pr:
-    description: 'Format of the pr row in the release notes. Available placeholders: {number}, {title}, {pull-requests}. Placeholders are case-insensitive.'
+    description: 'Format of the pr row in the release notes. Available placeholders: {number}, {title}. Placeholders are case-insensitive.'
     required: false
     default: '{number} _{title}_'
   row-format-link-pr:
@@ -124,10 +128,10 @@ runs:
         pip install -r ${{ github.action_path }}/requirements.txt
       shell: bash
 
-    - name: Set PROJECT_ROOT and update PYTHONPATH
+    - name: Update PYTHONPATH
       run: |
         ACTION_ROOT="${{ github.action_path }}"
-        export PYTHONPATH="${PYTHONPATH}:${ACTION_ROOT}/release_notes_generator"
+        echo PYTHONPATH="${PYTHONPATH}:${ACTION_ROOT}/release_notes_generator" >> $GITHUB_ENV
       shell: bash
 
     - name: Call Release Notes Generator
@@ -137,7 +141,7 @@ runs:
         INPUT_TAG_NAME: ${{ inputs.tag-name }}
         INPUT_CHAPTERS: ${{ inputs.chapters }}
         INPUT_FROM_TAG_NAME: ${{ inputs.from-tag-name }}
-        INPUT_REGIME: ${{ inputs.regime }}
+        INPUT_HIERARCHY: ${{ inputs.hierarchy }}
         INPUT_DUPLICITY_SCOPE: ${{ inputs.duplicity-scope }}
         INPUT_DUPLICITY_ICON: ${{ inputs.duplicity-icon }}
         INPUT_WARNINGS: ${{ inputs.warnings }}
@@ -150,6 +154,7 @@ runs:
         INPUT_CODERABBIT_RELEASE_NOTES_TITLE: ${{ inputs.coderabbit-release-notes-title }}
         INPUT_CODERABBIT_SUMMARY_IGNORE_GROUPS: ${{ inputs.coderabbit-summary-ignore-groups }}
         INPUT_GITHUB_REPOSITORY: ${{ github.repository }}
+        INPUT_ROW_FORMAT_HIERARCHY_ISSUE: ${{ inputs.row-format-hierarchy-issue }}
         INPUT_ROW_FORMAT_ISSUE: ${{ inputs.row-format-issue }}
         INPUT_ROW_FORMAT_PR: ${{ inputs.row-format-pr }}
         INPUT_ROW_FORMAT_LINK_PR: ${{ inputs.row-format-link-pr }}

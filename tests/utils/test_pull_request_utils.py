@@ -125,7 +125,7 @@ def test_get_issues_for_pr_success(monkeypatch):
     monkeypatch.setattr(pru.requests, "post", fake_post)
 
     result = pru.get_issues_for_pr(123)
-    assert result == [11, 22]
+    assert result == {11, 22}
     assert captured["url"] == "https://api.github.com/graphql"
     # Query string correctly formatted
     assert captured["json"]["query"] == "Q 123 OWN REPO 10"
@@ -152,7 +152,7 @@ def test_get_issues_for_pr_empty_nodes(monkeypatch):
             }
 
     monkeypatch.setattr(pru.requests, "post", lambda *a, **k: Resp())
-    assert pru.get_issues_for_pr(5) == []
+    assert pru.get_issues_for_pr(5) == set()
 
 def test_get_issues_for_pr_http_error(monkeypatch):
     _patch_action_inputs(monkeypatch)
@@ -210,7 +210,7 @@ def test_get_issues_for_pr_caching(monkeypatch):
 
     first = pru.get_issues_for_pr(900)
     second = pru.get_issues_for_pr(900)  # should use cache
-    assert first == [9] and second == [9]
+    assert first == {9} and second == {9}
     assert calls["count"] == 1  # only one network call
 
 def test_get_issues_for_pr_different_numbers_not_cached(monkeypatch):
@@ -242,6 +242,6 @@ def test_get_issues_for_pr_different_numbers_not_cached(monkeypatch):
 
     r1 = pru.get_issues_for_pr(1)
     r2 = pru.get_issues_for_pr(2)
-    assert r1 == [1]
-    assert r2 == [2]
+    assert r1 == {1}
+    assert r2 == {2}
     assert calls["nums"] == [1, 2]

@@ -17,8 +17,10 @@
 """
 This module contains the BaseChapters class which is responsible for representing the base chapters.
 """
-
 from abc import ABC, abstractmethod
+from typing import Optional
+from datetime import datetime
+
 from release_notes_generator.model.chapter import Chapter
 from release_notes_generator.model.record import Record
 
@@ -32,7 +34,10 @@ class BaseChapters(ABC):
         self.sort_ascending = sort_ascending
         self.print_empty_chapters = print_empty_chapters
         self.chapters: dict[str, Chapter] = {}
-        self.populated_record_numbers: list[int | str] = []
+        self._populated_record_numbers: list[int | str] = []
+
+        # datetime point in time used as begin of release
+        self._since: Optional[datetime] = None
 
     @property
     def populated_record_numbers_list(self) -> list[int | str]:
@@ -41,7 +46,23 @@ class BaseChapters(ABC):
 
         @return: A list of populated record numbers.
         """
-        return self.populated_record_numbers
+        return self._populated_record_numbers
+
+    @property
+    def since(self) -> datetime:
+        """
+        Gets the since datetime.
+
+        Returns:
+            The since datetime or datetime.min if not set.
+        """
+        if self._since is None:
+            return datetime.min
+        return self._since
+
+    @since.setter
+    def since(self, value: Optional[datetime]):
+        self._since = value
 
     def add_row(self, chapter_key: str, number: int, row: str) -> None:
         """
@@ -67,7 +88,8 @@ class BaseChapters(ABC):
             chapter_string = chapter.to_string(
                 sort_ascending=self.sort_ascending, print_empty_chapters=self.print_empty_chapters
             )
-            result += chapter_string + "\n\n"
+            if chapter_string:
+                result += chapter_string + "\n\n"
 
         # Note: strip is required to remove leading newline chars when empty chapters are not printed option
         return result.strip()

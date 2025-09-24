@@ -51,13 +51,14 @@ class CommitRecord(Record):
 
     # methods - override Record methods
 
-    def to_chapter_row(self) -> str:
-        super().to_chapter_row()
+    def to_chapter_row(self, add_into_chapters: bool = True) -> str:
+        if add_into_chapters:
+            self.added_into_chapters()
         row_prefix = f"{ActionInputs.get_duplicity_icon()} " if self.present_in_chapters() > 1 else ""
 
         # collecting values for formatting
         commit_message = self._commit.commit.message.replace("\n", " ")
-        row = f"{row_prefix}Commit: {self._commit.sha[:7]} - {commit_message}"
+        row = f"{row_prefix}Commit: {self._commit.sha[:7]}... - {commit_message}"
 
         if self.contains_release_notes():
             row = f"{row}\n{self.get_rls_notes()}"
@@ -65,7 +66,10 @@ class CommitRecord(Record):
         return row
 
     def get_rls_notes(self, line_marks: Optional[list[str]] = None) -> str:
-        # TODO - in this version - direct commits does not support release notes
+        # Hint: direct commits does not support release notes
         return ""
+
+    def get_labels(self) -> list[str]:
+        return []
 
     # methods - specific to CommitRecord

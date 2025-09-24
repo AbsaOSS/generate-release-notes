@@ -15,7 +15,7 @@
 #
 
 """
-This module contains the PullRequestRecord class which is responsible for representing a record in the release notes.
+This module contains utility functions for extracting and fetching issue numbers from pull requests.
 """
 
 import re
@@ -28,13 +28,15 @@ from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.utils.constants import ISSUES_FOR_PRS, LINKED_ISSUES_MAX
 
 
-@lru_cache(maxsize=None)
 def extract_issue_numbers_from_body(pr: PullRequest) -> set[int]:
     """
     Extracts the numbers of the issues mentioned in the body of the pull request.
 
-    @param pr: The pull request to extract the issue numbers from.
-    @return: The numbers of the issues mentioned in the body of the pull request as a list of integers.
+    Parameters:
+        pr (PullRequest): The pull request to extract numbers from.
+
+    Returns:
+        Set of issue numbers mentioned in the pull request body.
     """
     # Regex pattern to match issue numbers following keywords like "Close", "Fix", "Resolve"
     regex_pattern = re.compile(r"([Cc]los(e|es|ed)|[Ff]ix(es|ed)?|[Rr]esolv(e|es|ed))\s*#\s*([0-9]+)")
@@ -48,9 +50,9 @@ def extract_issue_numbers_from_body(pr: PullRequest) -> set[int]:
     return issue_numbers
 
 
-@lru_cache(maxsize=None)
-def get_issues_for_pr(pull_number: int) -> list[int]:
-    """Update the placeholder values and formate the graphQL query"""
+@lru_cache(maxsize=1024)
+def get_issues_for_pr(pull_number: int) -> set[int]:
+    """Fetch closing issue numbers for a PR via GitHub GraphQL and return them as a set."""
     github_api_url = "https://api.github.com/graphql"
     query = ISSUES_FOR_PRS.format(
         number=pull_number,
@@ -65,8 +67,8 @@ def get_issues_for_pr(pull_number: int) -> list[int]:
 
     response = requests.post(github_api_url, json={"query": query}, headers=headers, verify=False, timeout=10)
     response.raise_for_status()  # Raise an error for HTTP issues
-    numbers = [
-        node["number"]
-        for node in response.json()["data"]["repository"]["pullRequest"]["closingIssuesReferences"]["nodes"]
-    ]
-    return numbers
+    data = response.json()
+    if data.get("errors"):
+        raise RuntimeError(f"GitHub GraphQL errors: {data['errors']}")
+
+    return {node["number"] for node in data["data"]["repository"]["pullRequest"]["closingIssuesReferences"]["nodes"]}

@@ -21,12 +21,10 @@ class PullRequestRecord(Record):
     PR_STATE_CLOSED = "closed"
     PR_STATE_OPEN = "open"
 
-    def __init__(self, pull: PullRequest, skip: bool = False):
-        super().__init__(skip=skip)
+    def __init__(self, pull: PullRequest, labels: Optional[list[str]] = None, skip: bool = False):
+        super().__init__(labels, skip)
 
         self._pull_request: PullRequest = pull
-        self._labels = {label.name for label in self._pull_request.get_labels()}
-
         self._commits: dict[str, Commit] = {}
 
     # properties - override Record properties
@@ -106,8 +104,14 @@ class PullRequestRecord(Record):
 
     # methods - override Record methods
 
-    def to_chapter_row(self) -> str:
-        super().to_chapter_row()
+    def get_labels(self) -> list[str]:
+        self._labels = [label.name for label in list(self._pull_request.get_labels())]
+        return self.labels
+
+    def to_chapter_row(self, add_into_chapters: bool = True) -> str:
+        if add_into_chapters:
+            self.added_into_chapters()
+
         row_prefix = f"{ActionInputs.get_duplicity_icon()} " if self.present_in_chapters() > 1 else ""
         format_values: dict[str, Any] = {}
 

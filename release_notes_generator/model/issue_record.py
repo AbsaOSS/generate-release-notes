@@ -23,16 +23,16 @@ class IssueRecord(Record):
     ISSUE_STATE_OPEN = "open"
     ISSUE_STATE_ALL = "all"
 
-    def __init__(self, issue: Issue, skip: bool = False):
+    def __init__(self, issue: Issue, issue_labels: Optional[list[str]] = None, skip: bool = False):
         super().__init__(skip=skip)
 
         self._issue: Issue = issue
-        self._issue_type: Optional[str] = None
+        self._labels: Optional[list[str]] = issue_labels if issue_labels is not None else None
 
         if issue is not None and issue.type is not None:
             self._issue_type = issue.type.name
-
-        self._labels = {label.name for label in self._issue.get_labels()}
+        else:
+            self._issue_type = None
 
         self._pull_requests: dict[int, PullRequest] = {}
         self._commits: dict[int, dict[str, Commit]] = {}
@@ -78,8 +78,28 @@ class IssueRecord(Record):
 
     # methods - override Record methods
 
-    def to_chapter_row(self) -> str:
-        super().to_chapter_row()
+    def get_labels(self) -> list[str]:
+        self._labels = [label.name for label in list(self._issue.get_labels())]
+        return self.labels
+
+    def find_issue(self, issue_number: int) -> Optional["IssueRecord"]:
+        """
+        Finds an issue record by its number.
+
+        Parameters:
+            issue_number (int): The number of the issue.
+
+        Returns:
+            IssueRecord: The issue record with that number.
+        """
+        if self._issue.number == issue_number:
+            return self
+
+        return None
+
+    def to_chapter_row(self, add_into_chapters: bool = True) -> str:
+        if add_into_chapters:
+            self.added_into_chapters()
         row_prefix = f"{ActionInputs.get_duplicity_icon()} " if self.present_in_chapters() > 1 else ""
         format_values: dict[str, Any] = {}
 
@@ -177,7 +197,6 @@ class IssueRecord(Record):
         Returns: None
         """
         self._pull_requests[pull.number] = pull
-        self._labels.update({label.name for label in pull.get_labels()})
 
     def register_commit(self, pull: PullRequest, commit: Commit) -> None:
         """
@@ -209,7 +228,7 @@ class IssueRecord(Record):
         Returns:
             list[str]: A list of pull request links associated with the issue.
         """
-        if len(self._pull_requests) == 0:
+        if not self._pull_requests:
             return []
 
         template = "#{number}"
