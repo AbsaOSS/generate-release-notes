@@ -147,6 +147,9 @@ class DataMiner:
             state=IssueRecord.ISSUE_STATE_OPEN,
         )
 
+        logger.debug("Fetched %d issues after 'since'", len(list(issues_since)))
+        logger.debug("Fetched %d open issues", len(list(open_issues)))
+
         issues_since = list(issues_since or [])
         open_issues = list(open_issues or [])
 
