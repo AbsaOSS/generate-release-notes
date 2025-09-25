@@ -25,6 +25,7 @@ from github import Github
 from github.Issue import Issue
 from github.PullRequest import PullRequest
 from github.Commit import Commit
+from github.Repository import Repository
 
 from release_notes_generator.model.commit_record import CommitRecord
 from release_notes_generator.model.issue_record import IssueRecord
@@ -46,9 +47,10 @@ class DefaultRecordFactory(RecordFactory):
     A class used to generate records for release notes.
     """
 
-    def __init__(self, github: Github) -> None:
+    def __init__(self, github: Github, home_repository: Repository) -> None:
         rate_limiter = GithubRateLimiter(github)
         self._safe_call = safe_call_decorator(rate_limiter)
+        self._repository = home_repository
 
         self._records: dict[int | str, Record] = {}
 
@@ -57,6 +59,7 @@ class DefaultRecordFactory(RecordFactory):
         Generate records for release notes.
         Parameters:
             data (MinedData): The MinedData instance containing repository, issues, pull requests, and commits.
+            home_repository (Repository): The home repository.
         Returns:
             dict[int|str, Record]: A dictionary of records where the key is the issue or pull request number.
         """

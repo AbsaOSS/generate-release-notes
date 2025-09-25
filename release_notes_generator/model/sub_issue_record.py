@@ -6,6 +6,7 @@ import logging
 from typing import Optional
 
 from github.Issue import SubIssue, Issue
+from github.Repository import Repository
 
 from release_notes_generator.model.issue_record import IssueRecord
 
@@ -33,4 +34,4 @@ class SubIssueRecord(IssueRecord):
             raise TypeError("Expected SubIssue")
         return self._issue
 
-    # properties - specific to IssueRecord
+    # properties - specific to SubIssueRecord

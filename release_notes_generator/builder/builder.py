@@ -21,6 +21,8 @@ import logging
 
 from itertools import chain
 
+from github.Repository import Repository
+
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.chapters.custom_chapters import CustomChapters
 from release_notes_generator.model.record import Record
@@ -49,14 +51,14 @@ class ReleaseNotesBuilder:
         self.warnings = ActionInputs.get_warnings()
         self.print_empty_chapters = ActionInputs.get_print_empty_chapters()
 
-    def build(self) -> str:
+    def build(self, home_repository: Repository) -> str:
         """
         Build the release notes based on the records, changelog URL, formatter, and custom chapters.
 
         @return: The release notes as a string.
         """
         logger.info("Building Release Notes")
-        self.custom_chapters.populate(self.records)
+        self.custom_chapters.populate(self.records, home_repository)
         user_defined_chapters_str = self.custom_chapters.to_string()
 
         user_defined_labels_nested = [
@@ -70,7 +72,7 @@ class ReleaseNotesBuilder:
                 user_defined_labels=user_defined_labels,
                 used_record_numbers=self.custom_chapters.populated_record_numbers_list,
             )
-            service_chapters.populate(self.records)
+            service_chapters.populate(self.records, home_repository)
 
             service_chapters_str = service_chapters.to_string()
             if len(service_chapters_str) > 0:

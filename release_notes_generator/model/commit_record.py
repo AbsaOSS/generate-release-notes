@@ -5,6 +5,7 @@ A module that defines the CommitRecord class, which represents a direct commit r
 from typing import Optional
 
 from github.Commit import Commit
+from github.Repository import Repository
 
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.record import Record
@@ -51,7 +52,7 @@ class CommitRecord(Record):
 
     # methods - override Record methods
 
-    def to_chapter_row(self, add_into_chapters: bool = True) -> str:
+    def to_chapter_row(self, add_into_chapters: bool = True, home_repository: Optional[Repository] = None) -> str:
         if add_into_chapters:
             self.added_into_chapters()
         row_prefix = f"{ActionInputs.get_duplicity_icon()} " if self.present_in_chapters() > 1 else ""

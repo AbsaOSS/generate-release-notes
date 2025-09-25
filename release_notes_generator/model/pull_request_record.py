@@ -7,6 +7,7 @@ from typing import Optional, Any
 
 from github.Commit import Commit
 from github.PullRequest import PullRequest
+from github.Repository import Repository
 
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.record import Record
@@ -108,7 +109,7 @@ class PullRequestRecord(Record):
         self._labels = [label.name for label in list(self._pull_request.get_labels())]
         return self.labels
 
-    def to_chapter_row(self, add_into_chapters: bool = True) -> str:
+    def to_chapter_row(self, add_into_chapters: bool = True, home_repository: Optional[Repository] = None) -> str:
         if add_into_chapters:
             self.added_into_chapters()
 

@@ -25,6 +25,7 @@ from typing import cast, Optional
 from github import Github
 from github.Issue import Issue, SubIssue
 from github.PullRequest import PullRequest
+from github.Repository import Repository
 
 from release_notes_generator.model.commit_record import CommitRecord
 from release_notes_generator.model.hierarchy_issue_record import HierarchyIssueRecord
@@ -46,8 +47,8 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
     A class used to generate records for release notes.
     """
 
-    def __init__(self, github: Github) -> None:
-        super().__init__(github)
+    def __init__(self, github: Github, home_repository: Repository) -> None:
+        super().__init__(github, home_repository)
 
         self.__registered_issues: set[int] = set()
         self.__sub_issue_parents: dict[int, int] = {}
@@ -70,11 +71,9 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
 
             self._create_hierarchy_issue_record_using_sub_issues_existence(issue, data.since)
 
+        # Second register all external sub-issues
         for ext_sub_issue in self.__external_sub_issues:
             self._create_record_for_sub_issue(ext_sub_issue)
-
-        # TODO get PRs for external sub-issues and register them
-        # TODO update external links in rls notes
 
         # Now register all issues without sub-issues
         for issue in data.issues:

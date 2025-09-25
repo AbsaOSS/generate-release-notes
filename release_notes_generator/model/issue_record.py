@@ -8,6 +8,7 @@ from typing import Optional, Any
 from github.Commit import Commit
 from github.Issue import Issue
 from github.PullRequest import PullRequest
+from github.Repository import Repository
 
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.record import Record
@@ -76,6 +77,15 @@ class IssueRecord(Record):
         """
         return self._issue_type
 
+    @property
+    def repository(self) -> Repository:
+        """
+        Gets the repository associated with the sub-issue.
+
+        Returns: The repository associated with the sub-issue.
+        """
+        return self.issue.repository
+
     # methods - override Record methods
 
     def get_labels(self) -> list[str]:
@@ -97,14 +107,25 @@ class IssueRecord(Record):
 
         return None
 
-    def to_chapter_row(self, add_into_chapters: bool = True) -> str:
+    def to_chapter_row(self, add_into_chapters: bool = True, home_repository: Optional[Repository] = None) -> str:
         if add_into_chapters:
             self.added_into_chapters()
         row_prefix = f"{ActionInputs.get_duplicity_icon()} " if self.present_in_chapters() > 1 else ""
         format_values: dict[str, Any] = {}
 
+        if self.issue.number == 198:
+            print("XXX - Issue 198 - issue_record")
+            print("XXX - self.issue.repository full name", self.issue.repository.full_name)
+            if home_repository is not None:
+                print("XXX - home_repository full name", home_repository.full_name)
+            else:
+                print("XXX - home_repository is None")
+
         # collect format values
-        format_values["number"] = f"#{self._issue.number}"
+        if home_repository and home_repository.full_name != self.issue.repository.full_name:
+            format_values["number"] = f"{home_repository.full_name}#{self._issue.number}"
+        else:
+            format_values["number"] = f"#{self._issue.number}"
         format_values["title"] = self._issue.title
         list_pr_links = self.get_pr_links()
         if len(list_pr_links) > 0:

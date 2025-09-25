@@ -5,6 +5,7 @@ A module that defines the HierarchyIssueRecord class for hierarchical issue rend
 import logging
 from typing import Optional, Any
 from github.Issue import Issue
+from github.Repository import Repository
 
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.issue_record import IssueRecord
@@ -84,14 +85,22 @@ class HierarchyIssueRecord(IssueRecord):
         return list(labels)
 
     # methods - override ancestor methods
-    def to_chapter_row(self, add_into_chapters: bool = True) -> str:
+    def to_chapter_row(self, add_into_chapters: bool = True, home_repository: Optional[Repository] = None) -> str:
         if add_into_chapters:
             self.added_into_chapters()
         row_prefix = f"{ActionInputs.get_duplicity_icon()} " if self.present_in_chapters() > 1 else ""
         format_values: dict[str, Any] = {}
 
+        if self.issue.number == 198:
+            print("XXX - Issue 198 - issue_record")
+            print("XXX - home_repository full name", home_repository.full_name)
+            print("XXX - self.issue.repository full name", self.issue.repository.full_name)
+
         # collect format values
-        format_values["number"] = f"#{self.issue.number}"
+        if home_repository and home_repository.full_name != self.issue.repository.full_name:
+            format_values["number"] = f"{home_repository.full_name}#{self._issue.number}"
+        else:
+            format_values["number"] = f"#{self._issue.number}"
         format_values["title"] = self.issue.title
         if self.issue_type is not None:
             format_values["type"] = self.issue_type

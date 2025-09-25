@@ -22,6 +22,8 @@ import logging
 from abc import ABCMeta, abstractmethod
 from typing import Optional
 
+from github.Repository import Repository
+
 logger = logging.getLogger(__name__)
 
 
@@ -106,12 +108,13 @@ class Record(metaclass=ABCMeta):
     # abstract methods
 
     @abstractmethod
-    def to_chapter_row(self, add_into_chapters: bool = True) -> str:
+    def to_chapter_row(self, add_into_chapters: bool = True, home_repository: Optional[Repository] = None) -> str:
         """
         Converts the record to a string row in a chapter.
 
         Parameters:
             add_into_chapters (bool): Whether to increment the chapter count for this record.
+            home_repository (Optional[Repository]): The home repository for generating links.
 
         Returns:
             str: The string representation of the record in a chapter row.

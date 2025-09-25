@@ -21,6 +21,8 @@ from abc import ABC, abstractmethod
 from typing import Optional
 from datetime import datetime
 
+from github.Repository import Repository
+
 from release_notes_generator.model.chapter import Chapter
 from release_notes_generator.model.record import Record
 
@@ -104,9 +106,11 @@ class BaseChapters(ABC):
         return [chapter.title for chapter in self.chapters.values()]
 
     @abstractmethod
-    def populate(self, records: dict[int | str, Record]) -> None:
+    def populate(self, records: dict[int | str, Record], home_repository: Repository) -> None:
         """
         Populates the chapters with records.
 
-        @param records: A dictionary of records where the key is an integer and the value is a Record object.
+        Parameters:
+            records: A dictionary of records where the key is an integer and the value is a Record object.
+            home_repository: The home repository.
         """

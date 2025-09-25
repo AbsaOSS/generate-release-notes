@@ -20,6 +20,8 @@ This module contains the RecordFactory base class used to generate records.
 import abc
 import logging
 
+from github.Repository import Repository
+
 from release_notes_generator.model.mined_data import MinedData
 from release_notes_generator.model.record import Record
 
@@ -40,6 +42,3 @@ class RecordFactory(metaclass=abc.ABCMeta):
         Returns:
             dict[int|str, Record]: A dictionary of records where the key is the issue or pull request number.
         """
-
-    # TODO - do review of children and decide if more useful method could be defined here for inheritation
-    #   fix unit test first to detect breaking changes

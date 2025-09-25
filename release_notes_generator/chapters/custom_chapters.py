@@ -21,6 +21,8 @@ notes.
 import logging
 from typing import cast
 
+from github.Repository import Repository
+
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.chapters.base_chapters import BaseChapters
 from release_notes_generator.model.chapter import Chapter
@@ -39,7 +41,7 @@ class CustomChapters(BaseChapters):
     A class used to represent the custom chapters in the release notes.
     """
 
-    def populate(self, records: dict[int | str, Record]) -> None:
+    def populate(self, records: dict[int | str, Record], home_repository: Repository) -> None:
         """
         Populates the custom chapters with records.
 
@@ -69,7 +71,7 @@ class CustomChapters(BaseChapters):
                 for record_label in records[record_id].labels:  # iterate all labels of the record (issue, or 1st PR)
                     if record_label in ch.labels and pulls_count > 0:
                         if not records[record_id].is_present_in_chapters:
-                            ch.add_row(record_id, records[record_id].to_chapter_row(True))
+                            ch.add_row(record_id, records[record_id].to_chapter_row(True, home_repository))
                             self.populated_record_numbers_list.append(record_id)
 
     def from_yaml_array(self, chapters: list[dict[str, str]]) -> "CustomChapters":
