@@ -19,7 +19,7 @@ DefaultRecordFactory builds Record objects (issues, pulls, commits) from mined G
 """
 
 import logging
-from functools import singledispatchmethod
+from functools import singledispatchmethod, lru_cache
 from typing import cast, Optional
 
 from github import Github
@@ -68,7 +68,13 @@ class DefaultRecordFactory(RecordFactory):
 
     @get_id.register
     def _(self, issue: Issue) -> str:
-        return f"{issue.repository.full_name}#{issue.number}"
+        # delegate to a cached, hashable-only helper
+        return self._issue_id(issue.repository.full_name, issue.number)
+
+    @staticmethod
+    @lru_cache(maxsize=2048)
+    def _issue_id(repo_full_name: str, number: int) -> str:
+        return f"{repo_full_name.lower()}#{number}"
 
     @get_id.register
     def _(self, pull_request: PullRequest) -> str:

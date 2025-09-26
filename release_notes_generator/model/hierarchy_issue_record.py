@@ -120,7 +120,8 @@ class HierarchyIssueRecord(IssueRecord):
 
         # add sub-hierarchy issues
         for sub_hierarchy_issue in self._sub_hierarchy_issues.values():
-            row = f"{row}\n{sub_hierarchy_issue.to_chapter_row()}"
+            if sub_hierarchy_issue.contains_change_increment():
+                row = f"{row}\n{sub_hierarchy_issue.to_chapter_row()}"
 
         # add sub-issues
         if len(self._sub_issues) > 0:
@@ -128,6 +129,9 @@ class HierarchyIssueRecord(IssueRecord):
             for sub_issue in self._sub_issues.values():
                 if sub_issue.is_open:
                     continue  # only closed issues are reported in release notes
+
+                if not sub_issue.contains_change_increment():
+                    continue  # skip sub-issues without change increment
 
                 sub_issue_block = "- " + sub_issue.to_chapter_row()
                 ind_child_block = "\n".join(

@@ -834,7 +834,7 @@ def mined_data_isolated_record_types_with_labels_with_type_defined(mocker, mined
     t_epic = mocker.Mock(spec=IssueType)
     t_epic.name = "Epic"
     t_feature = mocker.Mock(spec=IssueType)
-    t_feature.name = "feature"
+    t_feature.name = "Feature"
     t_task = mocker.Mock(spec=IssueType)
     t_task.name = "Task"
     t_bug = mocker.Mock(spec=IssueType)
