@@ -185,6 +185,7 @@ def mock_issue_closed(mocker):
     issue.body = "Some issue body text"
     issue.get_sub_issues.return_value = []
     issue.repository.full_name = "org/repo"
+    issue.closed_at = datetime.now()
 
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
@@ -203,6 +204,7 @@ def mock_issue_closed_i1_bug(mocker):
     issue.number = 122
     issue.body = "Some issue body text\nRelease Notes:\n- Fixed bug\n- Improved performance\n+ More nice code\n  * Awesome architecture"
     issue.repository.full_name = "org/repo"
+    issue.closed_at = datetime.now()
 
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
@@ -220,6 +222,7 @@ def mock_issue_closed_i1_bug_and_skip(mocker):
     issue.title = "I1+bug"
     issue.number = 122
     issue.repository.full_name = "org/repo"
+    issue.closed_at = datetime.now()
 
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "skip-release-notes"
@@ -240,6 +243,7 @@ def mock_open_sub_issue(mocker):
     issue.body = "I400 open\nRelease Notes:\n- Hierarchy level release note"
     issue.type = None
     issue.created_at = datetime.now()
+    issue.closed_at = None
     issue.repository.full_name = "org/repo"
 
     issue.get_labels.return_value = []
@@ -258,6 +262,7 @@ def mock_closed_sub_issue(mocker):
     issue.body = "I450 closed\nRelease Notes:\n- Hierarchy level release note"
     issue.type = None
     issue.created_at = datetime.now()
+    issue.closed_at = datetime.now()
     issue.repository.full_name = "org/repo"
 
     issue.get_labels.return_value = []
@@ -276,6 +281,7 @@ def mock_open_hierarchy_issue(mocker):
     issue.body = "I300 open\nRelease Notes:\n- Hierarchy level release note"
     issue.type = None
     issue.created_at = datetime.now()
+    issue.closed_at = None
     issue.repository.full_name = "org/repo"
 
     issue.get_labels.return_value = []
@@ -296,6 +302,7 @@ def mock_open_hierarchy_issue_epic(mocker):
     issue.body = "I200 open\nRelease Notes:\n- Epic level release note"
     issue.type = issue_type
     issue.created_at = datetime.now()
+    issue.closed_at = None
     issue.repository.full_name = "org/repo"
 
     label1 = mocker.Mock(spec=MockLabel)
@@ -320,6 +327,7 @@ def mock_open_hierarchy_issue_feature(mocker):
     issue.body = "HI201 open\nRelease Notes:\n- Feature level release note"
     issue.type = issue_type
     issue.created_at = datetime.now()
+    issue.closed_at = None
     issue.repository.full_name = "org/repo"
 
     label1 = mocker.Mock(spec=MockLabel)
@@ -343,6 +351,7 @@ def mock_closed_issue_type_task(mocker):
     issue.body = "Some issue body text"
     issue.type = issue_type
     issue.created_at = datetime.now()
+    issue.closed_at = datetime.now()
     issue.repository.full_name = "org/repo"
 
     label1 = mocker.Mock(spec=MockLabel)
@@ -363,6 +372,7 @@ def mock_closed_issue_type_none(mocker):
     issue.body = "Some sub issue body text"
     issue.type = None
     issue.created_at = datetime.now()
+    issue.closed_at = datetime.now()
     issue.repository.full_name = "org/repo"
 
     label1 = mocker.Mock(spec=MockLabel)
@@ -386,6 +396,7 @@ def mock_closed_issue_type_bug(mocker):
     issue.body = "Some issue body text\nRelease Notes:\n- Fixed bug\n- Improved performance\n+ More nice code\n  * Awesome architecture"
     issue.type = issue_type
     issue.created_at = datetime.now()
+    issue.closed_at = datetime.now()
     issue.repository.full_name = "org/repo"
 
     label1 = mocker.Mock(spec=MockLabel)

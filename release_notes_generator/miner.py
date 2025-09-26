@@ -48,6 +48,12 @@ class DataMiner:
         self._safe_call = safe_call_decorator(rate_limiter)
 
     def check_repository_exists(self) -> bool:
+        """
+        Checks if the specified GitHub repository exists.
+
+        Returns:
+            bool: True if the repository exists, False otherwise.
+        """
         repo: Repository = self._safe_call(self.github_instance.get_repo)(ActionInputs.get_github_repository())
         if repo is None:
             logger.error("Repository not found: %s", ActionInputs.get_github_repository())
@@ -62,7 +68,7 @@ class DataMiner:
         repo: Repository = self._safe_call(self.github_instance.get_repo)(ActionInputs.get_github_repository())
         if repo is None:
             logger.error("Repository not found: %s", ActionInputs.get_github_repository())
-            raise Exception("Repository not found")
+            raise ValueError("Repository not found")
 
         data = MinedData(repo)
         data.release = self.get_latest_release(data.repository)

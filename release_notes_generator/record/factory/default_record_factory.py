@@ -53,8 +53,17 @@ class DefaultRecordFactory(RecordFactory):
 
         self._records: dict[str, Record] = {}
 
-    @singledispatchmethod
+    @singledispatchmethod   # pylint: disable=abstract-method
     def get_id(self, obj) -> str:
+        """
+        Get the ID of an object.
+
+        Parameters:
+            obj: The object to get the ID of.
+
+        Returns:
+            str: The ID of the object.
+        """
         raise NotImplementedError(f"Unsupported type: {type(obj)}")
 
     @get_id.register

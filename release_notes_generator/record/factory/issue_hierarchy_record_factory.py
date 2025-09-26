@@ -163,7 +163,9 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
                 # check if sub-issue is from current repository
                 if si.repository.full_name != issue.repository.full_name:
                     # register sub-issue and its parent for later hierarchy building
-                    self.__sub_issue_parents[self.get_id(si)] = self.get_id(issue)  # Note: GitHub now allows only 1 parent
+                    self.__sub_issue_parents[self.get_id(si)] = self.get_id(
+                        issue
+                    )  # Note: GitHub now allows only 1 parent
 
                     self.__external_sub_issues.append(si)
                     logger.debug(
@@ -172,10 +174,9 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
                         si.number,
                         si.repository.full_name,
                     )
-                    continue
 
                 else:
-                    if since and si.closed_at and since > si.closed_at:
+                    if since and si.state == IssueRecord.ISSUE_STATE_CLOSED and si.closed_at and since > si.closed_at:
                         logger.debug("Detected sub-issue %d closed in previous release - skipping", si.number)
                         continue
 
@@ -271,7 +272,7 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
                 made_progress = True
             else:
                 logger.error(
-                    "Detected IssueRecord in position of SubIssueRecord - leaving as standalone" " and dropping mapping"
+                    "Detected IssueRecord in position of SubIssueRecord - leaving as standalone and dropping mapping"
                 )
                 # Avoid infinite recursion by removing the unresolved mapping
                 self.__sub_issue_parents.pop(sub_issue_id, None)
