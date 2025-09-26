@@ -53,7 +53,7 @@ class DefaultRecordFactory(RecordFactory):
 
         self._records: dict[str, Record] = {}
 
-    @singledispatchmethod   # pylint: disable=abstract-method
+    @singledispatchmethod  # pylint: disable=abstract-method
     def get_id(self, obj) -> str:
         """
         Get the ID of an object.

@@ -71,6 +71,7 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
             self._create_issue_record_using_sub_issues_existence(issue, data.since)
 
         # Second register all external sub-issues
+        # TODO decide if added as issue or sub-issue
         for ext_sub_issue in self.__external_sub_issues:
             self._create_record_for_sub_issue(ext_sub_issue)
 
@@ -176,6 +177,9 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
                     )
 
                 else:
+                    self.__sub_issue_parents[self.get_id(si)] = self.get_id(
+                        issue
+                    )  # Note: GitHub now allows only 1 parent
                     if since and si.state == IssueRecord.ISSUE_STATE_CLOSED and si.closed_at and since > si.closed_at:
                         logger.debug("Detected sub-issue %d closed in previous release - skipping", si.number)
                         continue
