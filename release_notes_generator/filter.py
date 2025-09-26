@@ -61,8 +61,7 @@ class FilterByRelease(Filter):
         Returns:
             MinedData: The filtered mined data.
         """
-        md = MinedData()
-        md.repository = data.repository
+        md = MinedData(data.repository)
         md.release = data.release
         md.since = data.since
 

@@ -19,6 +19,7 @@ DefaultRecordFactory builds Record objects (issues, pulls, commits) from mined G
 """
 
 import logging
+from functools import singledispatchmethod
 from typing import cast, Optional
 
 from github import Github
@@ -50,49 +51,67 @@ class DefaultRecordFactory(RecordFactory):
         rate_limiter = GithubRateLimiter(github)
         self._safe_call = safe_call_decorator(rate_limiter)
 
-        self._records: dict[int | str, Record] = {}
+        self._records: dict[str, Record] = {}
 
-    def generate(self, data: MinedData) -> dict[int | str, Record]:
+    @singledispatchmethod
+    def get_id(self, obj) -> str:
+        raise NotImplementedError(f"Unsupported type: {type(obj)}")
+
+    @get_id.register
+    def _(self, issue: Issue) -> str:
+        return f"{issue.repository.full_name}#{issue.number}"
+
+    @get_id.register
+    def _(self, pull_request: PullRequest) -> str:
+        return f"{pull_request.number}"
+
+    @get_id.register
+    def _(self, commit: Commit) -> str:
+        return commit.sha
+
+    def generate(self, data: MinedData) -> dict[str, Record]:
         """
         Generate records for release notes.
         Parameters:
             data (MinedData): The MinedData instance containing repository, issues, pull requests, and commits.
         Returns:
-            dict[int|str, Record]: A dictionary of records where the key is the issue or pull request number.
+            dict[str, Record]: A dictionary of records where the key is the issue or pull request number.
         """
 
         def register_pull_request(pull: PullRequest, skip_rec: bool) -> None:
-            detected_issues = extract_issue_numbers_from_body(pull)
+            detected_issues = extract_issue_numbers_from_body(pull, repository=data.repository)
             logger.debug("Detected issues - from body: %s", detected_issues)
             linked = self._safe_call(get_issues_for_pr)(pull_number=pull.number)
             if linked:
                 detected_issues.update(linked)
             logger.debug("Detected issues - merged: %s", detected_issues)
 
-            for parent_issue_number in detected_issues:
+            for parent_issue_id in detected_issues:
                 # create an issue record if not present for PR parent
-                if parent_issue_number not in self._records:
+                if parent_issue_id not in self._records:
                     logger.warning(
-                        "Detected PR %d linked to issue %d which is not in the list of received issues. "
+                        "Detected PR %d linked to issue %s which is not in the list of received issues. "
                         "Fetching ...",
                         pull.number,
-                        parent_issue_number,
+                        parent_issue_id,
                     )
+                    # dev note: here we expect that PR links to an issue in the same repository !!!
+                    parent_issue_number = int(parent_issue_id.split("#")[1])
                     parent_issue = (
                         self._safe_call(data.repository.get_issue)(parent_issue_number) if data.repository else None
                     )
                     if parent_issue is not None:
                         self._create_record_for_issue(parent_issue)
 
-                if parent_issue_number in self._records:
-                    cast(IssueRecord, self._records[parent_issue_number]).register_pull_request(pull)
-                    logger.debug("Registering PR %d: %s to Issue %d", pull.number, pull.title, parent_issue_number)
+                if parent_issue_id in self._records:
+                    cast(IssueRecord, self._records[parent_issue_id]).register_pull_request(pull)
+                    logger.debug("Registering PR %d: %s to Issue %s", pull.number, pull.title, parent_issue_id)
                 else:
                     logger.debug(
-                        "Registering stand-alone PR %d: %s as mentioned Issue %d not found.",
+                        "Registering stand-alone PR %d: %s as mentioned Issue %s not found.",
                         pull.number,
                         pull.title,
-                        parent_issue_number,
+                        parent_issue_id,
                     )
 
         logger.debug("Registering issues to records...")
@@ -101,16 +120,17 @@ class DefaultRecordFactory(RecordFactory):
 
         logger.debug("Registering pull requests to records...")
         for pull in data.pull_requests:
+            pid = self.get_id(pull)
             pull_labels = [label.name for label in pull.get_labels()]
             skip_record: bool = any(item in pull_labels for item in ActionInputs.get_skip_release_notes_labels())
 
             linked_from_api = self._safe_call(get_issues_for_pr)(pull_number=pull.number) or set()
-            linked_from_body = extract_issue_numbers_from_body(pull)
+            linked_from_body = extract_issue_numbers_from_body(pull, data.repository)
             if not linked_from_api and not linked_from_body:
-                self._records[pull.number] = PullRequestRecord(pull, pull_labels, skip=skip_record)
-                logger.debug("Created record for PR %d: %s", pull.number, pull.title)
+                self._records[pid] = PullRequestRecord(pull, pull_labels, skip=skip_record)
+                logger.debug("Created record for PR %s: %s", pid, pull.title)
             else:
-                logger.debug("Registering pull number: %s, title : %s", pull.number, pull.title)
+                logger.debug("Registering pull number: %s, title : %s", pid, pull.title)
                 register_pull_request(pull, skip_record)
 
         logger.debug("Registering commits to records...")
@@ -166,5 +186,5 @@ class DefaultRecordFactory(RecordFactory):
         if issue_labels is None:
             issue_labels = [label.name for label in issue.get_labels()]
         skip_record = any(item in issue_labels for item in ActionInputs.get_skip_release_notes_labels())
-        self._records[issue.number] = IssueRecord(issue=issue, skip=skip_record)
-        logger.debug("Created record for non hierarchy issue %d: %s", issue.number, issue.title)
+        self._records[iid := self.get_id(issue)] = IssueRecord(issue=issue, skip=skip_record)
+        logger.debug("Created record for non hierarchy issue '%s': %s", iid, issue.title)

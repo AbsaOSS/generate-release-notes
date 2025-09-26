@@ -39,7 +39,7 @@ class CustomChapters(BaseChapters):
     A class used to represent the custom chapters in the release notes.
     """
 
-    def populate(self, records: dict[int | str, Record]) -> None:
+    def populate(self, records: dict[str, Record]) -> None:
         """
         Populates the custom chapters with records.
 

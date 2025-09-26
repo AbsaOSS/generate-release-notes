@@ -39,8 +39,7 @@ class MinedDataMock(MinedData):
     """
 
     def __init__(self, mocker, rls_mock: Optional[GitRelease], mock_repo: Repository):
-        super().__init__()
-        self.repository = mock_repo
+        super().__init__(mock_repo)
         self.release = rls_mock if rls_mock is not None else mocker.Mock(spec=GitRelease)
         self.issues = [
             mocker.Mock(spec=Issue, title="Mock Issue 1", number=1),

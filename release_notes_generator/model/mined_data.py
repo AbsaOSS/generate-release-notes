@@ -38,8 +38,8 @@ logger = logging.getLogger(__name__)
 class MinedData:
     """Class for keeping track of mined GitHub data."""
 
-    def __init__(self):
-        self.repository: Optional[Repository] = None
+    def __init__(self, repository: Repository):
+        self.repository: Repository = repository
         self.release: Optional[GitRelease] = None
         self.issues: list[Issue] = []
         self.pull_requests: list[PullRequest] = []
@@ -48,9 +48,9 @@ class MinedData:
 
     def is_empty(self):
         """
-        Checks if the mined data is empty, meaning no repository has been set.
+        Check if the mined data is empty (no issues, pull requests, or commits).
 
         Returns:
-            bool: True if the repository is None, False otherwise.
+            bool: True if empty, False otherwise.
         """
-        return self.repository is None
+        return self.issues == [] and self.pull_requests == [] and self.commits == []

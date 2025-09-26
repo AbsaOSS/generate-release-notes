@@ -38,7 +38,7 @@ class ReleaseNotesBuilder:
 
     def __init__(
         self,
-        records: dict[int | str, Record],
+        records: dict[str, Record],
         changelog_url: str,
         custom_chapters: CustomChapters,
     ):

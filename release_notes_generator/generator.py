@@ -76,9 +76,14 @@ class ReleaseNotesGenerator:
         @return: The generated release notes as a string, or None if the repository could not be found.
         """
         miner = DataMiner(self._github_instance, self._rate_limiter)
+        if not miner.check_repository_exists():
+            return None
+
         data = miner.mine_data()
+
         if data.is_empty():
             return None
+
         self.custom_chapters.since = data.since
 
         filterer = FilterByRelease()
@@ -92,7 +97,7 @@ class ReleaseNotesGenerator:
 
         assert data_filtered_by_release.repository is not None, "Repository must not be None"
 
-        rls_notes_records: dict[int | str, Record] = self._get_record_factory(github=self._github_instance).generate(
+        rls_notes_records: dict[str, Record] = self._get_record_factory(github=self._github_instance).generate(
             data=data_filtered_by_release
         )
 

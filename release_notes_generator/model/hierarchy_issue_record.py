@@ -23,8 +23,8 @@ class HierarchyIssueRecord(IssueRecord):
         super().__init__(issue, issue_labels, skip)
 
         self._level: int = 0
-        self._sub_issues: dict[int, SubIssueRecord] = {}
-        self._sub_hierarchy_issues: dict[int, "HierarchyIssueRecord"] = {}
+        self._sub_issues: dict[str, SubIssueRecord] = {}
+        self._sub_hierarchy_issues: dict[str, "HierarchyIssueRecord"] = {}
 
     @property
     def level(self) -> int:

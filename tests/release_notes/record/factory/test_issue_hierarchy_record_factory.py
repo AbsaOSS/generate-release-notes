@@ -29,10 +29,10 @@ from tests.conftest import mock_safe_call_decorator
 
 # generate
 
-def test_generate_no_input_data(mocker):
+def test_generate_no_input_data(mocker, mock_repo):
     mock_github_client = mocker.Mock(spec=Github)
     factory = IssueHierarchyRecordFactory(github=mock_github_client)
-    data = MinedData()
+    data = MinedData(mock_repo)
 
     result = factory.generate(data)
 
@@ -59,52 +59,52 @@ def test_generate_isolated_record_types_no_labels_no_type_defined(mocker, mined_
     result = factory.generate(mined_data_isolated_record_types_no_labels_no_type_defined)
 
     assert 8 == len(result)
-    assert {121, 301, 302, 303, 304, 123, 124, "merge_commit_sha_direct"}.issubset(result.keys())
+    assert {'org/repo#121', 'org/repo#301', 'org/repo#302', 'org/repo#303', 'org/repo#304', '123', '124', "merge_commit_sha_direct"}.issubset(result.keys())
 
-    assert isinstance(result[121], IssueRecord)
-    assert isinstance(result[301], HierarchyIssueRecord)
-    assert isinstance(result[302], HierarchyIssueRecord)
-    assert isinstance(result[303], HierarchyIssueRecord)
-    assert isinstance(result[304], HierarchyIssueRecord)
-    assert isinstance(result[123], PullRequestRecord)
-    assert isinstance(result[124], PullRequestRecord)
+    assert isinstance(result['org/repo#121'], IssueRecord)
+    assert isinstance(result['org/repo#301'], HierarchyIssueRecord)
+    assert isinstance(result['org/repo#302'], HierarchyIssueRecord)
+    assert isinstance(result['org/repo#303'], HierarchyIssueRecord)
+    assert isinstance(result['org/repo#304'], HierarchyIssueRecord)
+    assert isinstance(result['123'], PullRequestRecord)
+    assert isinstance(result['124'], PullRequestRecord)
     assert isinstance(result["merge_commit_sha_direct"], CommitRecord)
 
-    rec_i = cast(IssueRecord, result[121])
+    rec_i = cast(IssueRecord, result['org/repo#121'])
     assert 0 == rec_i.pull_requests_count()
 
-    rec_hi_1 = cast(HierarchyIssueRecord, result[301])
+    rec_hi_1 = cast(HierarchyIssueRecord, result['org/repo#301'])
     assert 0 == rec_hi_1.pull_requests_count()
     assert 0 == len(rec_hi_1.sub_hierarchy_issues.values())
     assert 2 == len(rec_hi_1.sub_issues.values())
-    assert 0 == rec_hi_1.sub_issues[450].pull_requests_count()
+    assert 0 == rec_hi_1.sub_issues['org/repo#450'].pull_requests_count()
     assert 0 == rec_hi_1.level
 
-    rec_hi_2 = cast(HierarchyIssueRecord, result[302])
+    rec_hi_2 = cast(HierarchyIssueRecord, result['org/repo#302'])
     assert 1 == rec_hi_2.pull_requests_count()
     assert 0 == len(rec_hi_2.sub_hierarchy_issues.values())
     assert 2 == len(rec_hi_2.sub_issues.values())
-    assert 1 == rec_hi_2.sub_issues[451].pull_requests_count()
+    assert 1 == rec_hi_2.sub_issues['org/repo#451'].pull_requests_count()
     assert 0 == rec_hi_2.level
 
-    rec_hi_3 = cast(HierarchyIssueRecord, result[303])
+    rec_hi_3 = cast(HierarchyIssueRecord, result['org/repo#303'])
     assert 1 == rec_hi_3.pull_requests_count()
     assert 0 == len(rec_hi_3.sub_hierarchy_issues.values())
     assert 2 == len(rec_hi_3.sub_issues.values())
-    assert 1 == rec_hi_3.sub_issues[452].pull_requests_count()
-    assert "Fixed bug in PR 151" == rec_hi_3.sub_issues[452].get_commit(151, "merge_commit_sha_151").commit.message
+    assert 1 == rec_hi_3.sub_issues['org/repo#452'].pull_requests_count()
+    assert "Fixed bug in PR 151" == rec_hi_3.sub_issues['org/repo#452'].get_commit(151, "merge_commit_sha_151").commit.message
     assert 0 == rec_hi_3.level
 
-    rec_hi_4 = cast(HierarchyIssueRecord, result[304])
+    rec_hi_4 = cast(HierarchyIssueRecord, result['org/repo#304'])
     assert 1 == rec_hi_4.pull_requests_count()
     assert 1 == len(rec_hi_4.sub_hierarchy_issues.values())
     assert 0 == len(rec_hi_4.sub_issues.values())
     assert 1 == rec_hi_4.pull_requests_count()
-    assert "Fixed bug in PR 152" == rec_hi_4.sub_hierarchy_issues[350].sub_issues[453].get_commit(152, "merge_commit_sha_152").commit.message
+    assert "Fixed bug in PR 152" == rec_hi_4.sub_hierarchy_issues['org/repo#350'].sub_issues['org/repo#453'].get_commit(152, "merge_commit_sha_152").commit.message
     assert 0 == rec_hi_4.level
 
-    rec_hi_5 = cast(HierarchyIssueRecord, result[304])
-    assert 1 == rec_hi_5.sub_hierarchy_issues[350].level
+    rec_hi_5 = cast(HierarchyIssueRecord, result['org/repo#304'])
+    assert 1 == rec_hi_5.sub_hierarchy_issues['org/repo#350'].level
 
 
 #   - single issue record (closed)
@@ -128,45 +128,45 @@ def test_generate_isolated_record_types_with_labels_no_type_defined(mocker, mine
     result = factory.generate(mined_data_isolated_record_types_with_labels_no_type_defined)
 
     assert 8 == len(result)
-    assert {121, 301, 302, 303, 304, 123, 124, "merge_commit_sha_direct"}.issubset(result.keys())
+    assert {'org/repo#121', 'org/repo#301', 'org/repo#302', 'org/repo#303', 'org/repo#304', '123', '124', "merge_commit_sha_direct"}.issubset(result.keys())
 
-    assert isinstance(result[121], IssueRecord)
-    assert isinstance(result[301], HierarchyIssueRecord)
-    assert isinstance(result[302], HierarchyIssueRecord)
-    assert isinstance(result[303], HierarchyIssueRecord)
-    assert isinstance(result[304], HierarchyIssueRecord)
-    assert isinstance(result[123], PullRequestRecord)
-    assert isinstance(result[124], PullRequestRecord)
+    assert isinstance(result['org/repo#121'], IssueRecord)
+    assert isinstance(result['org/repo#301'], HierarchyIssueRecord)
+    assert isinstance(result['org/repo#302'], HierarchyIssueRecord)
+    assert isinstance(result['org/repo#303'], HierarchyIssueRecord)
+    assert isinstance(result['org/repo#304'], HierarchyIssueRecord)
+    assert isinstance(result['123'], PullRequestRecord)
+    assert isinstance(result['124'], PullRequestRecord)
     assert isinstance(result["merge_commit_sha_direct"], CommitRecord)
 
-    rec_i = cast(IssueRecord, result[121])
+    rec_i = cast(IssueRecord, result['org/repo#121'])
     assert 0 == rec_i.pull_requests_count()
 
-    rec_hi_1 = cast(HierarchyIssueRecord, result[301])
+    rec_hi_1 = cast(HierarchyIssueRecord, result['org/repo#301'])
     assert 0 == rec_hi_1.pull_requests_count()
     assert 0 == len(rec_hi_1.sub_hierarchy_issues.values())
     assert 2 == len(rec_hi_1.sub_issues.values())
-    assert 0 == rec_hi_1.sub_issues[450].pull_requests_count()
+    assert 0 == rec_hi_1.sub_issues['org/repo#450'].pull_requests_count()
 
-    rec_hi_2 = cast(HierarchyIssueRecord, result[302])
+    rec_hi_2 = cast(HierarchyIssueRecord, result['org/repo#302'])
     assert 1 == rec_hi_2.pull_requests_count()
     assert 0 == len(rec_hi_2.sub_hierarchy_issues.values())
     assert 2 == len(rec_hi_2.sub_issues.values())
-    assert 1 == rec_hi_2.sub_issues[451].pull_requests_count()
+    assert 1 == rec_hi_2.sub_issues['org/repo#451'].pull_requests_count()
 
-    rec_hi_3 = cast(HierarchyIssueRecord, result[303])
+    rec_hi_3 = cast(HierarchyIssueRecord, result['org/repo#303'])
     assert 1 == rec_hi_3.pull_requests_count()
     assert 0 == len(rec_hi_3.sub_hierarchy_issues.values())
     assert 2 == len(rec_hi_3.sub_issues.values())
-    assert 1 == rec_hi_3.sub_issues[452].pull_requests_count()
-    assert "Fixed bug in PR 151" == rec_hi_3.sub_issues[452].get_commit(151, "merge_commit_sha_151").commit.message
+    assert 1 == rec_hi_3.sub_issues['org/repo#452'].pull_requests_count()
+    assert "Fixed bug in PR 151" == rec_hi_3.sub_issues['org/repo#452'].get_commit(151, "merge_commit_sha_151").commit.message
 
-    rec_hi_4 = cast(HierarchyIssueRecord, result[304])
+    rec_hi_4 = cast(HierarchyIssueRecord, result['org/repo#304'])
     assert 1 == rec_hi_4.pull_requests_count()
     assert 1 == len(rec_hi_4.sub_hierarchy_issues.values())
     assert 0 == len(rec_hi_4.sub_issues.values())
     assert 1 == rec_hi_4.pull_requests_count()
-    assert "Fixed bug in PR 152" == rec_hi_4.sub_hierarchy_issues[350].sub_issues[453].get_commit(152, "merge_commit_sha_152").commit.message
+    assert "Fixed bug in PR 152" == rec_hi_4.sub_hierarchy_issues['org/repo#350'].sub_issues['org/repo#453'].get_commit(152, "merge_commit_sha_152").commit.message
 
 
 #   - single issue record (closed)
@@ -190,45 +190,45 @@ def test_generate_isolated_record_types_no_labels_with_type_defined(mocker, mine
     result = factory.generate(mined_data_isolated_record_types_no_labels_with_type_defined)
 
     assert 8 == len(result)
-    assert {121, 301, 302, 303, 304, 123, 124, "merge_commit_sha_direct"}.issubset(result.keys())
+    assert {'org/repo#121', 'org/repo#301', 'org/repo#302', 'org/repo#303', 'org/repo#304', '123', '124', "merge_commit_sha_direct"}.issubset(result.keys())
 
-    assert isinstance(result[121], IssueRecord)
-    assert isinstance(result[301], HierarchyIssueRecord)
-    assert isinstance(result[302], HierarchyIssueRecord)
-    assert isinstance(result[303], HierarchyIssueRecord)
-    assert isinstance(result[304], HierarchyIssueRecord)
-    assert isinstance(result[123], PullRequestRecord)
-    assert isinstance(result[124], PullRequestRecord)
+    assert isinstance(result['org/repo#121'], IssueRecord)
+    assert isinstance(result['org/repo#301'], HierarchyIssueRecord)
+    assert isinstance(result['org/repo#302'], HierarchyIssueRecord)
+    assert isinstance(result['org/repo#303'], HierarchyIssueRecord)
+    assert isinstance(result['org/repo#304'], HierarchyIssueRecord)
+    assert isinstance(result['123'], PullRequestRecord)
+    assert isinstance(result['124'], PullRequestRecord)
     assert isinstance(result["merge_commit_sha_direct"], CommitRecord)
 
-    rec_i = cast(IssueRecord, result[121])
+    rec_i = cast(IssueRecord, result['org/repo#121'])
     assert 0 == rec_i.pull_requests_count()
 
-    rec_hi_1 = cast(HierarchyIssueRecord, result[301])
+    rec_hi_1 = cast(HierarchyIssueRecord, result['org/repo#301'])
     assert 0 == rec_hi_1.pull_requests_count()
     assert 0 == len(rec_hi_1.sub_hierarchy_issues.values())
     assert 2 == len(rec_hi_1.sub_issues.values())
-    assert 0 == rec_hi_1.sub_issues[450].pull_requests_count()
+    assert 0 == rec_hi_1.sub_issues['org/repo#450'].pull_requests_count()
 
-    rec_hi_2 = cast(HierarchyIssueRecord, result[302])
+    rec_hi_2 = cast(HierarchyIssueRecord, result['org/repo#302'])
     assert 1 == rec_hi_2.pull_requests_count()
     assert 0 == len(rec_hi_2.sub_hierarchy_issues.values())
     assert 2 == len(rec_hi_2.sub_issues.values())
-    assert 1 == rec_hi_2.sub_issues[451].pull_requests_count()
+    assert 1 == rec_hi_2.sub_issues['org/repo#451'].pull_requests_count()
 
-    rec_hi_3 = cast(HierarchyIssueRecord, result[303])
+    rec_hi_3 = cast(HierarchyIssueRecord, result['org/repo#303'])
     assert 1 == rec_hi_3.pull_requests_count()
     assert 0 == len(rec_hi_3.sub_hierarchy_issues.values())
     assert 2 == len(rec_hi_3.sub_issues.values())
-    assert 1 == rec_hi_3.sub_issues[452].pull_requests_count()
-    assert "Fixed bug in PR 151" == rec_hi_3.sub_issues[452].get_commit(151, "merge_commit_sha_151").commit.message
+    assert 1 == rec_hi_3.sub_issues['org/repo#452'].pull_requests_count()
+    assert "Fixed bug in PR 151" == rec_hi_3.sub_issues['org/repo#452'].get_commit(151, "merge_commit_sha_151").commit.message
 
-    rec_hi_4 = cast(HierarchyIssueRecord, result[304])
+    rec_hi_4 = cast(HierarchyIssueRecord, result['org/repo#304'])
     assert 1 == rec_hi_4.pull_requests_count()
     assert 1 == len(rec_hi_4.sub_hierarchy_issues.values())
     assert 0 == len(rec_hi_4.sub_issues.values())
     assert 1 == rec_hi_4.pull_requests_count()
-    assert "Fixed bug in PR 152" == rec_hi_4.sub_hierarchy_issues[350].sub_issues[453].get_commit(152, "merge_commit_sha_152").commit.message
+    assert "Fixed bug in PR 152" == rec_hi_4.sub_hierarchy_issues['org/repo#350'].sub_issues['org/repo#453'].get_commit(152, "merge_commit_sha_152").commit.message
 
 
 #   - single issue record (closed)
@@ -252,42 +252,42 @@ def test_generate_isolated_record_types_with_labels_with_type_defined(mocker, mi
     result = factory.generate(mined_data_isolated_record_types_with_labels_with_type_defined)
 
     assert 8 == len(result)
-    assert {121, 301, 302, 303, 304, 123, 124, "merge_commit_sha_direct"}.issubset(result.keys())
+    assert {'org/repo#121', 'org/repo#301', 'org/repo#302', 'org/repo#303', 'org/repo#304', '123', '124', "merge_commit_sha_direct"}.issubset(result.keys())
 
-    assert isinstance(result[121], IssueRecord)
-    assert isinstance(result[301], HierarchyIssueRecord)
-    assert isinstance(result[302], HierarchyIssueRecord)
-    assert isinstance(result[303], HierarchyIssueRecord)
-    assert isinstance(result[304], HierarchyIssueRecord)
-    assert isinstance(result[123], PullRequestRecord)
-    assert isinstance(result[124], PullRequestRecord)
+    assert isinstance(result['org/repo#121'], IssueRecord)
+    assert isinstance(result['org/repo#301'], HierarchyIssueRecord)
+    assert isinstance(result['org/repo#302'], HierarchyIssueRecord)
+    assert isinstance(result['org/repo#303'], HierarchyIssueRecord)
+    assert isinstance(result['org/repo#304'], HierarchyIssueRecord)
+    assert isinstance(result['123'], PullRequestRecord)
+    assert isinstance(result['124'], PullRequestRecord)
     assert isinstance(result["merge_commit_sha_direct"], CommitRecord)
 
-    rec_i = cast(IssueRecord, result[121])
+    rec_i = cast(IssueRecord, result['org/repo#121'])
     assert 0 == rec_i.pull_requests_count()
 
-    rec_hi_1 = cast(HierarchyIssueRecord, result[301])
+    rec_hi_1 = cast(HierarchyIssueRecord, result['org/repo#301'])
     assert 0 == rec_hi_1.pull_requests_count()
     assert 0 == len(rec_hi_1.sub_hierarchy_issues.values())
     assert 2 == len(rec_hi_1.sub_issues.values())
-    assert 0 == rec_hi_1.sub_issues[450].pull_requests_count()
+    assert 0 == rec_hi_1.sub_issues['org/repo#450'].pull_requests_count()
 
-    rec_hi_2 = cast(HierarchyIssueRecord, result[302])
+    rec_hi_2 = cast(HierarchyIssueRecord, result['org/repo#302'])
     assert 1 == rec_hi_2.pull_requests_count()
     assert 0 == len(rec_hi_2.sub_hierarchy_issues.values())
     assert 2 == len(rec_hi_2.sub_issues.values())
-    assert 1 == rec_hi_2.sub_issues[451].pull_requests_count()
+    assert 1 == rec_hi_2.sub_issues['org/repo#451'].pull_requests_count()
 
-    rec_hi_3 = cast(HierarchyIssueRecord, result[303])
+    rec_hi_3 = cast(HierarchyIssueRecord, result['org/repo#303'])
     assert 1 == rec_hi_3.pull_requests_count()
     assert 0 == len(rec_hi_3.sub_hierarchy_issues.values())
     assert 2 == len(rec_hi_3.sub_issues.values())
-    assert 1 == rec_hi_3.sub_issues[452].pull_requests_count()
-    assert "Fixed bug in PR 151" == rec_hi_3.sub_issues[452].get_commit(151, "merge_commit_sha_151").commit.message
+    assert 1 == rec_hi_3.sub_issues['org/repo#452'].pull_requests_count()
+    assert "Fixed bug in PR 151" == rec_hi_3.sub_issues['org/repo#452'].get_commit(151, "merge_commit_sha_151").commit.message
 
-    rec_hi_4 = cast(HierarchyIssueRecord, result[304])
+    rec_hi_4 = cast(HierarchyIssueRecord, result['org/repo#304'])
     assert 1 == rec_hi_4.pull_requests_count()
     assert 1 == len(rec_hi_4.sub_hierarchy_issues.values())
     assert 0 == len(rec_hi_4.sub_issues.values())
     assert 1 == rec_hi_4.pull_requests_count()
-    assert "Fixed bug in PR 152" == rec_hi_4.sub_hierarchy_issues[350].sub_issues[453].get_commit(152, "merge_commit_sha_152").commit.message
+    assert "Fixed bug in PR 152" == rec_hi_4.sub_hierarchy_issues['org/repo#350'].sub_issues['org/repo#453'].get_commit(152, "merge_commit_sha_152").commit.message

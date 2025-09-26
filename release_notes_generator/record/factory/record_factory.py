@@ -32,14 +32,11 @@ class RecordFactory(metaclass=abc.ABCMeta):
     """
 
     @abc.abstractmethod
-    def generate(self, data: MinedData) -> dict[int | str, Record]:
+    def generate(self, data: MinedData) -> dict[str, Record]:
         """
         Generate records for release notes.
         Parameters:
             data (MinedData): The MinedData instance containing repository, issues, pull requests, and commits.
         Returns:
-            dict[int|str, Record]: A dictionary of records where the key is the issue or pull request number.
+            dict[str, Record]: A dictionary of records where the key is 'org_name/repo_name#number'.
         """
-
-    # TODO - do review of children and decide if more useful method could be defined here for inheritation
-    #   fix unit test first to detect breaking changes
