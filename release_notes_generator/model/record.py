@@ -118,6 +118,15 @@ class Record(metaclass=ABCMeta):
         """
 
     @abstractmethod
+    def contains_change_increment(self) -> bool:
+        """
+        Checks if the record contains a change increment.
+
+        Returns:
+            bool: True if the record contains a change increment, False otherwise.
+        """
+
+    @abstractmethod
     def get_labels(self) -> list[str]:
         """
         Gets the labels of the record.

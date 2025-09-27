@@ -39,7 +39,7 @@ class CustomChapters(BaseChapters):
     A class used to represent the custom chapters in the release notes.
     """
 
-    def populate(self, records: dict[int | str, Record]) -> None:
+    def populate(self, records: dict[str, Record]) -> None:
         """
         Populates the custom chapters with records.
 
@@ -68,7 +68,10 @@ class CustomChapters(BaseChapters):
 
                 for record_label in records[record_id].labels:  # iterate all labels of the record (issue, or 1st PR)
                     if record_label in ch.labels and pulls_count > 0:
-                        if not records[record_id].is_present_in_chapters:
+                        if (
+                            not records[record_id].is_present_in_chapters
+                            and records[record_id].contains_change_increment()
+                        ):
                             ch.add_row(record_id, records[record_id].to_chapter_row(True))
                             self.populated_record_numbers_list.append(record_id)
 

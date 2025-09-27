@@ -20,7 +20,6 @@ from github.PullRequest import PullRequest
 from release_notes_generator.utils import pull_request_utils as pru
 from release_notes_generator.utils.pull_request_utils import (
     extract_issue_numbers_from_body,
-    get_issues_for_pr,
 )
 
 
@@ -44,42 +43,42 @@ def _patch_issues_template(monkeypatch, template="Q {number} {owner} {name} {fir
 # extract_issue_numbers_from_body
 
 
-def test_extract_issue_numbers_from_body_no_issues(mocker):
+def test_extract_issue_numbers_from_body_no_issues(mocker, mock_repo):
     mock_pr = mocker.Mock(spec=PullRequest)
     mock_pr.body = "This PR does not fix any issues."
-    issue_numbers = extract_issue_numbers_from_body(mock_pr)
-    assert issue_numbers == set()
+    issue_ids = extract_issue_numbers_from_body(mock_pr, mock_repo)
+    assert issue_ids == set()
 
 
-def test_extract_issue_numbers_from_body_single_issue(mocker):
+def test_extract_issue_numbers_from_body_single_issue(mocker, mock_repo):
     mock_pr = mocker.Mock(spec=PullRequest)
     mock_pr.body = "This PR closes #123."
-    issue_numbers = extract_issue_numbers_from_body(mock_pr)
-    assert issue_numbers == {123}
+    issue_ids = extract_issue_numbers_from_body(mock_pr, mock_repo)
+    assert issue_ids == {'org/repo#123'}
 
 
-def test_extract_issue_numbers_from_body_multiple_issues(mocker):
+def test_extract_issue_numbers_from_body_multiple_issues(mocker, mock_repo):
     mock_pr = mocker.Mock(spec=PullRequest)
     mock_pr.body = "This PR fixes #123 and resolves #456."
-    issue_numbers = extract_issue_numbers_from_body(mock_pr)
-    assert issue_numbers == {123, 456}
+    issue_ids = extract_issue_numbers_from_body(mock_pr, mock_repo)
+    assert issue_ids == {'org/repo#123', 'org/repo#456'}
 
 
-def test_extract_issue_numbers_from_body_mixed_case_keywords(mocker):
+def test_extract_issue_numbers_from_body_mixed_case_keywords(mocker, mock_repo):
     mock_pr = mocker.Mock(spec=PullRequest)
     mock_pr.body = "This PR Fixes #123 and Resolves #456."
-    issue_numbers = extract_issue_numbers_from_body(mock_pr)
-    assert issue_numbers == {123, 456}
+    issue_ids = extract_issue_numbers_from_body(mock_pr, mock_repo)
+    assert issue_ids == {'org/repo#123', 'org/repo#456'}
 
 
-def test_extract_issue_numbers_from_body_no_body(mocker):
+def test_extract_issue_numbers_from_body_no_body(mocker, mock_repo):
     mock_pr = mocker.Mock(spec=PullRequest)
     mock_pr.body = None
-    issue_numbers = extract_issue_numbers_from_body(mock_pr)
-    assert issue_numbers == set()
+    issue_ids = extract_issue_numbers_from_body(mock_pr, mock_repo)
+    assert issue_ids == set()
 
 
-def test_extract_issue_numbers_from_body_complex_text_with_wrong_syntax(mocker):
+def test_extract_issue_numbers_from_body_complex_text_with_wrong_syntax(mocker, mock_repo):
     mock_pr = mocker.Mock(spec=PullRequest)
     mock_pr.body = """
     This PR does a lot:
@@ -87,8 +86,8 @@ def test_extract_issue_numbers_from_body_complex_text_with_wrong_syntax(mocker):
     - fixes issue #456
     - resolves the bug in #789
     """
-    issue_numbers = extract_issue_numbers_from_body(mock_pr)
-    assert issue_numbers == {123}
+    issue_ids = extract_issue_numbers_from_body(mock_pr, mock_repo)
+    assert issue_ids == {'org/repo#123'}
 
 
 # get_issues_for_pr
@@ -125,7 +124,7 @@ def test_get_issues_for_pr_success(monkeypatch):
     monkeypatch.setattr(pru.requests, "post", fake_post)
 
     result = pru.get_issues_for_pr(123)
-    assert result == {11, 22}
+    assert result == {'OWN/REPO#11', 'OWN/REPO#22'}
     assert captured["url"] == "https://api.github.com/graphql"
     # Query string correctly formatted
     assert captured["json"]["query"] == "Q 123 OWN REPO 10"
@@ -210,7 +209,7 @@ def test_get_issues_for_pr_caching(monkeypatch):
 
     first = pru.get_issues_for_pr(900)
     second = pru.get_issues_for_pr(900)  # should use cache
-    assert first == {9} and second == {9}
+    assert first == {'OWN/REPO#9'} and second == {'OWN/REPO#9'}
     assert calls["count"] == 1  # only one network call
 
 def test_get_issues_for_pr_different_numbers_not_cached(monkeypatch):
@@ -242,6 +241,6 @@ def test_get_issues_for_pr_different_numbers_not_cached(monkeypatch):
 
     r1 = pru.get_issues_for_pr(1)
     r2 = pru.get_issues_for_pr(2)
-    assert r1 == {1}
-    assert r2 == {2}
+    assert r1 == {'OWN/REPO#1'}
+    assert r2 == {'OWN/REPO#2'}
     assert calls["nums"] == [1, 2]

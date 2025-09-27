@@ -65,6 +65,9 @@ class CommitRecord(Record):
 
         return row
 
+    def contains_change_increment(self) -> bool:
+        return True
+
     def get_rls_notes(self, line_marks: Optional[list[str]] = None) -> str:
         # Hint: direct commits does not support release notes
         return ""
