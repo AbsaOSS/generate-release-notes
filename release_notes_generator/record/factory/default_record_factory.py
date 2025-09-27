@@ -201,5 +201,5 @@ class DefaultRecordFactory(RecordFactory):
         if issue_labels is None:
             issue_labels = [label.name for label in issue.get_labels()]
         skip_record = any(item in issue_labels for item in ActionInputs.get_skip_release_notes_labels())
-        self._records[iid := self.get_id(issue)] = IssueRecord(issue=issue, skip=skip_record)
+        self._records[iid := self.get_id(issue)] = IssueRecord(issue=issue, skip=skip_record, issue_labels=issue_labels)
         logger.debug("Created record for non hierarchy issue '%s': %s", iid, issue.title)

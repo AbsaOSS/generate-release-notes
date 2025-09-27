@@ -78,7 +78,7 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
         registered_before = -1
         while registered_before < len(self.__registered_issues):
             registered_before = len(self.__registered_issues)
-            logger.debug(f"Looking for hierarchical issue among sub-issues...")
+            logger.debug("Looking for hierarchical issue among sub-issues...")
 
             issues_expansion = []
             for issue in data.issues:
@@ -86,7 +86,7 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
                 if iid in self.__registered_issues:
                     continue
 
-                if iid in self.__sub_issue_parents.keys() and iid not in self.__local_sub_issues_checked:
+                if iid in self.__sub_issue_parents and iid not in self.__local_sub_issues_checked:
                     issues_expansion.extend(self._create_issue_record_using_sub_issues_existence(issue, data))
                     self.__local_sub_issues_checked.append(iid)
 
@@ -181,7 +181,7 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
     def _create_issue_record_using_sub_issues_existence(self, issue: Issue, data: MinedData) -> list[SubIssue]:
         # use presence of sub-issues as a hint for hierarchy issue or non hierarchy issue
         sub_issues = list(issue.get_sub_issues())
-        logger.debug(f"Found {len(sub_issues)} sub-issues for {issue.number}")
+        logger.debug("Found %d sub-issues for %d", len(sub_issues), issue.number)
         new_local_issues: list[SubIssue] = []
 
         if len(sub_issues) > 0:
@@ -205,7 +205,12 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
 
                 else:
                     use_issue = False
-                    if data.since and si.state == IssueRecord.ISSUE_STATE_CLOSED and si.closed_at and data.since > si.closed_at:
+                    if (
+                        data.since
+                        and si.state == IssueRecord.ISSUE_STATE_CLOSED
+                        and si.closed_at
+                        and data.since > si.closed_at
+                    ):
                         logger.debug("Detected sub-issue %d closed in previous release.", si.number)
                         if len(list(si.get_sub_issues())) > 0:
                             use_issue = True
@@ -256,7 +261,7 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
             issue_labels = self._get_issue_labels_mix_with_type(i)
         skip_record = any(item in issue_labels for item in ActionInputs.get_skip_release_notes_labels())
 
-        self._records[iid] = HierarchyIssueRecord(issue=i, skip=skip_record)
+        self._records[iid] = HierarchyIssueRecord(issue=i, skip=skip_record, issue_labels=issue_labels)
         self.__registered_issues.add(iid)
         logger.debug("Created record for hierarchy issue %s: %s", iid, i.title)
 
