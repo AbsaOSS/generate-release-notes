@@ -426,7 +426,7 @@ RELEASE_NOTES_DATA_HIERARCHY_WITH_LABELS_WITH_TYPE = """### Epics
 - Epic: _HI304 open_ #304
   - _Release Notes_:
     - Hierarchy level release note
-  - feature: _HI350 open_ #350
+  - Feature: _HI350 open_ #350
     - _Release Notes_:
       - Sub-hierarchy level release note
     - #453 _SI453 closed_ in #152
@@ -480,7 +480,7 @@ All closed PRs are linked to issues.
 - 🔔 Epic: _HI304 open_ #304
   - _Release Notes_:
     - Hierarchy level release note
-  - 🔔 feature: _HI350 open_ #350
+  - 🔔 Feature: _HI350 open_ #350
     - _Release Notes_:
       - Sub-hierarchy level release note
     - 🔔 #453 _SI453 closed_ in #152

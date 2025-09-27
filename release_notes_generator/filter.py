@@ -107,26 +107,26 @@ class FilterByRelease(Filter):
             md.pull_requests = deepcopy(data.pull_requests)
             md.commits = deepcopy(data.commits)
 
-        print("debug filtering")
-        print(f"XXX md issues before {len(md.issues)}")
-
-        for issue in data.issues:
-            # if issue.number not in [3689,3688,3687,3686,3674,3620,3580,2960,3606,248,198,199,200,201,202,203]:
-            if issue.number not in [3689,3688,3687,3686,3674,3620,3580,2960,3606]:
-                if issue in md.issues:
-                    md.issues.remove(issue)
-
-        print(f"XXX md issues after {len(md.issues)}")
-
-        md.pull_requests = []
-        for pull in data.pull_requests:
-            if pull.number == 3616:
-                md.pull_requests.append(pull)
-
-        # for commit in data.commits:
-        #     if commit.sha in []:
-        #         md.commits.remove(commit)
-        md.commits = []
+        # print("debug filtering")
+        # print(f"XXX md issues before {len(md.issues)}")
+        #
+        # for issue in data.issues:
+        #     # if issue.number not in [3689,3688,3687,3686,3674,3620,3580,2960,3606,248,198,199,200,201,202,203]:
+        #     if issue.number not in [3689,3688,3687,3686,3674,3620,3580,2960,3606]:
+        #         if issue in md.issues:
+        #             md.issues.remove(issue)
+        #
+        # print(f"XXX md issues after {len(md.issues)}")
+        #
+        # md.pull_requests = []
+        # for pull in data.pull_requests:
+        #     if pull.number == 3616:
+        #         md.pull_requests.append(pull)
+        #
+        # # for commit in data.commits:
+        # #     if commit.sha in []:
+        # #         md.commits.remove(commit)
+        # md.commits = []
 
         return md
 
