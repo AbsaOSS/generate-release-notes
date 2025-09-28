@@ -24,6 +24,7 @@ import logging
 from typing import Optional
 
 from github import Github
+from github.Repository import Repository
 
 from release_notes_generator.filter import FilterByRelease
 from release_notes_generator.miner import DataMiner
@@ -97,9 +98,10 @@ class ReleaseNotesGenerator:
 
         assert data_filtered_by_release.repository is not None, "Repository must not be None"
 
-        rls_notes_records: dict[str, Record] = self._get_record_factory(github=self._github_instance).generate(
-            data=data_filtered_by_release
-        )
+        rls_notes_records: dict[str, Record] = self._get_record_factory(
+            github=self._github_instance,
+            home_repository=data_filtered_by_release.repository,
+        ).generate(data=data_filtered_by_release)
 
         return ReleaseNotesBuilder(
             records=rls_notes_records,
@@ -107,16 +109,20 @@ class ReleaseNotesGenerator:
             changelog_url=changelog_url,
         ).build()
 
-    def _get_record_factory(self, github: Github) -> DefaultRecordFactory:
+    def _get_record_factory(self, github: Github, home_repository: Repository) -> DefaultRecordFactory:
         """
         Determines and returns the appropriate RecordFactory instance based on the action inputs.
+
+        Parameters:
+            github (Github): An instance of the Github class.
+            home_repository (Repository): The home repository for which records are to be generated.
 
         Returns:
             DefaultRecordFactory: An instance of either IssueHierarchyRecordFactory or RecordFactory.
         """
         if ActionInputs.get_hierarchy():
             logger.info("Using IssueHierarchyRecordFactory based on action inputs.")
-            return IssueHierarchyRecordFactory(github)
+            return IssueHierarchyRecordFactory(github, home_repository)
 
         logger.info("Using default RecordFactory based on action inputs.")
-        return DefaultRecordFactory(github)
+        return DefaultRecordFactory(github, home_repository)

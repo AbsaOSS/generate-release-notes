@@ -108,5 +108,9 @@ class BaseChapters(ABC):
         """
         Populates the chapters with records.
 
-        @param records: A dictionary of records where the key is an integer and the value is a Record object.
+        Parameters:
+            records (dict[str, Record]): A dictionary of records to populate the chapters with.
+
+        Returns:
+            None
         """

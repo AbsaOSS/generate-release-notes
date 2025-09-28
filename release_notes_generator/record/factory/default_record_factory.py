@@ -26,6 +26,7 @@ from github import Github
 from github.Issue import Issue
 from github.PullRequest import PullRequest
 from github.Commit import Commit
+from github.Repository import Repository
 
 from release_notes_generator.model.commit_record import CommitRecord
 from release_notes_generator.model.issue_record import IssueRecord
@@ -47,9 +48,10 @@ class DefaultRecordFactory(RecordFactory):
     A class used to generate records for release notes.
     """
 
-    def __init__(self, github: Github) -> None:
+    def __init__(self, github: Github, home_repository: Repository) -> None:
         rate_limiter = GithubRateLimiter(github)
         self._safe_call = safe_call_decorator(rate_limiter)
+        self._home_repository = home_repository
 
         self._records: dict[str, Record] = {}
 
@@ -78,11 +80,11 @@ class DefaultRecordFactory(RecordFactory):
 
     @get_id.register
     def _(self, pull_request: PullRequest) -> str:
-        return f"{pull_request.number}"
+        return f"{self._home_repository.full_name.lower()}#{pull_request.number}"
 
     @get_id.register
     def _(self, commit: Commit) -> str:
-        return commit.sha
+        return f"{commit.repository.full_name.lower()}@{commit.sha}"
 
     def generate(self, data: MinedData) -> dict[str, Record]:
         """
@@ -93,10 +95,10 @@ class DefaultRecordFactory(RecordFactory):
             dict[str, Record]: A dictionary of records where the key is the issue or pull request number.
         """
 
-        def register_pull_request(pull: PullRequest, skip_rec: bool) -> None:
-            detected_issues = extract_issue_numbers_from_body(pull, repository=data.repository)
+        def register_pull_request(pr: PullRequest, skip_rec: bool) -> None:
+            detected_issues = extract_issue_numbers_from_body(pr, repository=data.repository)
             logger.debug("Detected issues - from body: %s", detected_issues)
-            linked = self._safe_call(get_issues_for_pr)(pull_number=pull.number)
+            linked = self._safe_call(get_issues_for_pr)(pull_number=pr.number)
             if linked:
                 detected_issues.update(linked)
             logger.debug("Detected issues - merged: %s", detected_issues)
@@ -107,7 +109,7 @@ class DefaultRecordFactory(RecordFactory):
                     logger.warning(
                         "Detected PR %d linked to issue %s which is not in the list of received issues. "
                         "Fetching ...",
-                        pull.number,
+                        pr.number,
                         parent_issue_id,
                     )
                     # dev note: here we expect that PR links to an issue in the same repository !!!
@@ -119,13 +121,13 @@ class DefaultRecordFactory(RecordFactory):
                         self._create_record_for_issue(parent_issue)
 
                 if parent_issue_id in self._records:
-                    cast(IssueRecord, self._records[parent_issue_id]).register_pull_request(pull)
-                    logger.debug("Registering PR %d: %s to Issue %s", pull.number, pull.title, parent_issue_id)
+                    cast(IssueRecord, self._records[parent_issue_id]).register_pull_request(pr)
+                    logger.debug("Registering PR %d: %s to Issue %s", pr.number, pr.title, parent_issue_id)
                 else:
                     logger.debug(
                         "Registering stand-alone PR %d: %s as mentioned Issue %s not found.",
-                        pull.number,
-                        pull.title,
+                        pr.number,
+                        pr.title,
                         parent_issue_id,
                     )
 

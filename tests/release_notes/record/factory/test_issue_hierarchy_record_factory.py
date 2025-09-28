@@ -31,7 +31,7 @@ from tests.conftest import mock_safe_call_decorator
 
 def test_generate_no_input_data(mocker, mock_repo):
     mock_github_client = mocker.Mock(spec=Github)
-    factory = IssueHierarchyRecordFactory(github=mock_github_client)
+    factory = IssueHierarchyRecordFactory(github=mock_github_client, home_repository=mock_repo)
     data = MinedData(mock_repo)
 
     result = factory.generate(data)
@@ -45,7 +45,8 @@ def test_generate_no_input_data(mocker, mock_repo):
 #   - single hierarchy issue record - one sub hierarchy issues - two sub-issues with PRs - with commits
 #   - single pull request record (closed, merged)
 #   - single direct commit record
-def test_generate_isolated_record_types_no_labels_no_type_defined(mocker, mined_data_isolated_record_types_no_labels_no_type_defined):
+def test_generate_isolated_record_types_no_labels_no_type_defined(mocker, mock_repo,
+                                                                  mined_data_isolated_record_types_no_labels_no_type_defined):
     mocker.patch("release_notes_generator.record.factory.default_record_factory.safe_call_decorator", side_effect=mock_safe_call_decorator)
     mock_github_client = mocker.Mock(spec=Github)
 
@@ -54,7 +55,7 @@ def test_generate_isolated_record_types_no_labels_no_type_defined(mocker, mined_
     mock_rate_limit.rate.reset.timestamp.return_value = time.time() + 3600
     mock_github_client.get_rate_limit.return_value = mock_rate_limit
 
-    factory = IssueHierarchyRecordFactory(github=mock_github_client)
+    factory = IssueHierarchyRecordFactory(github=mock_github_client, home_repository=mock_repo)
 
     result = factory.generate(mined_data_isolated_record_types_no_labels_no_type_defined)
 
@@ -114,7 +115,8 @@ def test_generate_isolated_record_types_no_labels_no_type_defined(mocker, mined_
 #   - single hierarchy issue record - one sub hierarchy issues - two sub-issues with PRs - with commits
 #   - single pull request record (closed, merged)
 #   - single direct commit record
-def test_generate_isolated_record_types_with_labels_no_type_defined(mocker, mined_data_isolated_record_types_with_labels_no_type_defined):
+def test_generate_isolated_record_types_with_labels_no_type_defined(mocker, mock_repo,
+                                                                    mined_data_isolated_record_types_with_labels_no_type_defined):
     mocker.patch("release_notes_generator.record.factory.default_record_factory.safe_call_decorator", side_effect=mock_safe_call_decorator)
     mock_github_client = mocker.Mock(spec=Github)
 
@@ -123,7 +125,7 @@ def test_generate_isolated_record_types_with_labels_no_type_defined(mocker, mine
     mock_rate_limit.rate.reset.timestamp.return_value = time.time() + 3600
     mock_github_client.get_rate_limit.return_value = mock_rate_limit
 
-    factory = IssueHierarchyRecordFactory(github=mock_github_client)
+    factory = IssueHierarchyRecordFactory(github=mock_github_client, home_repository=mock_repo)
 
     result = factory.generate(mined_data_isolated_record_types_with_labels_no_type_defined)
 
@@ -176,7 +178,8 @@ def test_generate_isolated_record_types_with_labels_no_type_defined(mocker, mine
 #   - single hierarchy issue record - one sub hierarchy issues - two sub-issues with PRs - with commits
 #   - single pull request record (closed, merged)
 #   - single direct commit record
-def test_generate_isolated_record_types_no_labels_with_type_defined(mocker, mined_data_isolated_record_types_no_labels_with_type_defined):
+def test_generate_isolated_record_types_no_labels_with_type_defined(mocker, mock_repo,
+                                                                    mined_data_isolated_record_types_no_labels_with_type_defined):
     mocker.patch("release_notes_generator.record.factory.default_record_factory.safe_call_decorator", side_effect=mock_safe_call_decorator)
     mock_github_client = mocker.Mock(spec=Github)
 
@@ -185,7 +188,7 @@ def test_generate_isolated_record_types_no_labels_with_type_defined(mocker, mine
     mock_rate_limit.rate.reset.timestamp.return_value = time.time() + 3600
     mock_github_client.get_rate_limit.return_value = mock_rate_limit
 
-    factory = IssueHierarchyRecordFactory(github=mock_github_client)
+    factory = IssueHierarchyRecordFactory(github=mock_github_client, home_repository=mock_repo)
 
     result = factory.generate(mined_data_isolated_record_types_no_labels_with_type_defined)
 
@@ -238,7 +241,8 @@ def test_generate_isolated_record_types_no_labels_with_type_defined(mocker, mine
 #   - single hierarchy issue record - one sub hierarchy issues - two sub-issues with PRs - with commits
 #   - single pull request record (closed, merged)
 #   - single direct commit record
-def test_generate_isolated_record_types_with_labels_with_type_defined(mocker, mined_data_isolated_record_types_with_labels_with_type_defined):
+def test_generate_isolated_record_types_with_labels_with_type_defined(mocker, mock_repo,
+                                                                      mined_data_isolated_record_types_with_labels_with_type_defined):
     mocker.patch("release_notes_generator.record.factory.default_record_factory.safe_call_decorator", side_effect=mock_safe_call_decorator)
     mock_github_client = mocker.Mock(spec=Github)
 
@@ -247,7 +251,7 @@ def test_generate_isolated_record_types_with_labels_with_type_defined(mocker, mi
     mock_rate_limit.rate.reset.timestamp.return_value = time.time() + 3600
     mock_github_client.get_rate_limit.return_value = mock_rate_limit
 
-    factory = IssueHierarchyRecordFactory(github=mock_github_client)
+    factory = IssueHierarchyRecordFactory(github=mock_github_client, home_repository=mock_repo)
 
     result = factory.generate(mined_data_isolated_record_types_with_labels_with_type_defined)
 

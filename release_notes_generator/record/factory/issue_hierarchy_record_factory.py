@@ -24,6 +24,7 @@ from typing import cast, Optional
 from github import Github
 from github.Issue import Issue, SubIssue
 from github.PullRequest import PullRequest
+from github.Repository import Repository
 
 from release_notes_generator.model.commit_record import CommitRecord
 from release_notes_generator.model.hierarchy_issue_record import HierarchyIssueRecord
@@ -45,8 +46,8 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
     A class used to generate records for release notes.
     """
 
-    def __init__(self, github: Github) -> None:
-        super().__init__(github)
+    def __init__(self, github: Github, home_repository: Repository) -> None:
+        super().__init__(github, home_repository)
 
         self.__registered_issues: set[str] = set()
         self.__sub_issue_parents: dict[str, str] = {}
