@@ -20,6 +20,7 @@ import copy
 import pytest
 
 from github import Github, IssueType
+from github.Commit import Commit
 from github.GitRelease import GitRelease
 from github.Issue import Issue
 from github.PullRequest import PullRequest
@@ -597,10 +598,11 @@ def mock_pull_no_rls_notes(mocker):
 # Fixtures for GitHub Commit(s)
 @pytest.fixture
 def mock_commit(mocker):
-    commit = mocker.Mock()
+    commit = mocker.Mock(spec=Commit)
     commit.author.login = "author"
     commit.sha = "merge_commit_sha"
     commit.commit.message = "Fixed bug"
+    commit.repository.full_name = "org/repo"
     return commit
 
 

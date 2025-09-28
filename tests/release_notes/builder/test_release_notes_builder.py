@@ -1586,7 +1586,8 @@ def test_build_closed_pr_service_chapter_without_issue_with_skip_label_on_pr(
 
 def test_build_hierarchy_rls_notes_no_labels_no_type(
         mocker, mock_repo,
-        custom_chapters_not_print_empty_chapters, mined_data_isolated_record_types_no_labels_no_type_defined
+        custom_chapters_not_print_empty_chapters,
+        mined_data_isolated_record_types_no_labels_no_type_defined
 ):
     expected_release_notes = RELEASE_NOTES_DATA_HIERARCHY_NO_LABELS_NO_TYPE
 

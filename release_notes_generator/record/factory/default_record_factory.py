@@ -96,6 +96,9 @@ class DefaultRecordFactory(RecordFactory):
         """
 
         def register_pull_request(pr: PullRequest, skip_rec: bool) -> None:
+            pid = self.get_id(pr)
+            pull_labels = [label.name for label in pr.get_labels()]
+            attached_any = False
             detected_issues = extract_issue_numbers_from_body(pr, repository=data.repository)
             logger.debug("Detected issues - from body: %s", detected_issues)
             linked = self._safe_call(get_issues_for_pr)(pull_number=pr.number)
@@ -123,6 +126,7 @@ class DefaultRecordFactory(RecordFactory):
                 if parent_issue_id in self._records:
                     cast(IssueRecord, self._records[parent_issue_id]).register_pull_request(pr)
                     logger.debug("Registering PR %d: %s to Issue %s", pr.number, pr.title, parent_issue_id)
+                    attached_any = True
                 else:
                     logger.debug(
                         "Registering stand-alone PR %d: %s as mentioned Issue %s not found.",
@@ -130,6 +134,10 @@ class DefaultRecordFactory(RecordFactory):
                         pr.title,
                         parent_issue_id,
                     )
+
+            if not attached_any:
+                self._records[pid] = PullRequestRecord(pr, pull_labels, skip=skip_rec)
+                logger.debug("Created stand-alone PR record %s: %s (fallback)", pid, pr.title)
 
         logger.debug("Registering issues to records...")
         for issue in data.issues:
@@ -184,7 +192,7 @@ class DefaultRecordFactory(RecordFactory):
                     rec_pr.register_commit(commit)
                     return True
 
-        self._records[commit.sha] = CommitRecord(commit=commit)
+        self._records[self.get_id(commit)] = CommitRecord(commit=commit)
         logger.debug("Created record for direct commit %s: %s", commit.sha, commit.commit.message)
         return False
 

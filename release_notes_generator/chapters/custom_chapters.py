@@ -79,8 +79,9 @@ class CustomChapters(BaseChapters):
                                 DuplicityScopeEnum.CUSTOM,
                                 DuplicityScopeEnum.BOTH,
                             )
-                            if (allow_dup or not records[record_id].is_present_in_chapters) and \
-                                records[record_id].contains_change_increment():
+                            if (allow_dup or not records[record_id].is_present_in_chapters) and records[
+                                record_id
+                            ].contains_change_increment():
                                 ch.add_row(record_id, records[record_id].to_chapter_row(True))
                                 self.populated_record_numbers_list.append(record_id)
 

@@ -119,7 +119,7 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
         logger.debug("Registering direct commits to records...")
         for commit in data.commits:
             if commit.sha not in self.__registered_commits:
-                self._records[commit.sha] = CommitRecord(commit)
+                self._records[self.get_id(commit)] = CommitRecord(commit)
 
         # dev note: now we have all PRs and commits registered to issues or as stand-alone records
         #   let build hierarchy
@@ -178,8 +178,9 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
             pr_rec = PullRequestRecord(pull, pull_labels, skip_record)
             for c in related_commits:  # register commits to the PR record
                 pr_rec.register_commit(c)
-            self._records[str(pull.number)] = pr_rec
-            logger.debug("Created record for PR %d: %s", pull.number, pull.title)
+            pid = self.get_id(pull)
+            self._records[pid] = pr_rec
+            logger.debug("Created record for PR %d: %s", pid, pull.title)
 
     def _create_issue_record_using_sub_issues_existence(self, issue: Issue, data: MinedData) -> list[SubIssue]:
         # use presence of sub-issues as a hint for hierarchy issue or non hierarchy issue
