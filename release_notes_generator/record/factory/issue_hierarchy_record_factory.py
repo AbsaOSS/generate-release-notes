@@ -156,6 +156,8 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
                         issue_id,
                     )
                     # dev note: here we expect that PR links to an issue in the same repository !!!
+                    # TODO - handle cross-repo issue linking - the split[0] can contain different repo name
+                    #   this problem is present on multiple places
                     issue_number = int(issue_id.split("#")[1])
                     parent_issue = self._safe_call(data.repository.get_issue)(issue_number) if data.repository else None
                     if parent_issue is not None:
