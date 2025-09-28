@@ -92,15 +92,14 @@ class ReleaseNotesGenerator:
 
         changelog_url: str = get_change_url(
             tag_name=ActionInputs.get_tag_name(),
-            repository=data_filtered_by_release.repository,
+            repository=data_filtered_by_release.home_repository,
             git_release=data_filtered_by_release.release,
         )
 
-        assert data_filtered_by_release.repository is not None, "Repository must not be None"
+        assert data_filtered_by_release.home_repository is not None, "Repository must not be None"
 
         rls_notes_records: dict[str, Record] = self._get_record_factory(
-            github=self._github_instance,
-            home_repository=data_filtered_by_release.repository,
+            github=self._github_instance, home_repository=data_filtered_by_release.home_repository, miner=miner
         ).generate(data=data_filtered_by_release)
 
         return ReleaseNotesBuilder(
@@ -109,12 +108,13 @@ class ReleaseNotesGenerator:
             changelog_url=changelog_url,
         ).build()
 
-    def _get_record_factory(self, github: Github, home_repository: Repository) -> DefaultRecordFactory:
+    @staticmethod
+    def _get_record_factory(github: Github, home_repository: Repository) -> DefaultRecordFactory:
         """
         Determines and returns the appropriate RecordFactory instance based on the action inputs.
 
         Parameters:
-            github (Github): An instance of the Github class.
+            github (GitHub): An instance of the GitHub class.
             home_repository (Repository): The home repository for which records are to be generated.
 
         Returns:

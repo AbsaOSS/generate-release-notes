@@ -49,6 +49,7 @@ class DefaultRecordFactory(RecordFactory):
     """
 
     def __init__(self, github: Github, home_repository: Repository) -> None:
+        self._github = github
         rate_limiter = GithubRateLimiter(github)
         self._safe_call = safe_call_decorator(rate_limiter)
         self._home_repository = home_repository
@@ -84,7 +85,20 @@ class DefaultRecordFactory(RecordFactory):
 
     @get_id.register
     def _(self, commit: Commit) -> str:
-        return f"{commit.repository.full_name}@{commit.sha}"
+        return f"{commit.sha}"
+
+    def get_repository(self, full_name: str) -> Optional[Repository]:
+        """
+        Retrieves the specified GitHub repository.
+
+        Returns:
+            Optional[Repository]: The GitHub repository if found, None otherwise.
+        """
+        repo: Repository = self._safe_call(self._github.get_repo)(full_name)
+        if repo is None:
+            logger.error("Repository not found: %s", full_name)
+            return None
+        return repo
 
     def generate(self, data: MinedData) -> dict[str, Record]:
         """
@@ -96,10 +110,10 @@ class DefaultRecordFactory(RecordFactory):
         """
 
         def register_pull_request(pr: PullRequest, skip_rec: bool) -> None:
-            pid = self.get_id(pr)
-            pull_labels = [label.name for label in pr.get_labels()]
+            l_pid = self.get_id(pr)
+            l_pull_labels = [label.name for label in pr.get_labels()]
             attached_any = False
-            detected_issues = extract_issue_numbers_from_body(pr, repository=data.repository)
+            detected_issues = extract_issue_numbers_from_body(pr, repository=data.home_repository)
             logger.debug("Detected issues - from body: %s", detected_issues)
             linked = self._safe_call(get_issues_for_pr)(pull_number=pr.number)
             if linked:
@@ -116,9 +130,12 @@ class DefaultRecordFactory(RecordFactory):
                         parent_issue_id,
                     )
                     # dev note: here we expect that PR links to an issue in the same repository !!!
-                    parent_issue_number = int(parent_issue_id.split("#")[1])
+                    pi_repo_name, pi_number = parent_issue_id.split("#")
+                    parent_repository = data.get_repository(pi_repo_name)
                     parent_issue = (
-                        self._safe_call(data.repository.get_issue)(parent_issue_number) if data.repository else None
+                        self._safe_call(parent_repository.get_issue)(pi_number)
+                        if parent_repository is not None
+                        else None
                     )
                     if parent_issue is not None:
                         self._create_record_for_issue(parent_issue)
@@ -136,8 +153,8 @@ class DefaultRecordFactory(RecordFactory):
                     )
 
             if not attached_any:
-                self._records[pid] = PullRequestRecord(pr, pull_labels, skip=skip_rec)
-                logger.debug("Created stand-alone PR record %s: %s (fallback)", pid, pr.title)
+                self._records[l_pid] = PullRequestRecord(pr, l_pull_labels, skip=skip_rec)
+                logger.debug("Created stand-alone PR record %s: %s (fallback)", l_pid, pr.title)
 
         logger.debug("Registering issues to records...")
         for issue in data.issues:
@@ -150,7 +167,7 @@ class DefaultRecordFactory(RecordFactory):
             skip_record: bool = any(item in pull_labels for item in ActionInputs.get_skip_release_notes_labels())
 
             linked_from_api = self._safe_call(get_issues_for_pr)(pull_number=pull.number) or set()
-            linked_from_body = extract_issue_numbers_from_body(pull, data.repository)
+            linked_from_body = extract_issue_numbers_from_body(pull, data.home_repository)
             if not linked_from_api and not linked_from_body:
                 self._records[pid] = PullRequestRecord(pull, pull_labels, skip=skip_record)
                 logger.debug("Created record for PR %s: %s", pid, pull.title)

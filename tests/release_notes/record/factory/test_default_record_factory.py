@@ -241,12 +241,12 @@ def test_generate_with_issues_and_pulls_and_commits_with_skip_labels(mocker, moc
 
     assert 'org/repo#1' in records
     assert 'org/repo#2' in records
-    assert 'org/repo@ghi789' in records
+    assert 'ghi789' in records
 
     # Verify the record creation
     assert isinstance(records['org/repo#1'], IssueRecord)
     assert isinstance(records['org/repo#2'], IssueRecord)
-    assert isinstance(records['org/repo@ghi789'], CommitRecord)
+    assert isinstance(records['ghi789'], CommitRecord)
 
     assert records['org/repo#1'].skip      # skip label applied to issue as the record was created from issue
     assert not records['org/repo#2'].skip  # skip label is present only on inner PR but record create from issues (leading)
@@ -264,7 +264,7 @@ def test_generate_with_issues_and_pulls_and_commits_with_skip_labels(mocker, moc
     # Verify that commits are registered
     assert commit1 == rec_i1.get_commit(101, 'abc123')
     assert commit2 == rec_i2.get_commit(102, 'def456')
-    assert commit3 == cast(CommitRecord, records['org/repo@ghi789']).commit
+    assert commit3 == cast(CommitRecord, records['ghi789']).commit
 
 
 def test_generate_with_no_commits(mocker, mock_repo):
@@ -352,7 +352,7 @@ def test_generate_with_no_issues(mocker, mock_repo, request):
     pr1, pr2, commit1, commit2 = setup_no_issues_pulls_commits(mocker)
     data.pull_requests = [pr1, pr2]
     data.commits = [commit1, commit2]
-    data.repository = request.getfixturevalue("mock_repo")
+    data.home_repository.return_value = request.getfixturevalue("mock_repo")
     data.issues = []  # No issues
 
     records = DefaultRecordFactory(mock_github_client, mock_repo).generate(data)
@@ -394,7 +394,7 @@ def test_generate_with_no_issues_skip_labels(mocker, mock_repo, request):
     data.pull_requests = [pr1, pr2]
     data.commits = [commit1, commit2]
 
-    data.repository = request.getfixturevalue("mock_repo")
+    data.home_repository.return_value = request.getfixturevalue("mock_repo")
     data.issues = []  # No issues
 
     records = DefaultRecordFactory(mock_github_client, mock_repo).generate(data)

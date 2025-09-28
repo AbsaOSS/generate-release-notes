@@ -23,14 +23,14 @@ class SubIssueRecord(IssueRecord):
 
     # properties - override IssueRecord properties
 
-    @property
-    def issue(self) -> SubIssue:
-        """
-        Gets the issue associated with the record.
-        Returns: The issue associated with the record.
-        """
-        if not isinstance(self._issue, SubIssue):
-            raise TypeError("Expected SubIssue")
-        return self._issue
+    # @property
+    # def issue(self) -> SubIssue:
+    #     """
+    #     Gets the issue associated with the record.
+    #     Returns: The issue associated with the record.
+    #     """
+    #     if not isinstance(self._issue, SubIssue):
+    #         raise TypeError("Expected SubIssue")
+    #     return self._issue
 
     # properties - specific to IssueRecord

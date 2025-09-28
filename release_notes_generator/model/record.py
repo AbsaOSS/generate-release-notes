@@ -36,6 +36,7 @@ class Record(metaclass=ABCMeta):
     def __init__(self, labels: Optional[list[str]] = None, skip: bool = False):
         self._present_in_chapters = 0
         self._skip = skip
+        self._is_cross_repo: bool = False
         self._is_release_note_detected: Optional[bool] = None
         self._labels: Optional[list[str]] = labels
         self._rls_notes: Optional[str] = None  # single annotation here
@@ -49,6 +50,24 @@ class Record(metaclass=ABCMeta):
             bool: True if the record is present in at least one chapter, False otherwise.
         """
         return self._present_in_chapters > 0
+
+    @property
+    def is_cross_repo(self) -> bool:
+        """
+        Checks if the record is a cross-repo record.
+        Returns:
+            bool: True if the record is a cross-repo record, False otherwise.
+        """
+        return self._is_cross_repo
+
+    @is_cross_repo.setter
+    def is_cross_repo(self, value: bool) -> None:
+        """
+        Sets the cross-repo status of the record.
+        Parameters:
+            value (bool): The cross-repo status to set.
+        """
+        self._is_cross_repo = value
 
     @property
     def skip(self) -> bool:
