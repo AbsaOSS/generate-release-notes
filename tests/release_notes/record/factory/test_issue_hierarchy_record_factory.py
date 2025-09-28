@@ -60,15 +60,15 @@ def test_generate_isolated_record_types_no_labels_no_type_defined(mocker, mock_r
     result = factory.generate(mined_data_isolated_record_types_no_labels_no_type_defined)
 
     assert 8 == len(result)
-    assert {'org/repo#121', 'org/repo#301', 'org/repo#302', 'org/repo#303', 'org/repo#304', '123', '124', "org/repo@merge_commit_sha_direct"}.issubset(result.keys())
+    assert {'org/repo#121', 'org/repo#301', 'org/repo#302', 'org/repo#303', 'org/repo#304', 'org/repo#123', 'org/repo#124', "org/repo@merge_commit_sha_direct"}.issubset(result.keys())
 
     assert isinstance(result['org/repo#121'], IssueRecord)
     assert isinstance(result['org/repo#301'], HierarchyIssueRecord)
     assert isinstance(result['org/repo#302'], HierarchyIssueRecord)
     assert isinstance(result['org/repo#303'], HierarchyIssueRecord)
     assert isinstance(result['org/repo#304'], HierarchyIssueRecord)
-    assert isinstance(result['123'], PullRequestRecord)
-    assert isinstance(result['124'], PullRequestRecord)
+    assert isinstance(result['org/repo#123'], PullRequestRecord)
+    assert isinstance(result['org/repo#124'], PullRequestRecord)
     assert isinstance(result["org/repo@merge_commit_sha_direct"], CommitRecord)
 
     rec_i = cast(IssueRecord, result['org/repo#121'])
@@ -130,15 +130,15 @@ def test_generate_isolated_record_types_with_labels_no_type_defined(mocker, mock
     result = factory.generate(mined_data_isolated_record_types_with_labels_no_type_defined)
 
     assert 8 == len(result)
-    assert {'org/repo#121', 'org/repo#301', 'org/repo#302', 'org/repo#303', 'org/repo#304', '123', '124', "org/repo@merge_commit_sha_direct"}.issubset(result.keys())
+    assert {'org/repo#121', 'org/repo#301', 'org/repo#302', 'org/repo#303', 'org/repo#304', 'org/repo#123', 'org/repo#124', "org/repo@merge_commit_sha_direct"}.issubset(result.keys())
 
     assert isinstance(result['org/repo#121'], IssueRecord)
     assert isinstance(result['org/repo#301'], HierarchyIssueRecord)
     assert isinstance(result['org/repo#302'], HierarchyIssueRecord)
     assert isinstance(result['org/repo#303'], HierarchyIssueRecord)
     assert isinstance(result['org/repo#304'], HierarchyIssueRecord)
-    assert isinstance(result['123'], PullRequestRecord)
-    assert isinstance(result['124'], PullRequestRecord)
+    assert isinstance(result['org/repo#123'], PullRequestRecord)
+    assert isinstance(result['org/repo#124'], PullRequestRecord)
     assert isinstance(result["org/repo@merge_commit_sha_direct"], CommitRecord)
 
     rec_i = cast(IssueRecord, result['org/repo#121'])
@@ -193,15 +193,15 @@ def test_generate_isolated_record_types_no_labels_with_type_defined(mocker, mock
     result = factory.generate(mined_data_isolated_record_types_no_labels_with_type_defined)
 
     assert 8 == len(result)
-    assert {'org/repo#121', 'org/repo#301', 'org/repo#302', 'org/repo#303', 'org/repo#304', '123', '124', "org/repo@merge_commit_sha_direct"}.issubset(result.keys())
+    assert {'org/repo#121', 'org/repo#301', 'org/repo#302', 'org/repo#303', 'org/repo#304', 'org/repo#123', 'org/repo#124', "org/repo@merge_commit_sha_direct"}.issubset(result.keys())
 
     assert isinstance(result['org/repo#121'], IssueRecord)
     assert isinstance(result['org/repo#301'], HierarchyIssueRecord)
     assert isinstance(result['org/repo#302'], HierarchyIssueRecord)
     assert isinstance(result['org/repo#303'], HierarchyIssueRecord)
     assert isinstance(result['org/repo#304'], HierarchyIssueRecord)
-    assert isinstance(result['123'], PullRequestRecord)
-    assert isinstance(result['124'], PullRequestRecord)
+    assert isinstance(result['org/repo#123'], PullRequestRecord)
+    assert isinstance(result['org/repo#124'], PullRequestRecord)
     assert isinstance(result["org/repo@merge_commit_sha_direct"], CommitRecord)
 
     rec_i = cast(IssueRecord, result['org/repo#121'])
@@ -256,15 +256,15 @@ def test_generate_isolated_record_types_with_labels_with_type_defined(mocker, mo
     result = factory.generate(mined_data_isolated_record_types_with_labels_with_type_defined)
 
     assert 8 == len(result)
-    assert {'org/repo#121', 'org/repo#301', 'org/repo#302', 'org/repo#303', 'org/repo#304', '123', '124', "org/repo@merge_commit_sha_direct"}.issubset(result.keys())
+    assert {'org/repo#121', 'org/repo#301', 'org/repo#302', 'org/repo#303', 'org/repo#304', 'org/repo#123', 'org/repo#124', "org/repo@merge_commit_sha_direct"}.issubset(result.keys())
 
     assert isinstance(result['org/repo#121'], IssueRecord)
     assert isinstance(result['org/repo#301'], HierarchyIssueRecord)
     assert isinstance(result['org/repo#302'], HierarchyIssueRecord)
     assert isinstance(result['org/repo#303'], HierarchyIssueRecord)
     assert isinstance(result['org/repo#304'], HierarchyIssueRecord)
-    assert isinstance(result['123'], PullRequestRecord)
-    assert isinstance(result['124'], PullRequestRecord)
+    assert isinstance(result['org/repo#123'], PullRequestRecord)
+    assert isinstance(result['org/repo#124'], PullRequestRecord)
     assert isinstance(result["org/repo@merge_commit_sha_direct"], CommitRecord)
 
     rec_i = cast(IssueRecord, result['org/repo#121'])
