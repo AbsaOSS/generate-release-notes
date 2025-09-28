@@ -55,6 +55,9 @@ class DummyRecord(Record):
     def get_labels(self) -> list[str]:
         return self._labels
 
+    def contains_change_increment(self) -> bool:
+        return True
+
 def test_is_present_in_chapters():
     rec = DummyRecord()
     assert not rec.is_present_in_chapters

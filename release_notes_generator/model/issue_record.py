@@ -122,6 +122,9 @@ class IssueRecord(Record):
 
         return row
 
+    def contains_change_increment(self) -> bool:
+        return self.pull_requests_count() > 0
+
     def get_rls_notes(self, line_marks: Optional[list[str]] = None) -> str:
         release_notes = ""
         detection_pattern = ActionInputs.get_release_notes_title()

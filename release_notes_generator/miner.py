@@ -47,18 +47,30 @@ class DataMiner:
         self.github_instance = github_instance
         self._safe_call = safe_call_decorator(rate_limiter)
 
+    def check_repository_exists(self) -> bool:
+        """
+        Checks if the specified GitHub repository exists.
+
+        Returns:
+            bool: True if the repository exists, False otherwise.
+        """
+        repo: Repository = self._safe_call(self.github_instance.get_repo)(ActionInputs.get_github_repository())
+        if repo is None:
+            logger.error("Repository not found: %s", ActionInputs.get_github_repository())
+            return False
+        return True
+
     def mine_data(self) -> MinedData:
         """
         Mines data from GitHub, including repository information, issues, pull requests, commits, and releases.
         """
         logger.info("Starting data mining from GitHub...")
-        data = MinedData()
-
-        data.repository = self._safe_call(self.github_instance.get_repo)(ActionInputs.get_github_repository())
-        if data.repository is None:
+        repo: Repository = self._safe_call(self.github_instance.get_repo)(ActionInputs.get_github_repository())
+        if repo is None:
             logger.error("Repository not found: %s", ActionInputs.get_github_repository())
-            return data
+            raise ValueError("Repository not found")
 
+        data = MinedData(repo)
         data.release = self.get_latest_release(data.repository)
 
         self._get_issues(data)

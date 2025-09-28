@@ -20,6 +20,7 @@ import copy
 import pytest
 
 from github import Github, IssueType
+from github.Commit import Commit
 from github.GitRelease import GitRelease
 from github.Issue import Issue
 from github.PullRequest import PullRequest
@@ -146,6 +147,7 @@ def mock_issue_open(mocker):
     issue.title = "I1 open"
     issue.state_reason = None
     issue.body = "I1 open"
+    issue.repository.full_name = "org/repo"
 
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
@@ -164,6 +166,7 @@ def mock_issue_open_2(mocker):
     issue.title = "I2 open"
     issue.state_reason = None
     issue.body = "I2 open"
+    issue.repository.full_name = "org/repo"
 
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
@@ -182,6 +185,8 @@ def mock_issue_closed(mocker):
     issue.number = 121
     issue.body = "Some issue body text"
     issue.get_sub_issues.return_value = []
+    issue.repository.full_name = "org/repo"
+    issue.closed_at = datetime.now()
 
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
@@ -199,6 +204,8 @@ def mock_issue_closed_i1_bug(mocker):
     issue.title = "I1+bug"
     issue.number = 122
     issue.body = "Some issue body text\nRelease Notes:\n- Fixed bug\n- Improved performance\n+ More nice code\n  * Awesome architecture"
+    issue.repository.full_name = "org/repo"
+    issue.closed_at = datetime.now()
 
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
@@ -215,6 +222,8 @@ def mock_issue_closed_i1_bug_and_skip(mocker):
     issue.state = IssueRecord.ISSUE_STATE_CLOSED
     issue.title = "I1+bug"
     issue.number = 122
+    issue.repository.full_name = "org/repo"
+    issue.closed_at = datetime.now()
 
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "skip-release-notes"
@@ -235,6 +244,8 @@ def mock_open_sub_issue(mocker):
     issue.body = "I400 open\nRelease Notes:\n- Hierarchy level release note"
     issue.type = None
     issue.created_at = datetime.now()
+    issue.closed_at = None
+    issue.repository.full_name = "org/repo"
 
     issue.get_labels.return_value = []
     issue.get_sub_issues.return_value = []
@@ -252,6 +263,8 @@ def mock_closed_sub_issue(mocker):
     issue.body = "I450 closed\nRelease Notes:\n- Hierarchy level release note"
     issue.type = None
     issue.created_at = datetime.now()
+    issue.closed_at = datetime.now()
+    issue.repository.full_name = "org/repo"
 
     issue.get_labels.return_value = []
     issue.get_sub_issues.return_value = []
@@ -269,6 +282,8 @@ def mock_open_hierarchy_issue(mocker):
     issue.body = "I300 open\nRelease Notes:\n- Hierarchy level release note"
     issue.type = None
     issue.created_at = datetime.now()
+    issue.closed_at = None
+    issue.repository.full_name = "org/repo"
 
     issue.get_labels.return_value = []
     issue.get_sub_issues.return_value = []
@@ -288,6 +303,8 @@ def mock_open_hierarchy_issue_epic(mocker):
     issue.body = "I200 open\nRelease Notes:\n- Epic level release note"
     issue.type = issue_type
     issue.created_at = datetime.now()
+    issue.closed_at = None
+    issue.repository.full_name = "org/repo"
 
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
@@ -311,6 +328,8 @@ def mock_open_hierarchy_issue_feature(mocker):
     issue.body = "HI201 open\nRelease Notes:\n- Feature level release note"
     issue.type = issue_type
     issue.created_at = datetime.now()
+    issue.closed_at = None
+    issue.repository.full_name = "org/repo"
 
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
@@ -333,6 +352,8 @@ def mock_closed_issue_type_task(mocker):
     issue.body = "Some issue body text"
     issue.type = issue_type
     issue.created_at = datetime.now()
+    issue.closed_at = datetime.now()
+    issue.repository.full_name = "org/repo"
 
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
@@ -352,6 +373,8 @@ def mock_closed_issue_type_none(mocker):
     issue.body = "Some sub issue body text"
     issue.type = None
     issue.created_at = datetime.now()
+    issue.closed_at = datetime.now()
+    issue.repository.full_name = "org/repo"
 
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
@@ -374,6 +397,8 @@ def mock_closed_issue_type_bug(mocker):
     issue.body = "Some issue body text\nRelease Notes:\n- Fixed bug\n- Improved performance\n+ More nice code\n  * Awesome architecture"
     issue.type = issue_type
     issue.created_at = datetime.now()
+    issue.closed_at = datetime.now()
+    issue.repository.full_name = "org/repo"
 
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
@@ -573,16 +598,17 @@ def mock_pull_no_rls_notes(mocker):
 # Fixtures for GitHub Commit(s)
 @pytest.fixture
 def mock_commit(mocker):
-    commit = mocker.Mock()
+    commit = mocker.Mock(spec=Commit)
     commit.author.login = "author"
     commit.sha = "merge_commit_sha"
     commit.commit.message = "Fixed bug"
+    commit.repository.full_name = "org/repo"
     return commit
 
 
 @pytest.fixture
 def mined_data_isolated_record_types_no_labels_no_type_defined(
-        mock_issue_closed, mock_pull_closed, mock_pull_merged, mock_commit,
+        mock_repo, mock_issue_closed, mock_pull_closed, mock_pull_merged, mock_commit,
         mock_open_hierarchy_issue, mock_open_sub_issue, mock_closed_sub_issue
 ):
     #   - single issue record (closed)
@@ -592,7 +618,7 @@ def mined_data_isolated_record_types_no_labels_no_type_defined(
     #   - single hierarchy issue record - one sub hierarchy issues - two sub-issues with PRs - with commits
     #   - single pull request record (closed, merged)
     #   - single direct commit record
-    data = MinedData()
+    data = MinedData(mock_repo)
 
     # single issue record (closed)
     solo_closed_issue = copy.deepcopy(mock_issue_closed)        # 121
@@ -810,7 +836,7 @@ def mined_data_isolated_record_types_with_labels_with_type_defined(mocker, mined
     t_epic = mocker.Mock(spec=IssueType)
     t_epic.name = "Epic"
     t_feature = mocker.Mock(spec=IssueType)
-    t_feature.name = "feature"
+    t_feature.name = "Feature"
     t_task = mocker.Mock(spec=IssueType)
     t_task.name = "Task"
     t_bug = mocker.Mock(spec=IssueType)

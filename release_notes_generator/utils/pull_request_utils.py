@@ -23,12 +23,13 @@ from functools import lru_cache
 
 import requests
 from github.PullRequest import PullRequest
+from github.Repository import Repository
 
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.utils.constants import ISSUES_FOR_PRS, LINKED_ISSUES_MAX
 
 
-def extract_issue_numbers_from_body(pr: PullRequest) -> set[int]:
+def extract_issue_numbers_from_body(pr: PullRequest, repository: Repository) -> set[str]:
     """
     Extracts the numbers of the issues mentioned in the body of the pull request.
 
@@ -46,18 +47,21 @@ def extract_issue_numbers_from_body(pr: PullRequest) -> set[int]:
 
     # Extract the issue numbers from the matches
     issue_numbers = {int(match[-1]) for match in issue_matches}
+    issue_ids = {f"{repository.full_name}#{number}" for number in issue_numbers}
 
-    return issue_numbers
+    return issue_ids
 
 
 @lru_cache(maxsize=1024)
-def get_issues_for_pr(pull_number: int) -> set[int]:
+def get_issues_for_pr(pull_number: int) -> set[str]:
     """Fetch closing issue numbers for a PR via GitHub GraphQL and return them as a set."""
     github_api_url = "https://api.github.com/graphql"
+    owner = ActionInputs.get_github_owner()
+    name = ActionInputs.get_github_repo_name()
     query = ISSUES_FOR_PRS.format(
         number=pull_number,
-        owner=ActionInputs.get_github_owner(),
-        name=ActionInputs.get_github_repo_name(),
+        owner=owner,
+        name=name,
         first=LINKED_ISSUES_MAX,
     )
     headers = {
@@ -71,4 +75,8 @@ def get_issues_for_pr(pull_number: int) -> set[int]:
     if data.get("errors"):
         raise RuntimeError(f"GitHub GraphQL errors: {data['errors']}")
 
-    return {node["number"] for node in data["data"]["repository"]["pullRequest"]["closingIssuesReferences"]["nodes"]}
+    # TODO - mine owner and use it in ID
+    return {
+        f"{owner}/{name}#{node['number']}"
+        for node in data["data"]["repository"]["pullRequest"]["closingIssuesReferences"]["nodes"]
+    }

@@ -426,7 +426,7 @@ RELEASE_NOTES_DATA_HIERARCHY_WITH_LABELS_WITH_TYPE = """### Epics
 - Epic: _HI304 open_ #304
   - _Release Notes_:
     - Hierarchy level release note
-  - feature: _HI350 open_ #350
+  - Feature: _HI350 open_ #350
     - _Release Notes_:
       - Sub-hierarchy level release note
     - #453 _SI453 closed_ in #152
@@ -480,7 +480,7 @@ All closed PRs are linked to issues.
 - 🔔 Epic: _HI304 open_ #304
   - _Release Notes_:
     - Hierarchy level release note
-  - 🔔 feature: _HI350 open_ #350
+  - 🔔 Feature: _HI350 open_ #350
     - _Release Notes_:
       - Sub-hierarchy level release note
     - 🔔 #453 _SI453 closed_ in #152
@@ -1585,7 +1585,9 @@ def test_build_closed_pr_service_chapter_without_issue_with_skip_label_on_pr(
 
 
 def test_build_hierarchy_rls_notes_no_labels_no_type(
-        mocker, custom_chapters_not_print_empty_chapters, mined_data_isolated_record_types_no_labels_no_type_defined
+        mocker, mock_repo,
+        custom_chapters_not_print_empty_chapters,
+        mined_data_isolated_record_types_no_labels_no_type_defined
 ):
     expected_release_notes = RELEASE_NOTES_DATA_HIERARCHY_NO_LABELS_NO_TYPE
 
@@ -1601,7 +1603,7 @@ def test_build_hierarchy_rls_notes_no_labels_no_type(
     mock_rate_limit.rate.reset.timestamp.return_value = time.time() + 3600
     mock_github_client.get_rate_limit.return_value = mock_rate_limit
 
-    factory = IssueHierarchyRecordFactory(github=mock_github_client)
+    factory = IssueHierarchyRecordFactory(github=mock_github_client, home_repository=mock_repo)
     records = factory.generate(mined_data_isolated_record_types_no_labels_no_type_defined)
 
     builder = ReleaseNotesBuilder(
@@ -1616,7 +1618,8 @@ def test_build_hierarchy_rls_notes_no_labels_no_type(
 
 
 def test_build_hierarchy_rls_notes_with_labels_no_type(
-        mocker, custom_chapters_not_print_empty_chapters, mined_data_isolated_record_types_with_labels_no_type_defined
+        mocker, mock_repo,
+        custom_chapters_not_print_empty_chapters, mined_data_isolated_record_types_with_labels_no_type_defined
 ):
     expected_release_notes = RELEASE_NOTES_DATA_HIERARCHY_WITH_LABELS_NO_TYPE
 
@@ -1632,7 +1635,7 @@ def test_build_hierarchy_rls_notes_with_labels_no_type(
     mock_rate_limit.rate.reset.timestamp.return_value = time.time() + 3600
     mock_github_client.get_rate_limit.return_value = mock_rate_limit
 
-    factory = IssueHierarchyRecordFactory(github=mock_github_client)
+    factory = IssueHierarchyRecordFactory(github=mock_github_client, home_repository=mock_repo)
     records = factory.generate(mined_data_isolated_record_types_with_labels_no_type_defined)
 
     builder = ReleaseNotesBuilder(
@@ -1643,15 +1646,12 @@ def test_build_hierarchy_rls_notes_with_labels_no_type(
 
     actual_release_notes = builder.build()
 
-    print("XXX")
-    print(actual_release_notes)
-    print("YYY")
-
     assert expected_release_notes == actual_release_notes
 
 
 def test_build_hierarchy_rls_notes_no_labels_with_type(
-        mocker, custom_chapters_not_print_empty_chapters, mined_data_isolated_record_types_no_labels_with_type_defined
+        mocker, mock_repo,
+        custom_chapters_not_print_empty_chapters, mined_data_isolated_record_types_no_labels_with_type_defined
 ):
     expected_release_notes = RELEASE_NOTES_DATA_HIERARCHY_NO_LABELS_WITH_TYPE
 
@@ -1667,7 +1667,7 @@ def test_build_hierarchy_rls_notes_no_labels_with_type(
     mock_rate_limit.rate.reset.timestamp.return_value = time.time() + 3600
     mock_github_client.get_rate_limit.return_value = mock_rate_limit
 
-    factory = IssueHierarchyRecordFactory(github=mock_github_client)
+    factory = IssueHierarchyRecordFactory(github=mock_github_client, home_repository=mock_repo)
     records = factory.generate(mined_data_isolated_record_types_no_labels_with_type_defined)
 
     builder = ReleaseNotesBuilder(
@@ -1681,7 +1681,8 @@ def test_build_hierarchy_rls_notes_no_labels_with_type(
     assert expected_release_notes == actual_release_notes
 
 def test_build_hierarchy_rls_notes_with_labels_with_type(
-        mocker, custom_chapters_not_print_empty_chapters, mined_data_isolated_record_types_with_labels_with_type_defined
+        mocker, mock_repo,
+        custom_chapters_not_print_empty_chapters, mined_data_isolated_record_types_with_labels_with_type_defined
 ):
     expected_release_notes = RELEASE_NOTES_DATA_HIERARCHY_WITH_LABELS_WITH_TYPE
 
@@ -1697,7 +1698,7 @@ def test_build_hierarchy_rls_notes_with_labels_with_type(
     mock_rate_limit.rate.reset.timestamp.return_value = time.time() + 3600
     mock_github_client.get_rate_limit.return_value = mock_rate_limit
 
-    factory = IssueHierarchyRecordFactory(github=mock_github_client)
+    factory = IssueHierarchyRecordFactory(github=mock_github_client, home_repository=mock_repo)
     records = factory.generate(mined_data_isolated_record_types_with_labels_with_type_defined)
 
     builder = ReleaseNotesBuilder(
@@ -1712,7 +1713,8 @@ def test_build_hierarchy_rls_notes_with_labels_with_type(
 
 
 def test_build_no_hierarchy_rls_notes_no_labels_no_type_with_hierarchy_data(
-        mocker, custom_chapters_not_print_empty_chapters, mined_data_isolated_record_types_no_labels_no_type_defined
+        mocker, mock_repo,
+        custom_chapters_not_print_empty_chapters, mined_data_isolated_record_types_no_labels_no_type_defined
 ):
     expected_release_notes = RELEASE_NOTES_NO_DATA_HIERARCHY_NO_LABELS_NO_TYPE
 
@@ -1728,7 +1730,7 @@ def test_build_no_hierarchy_rls_notes_no_labels_no_type_with_hierarchy_data(
     mock_rate_limit.rate.reset.timestamp.return_value = time.time() + 3600
     mock_github_client.get_rate_limit.return_value = mock_rate_limit
 
-    factory = DefaultRecordFactory(github=mock_github_client)
+    factory = DefaultRecordFactory(github=mock_github_client, home_repository=mock_repo)
     records = factory.generate(mined_data_isolated_record_types_no_labels_no_type_defined)
 
     builder = ReleaseNotesBuilder(
@@ -1742,7 +1744,8 @@ def test_build_no_hierarchy_rls_notes_no_labels_no_type_with_hierarchy_data(
     assert expected_release_notes == actual_release_notes
 
 def test_build_no_hierarchy_rls_notes_with_labels_no_type_with_hierarchy_data(
-        mocker, custom_chapters_not_print_empty_chapters, mined_data_isolated_record_types_with_labels_no_type_defined
+        mocker, mock_repo,
+        custom_chapters_not_print_empty_chapters, mined_data_isolated_record_types_with_labels_no_type_defined
 ):
     expected_release_notes = RELEASE_NOTES_NO_DATA_HIERARCHY_WITH_LABELS_NO_TYPE
 
@@ -1757,7 +1760,7 @@ def test_build_no_hierarchy_rls_notes_with_labels_no_type_with_hierarchy_data(
     mock_rate_limit.rate.reset.timestamp.return_value = time.time() + 3600
     mock_github_client.get_rate_limit.return_value = mock_rate_limit
 
-    factory = DefaultRecordFactory(github=mock_github_client)
+    factory = DefaultRecordFactory(github=mock_github_client, home_repository=mock_repo)
     records = factory.generate(mined_data_isolated_record_types_with_labels_no_type_defined)
 
     builder = ReleaseNotesBuilder(
@@ -1772,7 +1775,8 @@ def test_build_no_hierarchy_rls_notes_with_labels_no_type_with_hierarchy_data(
 
 
 def test_build_no_hierarchy_rls_notes_no_labels_with_type_with_hierarchy_data(
-        mocker, custom_chapters_not_print_empty_chapters, mined_data_isolated_record_types_no_labels_with_type_defined
+        mocker, mock_repo,
+        custom_chapters_not_print_empty_chapters, mined_data_isolated_record_types_no_labels_with_type_defined
 ):
     expected_release_notes = RELEASE_NOTES_NO_DATA_HIERARCHY_NO_LABELS_WITH_TYPE
 
@@ -1788,7 +1792,7 @@ def test_build_no_hierarchy_rls_notes_no_labels_with_type_with_hierarchy_data(
     mock_rate_limit.rate.reset.timestamp.return_value = time.time() + 3600
     mock_github_client.get_rate_limit.return_value = mock_rate_limit
 
-    factory = DefaultRecordFactory(github=mock_github_client)
+    factory = DefaultRecordFactory(github=mock_github_client, home_repository=mock_repo)
     records = factory.generate(mined_data_isolated_record_types_no_labels_with_type_defined)
 
     builder = ReleaseNotesBuilder(
@@ -1803,7 +1807,8 @@ def test_build_no_hierarchy_rls_notes_no_labels_with_type_with_hierarchy_data(
 
 
 def test_build_no_hierarchy_rls_notes_with_labels_with_type_with_hierarchy_data(
-        mocker, custom_chapters_not_print_empty_chapters, mined_data_isolated_record_types_with_labels_with_type_defined
+        mocker, mock_repo,
+        custom_chapters_not_print_empty_chapters, mined_data_isolated_record_types_with_labels_with_type_defined
 ):
     expected_release_notes = RELEASE_NOTES_NO_DATA_HIERARCHY_WITH_LABELS_WITH_TYPE
 
@@ -1819,7 +1824,7 @@ def test_build_no_hierarchy_rls_notes_with_labels_with_type_with_hierarchy_data(
     mock_rate_limit.rate.reset.timestamp.return_value = time.time() + 3600
     mock_github_client.get_rate_limit.return_value = mock_rate_limit
 
-    factory = DefaultRecordFactory(github=mock_github_client)
+    factory = DefaultRecordFactory(github=mock_github_client, home_repository=mock_repo)
     records = factory.generate(mined_data_isolated_record_types_with_labels_with_type_defined)
 
     builder = ReleaseNotesBuilder(

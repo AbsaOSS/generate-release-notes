@@ -93,7 +93,7 @@ class ServiceChapters(BaseChapters):
 
         self.show_chapter_merged_prs_linked_to_open_issues = True
 
-    def populate(self, records: dict[int | str, Record]) -> None:
+    def populate(self, records: dict[str, Record]) -> None:
         """
         Populates the service chapters with records.
 

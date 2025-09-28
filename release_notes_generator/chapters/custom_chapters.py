@@ -39,12 +39,15 @@ class CustomChapters(BaseChapters):
     A class used to represent the custom chapters in the release notes.
     """
 
-    def populate(self, records: dict[int | str, Record]) -> None:
+    def populate(self, records: dict[str, Record]) -> None:
         """
         Populates the custom chapters with records.
 
-        @param records: A dictionary of records where the key is an integer and the value is a Record object.
-        @return: None
+        Parameters:
+            @param records: A dictionary of records keyed by 'owner/repo#number' and values are Record objects.
+
+        Returns:
+            None
         """
         for record_id, record in records.items():  # iterate all records
             # check if the record should be skipped
@@ -68,9 +71,19 @@ class CustomChapters(BaseChapters):
 
                 for record_label in records[record_id].labels:  # iterate all labels of the record (issue, or 1st PR)
                     if record_label in ch.labels and pulls_count > 0:
-                        if not records[record_id].is_present_in_chapters:
-                            ch.add_row(record_id, records[record_id].to_chapter_row(True))
-                            self.populated_record_numbers_list.append(record_id)
+                        if (
+                            not records[record_id].is_present_in_chapters
+                            and records[record_id].contains_change_increment()
+                        ):
+                            allow_dup = ActionInputs.get_duplicity_scope() in (
+                                DuplicityScopeEnum.CUSTOM,
+                                DuplicityScopeEnum.BOTH,
+                            )
+                            if (allow_dup or not records[record_id].is_present_in_chapters) and records[
+                                record_id
+                            ].contains_change_increment():
+                                ch.add_row(record_id, records[record_id].to_chapter_row(True))
+                                self.populated_record_numbers_list.append(record_id)
 
     def from_yaml_array(self, chapters: list[dict[str, str]]) -> "CustomChapters":
         """
