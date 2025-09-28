@@ -76,15 +76,15 @@ class DefaultRecordFactory(RecordFactory):
     @staticmethod
     @lru_cache(maxsize=2048)
     def _issue_id(repo_full_name: str, number: int) -> str:
-        return f"{repo_full_name.lower()}#{number}"
+        return f"{repo_full_name}#{number}"
 
     @get_id.register
     def _(self, pull_request: PullRequest) -> str:
-        return f"{self._home_repository.full_name.lower()}#{pull_request.number}"
+        return f"{self._home_repository.full_name}#{pull_request.number}"
 
     @get_id.register
     def _(self, commit: Commit) -> str:
-        return f"{commit.repository.full_name.lower()}@{commit.sha}"
+        return f"{commit.repository.full_name}@{commit.sha}"
 
     def generate(self, data: MinedData) -> dict[str, Record]:
         """
@@ -92,7 +92,7 @@ class DefaultRecordFactory(RecordFactory):
         Parameters:
             data (MinedData): The MinedData instance containing repository, issues, pull requests, and commits.
         Returns:
-            dict[str, Record]: A dictionary of records where the key is the issue or pull request number.
+            dict[str, Record]: A dictionary of records keyed by 'owner/repo#number' (or commit SHA for commits).
         """
 
         def register_pull_request(pr: PullRequest, skip_rec: bool) -> None:

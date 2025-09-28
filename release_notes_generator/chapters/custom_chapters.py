@@ -43,8 +43,11 @@ class CustomChapters(BaseChapters):
         """
         Populates the custom chapters with records.
 
-        @param records: A dictionary of records where the key is an integer and the value is a Record object.
-        @return: None
+        Parameters:
+            @param records: A dictionary of records keyed by 'owner/repo#number' and values are Record objects.
+
+        Returns:
+            None
         """
         for record_id, record in records.items():  # iterate all records
             # check if the record should be skipped
@@ -72,8 +75,14 @@ class CustomChapters(BaseChapters):
                             not records[record_id].is_present_in_chapters
                             and records[record_id].contains_change_increment()
                         ):
-                            ch.add_row(record_id, records[record_id].to_chapter_row(True))
-                            self.populated_record_numbers_list.append(record_id)
+                            allow_dup = ActionInputs.get_duplicity_scope() in (
+                                DuplicityScopeEnum.CUSTOM,
+                                DuplicityScopeEnum.BOTH,
+                            )
+                            if (allow_dup or not records[record_id].is_present_in_chapters) and \
+                                records[record_id].contains_change_increment():
+                                ch.add_row(record_id, records[record_id].to_chapter_row(True))
+                                self.populated_record_numbers_list.append(record_id)
 
     def from_yaml_array(self, chapters: list[dict[str, str]]) -> "CustomChapters":
         """

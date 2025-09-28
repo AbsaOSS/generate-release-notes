@@ -59,10 +59,12 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
     def generate(self, data: MinedData) -> dict[str, Record]:
         """
         Generate records for release notes.
+
         Parameters:
             data (MinedData): The MinedData instance containing repository, issues, pull requests, and commits.
+
         Returns:
-            dict[str, Record]: A dictionary of records where the key is the issue id or pull request number.
+            dict[str, Record]: A dictionary of records indexed by their IDs.
         """
         logger.debug("Creation of records started...")
         # First register all issues with sub-issues
