@@ -99,7 +99,7 @@ class ReleaseNotesGenerator:
         assert data_filtered_by_release.home_repository is not None, "Repository must not be None"
 
         rls_notes_records: dict[str, Record] = self._get_record_factory(
-            github=self._github_instance, home_repository=data_filtered_by_release.home_repository, miner=miner
+            github=self._github_instance, home_repository=data_filtered_by_release.home_repository
         ).generate(data=data_filtered_by_release)
 
         return ReleaseNotesBuilder(
