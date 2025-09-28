@@ -341,7 +341,7 @@ def mock_safe_call_decorator_no_issues(_rate_limiter):
         return fn
     return wrapper
 
-def mock_get_issues_for_pr_no_issues(pull_number: str) -> list[str]:
+def mock_get_issues_for_pr_no_issues() -> list[str]:
     return []
 
 

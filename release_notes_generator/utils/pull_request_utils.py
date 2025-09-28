@@ -75,6 +75,7 @@ def get_issues_for_pr(pull_number: int) -> set[str]:
     if data.get("errors"):
         raise RuntimeError(f"GitHub GraphQL errors: {data['errors']}")
 
+    # TODO - mine owner and use it in ID
     return {
         f"{owner}/{name}#{node['number']}"
         for node in data["data"]["repository"]["pullRequest"]["closingIssuesReferences"]["nodes"]

@@ -180,7 +180,7 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
                 pr_rec.register_commit(c)
             pid = self.get_id(pull)
             self._records[pid] = pr_rec
-            logger.debug("Created record for PR %d: %s", pid, pull.title)
+            logger.debug("Created record for PR %s: %s", pid, pull.title)
 
     def _create_issue_record_using_sub_issues_existence(self, issue: Issue, data: MinedData) -> list[SubIssue]:
         # use presence of sub-issues as a hint for hierarchy issue or non hierarchy issue
