@@ -160,9 +160,20 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
                         issue_id,
                     )
                     # dev note: here we expect that PR links to an issue in the same repository !!!
-                    i_repo_name, i_number = issue_id.split("#")
-                    parent_repository = data.get_repository(i_repo_name)
-                    parent_issue = self._safe_call(parent_repository.get_issue)(i_number) if parent_repository else None
+                    i_repo_name, i_number_str = issue_id.split("#", 1)
+                    try:
+                        i_number = int(i_number_str)
+                    except ValueError:
+                        logger.error("Invalid issue id: %s", issue_id)
+                        continue
+                    parent_repository = data.get_repository(i_repo_name) or self.get_repository(i_repo_name)
+                    if parent_repository is not None:
+                        if data.get_repository(i_repo_name) is None:
+                            data.add_repository(parent_repository)
+                        parent_issue = self._safe_call(parent_repository.get_issue)(i_number)
+                    else:
+                        parent_issue = None
+
                     if parent_issue is not None:
                         self._create_issue_record_using_sub_issues_existence(parent_issue, data)
 

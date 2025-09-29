@@ -130,13 +130,21 @@ class DefaultRecordFactory(RecordFactory):
                         parent_issue_id,
                     )
                     # dev note: here we expect that PR links to an issue in the same repository !!!
-                    pi_repo_name, pi_number = parent_issue_id.split("#")
-                    parent_repository = data.get_repository(pi_repo_name)
-                    parent_issue = (
-                        self._safe_call(parent_repository.get_issue)(pi_number)
-                        if parent_repository is not None
-                        else None
-                    )
+                    pi_repo_name, pi_number_str = parent_issue_id.split("#", 1)
+                    try:
+                        pi_number = int(pi_number_str)
+                    except ValueError:
+                        logger.error("Invalid parent issue id: %s", parent_issue_id)
+                        continue
+                    parent_repository = data.get_repository(pi_repo_name) or self.get_repository(pi_repo_name)
+                    if parent_repository is not None:
+                        # cache for subsequent lookups
+                        if data.get_repository(pi_repo_name) is None:
+                            data.add_repository(parent_repository)
+                        parent_issue = self._safe_call(parent_repository.get_issue)(pi_number)
+                    else:
+                        parent_issue = None
+
                     if parent_issue is not None:
                         self._create_record_for_issue(parent_issue)
 

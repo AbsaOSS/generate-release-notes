@@ -352,7 +352,6 @@ def test_generate_with_no_issues(mocker, mock_repo, request):
     pr1, pr2, commit1, commit2 = setup_no_issues_pulls_commits(mocker)
     data.pull_requests = [pr1, pr2]
     data.commits = [commit1, commit2]
-    data.home_repository.return_value = request.getfixturevalue("mock_repo")
     data.issues = []  # No issues
 
     records = DefaultRecordFactory(mock_github_client, mock_repo).generate(data)
@@ -394,7 +393,6 @@ def test_generate_with_no_issues_skip_labels(mocker, mock_repo, request):
     data.pull_requests = [pr1, pr2]
     data.commits = [commit1, commit2]
 
-    data.home_repository.return_value = request.getfixturevalue("mock_repo")
     data.issues = []  # No issues
 
     records = DefaultRecordFactory(mock_github_client, mock_repo).generate(data)
