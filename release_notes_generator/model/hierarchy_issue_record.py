@@ -61,10 +61,16 @@ class HierarchyIssueRecord(IssueRecord):
         count = super().pull_requests_count()
 
         for sub_issue in self._sub_issues.values():
-            count += sub_issue.pull_requests_count()
+            if sub_issue.is_cross_repo:
+                count += 1
+            else:
+                count += sub_issue.pull_requests_count()
 
         for sub_hierarchy_issue in self._sub_hierarchy_issues.values():
-            count += sub_hierarchy_issue.pull_requests_count()
+            if sub_hierarchy_issue.is_cross_repo:
+                count += 1
+            else:
+                count += sub_hierarchy_issue.pull_requests_count()
 
         return count
 
@@ -85,6 +91,7 @@ class HierarchyIssueRecord(IssueRecord):
 
     # methods - override ancestor methods
     def to_chapter_row(self, add_into_chapters: bool = True) -> str:
+        logger.debug("Rendering hierarchy issue row for issue #%s", self.issue.number)
         if add_into_chapters:
             self.added_into_chapters()
         row_prefix = f"{ActionInputs.get_duplicity_icon()} " if self.present_in_chapters() > 1 else ""
@@ -120,19 +127,23 @@ class HierarchyIssueRecord(IssueRecord):
 
         # add sub-hierarchy issues
         for sub_hierarchy_issue in self._sub_hierarchy_issues.values():
+            logger.debug("Rendering hierarchy issue row for sub-issue #%s", sub_hierarchy_issue.issue.number)
             if sub_hierarchy_issue.contains_change_increment():
+                logger.debug("Sub-hierarchy issue #%s contains change increment", sub_hierarchy_issue.issue.number)
                 row = f"{row}\n{sub_hierarchy_issue.to_chapter_row()}"
 
         # add sub-issues
         if len(self._sub_issues) > 0:
             sub_indent = "  " * (self._level + 1)
             for sub_issue in self._sub_issues.values():
+                logger.debug("Rendering sub-issue row for issue #%d", sub_issue.issue.number)
                 if sub_issue.is_open:
                     continue  # only closed issues are reported in release notes
 
                 if not sub_issue.contains_change_increment():
                     continue  # skip sub-issues without change increment
 
+                logger.debug("Sub-issue #%s contains change increment", sub_issue.issue.number)
                 sub_issue_block = "- " + sub_issue.to_chapter_row()
                 ind_child_block = "\n".join(
                     f"{sub_indent}{line}" if line else "" for line in sub_issue_block.splitlines()

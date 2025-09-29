@@ -61,7 +61,7 @@ class FilterByRelease(Filter):
         Returns:
             MinedData: The filtered mined data.
         """
-        md = MinedData(data.repository)
+        md = MinedData(data.home_repository)
         md.release = data.release
         md.since = data.since
 
@@ -123,7 +123,8 @@ class FilterByRelease(Filter):
         logger.debug("Used default issue filtering logic.")
         return self._filter_issues_default(data)
 
-    def _filter_issues_default(self, data: MinedData) -> list:
+    @staticmethod
+    def _filter_issues_default(data: MinedData) -> list:
         """
         Default filtering for issues: filter out closed issues before the release date.
 
@@ -135,7 +136,8 @@ class FilterByRelease(Filter):
         """
         return [issue for issue in data.issues if (issue.closed_at is None) or (issue.closed_at >= data.since)]
 
-    def _filter_issues_issue_hierarchy(self, data: MinedData) -> list:
+    @staticmethod
+    def _filter_issues_issue_hierarchy(data: MinedData) -> list:
         """
         Hierarchy filtering for issues: include issues closed since the release date
         or still open at generation time.

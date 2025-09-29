@@ -60,24 +60,36 @@ class DataMiner:
             return False
         return True
 
+    def get_repository(self, full_name: str) -> Optional[Repository]:
+        """
+        Retrieves the specified GitHub repository.
+
+        Returns:
+            Optional[Repository]: The GitHub repository if found, None otherwise.
+        """
+        repo: Optional[Repository] = self._safe_call(self.github_instance.get_repo)(full_name)
+        if repo is None:
+            logger.error("Repository not found: %s", full_name)
+            return None
+        return repo
+
     def mine_data(self) -> MinedData:
         """
         Mines data from GitHub, including repository information, issues, pull requests, commits, and releases.
         """
         logger.info("Starting data mining from GitHub...")
-        repo: Repository = self._safe_call(self.github_instance.get_repo)(ActionInputs.get_github_repository())
+        repo: Optional[Repository] = self.get_repository(ActionInputs.get_github_repository())
         if repo is None:
-            logger.error("Repository not found: %s", ActionInputs.get_github_repository())
             raise ValueError("Repository not found")
 
         data = MinedData(repo)
-        data.release = self.get_latest_release(data.repository)
+        data.release = self.get_latest_release(repo)
 
         self._get_issues(data)
 
         # pulls and commits, and then reduce them by the latest release since time
-        data.pull_requests = list(self._safe_call(data.repository.get_pulls)(state=PullRequestRecord.PR_STATE_CLOSED))
-        data.commits = list(self._safe_call(data.repository.get_commits)())
+        data.pull_requests = list(self._safe_call(repo.get_pulls)(state=PullRequestRecord.PR_STATE_CLOSED))
+        data.commits = list(self._safe_call(repo.get_commits)())
 
         logger.info("Data mining from GitHub completed.")
 
@@ -136,11 +148,11 @@ class DataMiner:
           - If release exists: fetch issues updated since the release timestamp AND all currently open issues
             (to include long-lived open issues not updated recently). De-duplicate by issue.number.
         """
-        assert data.repository is not None, "Repository must not be None"
+        assert data.home_repository is not None, "Repository must not be None"
         logger.info("Fetching issues from repository...")
 
         if data.release is None:
-            data.issues = list(self._safe_call(data.repository.get_issues)(state=IssueRecord.ISSUE_STATE_ALL))
+            data.issues = list(self._safe_call(data.home_repository.get_issues)(state=IssueRecord.ISSUE_STATE_ALL))
             logger.info("Fetched %d issues", len(data.issues))
             return
 
@@ -151,11 +163,11 @@ class DataMiner:
             if prefer_published and getattr(data.release, "published_at", None)
             else data.release.created_at
         )
-        issues_since = self._safe_call(data.repository.get_issues)(
+        issues_since = self._safe_call(data.home_repository.get_issues)(
             state=IssueRecord.ISSUE_STATE_ALL,
             since=data.since,
         )
-        open_issues = self._safe_call(data.repository.get_issues)(
+        open_issues = self._safe_call(data.home_repository.get_issues)(
             state=IssueRecord.ISSUE_STATE_OPEN,
         )
 
@@ -175,7 +187,8 @@ class DataMiner:
         data.issues = list(by_number.values())
         logger.info("Fetched %d issues (deduplicated).", len(data.issues))
 
-    def __get_latest_semantic_release(self, releases) -> Optional[GitRelease]:
+    @staticmethod
+    def __get_latest_semantic_release(releases) -> Optional[GitRelease]:
         published_releases = [release for release in releases if not release.draft and not release.prerelease]
         latest_version: Optional[semver.Version] = None
         rls: Optional[GitRelease] = None
@@ -199,7 +212,8 @@ class DataMiner:
 
         return rls
 
-    def __filter_duplicated_issues(self, data: MinedData) -> "MinedData":
+    @staticmethod
+    def __filter_duplicated_issues(data: MinedData) -> "MinedData":
         """
         Filters out duplicated issues from the list of issues.
         This method address problem in output of GitHub API where issues list contains PR values.

@@ -39,12 +39,30 @@ class MinedData:
     """Class for keeping track of mined GitHub data."""
 
     def __init__(self, repository: Repository):
-        self.repository: Repository = repository
+        self._home_repository_full_name: str = repository.full_name
+        self._repositories: dict[str, Repository] = {repository.full_name: repository}
         self.release: Optional[GitRelease] = None
         self.issues: list[Issue] = []
         self.pull_requests: list[PullRequest] = []
         self.commits: list[Commit] = []
         self.since = datetime(1970, 1, 1)  # Default to epoch start
+
+    @property
+    def home_repository(self) -> Repository:
+        """Get the home repository."""
+        return self._repositories[self._home_repository_full_name]
+
+    def add_repository(self, repository: Repository) -> None:
+        """Add a repository to the mined data if not already present."""
+        if repository.full_name not in self._repositories:
+            self._repositories[repository.full_name] = repository
+            logger.debug(f"Added repository {repository.full_name} to mined data.")
+
+    def get_repository(self, full_name: str) -> Optional[Repository]:
+        if full_name not in self._repositories:
+            return None
+
+        return self._repositories[full_name]
 
     def is_empty(self):
         """

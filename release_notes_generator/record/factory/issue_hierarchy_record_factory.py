@@ -136,14 +136,18 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
         )
         return self._records
 
-    def _register_pull_and_its_commits_to_issue(self, pull: PullRequest, data: MinedData) -> None:
+    def _register_pull_and_its_commits_to_issue(
+        self, pull: PullRequest, data: MinedData, target_repository: Optional[Repository] = None
+    ) -> None:
         pull_labels = [label.name for label in pull.get_labels()]
         skip_record: bool = any(item in pull_labels for item in ActionInputs.get_skip_release_notes_labels())
         related_commits = [c for c in data.commits if c.sha == pull.merge_commit_sha]
         self.__registered_commits.update(c.sha for c in related_commits)
 
+        pr_repo = target_repository if target_repository is not None else data.home_repository
+
         linked_from_api = self._safe_call(get_issues_for_pr)(pull_number=pull.number) or set()
-        linked_from_body = extract_issue_numbers_from_body(pull, data.repository)
+        linked_from_body = extract_issue_numbers_from_body(pull, pr_repo)
         pull_issues: list[str] = list(linked_from_api.union(linked_from_body))
         attached_any = False
         if len(pull_issues) > 0:
@@ -156,10 +160,20 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
                         issue_id,
                     )
                     # dev note: here we expect that PR links to an issue in the same repository !!!
-                    # TODO - handle cross-repo issue linking - the split[0] can contain different repo name
-                    #   this problem is present on multiple places
-                    issue_number = int(issue_id.split("#")[1])
-                    parent_issue = self._safe_call(data.repository.get_issue)(issue_number) if data.repository else None
+                    i_repo_name, i_number_str = issue_id.split("#", 1)
+                    try:
+                        i_number = int(i_number_str)
+                    except ValueError:
+                        logger.error("Invalid issue id: %s", issue_id)
+                        continue
+                    parent_repository = data.get_repository(i_repo_name) or self.get_repository(i_repo_name)
+                    if parent_repository is not None:
+                        if data.get_repository(i_repo_name) is None:
+                            data.add_repository(parent_repository)
+                        parent_issue = self._safe_call(parent_repository.get_issue)(i_number)
+                    else:
+                        parent_issue = None
+
                     if parent_issue is not None:
                         self._create_issue_record_using_sub_issues_existence(parent_issue, data)
 
@@ -298,6 +312,11 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
         self.__registered_issues.add(iid)
         self._records[iid] = SubIssueRecord(issue, issue_labels, skip_record)
 
+        if iid.split("#")[0] == self._home_repository.full_name:
+            return
+
+        self._records[iid].is_cross_repo = True
+
     def _re_register_hierarchy_issues(self):
         logger.debug("Re-registering hierarchy issues ...")
 
@@ -315,17 +334,20 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
             parent_issue_id: str = self.__sub_issue_parents[sub_issue_id]
             parent_rec = cast(HierarchyIssueRecord, self._records[parent_issue_id])
             sub_rec = self._records[sub_issue_id]
+            # TODO - check this localtion - is possiblem that there is saved another type than SubIssueRecord
 
             if isinstance(sub_rec, SubIssueRecord):
                 parent_rec.sub_issues[sub_issue_id] = sub_rec  # add to parent as SubIssueRecord
                 self._records.pop(sub_issue_id)  # remove from main records as it is sub-one
                 self.__sub_issue_parents.pop(sub_issue_id)  # remove from sub-parents as it is now sub-one
                 made_progress = True
+                logger.debug("Added sub-issue %s to parent %s", sub_issue_id, parent_issue_id)
             elif isinstance(sub_rec, HierarchyIssueRecord):
                 parent_rec.sub_hierarchy_issues[sub_issue_id] = sub_rec  # add to parent as 'Sub' HierarchyIssueRecord
                 self._records.pop(sub_issue_id)  # remove from main records as it is sub-one
                 self.__sub_issue_parents.pop(sub_issue_id)  # remove from sub-parents as it is now sub-one
                 made_progress = True
+                logger.debug("Added sub-hierarchy-issue %s to parent %s", sub_issue_id, parent_issue_id)
             else:
                 logger.error(
                     "Detected IssueRecord in position of SubIssueRecord - leaving as standalone and dropping mapping"

@@ -15,10 +15,10 @@
 #
 
 
-import pytest
 from unittest.mock import MagicMock
 from datetime import datetime
 
+from github.Repository import Repository
 
 from release_notes_generator.filter import FilterByRelease
 from release_notes_generator.model.mined_data import MinedData
@@ -30,7 +30,7 @@ def test_filter_no_release(mocker):
 
     # Mock MinedData
     data = MagicMock(spec=MinedData)
-    data.repository = MagicMock()
+    data.home_repository = MagicMock(spec=Repository)
     data.since = datetime(2023, 1, 1)
     data.release = None
     data.issues = [MagicMock(closed_at=None), MagicMock(closed_at=None)]
@@ -55,7 +55,7 @@ def test_filter_with_release(mocker):
 
     # Mock MinedData
     data = MagicMock(spec=MinedData)
-    data.repository = MagicMock()
+    data.home_repository = MagicMock(spec=Repository)
     data.release = MagicMock()
     data.since = datetime(2023, 1, 1)
 

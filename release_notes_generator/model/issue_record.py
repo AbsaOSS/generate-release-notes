@@ -123,6 +123,9 @@ class IssueRecord(Record):
         return row
 
     def contains_change_increment(self) -> bool:
+        if self.is_cross_repo:
+            return True
+
         return self.pull_requests_count() > 0
 
     def get_rls_notes(self, line_marks: Optional[list[str]] = None) -> str:
