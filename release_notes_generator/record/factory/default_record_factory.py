@@ -94,7 +94,7 @@ class DefaultRecordFactory(RecordFactory):
         Returns:
             Optional[Repository]: The GitHub repository if found, None otherwise.
         """
-        repo: Repository = self._safe_call(self._github.get_repo)(full_name)
+        repo: Optional[Repository] = self._safe_call(self._github.get_repo)(full_name)
         if repo is None:
             logger.error("Repository not found: %s", full_name)
             return None
