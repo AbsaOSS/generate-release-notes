@@ -92,7 +92,7 @@ class ReleaseNotesGenerator:
 
         # data expansion when hierarchy is enabled
         if ActionInputs.get_hierarchy():
-            data.issues.update(miner.mine_missing_sub_issues(data))
+            data_filtered_by_release.issues.update(miner.mine_missing_sub_issues(data_filtered_by_release))
 
         changelog_url: str = get_change_url(
             tag_name=ActionInputs.get_tag_name(),

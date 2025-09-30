@@ -30,8 +30,8 @@ class CollectorConfig:
 
     # Pagination and batching
     per_page: int = 100              # Max allowed by GitHub for subIssues
-    max_parents_per_repo: int = 2   # Max issue aliases per repository(...) block
-    max_repos_per_request: int = 8   # Max repository blocks per query
+    max_parents_per_repo: int = 100   # Max issue aliases per repository(...) block
+    max_repos_per_request: int = 1   # Max repository blocks per query
 
     # Pacing
     gentle_pacing_seconds: float = 0.05
@@ -166,8 +166,12 @@ class BulkSubIssueCollector:
                             child_ids.append(child_id)
 
                         # If the child has children, it's a "new parent"
-                        if child["subIssues"]["totalCount"] > 0 and child_id not in originals:
-                            new_parents_to_check.add(child_id)
+                        if child_id not in originals:
+                            if child["subIssues"]["totalCount"] > 0:
+                                new_parents_to_check.add(child_id)
+                            else:
+                                # save no sub-issues for non-parents
+                                self.parents_sub_issues.setdefault(child_id, [])
 
                     logger.debug("Sub-issues found for parent %s: %s", parent_id, child_ids)
 
@@ -186,7 +190,6 @@ class BulkSubIssueCollector:
     # ---------- internals ----------
 
     def _post_graphql(self, payload: dict) -> dict:
-        logger.info("Posting graphql payload: %s", payload)
         last_exc: Optional[Exception] = None
         for attempt in range(1, self._cfg.max_retries + 1):
             try:

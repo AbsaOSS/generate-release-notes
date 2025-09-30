@@ -68,23 +68,23 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
             dict[str, Record]: A dictionary of records indexed by their IDs.
         """
         logger.debug("Creation of records started...")  # NEW: uz mam mnapovani, kdo je hierarchy, kdo je SubIssue a kdo je Issue
-        for issue in data.issues:
-            id = get_id(issue)
+        for issue, repo in data.issues.items():
+            iid = get_id(issue, repo)
             # tmp note - tohle by nemelo by za potrebi - nove uz mam vsechno info, abych to udelal v 1 prubehu
             # if get_id(issue) in self.__registered_issues:
             #     continue
 
-            if len(data.parents_sub_issues[id]) > 0:
+            if len(data.parents_sub_issues[iid]) > 0:
                 # issue has sub-issues - it is either hierarchy issue or sub-hierarchy issue
-                self._create_record_for_hierarchy_issue(issue)
+                self._create_record_for_hierarchy_issue(issue, iid)
 
             elif id in self.__sub_issue_parents.values():
                 # issue has no sub-issues - it is sub-issue
-                self._create_record_for_sub_issue(issue)
+                self._create_record_for_sub_issue(issue, iid)
 
             else:
                 # issue is not sub-issue and has no sub-issues - it is issue
-                self._create_record_for_issue(issue)
+                self._create_record_for_issue(issue, iid)
 
         # old code for delete after testing
         # First register all issues with sub-issues
@@ -130,13 +130,13 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
         # This is useful for population by PRs and commits
 
         logger.debug("Registering Commits to Pull Requests and Pull Requests to Issues...")
-        for pull in data.pull_requests:
-            self._register_pull_and_its_commits_to_issue(pull, data)
+        for pull, repo in data.pull_requests.items():
+            self._register_pull_and_its_commits_to_issue(pull, get_id(pull, repo), data)
 
         logger.debug("Registering direct commits to records...")
-        for commit in data.commits:
+        for commit, repo in data.commits.items():
             if commit.sha not in self.__registered_commits:
-                self._records[get_id(commit)] = CommitRecord(commit)
+                self._records[get_id(commit, repo)] = CommitRecord(commit)
 
         # dev note: now we have all PRs and commits registered to issues or as stand-alone records
         #   let build hierarchy
@@ -154,7 +154,7 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
         return self._records
 
     def _register_pull_and_its_commits_to_issue(
-        self, pull: PullRequest, data: MinedData, target_repository: Optional[Repository] = None
+        self, pull: PullRequest, pid: str, data: MinedData, target_repository: Optional[Repository] = None
     ) -> None:
         pull_labels = [label.name for label in pull.get_labels()]
         skip_record: bool = any(item in pull_labels for item in ActionInputs.get_skip_release_notes_labels())
@@ -200,7 +200,6 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
             pr_rec = PullRequestRecord(pull, pull_labels, skip_record)
             for c in related_commits:  # register commits to the PR record
                 pr_rec.register_commit(c)
-            pid = get_id(pull)
             self._records[pid] = pr_rec
             logger.debug("Created record for PR %s: %s", pid, pull.title)
 
@@ -272,7 +271,7 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
     #     else:
     #         self._create_record_for_issue(issue)
 
-    def _create_record_for_hierarchy_issue(self, i: Issue, issue_labels: Optional[list[str]] = None) -> None:
+    def _create_record_for_hierarchy_issue(self, i: Issue, iid: str, issue_labels: Optional[list[str]] = None) -> None:
         """
         Create a hierarchy issue record and register sub-issues.
 
@@ -284,7 +283,6 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
             None
         """
         # check for skip labels presence and skip when detected
-        iid = get_id(i)
         if issue_labels is None:
             issue_labels = self._get_issue_labels_mix_with_type(i)
         skip_record = any(item in issue_labels for item in ActionInputs.get_skip_release_notes_labels())
@@ -303,20 +301,19 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
 
         return labels
 
-    def _create_record_for_issue(self, issue: Issue, issue_labels: Optional[list[str]] = None) -> None:
+    def _create_record_for_issue(self, issue: Issue, iid: str, issue_labels: Optional[list[str]] = None) -> None:
         if issue_labels is None:
             issue_labels = self._get_issue_labels_mix_with_type(issue)
 
-        super()._create_record_for_issue(issue, issue_labels)
-        self.__registered_issues.add(get_id(issue))
+        super()._create_record_for_issue(issue, iid, issue_labels)
+        self.__registered_issues.add(iid)
 
-    def _create_record_for_sub_issue(self, issue: Issue, issue_labels: Optional[list[str]] = None) -> None:
+    def _create_record_for_sub_issue(self, issue: Issue, iid: str,  issue_labels: Optional[list[str]] = None) -> None:
         if issue_labels is None:
             issue_labels = self._get_issue_labels_mix_with_type(issue)
 
-        iid: str = get_id(issue)
         skip_record = any(item in issue_labels for item in ActionInputs.get_skip_release_notes_labels())
-        logger.debug("Created record for sub issue %s: %s", iid, issue.title)
+        logger.debug("Created record for sub issue %s: %s", id, issue.title)
         self.__registered_issues.add(iid)
         self._records[iid] = SubIssueRecord(issue, issue_labels, skip_record)
 

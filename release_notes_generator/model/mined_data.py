@@ -41,11 +41,13 @@ class MinedData:
     def __init__(self, repository: Repository):
         self._home_repository_full_name: str = repository.full_name
         self._repositories: dict[str, Repository] = {repository.full_name: repository}
+
         self.release: Optional[GitRelease] = None
+        self.since = datetime(1970, 1, 1)  # Default to epoch start
+
         self.issues: dict[Issue, Repository] = {}
         self.pull_requests: dict[PullRequest, Repository] = {}
         self.commits: dict[Commit, Repository] = {}
-        self.since = datetime(1970, 1, 1)  # Default to epoch start
 
         self.parents_sub_issues: dict[str, list[str]] = {}  # parent issue id -> list of its sub-issues ids
 

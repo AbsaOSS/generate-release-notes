@@ -78,8 +78,7 @@ class DefaultRecordFactory(RecordFactory):
             dict[str, Record]: A dictionary of records keyed by 'owner/repo#number' (or commit SHA for commits).
         """
 
-        def register_pull_request(pr: PullRequest, skip_rec: bool) -> None:
-            l_pid = get_id(pr)
+        def register_pull_request(pr: PullRequest, l_pid: str, skip_rec: bool) -> None:
             l_pull_labels = [label.name for label in pr.get_labels()]
             attached_any = False
             detected_issues = extract_issue_numbers_from_body(pr, repository=data.home_repository)
@@ -115,7 +114,7 @@ class DefaultRecordFactory(RecordFactory):
                         parent_issue = None
 
                     if parent_issue is not None:
-                        self._create_record_for_issue(parent_issue)
+                        self._create_record_for_issue(parent_issue, parent_issue_id)
 
                 if parent_issue_id in self._records:
                     cast(IssueRecord, self._records[parent_issue_id]).register_pull_request(pr)
@@ -134,12 +133,12 @@ class DefaultRecordFactory(RecordFactory):
                 logger.debug("Created stand-alone PR record %s: %s (fallback)", l_pid, pr.title)
 
         logger.debug("Registering issues to records...")
-        for issue in data.issues:
-            self._create_record_for_issue(issue)
+        for issue, repo in data.issues.items():
+            self._create_record_for_issue(issue, get_id(issue, repo))
 
         logger.debug("Registering pull requests to records...")
-        for pull in data.pull_requests:
-            pid = get_id(pull)
+        for pull, repo in data.pull_requests.items():
+            pid = get_id(pull, repo)
             pull_labels = [label.name for label in pull.get_labels()]
             skip_record: bool = any(item in pull_labels for item in ActionInputs.get_skip_release_notes_labels())
 
@@ -150,10 +149,10 @@ class DefaultRecordFactory(RecordFactory):
                 logger.debug("Created record for PR %s: %s", pid, pull.title)
             else:
                 logger.debug("Registering pull number: %s, title : %s", pid, pull.title)
-                register_pull_request(pull, skip_record)
+                register_pull_request(pull, pid, skip_record)
 
         logger.debug("Registering commits to records...")
-        detected_direct_commits_count = sum(not self.register_commit_to_record(commit) for commit in data.commits)
+        detected_direct_commits_count = sum(not self.register_commit_to_record(commit, get_id(commit, repo)) for commit, repo in data.commits.items())
 
         logger.info(
             "Generated %d records from %d issues and %d PRs, with %d commits detected.",
@@ -164,7 +163,7 @@ class DefaultRecordFactory(RecordFactory):
         )
         return self._records
 
-    def register_commit_to_record(self, commit: Commit) -> bool:
+    def register_commit_to_record(self, commit: Commit, cid: str) -> bool:
         """
         Register a commit to a record.
 
@@ -186,16 +185,17 @@ class DefaultRecordFactory(RecordFactory):
                     rec_pr.register_commit(commit)
                     return True
 
-        self._records[get_id(commit)] = CommitRecord(commit=commit)
+        self._records[cid] = CommitRecord(commit=commit)
         logger.debug("Created record for direct commit %s: %s", commit.sha, commit.commit.message)
         return False
 
-    def _create_record_for_issue(self, issue: Issue, issue_labels: Optional[list[str]] = None) -> None:
+    def _create_record_for_issue(self, issue: Issue, iid: str, issue_labels: Optional[list[str]] = None) -> None:
         """
         Create a record for an issue.
 
         Parameters:
             issue (Issue): The issue to create a record for.
+            iid (str): The ID of the issue in the format 'owner/repo#number'.
             issue_labels (Optional[list[str]]): Optional set of labels for the issue. If not provided, labels will be
                 fetched from the issue.
         Returns:
@@ -205,5 +205,5 @@ class DefaultRecordFactory(RecordFactory):
         if issue_labels is None:
             issue_labels = [label.name for label in issue.get_labels()]
         skip_record = any(item in issue_labels for item in ActionInputs.get_skip_release_notes_labels())
-        self._records[iid := get_id(issue)] = IssueRecord(issue=issue, skip=skip_record, issue_labels=issue_labels)
+        self._records[iid] = IssueRecord(issue=issue, skip=skip_record, issue_labels=issue_labels)
         logger.debug("Created record for non hierarchy issue '%s': %s", iid, issue.title)

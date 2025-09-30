@@ -108,7 +108,7 @@ class DataMiner:
         # run in cycle to get all levels of hierarchy
         while new_parent_ids:
             logger.debug("Scanning sub-issues with parent ids: %s", new_parent_ids)
-            new_parent_ids = bulk_sub_issue_collector.scan_sub_issues_for_parents(parents_to_check)
+            new_parent_ids = bulk_sub_issue_collector.scan_sub_issues_for_parents(new_parent_ids)
             parents_sub_issues.update(bulk_sub_issue_collector.parents_sub_issues)
 
         return parents_sub_issues
@@ -132,13 +132,15 @@ class DataMiner:
             # fetch issue by id
             org, repo, num = parse_issue_id(parent_id)
 
-            if not self.get_repository(f"{org}/{repo}"):
+            if data.get_repository(f"{org}/{repo}") is None:
                 new_repo = self._get_repository(f"{org}/{repo}")
                 if new_repo is not None:
                     # cache for subsequent lookups
                     data.add_repository(new_repo)
 
-            issue = self._safe_call(self.get_repository(f"{org}/{repo}").get_issue)(int(parent_id))
+            issue = None
+            if data.get_repository(f"{org}/{repo}") is not None:
+                issue = self._safe_call(data.get_repository(f"{org}/{repo}").get_issue)(num)
             if issue is None:
                 logger.error("Issue not found: %s", parent_id)
                 continue
