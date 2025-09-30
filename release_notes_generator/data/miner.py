@@ -95,10 +95,10 @@ class DataMiner:
         Returns:
             dict[Issue, Repository]: A dictionary mapping fetched issues to their repositories.
         """
-        logger.debug("Mapping sub-issues...")
+        logger.info("Mapping sub-issues...")
         data.parents_sub_issues = self._scan_sub_issues_for_parents([get_id(i, r) for i, r in data.issues.items()])
 
-        logger.debug("Fetching missing issues...")
+        logger.info("Fetching missing issues...")
         return self._fetch_missing_issues_and_prs(data)
 
     def _scan_sub_issues_for_parents(self, parents_to_check: list[str]) -> dict[str, list[str]]:
