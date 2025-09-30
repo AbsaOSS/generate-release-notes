@@ -1614,6 +1614,10 @@ def test_build_hierarchy_rls_notes_no_labels_no_type(
 
     actual_release_notes = builder.build()
 
+    print("XXX")
+    print(actual_release_notes)
+    print("XXX")
+
     assert expected_release_notes == actual_release_notes
 
 
