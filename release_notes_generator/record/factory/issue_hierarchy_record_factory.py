@@ -19,7 +19,6 @@ IssueHierarchyRecordFactory builds hierarchical issue records (Epics/Features/Ta
 """
 
 import logging
-from copy import deepcopy
 from typing import cast, Optional
 
 from github import Github
@@ -70,7 +69,7 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
         for issue, repo in data.issues.items():
             iid = get_id(issue, repo)
 
-            if len(data.parents_sub_issues[iid]) > 0:
+            if len(data.parents_sub_issues.get(iid, [])) > 0:
                 # issue has sub-issues - it is either hierarchy issue or sub-hierarchy issue
                 self._create_record_for_hierarchy_issue(issue, iid)
 
@@ -208,7 +207,7 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
             issue_labels = self._get_issue_labels_mix_with_type(issue)
 
         skip_record = any(item in issue_labels for item in ActionInputs.get_skip_release_notes_labels())
-        logger.debug("Created record for sub issue %s: %s", id, issue.title)
+        logger.debug("Created record for sub issue %s: %s", iid, issue.title)
         self.__registered_issues.add(iid)
         self._records[iid] = SubIssueRecord(issue, issue_labels, skip_record)
 
@@ -219,7 +218,7 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
 
     def _re_register_hierarchy_issues(self, sub_issues_ids: list[str], sub_issue_parents: dict[str, str]):
         logger.debug("Re-registering hierarchy issues ...")
-        reduced_sub_issue_ids: list[str] = deepcopy(sub_issues_ids)
+        reduced_sub_issue_ids: list[str] = sub_issues_ids[:]
 
         made_progress = False
         for sub_issue_id in sub_issues_ids:

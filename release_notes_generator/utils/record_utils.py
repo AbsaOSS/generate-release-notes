@@ -4,7 +4,7 @@ Utilities for working with GitHub issue/PR/commit identifiers.
 
 import logging
 import re
-from functools import singledispatchmethod, lru_cache
+from functools import lru_cache
 from typing import cast
 
 from github.Commit import Commit
@@ -34,10 +34,10 @@ def get_id(obj, repository: Repository) -> str:
     """
     if isinstance(obj, Issue):
         issue = cast(Issue, obj)
-        return _issue_id(repository.full_name, issue.number)
+        return _entity_id(repository.full_name, issue.number)
     elif isinstance(obj, PullRequest):
         pr = cast(PullRequest, obj)
-        return _pr_id(repository.full_name, pr.number)
+        return _entity_id(repository.full_name, pr.number)
     elif isinstance(obj, Commit):
         commit = cast(Commit, obj)
         return f"{commit.sha}"
@@ -46,13 +46,7 @@ def get_id(obj, repository: Repository) -> str:
 
 
 @lru_cache(maxsize=2048)
-def _issue_id(repo_full_name: str, number: int) -> str:
-    """Format 'org/repo#123' from components."""
-    return f"{repo_full_name}#{number}"
-
-
-@lru_cache(maxsize=2048)
-def _pr_id(repo_full_name: str, number: int) -> str:
+def _entity_id(repo_full_name: str, number: int) -> str:
     """Format 'org/repo#123' from components."""
     return f"{repo_full_name}#{number}"
 

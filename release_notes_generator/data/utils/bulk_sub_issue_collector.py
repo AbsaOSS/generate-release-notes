@@ -185,7 +185,7 @@ class BulkSubIssueCollector:
                         remaining_by_repo[(org, repo)].discard(parent_num)
 
                 # Gentle pacing to avoid secondary limits
-                time.sleep(0.05)
+                time.sleep(self._cfg.gentle_pacing_seconds)
 
         # Deterministic order
         # return sorted(new_parents_to_check, key=lambda s: (lambda o, r, n: (o, r, n))(*parse_issue_id(s)))
@@ -207,9 +207,10 @@ class BulkSubIssueCollector:
                 )
                 resp.raise_for_status()
                 data = resp.json()
-                if "errors" in data and data["errors"]:
+                if data.get("errors"):
                     logger.error("GraphQL errors: %s", data["errors"])
                     raise RuntimeError(f"GitHub GraphQL errors: {data['errors']}")
+
                 logger.debug("Posted graphql query")
                 return data
             except Exception as e:

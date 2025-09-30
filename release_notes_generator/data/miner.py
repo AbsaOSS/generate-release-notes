@@ -21,7 +21,6 @@ This module contains logic for mining data from GitHub, including issues, pull r
 import logging
 import sys
 import traceback
-from builtins import list
 from typing import Optional
 
 import semver
@@ -94,7 +93,7 @@ class DataMiner:
         Parameters:
             data (MinedData): The mined data containing origin sets of issues and pull requests.
         Returns:
-            list[Issue]: A list of fetched missing issues.
+            dict[Issue, Repository]: A dictionary mapping fetched issues to their repositories.
         """
         logger.debug("Mapping sub-issues...")
         data.parents_sub_issues = self._scan_sub_issues_for_parents([get_id(i, r) for i, r in data.issues.items()])
@@ -131,7 +130,7 @@ class DataMiner:
         Parameters:
             data (MinedData): The mined data containing origin sets of issues and pull requests.
         Returns:
-            list[Issue]: A list of fetched missing issues.
+            dict[Issue, Repository]: A dictionary mapping fetched issues to their repositories.
         """
         fetched_issues: dict[Issue, Repository] = {}
 
@@ -144,7 +143,7 @@ class DataMiner:
             org, repo, num = parse_issue_id(parent_id)
 
             if data.get_repository(f"{org}/{repo}") is None:
-                new_repo = self._get_repository(f"{org}/{repo}")
+                new_repo = self._fetch_repository(f"{org}/{repo}")
                 if new_repo is not None:
                     # cache for subsequent lookups
                     data.add_repository(new_repo)
@@ -165,9 +164,9 @@ class DataMiner:
         logger.debug("Fetched %d missing issues.", len(fetched_issues))
         return fetched_issues
 
-    def _get_repository(self, full_name: str) -> Optional[Repository]:
+    def _fetch_repository(self, full_name: str) -> Optional[Repository]:
         """
-        Retrieves the specified GitHub repository.
+        Fetch a repository by its full name.
 
         Returns:
             Optional[Repository]: The GitHub repository if found, None otherwise.

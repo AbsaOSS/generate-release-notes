@@ -13,7 +13,8 @@ token = os.getenv("GITHUB_TOKEN")
 if token is None:
     raise ValueError("GITHUB_TOKEN environment variable is not set")
 
-# If you need to disable TLS verification (to mirror your example):
+# WARNING: TLS verification is disabled for testing purposes only.
+# Do not use this configuration in production.
 cfg = CollectorConfig(verify_tls=False)
 
 collector = BulkSubIssueCollector(token, cfg=cfg)

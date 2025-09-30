@@ -634,7 +634,6 @@ def mined_data_isolated_record_types_no_labels_no_type_defined(
     hi_two_sub_issues_no_prs.body = "I301 open\nRelease Notes:\n- Hierarchy level release note"
     sub_issue_1 = copy.deepcopy(mock_open_sub_issue)
     sub_issue_2 = copy.deepcopy(mock_closed_sub_issue)
-    # hi_two_sub_issues_no_prs.get_sub_issues.return_value = [sub_issue_1, sub_issue_2]
     data.parents_sub_issues[si1 := get_id(sub_issue_1, mock_repo)] = []
     data.parents_sub_issues[si2 := get_id(sub_issue_2, mock_repo)] = []
     data.parents_sub_issues[get_id(hi_two_sub_issues_no_prs, mock_repo)] = [si1, si2]
@@ -658,7 +657,6 @@ def mined_data_isolated_record_types_no_labels_no_type_defined(
     mock_pr_closed_2.merge_commit_sha = "merge_commit_sha_150"
     mock_pr_closed_2.get_labels.return_value = []
     mock_pr_closed_2.body += "\nCloses #451"
-    # hi_two_sub_issues_with_prs.get_sub_issues.return_value = [sub_issue_3, sub_issue_4]
     data.parents_sub_issues[si3 := get_id(sub_issue_3, mock_repo)] = []
     data.parents_sub_issues[si4 := get_id(sub_issue_4, mock_repo)] = []
     data.parents_sub_issues[get_id(hi_two_sub_issues_with_prs, mock_repo)] = [si3, si4]
@@ -685,7 +683,6 @@ def mined_data_isolated_record_types_no_labels_no_type_defined(
     mock_commit_1 = copy.deepcopy(mock_commit)
     mock_commit_1.sha = "merge_commit_sha_151"
     mock_commit_1.commit.message = "Fixed bug in PR 151"
-    # hi_two_sub_issues_with_prs_with_commit.get_sub_issues.return_value = [sub_issue_5, sub_issue_6]
     data.parents_sub_issues[si5 := get_id(sub_issue_5, mock_repo)] = []
     data.parents_sub_issues[si6 := get_id(sub_issue_6, mock_repo)] = []
     data.parents_sub_issues[get_id(hi_two_sub_issues_with_prs_with_commit, mock_repo)] = [si5, si6]
@@ -716,8 +713,6 @@ def mined_data_isolated_record_types_no_labels_no_type_defined(
     mock_commit_2 = copy.deepcopy(mock_commit)
     mock_commit_2.sha = "merge_commit_sha_152"
     mock_commit_2.commit.message = "Fixed bug in PR 152"
-    # sub_hierarchy_issue.get_sub_issues.return_value = [sub_issue_7, sub_issue_8]
-    # hi_one_sub_hierarchy_two_sub_issues_with_prs_with_commit.get_sub_issues.return_value = [sub_hierarchy_issue]
     data.parents_sub_issues[si7 := get_id(sub_issue_7, mock_repo)] = []
     data.parents_sub_issues[si8 := get_id(sub_issue_8, mock_repo)] = []
     data.parents_sub_issues[shi := get_id(sub_hierarchy_issue, mock_repo)] = [si7, si8]

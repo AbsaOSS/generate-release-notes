@@ -56,20 +56,6 @@ class DefaultRecordFactory(RecordFactory):
 
         self._records: dict[str, Record] = {}
 
-    # TODO - this should not be needed now - delete
-    # def get_repository(self, full_name: str) -> Optional[Repository]:
-    #     """
-    #     Retrieves the specified GitHub repository.
-    #
-    #     Returns:
-    #         Optional[Repository]: The GitHub repository if found, None otherwise.
-    #     """
-    #     repo: Optional[Repository] = self._safe_call(self._github.get_repo)(full_name)
-    #     if repo is None:
-    #         logger.error("Repository not found: %s", full_name)
-    #         return None
-    #     return repo
-
     def generate(self, data: MinedData) -> dict[str, Record]:
         """
         Generate records for release notes.

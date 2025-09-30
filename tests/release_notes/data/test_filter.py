@@ -82,9 +82,9 @@ def test_filter_with_release(mocker):
     assert len(filtered_data.issues) == 1
     assert len(filtered_data.pull_requests) == 1
     assert len(filtered_data.commits) == 1
-    assert list(filtered_data.issues.keys())[0].closed_at == datetime(2023, 1, 2)
-    assert list(filtered_data.pull_requests.keys())[0].merged_at == datetime(2023, 2, 3)
-    assert list(filtered_data.commits.keys())[0].commit.author.date == datetime(2024, 1, 4)
+    assert next(iter(filtered_data.issues.keys())).closed_at == datetime(2023, 1, 2)
+    assert next(iter(filtered_data.pull_requests.keys())).merged_at == datetime(2023, 2, 3)
+    assert next(iter(filtered_data.commits.keys())).commit.author.date == datetime(2024, 1, 4)
     assert ('Starting issue, prs and commit reduction by the latest release since time.',) == mock_log_info.call_args_list[0][0]
     assert ('Count of issues reduced from %d to %d', 2, 1) == mock_log_debug.call_args_list[1][0]
     assert ('Count of pulls reduced from %d to %d', 2, 1) == mock_log_debug.call_args_list[2][0]
