@@ -9,9 +9,13 @@ from release_notes_generator.data.utils.bulk_sub_issue_collector import Collecto
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+class MissingTokenError(ValueError):
+    """Raised when GITHUB_TOKEN environment variable is not set."""
+    pass
+
 token = os.getenv("GITHUB_TOKEN")
 if token is None:
-    raise ValueError("GITHUB_TOKEN environment variable is not set")
+    raise MissingTokenError("GITHUB_TOKEN environment variable is not set")
 
 # WARNING: TLS verification is disabled for testing purposes only.
 # Do not use this configuration in production.
