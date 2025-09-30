@@ -20,6 +20,10 @@ import logging
 from copy import deepcopy
 from typing import Optional
 
+from github.Issue import Issue
+from github.PullRequest import PullRequest
+from github.Repository import Repository
+
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.mined_data import MinedData
 
@@ -68,39 +72,43 @@ class FilterByRelease(Filter):
         if data.release is not None:
             logger.info("Starting issue, prs and commit reduction by the latest release since time.")
 
-            issues_list = self._filter_issues(data)
-            logger.debug("Count of issues reduced from %d to %d", len(data.issues), len(issues_list))
+            issues_dict = self._filter_issues(data)
+            logger.debug("Count of issues reduced from %d to %d", len(data.issues), len(issues_dict))
 
             # filter out merged PRs and commits before the date
             pulls_seen: set[int] = set()
-            pulls_list: list = []
-            for pull in data.pull_requests:
+            pulls_dict: dict[PullRequest, Repository] = {}
+            for pull, repo in data.pull_requests.items():
                 if (pull.merged_at is not None and pull.merged_at >= data.since) or (
                     pull.closed_at is not None and pull.closed_at >= data.since
                 ):
                     if pull.number not in pulls_seen:
                         pulls_seen.add(pull.number)
-                        pulls_list.append(pull)
-            logger.debug("Count of pulls reduced from %d to %d", len(data.pull_requests), len(pulls_list))
+                        pulls_dict[pull] = repo
+            logger.debug("Count of pulls reduced from %d to %d", len(data.pull_requests.items()), len(pulls_dict.items()))
 
-            commits_list = list(filter(lambda commit: commit.commit.author.date > data.since, data.commits))
-            logger.debug("Count of commits reduced from %d to %d", len(data.commits), len(commits_list))
+            commits_dict = {
+                commit: repo
+                for commit, repo in data.commits.items()
+                if commit.commit.author.date > data.since
+            }
+            logger.debug("Count of commits reduced from %d to %d", len(data.commits.items()), len(commits_dict.items()))
 
-            md.issues = issues_list
-            md.pull_requests = pulls_list
-            md.commits = commits_list
+            md.issues = issues_dict
+            md.pull_requests = pulls_dict
+            md.commits = commits_dict
 
             logger.debug(
                 "Input data. Issues: %d, Pull Requests: %d, Commits: %d",
-                len(data.issues),
-                len(data.pull_requests),
-                len(data.commits),
+                len(data.issues.items()),
+                len(data.pull_requests.items()),
+                len(data.commits.items()),
             )
             logger.debug(
                 "Filtered data. Issues: %d, Pull Requests: %d, Commits: %d",
-                len(md.issues),
-                len(md.pull_requests),
-                len(md.commits),
+                len(md.issues.items()),
+                len(md.pull_requests.items()),
+                len(md.commits.items()),
             )
         else:
             md.issues = deepcopy(data.issues)
@@ -109,12 +117,15 @@ class FilterByRelease(Filter):
 
         return md
 
-    def _filter_issues(self, data: MinedData) -> list:
+    def _filter_issues(self, data: MinedData) -> dict[Issue, Repository]:
         """
         Filter issues based on the selected filtering type - default or hierarchy.
 
-        @param data: The mined data containing issues.
-        @return: The filtered list of issues.
+        Parameters:
+            data (MinedData): The mined data to filter.
+
+        Returns:
+            dict[Issue, Repository]: The filtered issues.
         """
         if ActionInputs.get_hierarchy():
             logger.debug("Used hierarchy issue filtering logic.")
@@ -124,7 +135,7 @@ class FilterByRelease(Filter):
         return self._filter_issues_default(data)
 
     @staticmethod
-    def _filter_issues_default(data: MinedData) -> list:
+    def _filter_issues_default(data: MinedData) -> dict[Issue, Repository]:
         """
         Default filtering for issues: filter out closed issues before the release date.
 
@@ -132,12 +143,12 @@ class FilterByRelease(Filter):
             data (MinedData): The mined data containing issues and release information.
 
         Returns:
-            list: The filtered list of issues.
+            dict[Issue, Repository]: The filtered issues.
         """
-        return [issue for issue in data.issues if (issue.closed_at is None) or (issue.closed_at >= data.since)]
+        return {issue: repo for issue, repo in data.issues.items() if (issue.closed_at is None) or (issue.closed_at >= data.since)}
 
     @staticmethod
-    def _filter_issues_issue_hierarchy(data: MinedData) -> list:
+    def _filter_issues_issue_hierarchy(data: MinedData) -> dict[Issue, Repository]:
         """
         Hierarchy filtering for issues: include issues closed since the release date
         or still open at generation time.
@@ -146,14 +157,13 @@ class FilterByRelease(Filter):
             data (MinedData): The mined data containing issues and release information.
 
         Returns:
-            list: The filtered list of issues.
+            dict[Issue, Repository]: The filtered issues.
         """
-        return list(
-            filter(
-                lambda issue: (
-                    (issue.closed_at is not None and issue.closed_at >= data.since)  # closed after the release
-                    or (issue.state == "open")  # still open
-                ),
-                data.issues,
+        return {
+            issue: repo
+            for issue, repo in data.issues.items()
+            if (
+                (issue.closed_at is not None and issue.closed_at >= data.since)
+                or (issue.state == "open")
             )
-        )
+        }

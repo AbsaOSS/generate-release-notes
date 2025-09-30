@@ -22,7 +22,7 @@ import logging
 from typing import cast, Optional
 
 from github import Github
-from github.Issue import Issue, SubIssue
+from github.Issue import Issue
 from github.PullRequest import PullRequest
 from github.Repository import Repository
 
@@ -37,6 +37,7 @@ from release_notes_generator.model.sub_issue_record import SubIssueRecord
 from release_notes_generator.record.factory.default_record_factory import DefaultRecordFactory
 
 from release_notes_generator.utils.pull_request_utils import get_issues_for_pr, extract_issue_numbers_from_body
+from release_notes_generator.utils.record_utils import get_id, parse_issue_id
 
 logger = logging.getLogger(__name__)
 
@@ -53,8 +54,8 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
         self.__sub_issue_parents: dict[str, str] = {}
         self.__registered_commits: set[str] = set()
 
-        self.__external_sub_issues: list[SubIssue] = []
-        self.__local_sub_issues_checked: list[str] = []
+        # self.__external_sub_issues: list[SubIssue] = []
+        # self.__local_sub_issues_checked: list[str] = []
 
     def generate(self, data: MinedData) -> dict[str, Record]:
         """
@@ -66,48 +67,64 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
         Returns:
             dict[str, Record]: A dictionary of records indexed by their IDs.
         """
-        logger.debug("Creation of records started...")
-        # First register all issues with sub-issues
-        issues_expansion: list[SubIssue] = []
+        logger.debug("Creation of records started...")  # NEW: uz mam mnapovani, kdo je hierarchy, kdo je SubIssue a kdo je Issue
         for issue in data.issues:
-            if self.get_id(issue) in self.__registered_issues:
-                continue
+            id = get_id(issue)
+            # tmp note - tohle by nemelo by za potrebi - nove uz mam vsechno info, abych to udelal v 1 prubehu
+            # if get_id(issue) in self.__registered_issues:
+            #     continue
 
-            issues_expansion.extend(self._create_issue_record_using_sub_issues_existence(issue, data))
+            if len(data.parents_sub_issues[id]) > 0:
+                # issue has sub-issues - it is either hierarchy issue or sub-hierarchy issue
+                self._create_record_for_hierarchy_issue(issue)
 
-        data.issues.extend(issues_expansion)
+            elif id in self.__sub_issue_parents.values():
+                # issue has no sub-issues - it is sub-issue
+                self._create_record_for_sub_issue(issue)
+
+            else:
+                # issue is not sub-issue and has no sub-issues - it is issue
+                self._create_record_for_issue(issue)
+
+        # old code for delete after testing
+        # First register all issues with sub-issues
+        # for issue in data.issues:
+        #     if get_id(issue) in self.__registered_issues:
+        #         continue
+        #
+        #     self._create_issue_record_using_sub_issues_existence(issue, data)
 
         # Second register all hierarchy issues from sub-issues
-        registered_before = -1
-        while registered_before < len(self.__registered_issues):
-            registered_before = len(self.__registered_issues)
-            logger.debug("Looking for hierarchical issue among sub-issues...")
-
-            issues_expansion = []
-            for issue in data.issues:
-                iid = self.get_id(issue)
-                if iid in self.__registered_issues:
-                    continue
-
-                if iid in self.__sub_issue_parents and iid not in self.__local_sub_issues_checked:
-                    issues_expansion.extend(self._create_issue_record_using_sub_issues_existence(issue, data))
-                    self.__local_sub_issues_checked.append(iid)
-
-            data.issues.extend(issues_expansion)
+        # registered_before = -1
+        # while registered_before < len(self.__registered_issues):
+        #     registered_before = len(self.__registered_issues)
+        #     logger.debug("Looking for hierarchical issue among sub-issues...")
+        #
+        #     issues_expansion = []
+        #     for issue in data.issues:
+        #         iid = self.get_id(issue)
+        #         if iid in self.__registered_issues:
+        #             continue
+        #
+        #         if iid in self.__sub_issue_parents and iid not in self.__local_sub_issues_checked:
+        #             issues_expansion.extend(self._create_issue_record_using_sub_issues_existence(issue, data))
+        #             self.__local_sub_issues_checked.append(iid)
+        #
+        #     data.issues.extend(issues_expansion)
 
         # Third register all external sub-issues
-        for ext_sub_issue in self.__external_sub_issues:
-            if self.get_id(ext_sub_issue) in self.__registered_issues:
-                continue
-
-            self._create_record_for_sub_issue(ext_sub_issue)
+        # for ext_sub_issue in self.__external_sub_issues:
+        #     if self.get_id(ext_sub_issue) in self.__registered_issues:
+        #         continue
+        #
+        #     self._create_record_for_sub_issue(ext_sub_issue)
 
         # Now register all issues without sub-issues
-        for issue in data.issues:
-            if self.get_id(issue) in self.__registered_issues:
-                continue
-
-            self._create_issue_record_using_sub_issues_not_existence(issue)
+        # for issue in data.issues:
+        #     if self.get_id(issue) in self.__registered_issues:
+        #         continue
+        #
+        #     self._create_issue_record_using_sub_issues_not_existence(issue)
 
         # dev note: Each issue is now in records dict by its issue number - all on same level - no hierarchy
         # This is useful for population by PRs and commits
@@ -119,7 +136,7 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
         logger.debug("Registering direct commits to records...")
         for commit in data.commits:
             if commit.sha not in self.__registered_commits:
-                self._records[self.get_id(commit)] = CommitRecord(commit)
+                self._records[get_id(commit)] = CommitRecord(commit)
 
         # dev note: now we have all PRs and commits registered to issues or as stand-alone records
         #   let build hierarchy
@@ -160,22 +177,11 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
                         issue_id,
                     )
                     # dev note: here we expect that PR links to an issue in the same repository !!!
-                    i_repo_name, i_number_str = issue_id.split("#", 1)
-                    try:
-                        i_number = int(i_number_str)
-                    except ValueError:
-                        logger.error("Invalid issue id: %s", issue_id)
-                        continue
-                    parent_repository = data.get_repository(i_repo_name) or self.get_repository(i_repo_name)
-                    if parent_repository is not None:
-                        if data.get_repository(i_repo_name) is None:
-                            data.add_repository(parent_repository)
-                        parent_issue = self._safe_call(parent_repository.get_issue)(i_number)
-                    else:
-                        parent_issue = None
-
+                    org, repo, num = parse_issue_id(issue_id)
+                    repo_full_name = f"{org}/{repo}"
+                    parent_issue = self._safe_call(data.get_repository(repo_full_name).get_issue)(num) if data.get_repository(repo_full_name) is not None else None
                     if parent_issue is not None:
-                        self._create_issue_record_using_sub_issues_existence(parent_issue, data)
+                        self._create_record_for_issue(parent_issue)
 
                 if issue_id in self._records and isinstance(
                     self._records[issue_id], (SubIssueRecord, HierarchyIssueRecord, IssueRecord)
@@ -194,75 +200,77 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
             pr_rec = PullRequestRecord(pull, pull_labels, skip_record)
             for c in related_commits:  # register commits to the PR record
                 pr_rec.register_commit(c)
-            pid = self.get_id(pull)
+            pid = get_id(pull)
             self._records[pid] = pr_rec
             logger.debug("Created record for PR %s: %s", pid, pull.title)
 
-    def _create_issue_record_using_sub_issues_existence(self, issue: Issue, data: MinedData) -> list[SubIssue]:
-        # use presence of sub-issues as a hint for hierarchy issue or non hierarchy issue
-        sub_issues = list(issue.get_sub_issues())
-        logger.debug("Found %d sub-issues for %d", len(sub_issues), issue.number)
-        new_local_issues: list[SubIssue] = []
+    # def _create_issue_record_using_sub_issues_existence(self, issue: Issue, data: MinedData) -> list[SubIssue]:
+    #     # use presence of sub-issues as a hint for hierarchy issue or non hierarchy issue
+    #     iid = get_id(issue)
+    #     sub_issues_ids = data.parents_sub_issues[iid]
+    #     logger.debug("Found %d sub-issues for %d", len(sub_issues_ids), issue.number)
+    #
+    #     if len(sub_issues_ids) > 0:
+    #         self._create_record_for_hierarchy_issue(issue)
+    #         for siid in sub_issues_ids:
+    #             org, repo, num = parse_issue_id(siid)
+    #
+    #             # check if sub-issue is from current repository
+    #             if f"{org}/{repo}" != issue.repository.full_name:
+    #                 # register sub-issue and its parent for later hierarchy building
+    #                 # Note: GitHub now allows only 1 parent
+    #                 self.__sub_issue_parents[siid] = get_id(issue)
+    #
+    #                 # TODO - fetch
+    #
+    #                 self.__external_sub_issues.append(si)
+    #                 logger.debug(
+    #                     "Detected sub-issue %d from different repository %s - adding as external sub-issue"
+    #                     " for later processing",
+    #                     num,
+    #                     f"{org}/{repo}",
+    #                 )
+    #
+    #             else:
+    #                 use_issue = False
+    #                 if (
+    #                     data.since
+    #                     and si.state == IssueRecord.ISSUE_STATE_CLOSED
+    #                     and si.closed_at
+    #                     and data.since > si.closed_at
+    #                 ):
+    #                     logger.debug("Detected sub-issue %d closed in previous release.", si.number)
+    #                     if len(list(si.get_sub_issues())) > 0:
+    #                         use_issue = True
+    #                     else:
+    #                         self.__registered_issues.add(siid)
+    #
+    #                 elif si.state == IssueRecord.ISSUE_STATE_OPEN:
+    #                     logger.debug("Detected sub-issue %d is still open.", si.number)
+    #                     if len(list(si.get_sub_issues())) > 0:
+    #                         use_issue = True
+    #                     else:
+    #                         self.__registered_issues.add(siid)
+    #
+    #                 elif si.state == IssueRecord.ISSUE_STATE_CLOSED:  # issue is valid
+    #                     use_issue = True
+    #
+    #                 else:
+    #                     logger.warning("Detected unexpected sub-issue %d with parent %d", si.number, issue.number)
+    #
+    #                 if use_issue:
+    #                     self.__sub_issue_parents[siid] = get_id(issue)
+    #                     if si not in data.issues:
+    #                         new_local_issues.append(si)
+    #
+    #     return new_local_issues
 
-        if len(sub_issues) > 0:
-            self._create_record_for_hierarchy_issue(issue)
-            for si in sub_issues:
-                siid = self.get_id(si)
-
-                # check if sub-issue is from current repository
-                if si.repository.full_name != issue.repository.full_name:
-                    # register sub-issue and its parent for later hierarchy building
-                    # Note: GitHub now allows only 1 parent
-                    self.__sub_issue_parents[siid] = self.get_id(issue)
-
-                    self.__external_sub_issues.append(si)
-                    logger.debug(
-                        "Detected sub-issue %d from different repository %s - adding as external sub-issue"
-                        " for later processing",
-                        si.number,
-                        si.repository.full_name,
-                    )
-
-                else:
-                    use_issue = False
-                    if (
-                        data.since
-                        and si.state == IssueRecord.ISSUE_STATE_CLOSED
-                        and si.closed_at
-                        and data.since > si.closed_at
-                    ):
-                        logger.debug("Detected sub-issue %d closed in previous release.", si.number)
-                        if len(list(si.get_sub_issues())) > 0:
-                            use_issue = True
-                        else:
-                            self.__registered_issues.add(siid)
-
-                    elif si.state == IssueRecord.ISSUE_STATE_OPEN:
-                        logger.debug("Detected sub-issue %d is still open.", si.number)
-                        if len(list(si.get_sub_issues())) > 0:
-                            use_issue = True
-                        else:
-                            self.__registered_issues.add(siid)
-
-                    elif si.state == IssueRecord.ISSUE_STATE_CLOSED:  # issue is valid
-                        use_issue = True
-
-                    else:
-                        logger.warning("Detected unexpected sub-issue %d with parent %d", si.number, issue.number)
-
-                    if use_issue:
-                        self.__sub_issue_parents[siid] = self.get_id(issue)
-                        if si not in data.issues:
-                            new_local_issues.append(si)
-
-        return new_local_issues
-
-    def _create_issue_record_using_sub_issues_not_existence(self, issue: Issue) -> None:
-        # Expected to run after all issue with sub-issues are registered
-        if self.get_id(issue) in self.__sub_issue_parents.keys():  # pylint: disable=consider-iterating-dictionary
-            self._create_record_for_sub_issue(issue)
-        else:
-            self._create_record_for_issue(issue)
+    # def _create_issue_record_using_sub_issues_not_existence(self, issue: Issue) -> None:
+    #     # Expected to run after all issue with sub-issues are registered
+    #     if get_id(issue) in self.__sub_issue_parents.keys():  # pylint: disable=consider-iterating-dictionary
+    #         self._create_record_for_sub_issue(issue)
+    #     else:
+    #         self._create_record_for_issue(issue)
 
     def _create_record_for_hierarchy_issue(self, i: Issue, issue_labels: Optional[list[str]] = None) -> None:
         """
@@ -276,7 +284,7 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
             None
         """
         # check for skip labels presence and skip when detected
-        iid = self.get_id(i)
+        iid = get_id(i)
         if issue_labels is None:
             issue_labels = self._get_issue_labels_mix_with_type(i)
         skip_record = any(item in issue_labels for item in ActionInputs.get_skip_release_notes_labels())
@@ -300,13 +308,13 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
             issue_labels = self._get_issue_labels_mix_with_type(issue)
 
         super()._create_record_for_issue(issue, issue_labels)
-        self.__registered_issues.add(self.get_id(issue))
+        self.__registered_issues.add(get_id(issue))
 
     def _create_record_for_sub_issue(self, issue: Issue, issue_labels: Optional[list[str]] = None) -> None:
         if issue_labels is None:
             issue_labels = self._get_issue_labels_mix_with_type(issue)
 
-        iid: str = self.get_id(issue)
+        iid: str = get_id(issue)
         skip_record = any(item in issue_labels for item in ActionInputs.get_skip_release_notes_labels())
         logger.debug("Created record for sub issue %s: %s", iid, issue.title)
         self.__registered_issues.add(iid)

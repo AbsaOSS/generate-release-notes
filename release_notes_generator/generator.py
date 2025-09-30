@@ -26,8 +26,8 @@ from typing import Optional
 from github import Github
 from github.Repository import Repository
 
-from release_notes_generator.filter import FilterByRelease
-from release_notes_generator.miner import DataMiner
+from release_notes_generator.data.filter import FilterByRelease
+from release_notes_generator.data.miner import DataMiner
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.builder.builder import ReleaseNotesBuilder
 from release_notes_generator.chapters.custom_chapters import CustomChapters
@@ -89,6 +89,10 @@ class ReleaseNotesGenerator:
 
         filterer = FilterByRelease()
         data_filtered_by_release = filterer.filter(data=data)
+
+        # data expansion when hierarchy is enabled
+        if ActionInputs.get_hierarchy():
+            data.issues.update(miner.mine_missing_sub_issues(data))
 
         changelog_url: str = get_change_url(
             tag_name=ActionInputs.get_tag_name(),

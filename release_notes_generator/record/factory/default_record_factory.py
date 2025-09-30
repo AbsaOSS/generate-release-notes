@@ -19,7 +19,6 @@ DefaultRecordFactory builds Record objects (issues, pulls, commits) from mined G
 """
 
 import logging
-from functools import singledispatchmethod, lru_cache
 from typing import cast, Optional
 
 from github import Github
@@ -39,9 +38,9 @@ from release_notes_generator.record.factory.record_factory import RecordFactory
 from release_notes_generator.utils.decorators import safe_call_decorator
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
 from release_notes_generator.utils.pull_request_utils import get_issues_for_pr, extract_issue_numbers_from_body
+from release_notes_generator.utils.record_utils import get_id
 
 logger = logging.getLogger(__name__)
-
 
 class DefaultRecordFactory(RecordFactory):
     """
@@ -56,49 +55,19 @@ class DefaultRecordFactory(RecordFactory):
 
         self._records: dict[str, Record] = {}
 
-    @singledispatchmethod  # pylint: disable=abstract-method
-    def get_id(self, obj) -> str:
-        """
-        Get the ID of an object.
-
-        Parameters:
-            obj: The object to get the ID of.
-
-        Returns:
-            str: The ID of the object.
-        """
-        raise NotImplementedError(f"Unsupported type: {type(obj)}")
-
-    @get_id.register
-    def _(self, issue: Issue) -> str:
-        # delegate to a cached, hashable-only helper
-        return self._issue_id(issue.repository.full_name, issue.number)
-
-    @staticmethod
-    @lru_cache(maxsize=2048)
-    def _issue_id(repo_full_name: str, number: int) -> str:
-        return f"{repo_full_name}#{number}"
-
-    @get_id.register
-    def _(self, pull_request: PullRequest) -> str:
-        return f"{self._home_repository.full_name}#{pull_request.number}"
-
-    @get_id.register
-    def _(self, commit: Commit) -> str:
-        return f"{commit.sha}"
-
-    def get_repository(self, full_name: str) -> Optional[Repository]:
-        """
-        Retrieves the specified GitHub repository.
-
-        Returns:
-            Optional[Repository]: The GitHub repository if found, None otherwise.
-        """
-        repo: Optional[Repository] = self._safe_call(self._github.get_repo)(full_name)
-        if repo is None:
-            logger.error("Repository not found: %s", full_name)
-            return None
-        return repo
+    # TODO - this should not be needed now - delete
+    # def get_repository(self, full_name: str) -> Optional[Repository]:
+    #     """
+    #     Retrieves the specified GitHub repository.
+    #
+    #     Returns:
+    #         Optional[Repository]: The GitHub repository if found, None otherwise.
+    #     """
+    #     repo: Optional[Repository] = self._safe_call(self._github.get_repo)(full_name)
+    #     if repo is None:
+    #         logger.error("Repository not found: %s", full_name)
+    #         return None
+    #     return repo
 
     def generate(self, data: MinedData) -> dict[str, Record]:
         """
@@ -110,7 +79,7 @@ class DefaultRecordFactory(RecordFactory):
         """
 
         def register_pull_request(pr: PullRequest, skip_rec: bool) -> None:
-            l_pid = self.get_id(pr)
+            l_pid = get_id(pr)
             l_pull_labels = [label.name for label in pr.get_labels()]
             attached_any = False
             detected_issues = extract_issue_numbers_from_body(pr, repository=data.home_repository)
@@ -136,7 +105,7 @@ class DefaultRecordFactory(RecordFactory):
                     except ValueError:
                         logger.error("Invalid parent issue id: %s", parent_issue_id)
                         continue
-                    parent_repository = data.get_repository(pi_repo_name) or self.get_repository(pi_repo_name)
+                    parent_repository = data.get_repository(pi_repo_name)
                     if parent_repository is not None:
                         # cache for subsequent lookups
                         if data.get_repository(pi_repo_name) is None:
@@ -170,7 +139,7 @@ class DefaultRecordFactory(RecordFactory):
 
         logger.debug("Registering pull requests to records...")
         for pull in data.pull_requests:
-            pid = self.get_id(pull)
+            pid = get_id(pull)
             pull_labels = [label.name for label in pull.get_labels()]
             skip_record: bool = any(item in pull_labels for item in ActionInputs.get_skip_release_notes_labels())
 
@@ -217,7 +186,7 @@ class DefaultRecordFactory(RecordFactory):
                     rec_pr.register_commit(commit)
                     return True
 
-        self._records[self.get_id(commit)] = CommitRecord(commit=commit)
+        self._records[get_id(commit)] = CommitRecord(commit=commit)
         logger.debug("Created record for direct commit %s: %s", commit.sha, commit.commit.message)
         return False
 
@@ -236,5 +205,5 @@ class DefaultRecordFactory(RecordFactory):
         if issue_labels is None:
             issue_labels = [label.name for label in issue.get_labels()]
         skip_record = any(item in issue_labels for item in ActionInputs.get_skip_release_notes_labels())
-        self._records[iid := self.get_id(issue)] = IssueRecord(issue=issue, skip=skip_record, issue_labels=issue_labels)
+        self._records[iid := get_id(issue)] = IssueRecord(issue=issue, skip=skip_record, issue_labels=issue_labels)
         logger.debug("Created record for non hierarchy issue '%s': %s", iid, issue.title)

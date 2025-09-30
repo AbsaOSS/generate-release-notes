@@ -22,6 +22,8 @@ import logging
 from abc import ABCMeta, abstractmethod
 from typing import Optional
 
+from github.Repository import Repository
+
 logger = logging.getLogger(__name__)
 
 

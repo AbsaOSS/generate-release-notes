@@ -20,7 +20,7 @@ from datetime import datetime
 
 from github.Repository import Repository
 
-from release_notes_generator.filter import FilterByRelease
+from release_notes_generator.data.filter import FilterByRelease
 from release_notes_generator.model.mined_data import MinedData
 
 
