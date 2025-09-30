@@ -1,3 +1,7 @@
+"""
+Collect sub-issues for received parent issues in bulk via GitHub GraphQL API.
+"""
+
 from __future__ import annotations
 
 import json
@@ -29,9 +33,9 @@ class CollectorConfig:
     base_backoff: float = 1.0
 
     # Pagination and batching
-    per_page: int = 100              # Max allowed by GitHub for subIssues
-    max_parents_per_repo: int = 100   # Max issue aliases per repository(...) block
-    max_repos_per_request: int = 1   # Max repository blocks per query
+    per_page: int = 100  # Max allowed by GitHub for subIssues
+    max_parents_per_repo: int = 100  # Max issue aliases per repository(...) block
+    max_repos_per_request: int = 1  # Max repository blocks per query
 
     # Pacing
     gentle_pacing_seconds: float = 0.05
@@ -44,10 +48,10 @@ class BulkSubIssueCollector:
     """
 
     def __init__(
-            self,
-            token: str,
-            cfg: Optional[CollectorConfig] = None,
-            session: Optional[requests.Session] = None,
+        self,
+        token: str,
+        cfg: Optional[CollectorConfig] = None,
+        session: Optional[requests.Session] = None,
     ):
         self._cfg = cfg or CollectorConfig()
         self._session = session or requests.Session()
@@ -59,6 +63,7 @@ class BulkSubIssueCollector:
         # Parent -> list of its direct sub-issues ("org/repo#n")
         self.parents_sub_issues: dict[str, list[str]] = {}
 
+    # pylint: disable=too-many-locals,too-many-statements,too-many-branches
     def scan_sub_issues_for_parents(self, parents_to_check: list[str]) -> list[str]:
         """
         Input:  ["org/repo#123", "org2/repo2#77", ...]
@@ -86,9 +91,7 @@ class BulkSubIssueCollector:
 
             # Maintain cursors per (org, repo, issue).
             cursors: Dict[Tuple[str, str, int], Optional[str]] = {}
-            remaining_by_repo: Dict[Tuple[str, str], Set[int]] = {
-                k: set(v) for k, v in repo_chunk
-            }
+            remaining_by_repo: Dict[Tuple[str, str], Set[int]] = {k: set(v) for k, v in repo_chunk}
             for (org, repo), nums in remaining_by_repo.items():
                 for n in nums:
                     cursors[(org, repo, n)] = None
@@ -185,7 +188,8 @@ class BulkSubIssueCollector:
                 time.sleep(0.05)
 
         # Deterministic order
-        return sorted(new_parents_to_check, key=lambda s: (lambda o, r, n: (o, r, n))(*parse_issue_id(s)))
+        # return sorted(new_parents_to_check, key=lambda s: (lambda o, r, n: (o, r, n))(*parse_issue_id(s)))
+        return sorted(new_parents_to_check, key=parse_issue_id)
 
     # ---------- internals ----------
 

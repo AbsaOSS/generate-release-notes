@@ -60,9 +60,10 @@ class MinedData:
         """Add a repository to the mined data if not already present."""
         if repository.full_name not in self._repositories:
             self._repositories[repository.full_name] = repository
-            logger.debug(f"Added repository {repository.full_name} to mined data.")
+            logger.debug("Added repository %s to mined data.", repository.full_name)
 
     def get_repository(self, full_name: str) -> Optional[Repository]:
+        """Get a repository by its full name."""
         if full_name not in self._repositories:
             return None
 

@@ -64,7 +64,9 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
         Returns:
             dict[str, Record]: A dictionary of records indexed by their IDs.
         """
-        logger.debug("Creation of records started...")  # NEW: uz mam mnapovani, kdo je hierarchy, kdo je SubIssue a kdo je Issue
+        logger.debug(
+            "Creation of records started..."
+        )  # NEW: uz mam mnapovani, kdo je hierarchy, kdo je SubIssue a kdo je Issue
         for issue, repo in data.issues.items():
             iid = get_id(issue, repo)
 
@@ -97,12 +99,10 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
         logger.debug("Building issues hierarchy...")
 
         self._re_register_hierarchy_issues(
-            sub_issues_ids = list({iid for sublist in data.parents_sub_issues.values() for iid in sublist}),
-            sub_issue_parents = {
-                sub_issue: parent
-                for parent, sublist in data.parents_sub_issues.items()
-                for sub_issue in sublist
-            }
+            sub_issues_ids=list({iid for sublist in data.parents_sub_issues.values() for iid in sublist}),
+            sub_issue_parents={
+                sub_issue: parent for parent, sublist in data.parents_sub_issues.items() for sub_issue in sublist
+            },
         )
         self.order_hierarchy_levels()
 
@@ -115,6 +115,7 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
         )
         return self._records
 
+    # pylint: disable=too-many-statements
     def _register_pull_and_its_commits_to_issue(
         self, pull: PullRequest, pid: str, data: MinedData, target_repository: Optional[Repository] = None
     ) -> None:
@@ -140,10 +141,10 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
                     )
                     # dev note: here we expect that PR links to an issue in the same repository !!!
                     org, repo, num = parse_issue_id(issue_id)
-                    repo_full_name = f"{org}/{repo}"
-                    parent_issue = self._safe_call(data.get_repository(repo_full_name).get_issue)(num) if data.get_repository(repo_full_name) is not None else None
+                    r = data.get_repository(f"{org}/{repo}")
+                    parent_issue = self._safe_call(r.get_issue)(num) if r is not None else None
                     if parent_issue is not None:
-                        self._create_record_for_issue(parent_issue, get_id(parent_issue, data.get_repository(repo_full_name)))
+                        self._create_record_for_issue(parent_issue, get_id(parent_issue, r))  # type: ignore[arg-type]
 
                 if issue_id in self._records and isinstance(
                     self._records[issue_id], (SubIssueRecord, HierarchyIssueRecord, IssueRecord)
@@ -202,7 +203,7 @@ class IssueHierarchyRecordFactory(DefaultRecordFactory):
         super()._create_record_for_issue(issue, iid, issue_labels)
         self.__registered_issues.add(iid)
 
-    def _create_record_for_sub_issue(self, issue: Issue, iid: str,  issue_labels: Optional[list[str]] = None) -> None:
+    def _create_record_for_sub_issue(self, issue: Issue, iid: str, issue_labels: Optional[list[str]] = None) -> None:
         if issue_labels is None:
             issue_labels = self._get_issue_labels_mix_with_type(issue)
 

@@ -67,8 +67,12 @@ class DataMiner:
         self._get_issues(data)
 
         # pulls and commits, and then reduce them by the latest release since time
-        pull_requests = list(self._safe_call(repo.get_pulls)(state=PullRequestRecord.PR_STATE_CLOSED, base=repo.default_branch))
-        open_pull_requests = list(self._safe_call(repo.get_pulls)(state=PullRequestRecord.PR_STATE_OPEN, base=repo.default_branch))
+        pull_requests = list(
+            self._safe_call(repo.get_pulls)(state=PullRequestRecord.PR_STATE_CLOSED, base=repo.default_branch)
+        )
+        open_pull_requests = list(
+            self._safe_call(repo.get_pulls)(state=PullRequestRecord.PR_STATE_OPEN, base=repo.default_branch)
+        )
         data.pull_requests = {pr: data.home_repository for pr in pull_requests}
         if data.since:
             commits = list(self._safe_call(repo.get_commits)(since=data.since))
@@ -85,6 +89,13 @@ class DataMiner:
         return de_duplicated_data
 
     def mine_missing_sub_issues(self, data: MinedData) -> dict[Issue, Repository]:
+        """
+        Mines missing sub-issues from GitHub.
+        Parameters:
+            data (MinedData): The mined data containing origin sets of issues and pull requests.
+        Returns:
+            list[Issue]: A list of fetched missing issues.
+        """
         logger.debug("Mapping sub-issues...")
         data.parents_sub_issues = self._scan_sub_issues_for_parents([get_id(i, r) for i, r in data.issues.items()])
 
@@ -139,16 +150,17 @@ class DataMiner:
                     data.add_repository(new_repo)
 
             issue = None
-            if data.get_repository(f"{org}/{repo}") is not None:
-                issue = self._safe_call(data.get_repository(f"{org}/{repo}").get_issue)(num)
-            if issue is None:
-                logger.error("Issue not found: %s", parent_id)
-                continue
-            else:
+            r = data.get_repository(f"{org}/{repo}")
+            if r is not None:
+                issue = self._safe_call(r.get_issue)(num)
+                if issue is None:
+                    logger.error("Issue not found: %s", parent_id)
+                    continue
+
                 logger.debug("Fetching missing issue: %s", parent_id)
 
-            # add to issues list
-            fetched_issues[issue] = data.get_repository(f"{org}/{repo}")
+                # add to issues list
+                fetched_issues[issue] = r
 
         logger.debug("Fetched %d missing issues.", len(fetched_issues))
         return fetched_issues
@@ -323,7 +335,11 @@ class DataMiner:
         pr_numbers = {pr.number for pr in data.pull_requests.keys()}
         open_pr_numbers = [pr.number for pr in open_pull_requests]
 
-        filtered_issues = {issue: repo for issue, repo in data.issues.items() if issue.number not in pr_numbers and issue.number not in open_pr_numbers}
+        filtered_issues = {
+            issue: repo
+            for issue, repo in data.issues.items()
+            if issue.number not in pr_numbers and issue.number not in open_pr_numbers
+        }
 
         logger.debug("Duplicated issues removed: %s", len(data.issues.items()) - len(filtered_issues.items()))
 

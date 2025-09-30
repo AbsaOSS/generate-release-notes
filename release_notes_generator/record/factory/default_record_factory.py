@@ -42,6 +42,7 @@ from release_notes_generator.utils.record_utils import get_id
 
 logger = logging.getLogger(__name__)
 
+
 class DefaultRecordFactory(RecordFactory):
     """
     A class used to generate records for release notes.
@@ -152,7 +153,9 @@ class DefaultRecordFactory(RecordFactory):
                 register_pull_request(pull, pid, skip_record)
 
         logger.debug("Registering commits to records...")
-        detected_direct_commits_count = sum(not self.register_commit_to_record(commit, get_id(commit, repo)) for commit, repo in data.commits.items())
+        detected_direct_commits_count = sum(
+            not self.register_commit_to_record(commit, get_id(commit, repo)) for commit, repo in data.commits.items()
+        )
 
         logger.info(
             "Generated %d records from %d issues and %d PRs, with %d commits detected.",

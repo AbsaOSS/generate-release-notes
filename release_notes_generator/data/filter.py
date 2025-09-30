@@ -85,12 +85,12 @@ class FilterByRelease(Filter):
                     if pull.number not in pulls_seen:
                         pulls_seen.add(pull.number)
                         pulls_dict[pull] = repo
-            logger.debug("Count of pulls reduced from %d to %d", len(data.pull_requests.items()), len(pulls_dict.items()))
+            logger.debug(
+                "Count of pulls reduced from %d to %d", len(data.pull_requests.items()), len(pulls_dict.items())
+            )
 
             commits_dict = {
-                commit: repo
-                for commit, repo in data.commits.items()
-                if commit.commit.author.date > data.since
+                commit: repo for commit, repo in data.commits.items() if commit.commit.author.date > data.since
             }
             logger.debug("Count of commits reduced from %d to %d", len(data.commits.items()), len(commits_dict.items()))
 
@@ -145,7 +145,11 @@ class FilterByRelease(Filter):
         Returns:
             dict[Issue, Repository]: The filtered issues.
         """
-        return {issue: repo for issue, repo in data.issues.items() if (issue.closed_at is None) or (issue.closed_at >= data.since)}
+        return {
+            issue: repo
+            for issue, repo in data.issues.items()
+            if (issue.closed_at is None) or (issue.closed_at >= data.since)
+        }
 
     @staticmethod
     def _filter_issues_issue_hierarchy(data: MinedData) -> dict[Issue, Repository]:
@@ -162,8 +166,5 @@ class FilterByRelease(Filter):
         return {
             issue: repo
             for issue, repo in data.issues.items()
-            if (
-                (issue.closed_at is not None and issue.closed_at >= data.since)
-                or (issue.state == "open")
-            )
+            if ((issue.closed_at is not None and issue.closed_at >= data.since) or (issue.state == "open"))
         }
