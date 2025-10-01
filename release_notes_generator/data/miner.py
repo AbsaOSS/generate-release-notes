@@ -27,6 +27,7 @@ import semver
 from github import Github
 from github.GitRelease import GitRelease
 from github.Issue import Issue
+from github.IssuePullRequest import IssuePullRequest
 from github.PullRequest import PullRequest
 from github.Repository import Repository
 
@@ -69,8 +70,8 @@ class DataMiner:
         pull_requests = list(
             self._safe_call(repo.get_pulls)(state=PullRequestRecord.PR_STATE_CLOSED, base=repo.default_branch)
         )
-        open_pull_requests = list(
-            self._safe_call(repo.get_pulls)(state=PullRequestRecord.PR_STATE_OPEN, base=repo.default_branch)
+        all_pull_requests = list(
+            self._safe_call(repo.get_pulls)()
         )
         data.pull_requests = {pr: data.home_repository for pr in pull_requests}
         if data.since:
@@ -82,7 +83,7 @@ class DataMiner:
         logger.info("Initial data mining from GitHub completed.")
 
         logger.info("Filtering duplicated issues from the list of issues...")
-        de_duplicated_data = self.__filter_duplicated_issues(data, open_pull_requests)
+        de_duplicated_data = self.__filter_duplicated_issues(data, all_pull_requests)
         logger.info("Filtering duplicated issues from the list of issues finished.")
 
         return de_duplicated_data
@@ -319,29 +320,28 @@ class DataMiner:
         return rls
 
     @staticmethod
-    def __filter_duplicated_issues(data: MinedData, open_pull_requests: list[PullRequest]) -> "MinedData":
+    def __filter_duplicated_issues(data: MinedData, all_pull_requests: list[PullRequest]) -> "MinedData":
         """
         Filters out duplicated issues from the list of issues.
         This method address problem in output of GitHub API where issues list contains PR values.
 
         Parameters:
             data (MinedData): The mined data containing issues and pull requests.
-            open_pull_requests (list[PullRequest]): List of currently open pull requests.
+            all_pull_requests (list[PullRequest]): List of currently open pull requests.
 
         Returns:
             MinedData: The mined data with duplicated issues removed.
         """
         pr_numbers = {pr.number for pr in data.pull_requests.keys()}
-        open_pr_numbers = [pr.number for pr in open_pull_requests]
+        all_pr_numbers = [pr.number for pr in all_pull_requests]
 
         filtered_issues = {
             issue: repo
             for issue, repo in data.issues.items()
-            if issue.number not in pr_numbers and issue.number not in open_pr_numbers
+            if issue.number not in pr_numbers and issue.number not in all_pr_numbers and "/issues/" in issue.html_url
         }
 
         logger.debug("Duplicated issues removed: %s", len(data.issues.items()) - len(filtered_issues.items()))
 
         data.issues = filtered_issues
-
         return data
