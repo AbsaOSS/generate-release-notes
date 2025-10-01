@@ -37,6 +37,7 @@ from release_notes_generator.model.chapter import Chapter
 from release_notes_generator.chapters.custom_chapters import CustomChapters
 from release_notes_generator.model.sub_issue_record import SubIssueRecord
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
+from release_notes_generator.utils.record_utils import get_id
 
 
 # Test classes
@@ -624,6 +625,7 @@ def mined_data_isolated_record_types_no_labels_no_type_defined(
     solo_closed_issue = copy.deepcopy(mock_issue_closed)        # 121
     solo_closed_issue.body += "\nRelease Notes:\n- Solo issue release note"
     solo_closed_issue.get_labels.return_value = []
+    data.parents_sub_issues[get_id(solo_closed_issue, mock_repo)] = []
 
     # single hierarchy issue record - two sub-issues without PRs
     hi_two_sub_issues_no_prs = copy.deepcopy(mock_open_hierarchy_issue)
@@ -632,7 +634,9 @@ def mined_data_isolated_record_types_no_labels_no_type_defined(
     hi_two_sub_issues_no_prs.body = "I301 open\nRelease Notes:\n- Hierarchy level release note"
     sub_issue_1 = copy.deepcopy(mock_open_sub_issue)
     sub_issue_2 = copy.deepcopy(mock_closed_sub_issue)
-    hi_two_sub_issues_no_prs.get_sub_issues.return_value = [sub_issue_1, sub_issue_2]
+    data.parents_sub_issues[si1 := get_id(sub_issue_1, mock_repo)] = []
+    data.parents_sub_issues[si2 := get_id(sub_issue_2, mock_repo)] = []
+    data.parents_sub_issues[get_id(hi_two_sub_issues_no_prs, mock_repo)] = [si1, si2]
 
     # single hierarchy issue record - two sub-issues with PRs - no commits
     hi_two_sub_issues_with_prs = copy.deepcopy(mock_open_hierarchy_issue)
@@ -653,7 +657,9 @@ def mined_data_isolated_record_types_no_labels_no_type_defined(
     mock_pr_closed_2.merge_commit_sha = "merge_commit_sha_150"
     mock_pr_closed_2.get_labels.return_value = []
     mock_pr_closed_2.body += "\nCloses #451"
-    hi_two_sub_issues_with_prs.get_sub_issues.return_value = [sub_issue_3, sub_issue_4]
+    data.parents_sub_issues[si3 := get_id(sub_issue_3, mock_repo)] = []
+    data.parents_sub_issues[si4 := get_id(sub_issue_4, mock_repo)] = []
+    data.parents_sub_issues[get_id(hi_two_sub_issues_with_prs, mock_repo)] = [si3, si4]
 
     # single hierarchy issue record - two sub-issues with PRs - with commits
     hi_two_sub_issues_with_prs_with_commit = copy.deepcopy(mock_open_hierarchy_issue)
@@ -677,7 +683,9 @@ def mined_data_isolated_record_types_no_labels_no_type_defined(
     mock_commit_1 = copy.deepcopy(mock_commit)
     mock_commit_1.sha = "merge_commit_sha_151"
     mock_commit_1.commit.message = "Fixed bug in PR 151"
-    hi_two_sub_issues_with_prs_with_commit.get_sub_issues.return_value = [sub_issue_5, sub_issue_6]
+    data.parents_sub_issues[si5 := get_id(sub_issue_5, mock_repo)] = []
+    data.parents_sub_issues[si6 := get_id(sub_issue_6, mock_repo)] = []
+    data.parents_sub_issues[get_id(hi_two_sub_issues_with_prs_with_commit, mock_repo)] = [si5, si6]
 
     # single hierarchy issue record - one sub hierarchy issues - two sub-issues with PRs - with commits
     hi_one_sub_hierarchy_two_sub_issues_with_prs_with_commit = copy.deepcopy(mock_open_hierarchy_issue)
@@ -705,8 +713,10 @@ def mined_data_isolated_record_types_no_labels_no_type_defined(
     mock_commit_2 = copy.deepcopy(mock_commit)
     mock_commit_2.sha = "merge_commit_sha_152"
     mock_commit_2.commit.message = "Fixed bug in PR 152"
-    sub_hierarchy_issue.get_sub_issues.return_value = [sub_issue_7, sub_issue_8]
-    hi_one_sub_hierarchy_two_sub_issues_with_prs_with_commit.get_sub_issues.return_value = [sub_hierarchy_issue]
+    data.parents_sub_issues[si7 := get_id(sub_issue_7, mock_repo)] = []
+    data.parents_sub_issues[si8 := get_id(sub_issue_8, mock_repo)] = []
+    data.parents_sub_issues[shi := get_id(sub_hierarchy_issue, mock_repo)] = [si7, si8]
+    data.parents_sub_issues[get_id(hi_one_sub_hierarchy_two_sub_issues_with_prs_with_commit, mock_repo)] = [shi]
 
     # single pull request record (closed, merged)
     mock_pr_closed_1 = copy.deepcopy(mock_pull_closed)      # 123
@@ -719,18 +729,20 @@ def mined_data_isolated_record_types_no_labels_no_type_defined(
     mock_commit_3.sha = "merge_commit_sha_direct"
     mock_commit_3.commit.message = "Direct commit example"
 
-    data.issues = [solo_closed_issue,
-                   hi_two_sub_issues_no_prs,
-                   hi_two_sub_issues_with_prs,
-                   hi_two_sub_issues_with_prs_with_commit,
-                   hi_one_sub_hierarchy_two_sub_issues_with_prs_with_commit,    # index 4
-                   sub_issue_1, sub_issue_2,                                    # index 5,6
-                   sub_issue_3, sub_issue_4,                                    # index 7,8
-                   sub_issue_5, sub_issue_6,                                    # index 9,10
-                   sub_issue_7, sub_issue_8,                                    # index 11,12
-                   sub_hierarchy_issue]                                         # index 13
-    data.pull_requests = [mock_pr_closed_1, mock_pr_merged_1, mock_pr_closed_2, mock_pr_closed_3, mock_pr_closed_4]
-    data.commits = [mock_commit_1, mock_commit_2, mock_commit_3]
+    data.issues = {solo_closed_issue: mock_repo,
+                   hi_two_sub_issues_no_prs: mock_repo,
+                   hi_two_sub_issues_with_prs: mock_repo,
+                   hi_two_sub_issues_with_prs_with_commit: mock_repo,
+                   hi_one_sub_hierarchy_two_sub_issues_with_prs_with_commit: mock_repo,    # index 4
+                   sub_issue_1: mock_repo, sub_issue_2: mock_repo,                         # index 5,6
+                   sub_issue_3: mock_repo, sub_issue_4: mock_repo,                         # index 7,8
+                   sub_issue_5: mock_repo, sub_issue_6: mock_repo,                         # index 9,10
+                   sub_issue_7: mock_repo, sub_issue_8: mock_repo,                         # index 11,12
+                   sub_hierarchy_issue: mock_repo}                                         # index 13
+    data.pull_requests = {mock_pr_closed_1: mock_repo, mock_pr_merged_1: mock_repo,
+                          mock_pr_closed_2: mock_repo, mock_pr_closed_3: mock_repo,
+                          mock_pr_closed_4: mock_repo}
+    data.commits = {mock_commit_1: mock_repo, mock_commit_2: mock_repo, mock_commit_3: mock_repo}
 
     return data
 
@@ -750,26 +762,28 @@ def mined_data_isolated_record_types_with_labels_no_type_defined(mocker, mined_d
     l_bug = mocker.Mock(spec=MockLabel)
     l_bug.name = "bug"
 
-    data.issues[0].get_labels.return_value = [l_enh]
+    iks = list(data.issues.keys())
+    iks[0].get_labels.return_value = [l_enh]
 
-    data.issues[1].get_labels.return_value = [l_epic]       # 301
-    data.issues[2].get_labels.return_value = [l_epic]       # 302
-    data.issues[3].get_labels.return_value = [l_epic]       # 303
-    data.issues[4].get_labels.return_value = [l_epic]       # 304
+    iks[1].get_labels.return_value = [l_epic]       # 301
+    iks[2].get_labels.return_value = [l_epic]       # 302
+    iks[3].get_labels.return_value = [l_epic]       # 303
+    iks[4].get_labels.return_value = [l_epic]       # 304
 
-    data.issues[13].get_labels.return_value = [l_feature]   # 350
+    iks[13].get_labels.return_value = [l_feature]   # 350
 
-    data.issues[5].get_labels.return_value = [l_api]
-    data.issues[6].get_labels.return_value = [l_api]
-    data.issues[7].get_labels.return_value = [l_api]
-    data.issues[8].get_labels.return_value = [l_api]
-    data.issues[9].get_labels.return_value = [l_api]
-    data.issues[10].get_labels.return_value = [l_api]
-    data.issues[11].get_labels.return_value = [l_api]
-    data.issues[12].get_labels.return_value = [l_api]
+    iks[5].get_labels.return_value = [l_api]
+    iks[6].get_labels.return_value = [l_api]
+    iks[7].get_labels.return_value = [l_api]
+    iks[8].get_labels.return_value = [l_api]
+    iks[9].get_labels.return_value = [l_api]
+    iks[10].get_labels.return_value = [l_api]
+    iks[11].get_labels.return_value = [l_api]
+    iks[12].get_labels.return_value = [l_api]
 
-    data.pull_requests[0].get_labels.return_value = [l_bug]
-    data.pull_requests[4].get_labels.return_value = [l_bug]
+    pks = list(data.pull_requests.keys())
+    pks[0].get_labels.return_value = [l_bug]
+    pks[4].get_labels.return_value = [l_bug]
 
     return data
 
@@ -794,37 +808,38 @@ def mined_data_isolated_record_types_no_labels_with_type_defined(mocker, mined_d
     l_task = mocker.Mock(spec=MockLabel)
     l_task.name = "task"
 
-    data.issues[0].type = t_feature
-    data.issues[0].get_labels.return_value = [l_feature]
+    iks = list(data.issues.keys())
+    iks[0].type = t_feature
+    iks[0].get_labels.return_value = [l_feature]
 
-    data.issues[1].type = t_epic       # 301
-    data.issues[1].get_labels.return_value = [l_epic]
-    data.issues[2].type = t_epic       # 302
-    data.issues[2].get_labels.return_value = [l_epic]
-    data.issues[3].type = t_epic       # 303
-    data.issues[3].get_labels.return_value = [l_epic]
-    data.issues[4].type = t_epic       # 304
-    data.issues[4].get_labels.return_value = [l_epic]
+    iks[1].type = t_epic       # 301
+    iks[1].get_labels.return_value = [l_epic]
+    iks[2].type = t_epic       # 302
+    iks[2].get_labels.return_value = [l_epic]
+    iks[3].type = t_epic       # 303
+    iks[3].get_labels.return_value = [l_epic]
+    iks[4].type = t_epic       # 304
+    iks[4].get_labels.return_value = [l_epic]
 
-    data.issues[13].type = t_feature   # 350
-    data.issues[13].get_labels.return_value = [l_feature]
+    iks[13].type = t_feature   # 350
+    iks[13].get_labels.return_value = [l_feature]
 
-    data.issues[5].type = t_task
-    data.issues[5].get_labels.return_value = [l_task]
-    data.issues[6].type = t_task
-    data.issues[6].get_labels.return_value = [l_task]
-    data.issues[7].type = t_task
-    data.issues[7].get_labels.return_value = [l_task]
-    data.issues[8].type = t_task
-    data.issues[8].get_labels.return_value = [l_task]
-    data.issues[9].type = t_task
-    data.issues[9].get_labels.return_value = [l_task]
-    data.issues[10].type = t_task
-    data.issues[10].get_labels.return_value = [l_task]
-    data.issues[11].type = t_task
-    data.issues[11].get_labels.return_value = [l_task]
-    data.issues[12].type = t_task
-    data.issues[12].get_labels.return_value = [l_task]
+    iks[5].type = t_task
+    iks[5].get_labels.return_value = [l_task]
+    iks[6].type = t_task
+    iks[6].get_labels.return_value = [l_task]
+    iks[7].type = t_task
+    iks[7].get_labels.return_value = [l_task]
+    iks[8].type = t_task
+    iks[8].get_labels.return_value = [l_task]
+    iks[9].type = t_task
+    iks[9].get_labels.return_value = [l_task]
+    iks[10].type = t_task
+    iks[10].get_labels.return_value = [l_task]
+    iks[11].type = t_task
+    iks[11].get_labels.return_value = [l_task]
+    iks[12].type = t_task
+    iks[12].get_labels.return_value = [l_task]
 
     return data
 
@@ -842,23 +857,24 @@ def mined_data_isolated_record_types_with_labels_with_type_defined(mocker, mined
     t_bug = mocker.Mock(spec=IssueType)
     t_bug.name = "Bug"
 
-    data.issues[0].type = t_bug
+    iks = list(data.issues.keys())
+    iks[0].type = t_bug
 
-    data.issues[1].type = t_epic       # 301
-    data.issues[2].type = t_epic       # 302
-    data.issues[3].type = t_epic       # 303
-    data.issues[4].type = t_epic       # 304
+    iks[1].type = t_epic       # 301
+    iks[2].type = t_epic       # 302
+    iks[3].type = t_epic       # 303
+    iks[4].type = t_epic       # 304
 
-    data.issues[13].type = t_feature   # 350
+    iks[13].type = t_feature   # 350
 
-    data.issues[5].type = t_task
-    data.issues[6].type = t_task
-    data.issues[7].type = t_task
-    data.issues[8].type = t_task
-    data.issues[9].type = t_task
-    data.issues[10].type = t_task
-    data.issues[11].type = t_task
-    data.issues[12].type = t_task
+    iks[5].type = t_task
+    iks[6].type = t_task
+    iks[7].type = t_task
+    iks[8].type = t_task
+    iks[9].type = t_task
+    iks[10].type = t_task
+    iks[11].type = t_task
+    iks[12].type = t_task
 
     return data
 

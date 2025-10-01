@@ -26,14 +26,18 @@ from typing import Optional
 import semver
 from github import Github
 from github.GitRelease import GitRelease
+from github.Issue import Issue
+from github.PullRequest import PullRequest
 from github.Repository import Repository
 
 from release_notes_generator.action_inputs import ActionInputs
+from release_notes_generator.data.utils.bulk_sub_issue_collector import CollectorConfig, BulkSubIssueCollector
 from release_notes_generator.model.issue_record import IssueRecord
 from release_notes_generator.model.mined_data import MinedData
 from release_notes_generator.model.pull_request_record import PullRequestRecord
 from release_notes_generator.utils.decorators import safe_call_decorator
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
+from release_notes_generator.utils.record_utils import get_id, parse_issue_id
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +50,132 @@ class DataMiner:
     def __init__(self, github_instance: Github, rate_limiter: GithubRateLimiter):
         self.github_instance = github_instance
         self._safe_call = safe_call_decorator(rate_limiter)
+
+    def mine_data(self) -> MinedData:
+        """
+        Mines data from GitHub, including repository information, issues, pull requests, commits, and releases.
+        """
+        logger.info("Starting data mining from GitHub...")
+        repo: Optional[Repository] = self.get_repository(ActionInputs.get_github_repository())
+        if repo is None:
+            raise ValueError("Repository not found")
+
+        data = MinedData(repo)
+        data.release = self.get_latest_release(repo)
+
+        self._get_issues(data)
+
+        # pulls and commits, and then reduce them by the latest release since time
+        pull_requests = list(
+            self._safe_call(repo.get_pulls)(state=PullRequestRecord.PR_STATE_CLOSED, base=repo.default_branch)
+        )
+        open_pull_requests = list(
+            self._safe_call(repo.get_pulls)(state=PullRequestRecord.PR_STATE_OPEN, base=repo.default_branch)
+        )
+        data.pull_requests = {pr: data.home_repository for pr in pull_requests}
+        if data.since:
+            commits = list(self._safe_call(repo.get_commits)(since=data.since))
+        else:
+            commits = list(self._safe_call(repo.get_commits)())
+        data.commits = {c: data.home_repository for c in commits}
+
+        logger.info("Initial data mining from GitHub completed.")
+
+        logger.info("Filtering duplicated issues from the list of issues...")
+        de_duplicated_data = self.__filter_duplicated_issues(data, open_pull_requests)
+        logger.info("Filtering duplicated issues from the list of issues finished.")
+
+        return de_duplicated_data
+
+    def mine_missing_sub_issues(self, data: MinedData) -> dict[Issue, Repository]:
+        """
+        Mines missing sub-issues from GitHub.
+        Parameters:
+            data (MinedData): The mined data containing origin sets of issues and pull requests.
+        Returns:
+            dict[Issue, Repository]: A dictionary mapping fetched issues to their repositories.
+        """
+        logger.info("Mapping sub-issues...")
+        data.parents_sub_issues = self._scan_sub_issues_for_parents([get_id(i, r) for i, r in data.issues.items()])
+
+        logger.info("Fetching missing issues...")
+        return self._fetch_missing_issues_and_prs(data)
+
+    def _scan_sub_issues_for_parents(self, parents_to_check: list[str]) -> dict[str, list[str]]:
+        """
+        Scan sub-issues for parents.
+
+        Parameters:
+            parents_to_check (list[str]): List of parent issue IDs to check.
+        Returns:
+            dict[str, list[str]]: A dictionary mapping parent issue IDs to their sub-issue IDs.
+        """
+        new_parent_ids: list[str] = parents_to_check
+        cfg = CollectorConfig(verify_tls=False)
+        bulk_sub_issue_collector = BulkSubIssueCollector(ActionInputs.get_github_token(), cfg)
+        parents_sub_issues: dict[str, list[str]] = {}
+
+        # run in cycle to get all levels of hierarchy
+        while new_parent_ids:
+            logger.debug("Scanning sub-issues with parent ids: %s", new_parent_ids)
+            new_parent_ids = bulk_sub_issue_collector.scan_sub_issues_for_parents(new_parent_ids)
+            parents_sub_issues.update(bulk_sub_issue_collector.parents_sub_issues)
+
+        return parents_sub_issues
+
+    def _fetch_missing_issues_and_prs(self, data: MinedData) -> dict[Issue, Repository]:
+        """
+        Fetch missing issues.
+
+        Parameters:
+            data (MinedData): The mined data containing origin sets of issues and pull requests.
+        Returns:
+            dict[Issue, Repository]: A dictionary mapping fetched issues to their repositories.
+        """
+        fetched_issues: dict[Issue, Repository] = {}
+
+        origin_issue_ids = {get_id(i, r) for i, r in data.issues.items()}
+        for parent_id in data.parents_sub_issues.keys():
+            if parent_id in origin_issue_ids:
+                continue
+
+            # fetch issue by id
+            org, repo, num = parse_issue_id(parent_id)
+
+            if data.get_repository(f"{org}/{repo}") is None:
+                new_repo = self._fetch_repository(f"{org}/{repo}")
+                if new_repo is not None:
+                    # cache for subsequent lookups
+                    data.add_repository(new_repo)
+
+            issue = None
+            r = data.get_repository(f"{org}/{repo}")
+            if r is not None:
+                issue = self._safe_call(r.get_issue)(num)
+                if issue is None:
+                    logger.error("Issue not found: %s", parent_id)
+                    continue
+
+                logger.debug("Fetching missing issue: %s", parent_id)
+
+                # add to issues list
+                fetched_issues[issue] = r
+
+        logger.debug("Fetched %d missing issues.", len(fetched_issues))
+        return fetched_issues
+
+    def _fetch_repository(self, full_name: str) -> Optional[Repository]:
+        """
+        Fetch a repository by its full name.
+
+        Returns:
+            Optional[Repository]: The GitHub repository if found, None otherwise.
+        """
+        repo: Optional[Repository] = self._safe_call(self.github_instance.get_repo)(full_name)
+        if repo is None:
+            logger.error("Repository not found: %s", full_name)
+            return None
+        return repo
 
     def check_repository_exists(self) -> bool:
         """
@@ -72,32 +202,6 @@ class DataMiner:
             logger.error("Repository not found: %s", full_name)
             return None
         return repo
-
-    def mine_data(self) -> MinedData:
-        """
-        Mines data from GitHub, including repository information, issues, pull requests, commits, and releases.
-        """
-        logger.info("Starting data mining from GitHub...")
-        repo: Optional[Repository] = self.get_repository(ActionInputs.get_github_repository())
-        if repo is None:
-            raise ValueError("Repository not found")
-
-        data = MinedData(repo)
-        data.release = self.get_latest_release(repo)
-
-        self._get_issues(data)
-
-        # pulls and commits, and then reduce them by the latest release since time
-        data.pull_requests = list(self._safe_call(repo.get_pulls)(state=PullRequestRecord.PR_STATE_CLOSED))
-        data.commits = list(self._safe_call(repo.get_commits)())
-
-        logger.info("Data mining from GitHub completed.")
-
-        logger.info("Filtering duplicated issues from the list of issues...")
-        de_duplicated_data = self.__filter_duplicated_issues(data)
-        logger.info("Filtering duplicated issues from the list of issues finished.")
-
-        return de_duplicated_data
 
     def get_latest_release(self, repository: Repository) -> Optional[GitRelease]:
         """
@@ -139,7 +243,7 @@ class DataMiner:
 
         return rls
 
-    def _get_issues(self, data: MinedData):
+    def _get_issues(self, data: MinedData) -> None:
         """
         Populate data.issues.
 
@@ -152,8 +256,10 @@ class DataMiner:
         logger.info("Fetching issues from repository...")
 
         if data.release is None:
-            data.issues = list(self._safe_call(data.home_repository.get_issues)(state=IssueRecord.ISSUE_STATE_ALL))
-            logger.info("Fetched %d issues", len(data.issues))
+            issues = list(self._safe_call(data.home_repository.get_issues)(state=IssueRecord.ISSUE_STATE_ALL))
+            data.issues = {i: data.home_repository for i in issues}
+
+            logger.info("Fetched %d issues", len(data.issues.items()))
             return
 
         # Derive 'since' from release
@@ -184,7 +290,7 @@ class DataMiner:
             if num is not None and num not in by_number:
                 by_number[num] = issue
 
-        data.issues = list(by_number.values())
+        data.issues = {i: data.home_repository for i in list(by_number.values())}
         logger.info("Fetched %d issues (deduplicated).", len(data.issues))
 
     @staticmethod
@@ -213,21 +319,28 @@ class DataMiner:
         return rls
 
     @staticmethod
-    def __filter_duplicated_issues(data: MinedData) -> "MinedData":
+    def __filter_duplicated_issues(data: MinedData, open_pull_requests: list[PullRequest]) -> "MinedData":
         """
         Filters out duplicated issues from the list of issues.
         This method address problem in output of GitHub API where issues list contains PR values.
 
         Parameters:
-            - data (MinedData): The mined data containing issues and pull requests.
+            data (MinedData): The mined data containing issues and pull requests.
+            open_pull_requests (list[PullRequest]): List of currently open pull requests.
 
         Returns:
-            - MinedData: The mined data with duplicated issues removed.
+            MinedData: The mined data with duplicated issues removed.
         """
-        pr_numbers = {pr.number for pr in data.pull_requests}
-        filtered_issues = [issue for issue in data.issues if issue.number not in pr_numbers]
+        pr_numbers = {pr.number for pr in data.pull_requests.keys()}
+        open_pr_numbers = [pr.number for pr in open_pull_requests]
 
-        logger.debug("Duplicated issues removed: %s", len(data.issues) - len(filtered_issues))
+        filtered_issues = {
+            issue: repo
+            for issue, repo in data.issues.items()
+            if issue.number not in pr_numbers and issue.number not in open_pr_numbers
+        }
+
+        logger.debug("Duplicated issues removed: %s", len(data.issues.items()) - len(filtered_issues.items()))
 
         data.issues = filtered_issues
 

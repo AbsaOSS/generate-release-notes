@@ -114,7 +114,7 @@ def test_generate_release_notes_latest_release_found_by_created_at(
 
     mock_git_release.created_at = mock_repo.created_at + timedelta(days=5)
     mock_git_release.published_at = mock_repo.created_at + timedelta(days=5)
-    mocker.patch("release_notes_generator.miner.DataMiner.get_latest_release", return_value=mock_git_release)
+    mocker.patch("release_notes_generator.data.miner.DataMiner.get_latest_release", return_value=mock_git_release)
 
     mock_rate_limit = mocker.Mock()
     mock_rate_limit.rate.remaining = 1000
@@ -169,7 +169,7 @@ def test_generate_release_notes_latest_release_found_by_published_at(
     github_mock.get_repo().get_latest_release.return_value = mock_git_release
     mock_git_release.created_at = mock_repo.created_at + timedelta(days=5)
     mock_git_release.published_at = mock_repo.created_at + timedelta(days=5)
-    mocker.patch("release_notes_generator.miner.DataMiner.get_latest_release", return_value=mock_git_release)
+    mocker.patch("release_notes_generator.data.miner.DataMiner.get_latest_release", return_value=mock_git_release)
 
     mock_rate_limit = mocker.Mock()
     mock_rate_limit.rate.remaining = 1000

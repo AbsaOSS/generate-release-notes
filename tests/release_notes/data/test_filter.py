@@ -20,13 +20,14 @@ from datetime import datetime
 
 from github.Repository import Repository
 
-from release_notes_generator.filter import FilterByRelease
+from release_notes_generator.data.filter import FilterByRelease
 from release_notes_generator.model.mined_data import MinedData
+from tests.conftest import mock_repo
 
 
 def test_filter_no_release(mocker):
-    mock_log_info = mocker.patch("release_notes_generator.filter.logger.info")
-    mock_log_debug = mocker.patch("release_notes_generator.filter.logger.debug")
+    mock_log_info = mocker.patch("release_notes_generator.data.filter.logger.info")
+    mock_log_debug = mocker.patch("release_notes_generator.data.filter.logger.debug")
 
     # Mock MinedData
     data = MagicMock(spec=MinedData)
@@ -50,8 +51,8 @@ def test_filter_no_release(mocker):
 
 
 def test_filter_with_release(mocker):
-    mock_log_info = mocker.patch("release_notes_generator.filter.logger.info")
-    mock_log_debug = mocker.patch("release_notes_generator.filter.logger.debug")
+    mock_log_info = mocker.patch("release_notes_generator.data.filter.logger.info")
+    mock_log_debug = mocker.patch("release_notes_generator.data.filter.logger.debug")
 
     # Mock MinedData
     data = MagicMock(spec=MinedData)
@@ -60,18 +61,18 @@ def test_filter_with_release(mocker):
     data.since = datetime(2023, 1, 1)
 
     # Mock issues, pull requests, and commits
-    data.issues = [
-        MagicMock(closed_at=datetime(2023, 1, 2)),
-        MagicMock(closed_at=datetime(2022, 12, 31)),
-    ]
-    data.pull_requests = [
-        MagicMock(merged_at=datetime(2023, 2, 3), closed_at=datetime(2022, 12, 31)),
-        MagicMock(merged_at=datetime(2022, 12, 30), closed_at=datetime(2022, 12, 31)),
-    ]
-    data.commits = [
-        MagicMock(commit=MagicMock(author=MagicMock(date=datetime(2024, 1, 4)))),
-        MagicMock(commit=MagicMock(author=MagicMock(date=datetime(2022, 12, 29)))),
-    ]
+    data.issues = {
+        MagicMock(closed_at=datetime(2023, 1, 2)): data.home_repository,
+        MagicMock(closed_at=datetime(2022, 12, 31)): data.home_repository,
+    }
+    data.pull_requests = {
+        MagicMock(merged_at=datetime(2023, 2, 3), closed_at=datetime(2022, 12, 31)): data.home_repository,
+        MagicMock(merged_at=datetime(2022, 12, 30), closed_at=datetime(2022, 12, 31)): data.home_repository,
+    }
+    data.commits = {
+        MagicMock(commit=MagicMock(author=MagicMock(date=datetime(2024, 1, 4)))): data.home_repository,
+        MagicMock(commit=MagicMock(author=MagicMock(date=datetime(2022, 12, 29)))): data.home_repository,
+    }
 
     # Apply filter
     filter_instance = FilterByRelease()
@@ -81,9 +82,9 @@ def test_filter_with_release(mocker):
     assert len(filtered_data.issues) == 1
     assert len(filtered_data.pull_requests) == 1
     assert len(filtered_data.commits) == 1
-    assert filtered_data.issues[0].closed_at == datetime(2023, 1, 2)
-    assert filtered_data.pull_requests[0].merged_at == datetime(2023, 2, 3)
-    assert filtered_data.commits[0].commit.author.date == datetime(2024, 1, 4)
+    assert next(iter(filtered_data.issues.keys())).closed_at == datetime(2023, 1, 2)
+    assert next(iter(filtered_data.pull_requests.keys())).merged_at == datetime(2023, 2, 3)
+    assert next(iter(filtered_data.commits.keys())).commit.author.date == datetime(2024, 1, 4)
     assert ('Starting issue, prs and commit reduction by the latest release since time.',) == mock_log_info.call_args_list[0][0]
     assert ('Count of issues reduced from %d to %d', 2, 1) == mock_log_debug.call_args_list[1][0]
     assert ('Count of pulls reduced from %d to %d', 2, 1) == mock_log_debug.call_args_list[2][0]

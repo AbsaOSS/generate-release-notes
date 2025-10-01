@@ -187,12 +187,12 @@ def test_generate_with_issues_and_pulls_and_commits(mocker, mock_repo):
     mock_github_client.get_rate_limit.return_value = mock_rate_limit
 
     data = MinedData(mock_repo)
-    data.issues = [issue1]
-    data.pull_requests = [pr1]
+    data.issues = {issue1: mock_repo}
+    data.pull_requests = {pr1: mock_repo}
     commit3 = mocker.Mock(spec=Commit)
     commit3.sha = "ghi789"
     commit3.repository = mock_repo
-    data.commits = [commit1, commit2, commit3]
+    data.commits = {commit1: mock_repo, commit2: mock_repo, commit3: mock_repo}
 
     records = DefaultRecordFactory(mock_github_client, mock_repo).generate(data)
 
@@ -230,9 +230,9 @@ def test_generate_with_issues_and_pulls_and_commits_with_skip_labels(mocker, moc
     commit3.repository.full_name = "org/repo"
 
     data = MinedData(mock_repo)
-    data.issues = [issue1, issue2]
-    data.pull_requests = [pr1, pr2]
-    data.commits = [commit1, commit2, commit3]
+    data.issues = {issue1: mock_repo, issue2: mock_repo}
+    data.pull_requests = {pr1: mock_repo, pr2: mock_repo}
+    data.commits = {commit1: mock_repo, commit2: mock_repo, commit3: mock_repo}
 
     records = DefaultRecordFactory(mock_github_client, mock_repo).generate(data)
 
@@ -272,8 +272,8 @@ def test_generate_with_no_commits(mocker, mock_repo):
     data = MinedData(mock_repo)
     # pylint: disable=unused-variable
     issue1, issue2, pr1, pr2, commit1, commit2 = setup_issues_pulls_commits(mocker, mock_repo)
-    data.issues = [issue1]
-    data.pull_requests = [pr1]  # PR linked to a non-fetched issues (due to since condition)
+    data.issues = {issue1: mock_repo}
+    data.pull_requests = {pr1: mock_repo}  # PR linked to a non-fetched issues (due to since condition)
 
     mock_rate_limit = mocker.Mock()
     mock_rate_limit.rate.remaining = 10
@@ -281,7 +281,7 @@ def test_generate_with_no_commits(mocker, mock_repo):
     mock_github_client.get_rate_limit.return_value = mock_rate_limit
     mock_repo.get_issue.return_value = issue2
 
-    data.commits = []  # No commits
+    data.commits = {}  # No commits
     mocker.patch("release_notes_generator.record.factory.default_record_factory.get_issues_for_pr", return_value=['org/repo#2'])
     records = DefaultRecordFactory(mock_github_client, mock_repo).generate(data)
 
@@ -306,8 +306,8 @@ def test_generate_with_no_commits_with_wrong_issue_number_in_pull_body_mention(m
     # pylint: disable=unused-variable
     issue1, issue2, pr1, pr2, commit1, commit2 = setup_issues_pulls_commits(mocker, mock_repo)
     pr1.body = "Closes #2"
-    data.issues = [issue1]
-    data.pull_requests = [pr1]  # PR linked to a non-fetched issues (due to since condition)
+    data.issues = {issue1: mock_repo}
+    data.pull_requests = {pr1: mock_repo}  # PR linked to a non-fetched issues (due to since condition)
 
     mock_rate_limit = mocker.Mock()
     mock_rate_limit.rate.remaining = 10
@@ -315,7 +315,7 @@ def test_generate_with_no_commits_with_wrong_issue_number_in_pull_body_mention(m
     mock_github_client.get_rate_limit.return_value = mock_rate_limit
     mock_repo.get_issue.return_value = issue2
 
-    data.commits = []  # No commits
+    data.commits = {}  # No commits
     mocker.patch("release_notes_generator.record.factory.default_record_factory.get_issues_for_pr", return_value=['org/repo#2'])
     records = DefaultRecordFactory(mock_github_client, mock_repo).generate(data)
 
@@ -350,9 +350,9 @@ def test_generate_with_no_issues(mocker, mock_repo, request):
     mock_github_client = mocker.Mock(spec=Github)
     data = MinedData(mock_repo)
     pr1, pr2, commit1, commit2 = setup_no_issues_pulls_commits(mocker)
-    data.pull_requests = [pr1, pr2]
-    data.commits = [commit1, commit2]
-    data.issues = []  # No issues
+    data.pull_requests = {pr1: mock_repo, pr2: mock_repo}
+    data.commits = {commit1: mock_repo, commit2: mock_repo}
+    data.issues = {}  # No issues
 
     records = DefaultRecordFactory(mock_github_client, mock_repo).generate(data)
 
@@ -390,10 +390,10 @@ def test_generate_with_no_issues_skip_labels(mocker, mock_repo, request):
     pr1.get_labels.return_value = [mock_label1]
     pr2.get_labels.return_value = [mock_label2]
 
-    data.pull_requests = [pr1, pr2]
-    data.commits = [commit1, commit2]
+    data.pull_requests = {pr1: mock_repo, pr2: mock_repo}
+    data.commits = {commit1: mock_repo, commit2: mock_repo}
 
-    data.issues = []  # No issues
+    data.issues = {}  # No issues
 
     records = DefaultRecordFactory(mock_github_client, mock_repo).generate(data)
 
@@ -421,9 +421,9 @@ def test_generate_with_no_pulls(mocker, mock_repo):
     mock_github_client = mocker.Mock(spec=Github)
     data = MinedData(mock_repo)
     issue1, issue2 = setup_issues_no_pulls_no_commits(mocker)
-    data.issues = [issue1, issue2]
-    data.pull_requests = []  # No pull requests
-    data.commits = []  # No commits
+    data.issues = {issue1: mock_repo, issue2: mock_repo}
+    data.pull_requests = {}  # No pull requests
+    data.commits = {}  # No commits
     records = DefaultRecordFactory(mock_github_client, mock_repo).generate(data)
 
     # Verify the record creation

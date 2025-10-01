@@ -41,11 +41,15 @@ class MinedData:
     def __init__(self, repository: Repository):
         self._home_repository_full_name: str = repository.full_name
         self._repositories: dict[str, Repository] = {repository.full_name: repository}
+
         self.release: Optional[GitRelease] = None
-        self.issues: list[Issue] = []
-        self.pull_requests: list[PullRequest] = []
-        self.commits: list[Commit] = []
         self.since = datetime(1970, 1, 1)  # Default to epoch start
+
+        self.issues: dict[Issue, Repository] = {}
+        self.pull_requests: dict[PullRequest, Repository] = {}
+        self.commits: dict[Commit, Repository] = {}
+
+        self.parents_sub_issues: dict[str, list[str]] = {}  # parent issue id -> list of its sub-issues ids
 
     @property
     def home_repository(self) -> Repository:
@@ -56,9 +60,10 @@ class MinedData:
         """Add a repository to the mined data if not already present."""
         if repository.full_name not in self._repositories:
             self._repositories[repository.full_name] = repository
-            logger.debug(f"Added repository {repository.full_name} to mined data.")
+            logger.debug("Added repository %s to mined data.", repository.full_name)
 
     def get_repository(self, full_name: str) -> Optional[Repository]:
+        """Get a repository by its full name."""
         if full_name not in self._repositories:
             return None
 
@@ -71,4 +76,4 @@ class MinedData:
         Returns:
             bool: True if empty, False otherwise.
         """
-        return self.issues == [] and self.pull_requests == [] and self.commits == []
+        return not (self.issues or self.pull_requests or self.commits)

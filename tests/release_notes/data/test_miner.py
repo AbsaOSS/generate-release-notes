@@ -24,7 +24,7 @@ from github.Issue import Issue
 from github.PullRequest import PullRequest
 from github.Repository import Repository
 
-from release_notes_generator.miner import DataMiner
+from release_notes_generator.data.miner import DataMiner
 from release_notes_generator.model.mined_data import MinedData
 
 def decorator_mock(func):
@@ -41,24 +41,24 @@ class MinedDataMock(MinedData):
     def __init__(self, mocker, rls_mock: Optional[GitRelease], mock_repo: Repository):
         super().__init__(mock_repo)
         self.release = rls_mock if rls_mock is not None else mocker.Mock(spec=GitRelease)
-        self.issues = [
-            mocker.Mock(spec=Issue, title="Mock Issue 1", number=1),
-            mocker.Mock(spec=Issue, title="Mock Issue 2", number=2),
-        ]
-        self.pull_requests = [
-            mocker.Mock(spec=PullRequest, title="Mock PR 1", number=1),
-            mocker.Mock(spec=PullRequest, title="Mock PR 2", number=2),
-        ]
-        self.commits = [
-            mocker.Mock(spec=Commit, sha="abc123", commit={"message": "Mock Commit 1"}),
-            mocker.Mock(spec=Commit, sha="def456", commit={"message": "Mock Commit 2"}),
-        ]
+        self.issues = {
+            mocker.Mock(spec=Issue, title="Mock Issue 1", number=1): mock_repo,
+            mocker.Mock(spec=Issue, title="Mock Issue 2", number=2): mock_repo,
+        }
+        self.pull_requests = {
+            mocker.Mock(spec=PullRequest, title="Mock PR 1", number=1): mock_repo,
+            mocker.Mock(spec=PullRequest, title="Mock PR 2", number=2): mock_repo,
+        }
+        self.commits = {
+            mocker.Mock(spec=Commit, sha="abc123", commit={"message": "Mock Commit 1"}): mock_repo,
+            mocker.Mock(spec=Commit, sha="def456", commit={"message": "Mock Commit 2"}): mock_repo,
+        }
         self.since = datetime.now()
 
 def test_get_latest_release_from_tag_name_not_defined_2_releases_type_error(mocker, mock_repo, mock_git_releases):
     mocker.patch("release_notes_generator.action_inputs.ActionInputs.is_from_tag_name_defined", return_value=False)
-    mock_log_info = mocker.patch("release_notes_generator.miner.logger.info")
-    mock_log_error = mocker.patch("release_notes_generator.miner.logger.error")
+    mock_log_info = mocker.patch("release_notes_generator.data.miner.logger.info")
+    mock_log_error = mocker.patch("release_notes_generator.data.miner.logger.error")
 
     github_mock = mocker.Mock(spec=Github)
     github_mock.get_repo.return_value = mock_repo
@@ -84,8 +84,8 @@ def test_get_latest_release_from_tag_name_not_defined_2_releases_type_error(mock
 
 def test_get_latest_release_from_tag_name_not_defined_2_releases_value_error(mocker, mock_repo, mock_git_releases):
     mocker.patch("release_notes_generator.action_inputs.ActionInputs.is_from_tag_name_defined", return_value=False)
-    mock_log_info = mocker.patch("release_notes_generator.miner.logger.info")
-    mock_log_error = mocker.patch("release_notes_generator.miner.logger.error")
+    mock_log_info = mocker.patch("release_notes_generator.data.miner.logger.info")
+    mock_log_error = mocker.patch("release_notes_generator.data.miner.logger.error")
 
     github_mock = mocker.Mock(spec=Github)
     github_mock.get_repo.return_value = mock_repo
@@ -113,7 +113,7 @@ def test_get_latest_release_from_tag_name_not_defined_2_releases_value_error(moc
 
 def test_get_latest_release_from_tag_name_not_defined_2_releases(mocker, mock_repo, mock_git_releases):
     mocker.patch("release_notes_generator.action_inputs.ActionInputs.is_from_tag_name_defined", return_value=False)
-    mock_log_info = mocker.patch("release_notes_generator.miner.logger.info")
+    mock_log_info = mocker.patch("release_notes_generator.data.miner.logger.info")
 
     github_mock = mocker.Mock(spec=Github)
     github_mock.get_repo.return_value = mock_repo
@@ -135,7 +135,7 @@ def test_get_latest_release_from_tag_name_not_defined_2_releases(mocker, mock_re
 
 def test_get_latest_release_from_tag_name_not_defined_no_release(mocker, mock_repo):
     mocker.patch("release_notes_generator.action_inputs.ActionInputs.is_from_tag_name_defined", return_value=False)
-    mock_log_info = mocker.patch("release_notes_generator.miner.logger.info")
+    mock_log_info = mocker.patch("release_notes_generator.data.miner.logger.info")
 
     github_mock = mocker.Mock(spec=Github)
     github_mock.get_repo.return_value = mock_repo
@@ -160,7 +160,7 @@ def test_get_latest_release_from_tag_name_not_defined_no_release(mocker, mock_re
 def test_get_latest_release_from_tag_name_defined_release_exists(mocker, mock_repo):
     mocker.patch("release_notes_generator.action_inputs.ActionInputs.is_from_tag_name_defined", return_value=True)
     mock_exit = mocker.patch("sys.exit")
-    mock_log_info = mocker.patch("release_notes_generator.miner.logger.info")
+    mock_log_info = mocker.patch("release_notes_generator.data.miner.logger.info")
 
     github_mock = mocker.Mock(spec=Github)
     github_mock.get_repo.return_value = mock_repo
@@ -187,8 +187,8 @@ def test_get_latest_release_from_tag_name_defined_release_exists(mocker, mock_re
 def test_get_latest_release_from_tag_name_defined_no_release(mocker, mock_repo):
     mocker.patch("release_notes_generator.action_inputs.ActionInputs.is_from_tag_name_defined", return_value=True)
     mock_exit = mocker.patch("sys.exit")
-    mock_log_error = mocker.patch("release_notes_generator.miner.logger.error")
-    mock_log_info = mocker.patch("release_notes_generator.miner.logger.info")
+    mock_log_error = mocker.patch("release_notes_generator.data.miner.logger.error")
+    mock_log_info = mocker.patch("release_notes_generator.data.miner.logger.info")
 
     github_mock = mocker.Mock(spec=Github)
     github_mock.get_repo.return_value = mock_repo
