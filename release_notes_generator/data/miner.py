@@ -21,6 +21,7 @@ This module contains logic for mining data from GitHub, including issues, pull r
 import logging
 import sys
 import traceback
+from copy import deepcopy
 from typing import Optional
 
 import semver
@@ -70,9 +71,6 @@ class DataMiner:
         pull_requests = list(
             self._safe_call(repo.get_pulls)(state=PullRequestRecord.PR_STATE_CLOSED, base=repo.default_branch)
         )
-        all_pull_requests = list(
-            self._safe_call(repo.get_pulls)()
-        )
         data.pull_requests = {pr: data.home_repository for pr in pull_requests}
         if data.since:
             commits = list(self._safe_call(repo.get_commits)(since=data.since))
@@ -83,7 +81,7 @@ class DataMiner:
         logger.info("Initial data mining from GitHub completed.")
 
         logger.info("Filtering duplicated issues from the list of issues...")
-        de_duplicated_data = self.__filter_duplicated_issues(data, all_pull_requests)
+        de_duplicated_data = self.__filter_duplicated_issues(data)
         logger.info("Filtering duplicated issues from the list of issues finished.")
 
         return de_duplicated_data
@@ -136,6 +134,7 @@ class DataMiner:
         fetched_issues: dict[Issue, Repository] = {}
 
         origin_issue_ids = {get_id(i, r) for i, r in data.issues.items()}
+        issues_for_remove: list[str] = []
         for parent_id in data.parents_sub_issues.keys():
             if parent_id in origin_issue_ids:
                 continue
@@ -152,15 +151,32 @@ class DataMiner:
             issue = None
             r = data.get_repository(f"{org}/{repo}")
             if r is not None:
+                logger.debug("Fetching missing issue: %s", parent_id)
                 issue = self._safe_call(r.get_issue)(num)
                 if issue is None:
                     logger.error("Issue not found: %s", parent_id)
                     continue
 
-                logger.debug("Fetching missing issue: %s", parent_id)
+                fetch: bool = True
+                if not issue.closed_at:
+                    fetch = False
+                elif data.since:
+                    if issue.closed_at and data.since > issue.closed_at:
+                        fetch = False
 
-                # add to issues list
-                fetched_issues[issue] = r
+                if fetch:
+                    # add to issues list
+                    fetched_issues[issue] = r
+                else:
+                    logger.debug("Skipping issue %s since it does not meet criteria.", parent_id)
+                    issues_for_remove.append(parent_id)
+
+        # remove issue which does not meet criteria
+        for iid in issues_for_remove:
+            data.parents_sub_issues.pop(iid, None)
+            for sub_issues in data.parents_sub_issues.values():
+                if iid in sub_issues:
+                    sub_issues.remove(iid)
 
         logger.debug("Fetched %d missing issues.", len(fetched_issues))
         return fetched_issues
@@ -320,25 +336,21 @@ class DataMiner:
         return rls
 
     @staticmethod
-    def __filter_duplicated_issues(data: MinedData, all_pull_requests: list[PullRequest]) -> "MinedData":
+    def __filter_duplicated_issues(data: MinedData) -> "MinedData":
         """
         Filters out duplicated issues from the list of issues.
         This method address problem in output of GitHub API where issues list contains PR values.
 
         Parameters:
             data (MinedData): The mined data containing issues and pull requests.
-            all_pull_requests (list[PullRequest]): List of currently open pull requests.
 
         Returns:
             MinedData: The mined data with duplicated issues removed.
         """
-        pr_numbers = {pr.number for pr in data.pull_requests.keys()}
-        all_pr_numbers = [pr.number for pr in all_pull_requests]
-
         filtered_issues = {
             issue: repo
             for issue, repo in data.issues.items()
-            if issue.number not in pr_numbers and issue.number not in all_pr_numbers and "/issues/" in issue.html_url
+            if "/issues/" in issue.html_url
         }
 
         logger.debug("Duplicated issues removed: %s", len(data.issues.items()) - len(filtered_issues.items()))
