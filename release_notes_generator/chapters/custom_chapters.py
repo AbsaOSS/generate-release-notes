@@ -46,6 +46,9 @@ class CustomChapters(BaseChapters):
             None
         """
         for record_id, record in records.items():  # iterate all records
+            if not records[record_id].contains_change_increment():
+                continue
+
             # check if the record should be skipped
             if records[record_id].skip:
                 continue
@@ -62,9 +65,6 @@ class CustomChapters(BaseChapters):
                     continue
 
                 for record_label in records[record_id].labels:  # iterate all labels of the record (issue, or 1st PR)
-                    if not records[record_id].contains_change_increment():
-                        continue
-
                     if record_label in ch.labels:
                         if records[record_id].is_present_in_chapters:
                             allow_dup = ActionInputs.get_duplicity_scope() in (
@@ -77,7 +77,6 @@ class CustomChapters(BaseChapters):
                         if record_id not in ch.rows.keys():
                             ch.add_row(record_id, records[record_id].to_chapter_row(True))
                             self.populated_record_numbers_list.append(record_id)
-
 
     def from_yaml_array(self, chapters: list[dict[str, str]]) -> "CustomChapters":
         """

@@ -344,11 +344,7 @@ class DataMiner:
         Returns:
             MinedData: The mined data with duplicated issues removed.
         """
-        filtered_issues = {
-            issue: repo
-            for issue, repo in data.issues.items()
-            if "/issues/" in issue.html_url
-        }
+        filtered_issues = {issue: repo for issue, repo in data.issues.items() if "/issues/" in issue.html_url}
 
         logger.debug("Duplicated issues removed: %s", len(data.issues.items()) - len(filtered_issues.items()))
 

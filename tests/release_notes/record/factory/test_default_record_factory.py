@@ -432,13 +432,6 @@ def test_generate_with_no_pulls(mocker, mock_repo):
     assert 0 == cast(IssueRecord, records['org/repo#2']).pull_requests_count()
 
 
-# def mock_safe_call_decorator_wrong_issue_number(_rate_limiter):
-#     def wrapper(fn):
-#         if fn.__name__ == "get_issues_for_pr":
-#             return mock_get_issues_for_pr_with_wrong_issue_number
-#         return fn
-#     return wrapper
-
 def mock_get_issues_for_pr_with_wrong_issue_number(pull_number: int) -> list[int]:
     if pull_number == 101:
         return []

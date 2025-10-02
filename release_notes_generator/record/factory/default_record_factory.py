@@ -15,7 +15,7 @@
 #
 
 """
-IssueHierarchyRecordFactory builds hierarchical issue records (Epics/Features/Tasks) and associates PRs/commits.
+DefaultRecordFactory builds both flat and hierarchical issue records (Epics/Features/Tasks) and associates PRs/commits.
 """
 
 import logging
@@ -71,6 +71,10 @@ class DefaultRecordFactory(RecordFactory):
             dict[str, Record]: A dictionary of records indexed by their IDs.
         """
         logger.debug("Creation of records started...")
+
+        # Before the loop, compute a flat set of all sub-issue IDs
+        all_sub_issue_ids = {iid for sublist in data.parents_sub_issues.values() for iid in sublist}
+
         for issue, repo in data.issues.items():
             iid = get_id(issue, repo)
 
@@ -78,7 +82,7 @@ class DefaultRecordFactory(RecordFactory):
                 # issue has sub-issues - it is either hierarchy issue or sub-hierarchy issue
                 self._create_record_for_hierarchy_issue(issue, iid)
 
-            elif any(iid in sublist for sublist in data.parents_sub_issues.values()):
+            elif iid in all_sub_issue_ids:
                 # issue has no sub-issues - it is sub-issue
                 self._create_record_for_sub_issue(issue, iid)
 
