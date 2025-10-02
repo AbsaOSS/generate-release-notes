@@ -33,8 +33,8 @@ from release_notes_generator.builder.builder import ReleaseNotesBuilder
 from release_notes_generator.chapters.custom_chapters import CustomChapters
 from release_notes_generator.model.record import Record
 from release_notes_generator.record.factory.default_record_factory import DefaultRecordFactory
-from release_notes_generator.record.factory.issue_hierarchy_record_factory import IssueHierarchyRecordFactory
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
+from release_notes_generator.utils.record_utils import get_id
 from release_notes_generator.utils.utils import get_change_url
 
 logger = logging.getLogger(__name__)
@@ -93,6 +93,12 @@ class ReleaseNotesGenerator:
         # data expansion when hierarchy is enabled
         if ActionInputs.get_hierarchy():
             data_filtered_by_release.issues.update(miner.mine_missing_sub_issues(data_filtered_by_release))
+        else:
+            # fill flat structure with empty lists, no hierarchy
+            for issue in data_filtered_by_release.issues.values():
+                data_filtered_by_release.parents_sub_issues[
+                    get_id(issue, data_filtered_by_release.home_repository)
+                ] = []
 
         changelog_url: str = get_change_url(
             tag_name=ActionInputs.get_tag_name(),
@@ -122,11 +128,11 @@ class ReleaseNotesGenerator:
             home_repository (Repository): The home repository for which records are to be generated.
 
         Returns:
-            DefaultRecordFactory: An instance of either IssueHierarchyRecordFactory or RecordFactory.
+            DefaultRecordFactory: An instance of either DefaultRecordFactory or RecordFactory.
         """
         if ActionInputs.get_hierarchy():
-            logger.info("Using IssueHierarchyRecordFactory based on action inputs.")
-            return IssueHierarchyRecordFactory(github, home_repository)
+            logger.info("Using DefaultRecordFactory based on action inputs.")
+            return DefaultRecordFactory(github, home_repository)
 
         logger.info("Using default RecordFactory based on action inputs.")
         return DefaultRecordFactory(github, home_repository)

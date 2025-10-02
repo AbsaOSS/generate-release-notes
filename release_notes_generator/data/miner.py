@@ -21,15 +21,12 @@ This module contains logic for mining data from GitHub, including issues, pull r
 import logging
 import sys
 import traceback
-from copy import deepcopy
 from typing import Optional
 
 import semver
 from github import Github
 from github.GitRelease import GitRelease
 from github.Issue import Issue
-from github.IssuePullRequest import IssuePullRequest
-from github.PullRequest import PullRequest
 from github.Repository import Repository
 
 from release_notes_generator.action_inputs import ActionInputs

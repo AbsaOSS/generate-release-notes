@@ -56,19 +56,19 @@ def test_populate(custom_chapters, mocker):
     record3.skip = False
 
     records = {
-        1: record1,
-        2: record2,
-        3: record3,
+        "org/repo#1": record1,
+        "org/repo#2": record2,
+        "org/repo#3": record3,
     }
 
     custom_chapters.populate(records)
 
-    assert 1 in custom_chapters.chapters["Chapter 1"].rows
-    assert custom_chapters.chapters["Chapter 1"].rows[1] == "Record 1 Chapter Row"
-    assert 2 in custom_chapters.chapters["Chapter 1"].rows
-    assert custom_chapters.chapters["Chapter 1"].rows[2] == "Record 2 Chapter Row"
-    assert 3 in custom_chapters.chapters["Chapter 2"].rows
-    assert custom_chapters.chapters["Chapter 2"].rows[3] == "Record 3 Chapter Row"
+    assert "org/repo#1" in custom_chapters.chapters["Chapter 1"].rows
+    assert custom_chapters.chapters["Chapter 1"].rows["org/repo#1"] == "Record 1 Chapter Row"
+    assert "org/repo#2" in custom_chapters.chapters["Chapter 1"].rows
+    assert custom_chapters.chapters["Chapter 1"].rows["org/repo#2"] == "Record 2 Chapter Row"
+    assert "org/repo#3" in custom_chapters.chapters["Chapter 2"].rows
+    assert custom_chapters.chapters["Chapter 2"].rows["org/repo#3"] == "Record 3 Chapter Row"
 
 
 def test_populate_no_pulls_count(custom_chapters, mocker):
@@ -109,7 +109,7 @@ def test_populate_service_duplicity_scope(custom_chapters, mocker):
     record1.skip = False
 
     records = {
-        1: record1,
+        "org/repo#1": record1,
     }
 
     mocker.patch(
@@ -119,9 +119,9 @@ def test_populate_service_duplicity_scope(custom_chapters, mocker):
 
     custom_chapters.populate(records)
 
-    assert 1 in custom_chapters.chapters["Chapter 1"].rows
-    assert custom_chapters.chapters["Chapter 1"].rows[1] == "Record 1 Chapter Row"
-    assert 1 not in custom_chapters.chapters["Chapter 2"].rows
+    assert "org/repo#1" in custom_chapters.chapters["Chapter 1"].rows
+    assert custom_chapters.chapters["Chapter 1"].rows["org/repo#1"] == "Record 1 Chapter Row"
+    assert "org/repo#1" not in custom_chapters.chapters["Chapter 2"].rows
 
 
 def test_populate_none_duplicity_scope(custom_chapters, mocker):
@@ -133,7 +133,7 @@ def test_populate_none_duplicity_scope(custom_chapters, mocker):
     record1.skip = False
 
     records = {
-        1: record1,
+        "org/repo#1": record1,
     }
 
     mocker.patch(
@@ -142,9 +142,9 @@ def test_populate_none_duplicity_scope(custom_chapters, mocker):
 
     custom_chapters.populate(records)
 
-    assert 1 in custom_chapters.chapters["Chapter 1"].rows
-    assert custom_chapters.chapters["Chapter 1"].rows[1] == "Record 1 Chapter Row"
-    assert 1 not in custom_chapters.chapters["Chapter 2"].rows
+    assert "org/repo#1" in custom_chapters.chapters["Chapter 1"].rows
+    assert custom_chapters.chapters["Chapter 1"].rows["org/repo#1"] == "Record 1 Chapter Row"
+    assert "org/repo#1" not in custom_chapters.chapters["Chapter 2"].rows
 
 
 # from_json

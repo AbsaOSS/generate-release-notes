@@ -149,6 +149,7 @@ def mock_issue_open(mocker):
     issue.state_reason = None
     issue.body = "I1 open"
     issue.repository.full_name = "org/repo"
+    issue.type = None
 
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
@@ -168,6 +169,7 @@ def mock_issue_open_2(mocker):
     issue.state_reason = None
     issue.body = "I2 open"
     issue.repository.full_name = "org/repo"
+    issue.type = None
 
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
@@ -188,6 +190,8 @@ def mock_issue_closed(mocker):
     issue.get_sub_issues.return_value = []
     issue.repository.full_name = "org/repo"
     issue.closed_at = datetime.now()
+    issue.html_url = "https://github.com/org/repo/issues/121"
+    issue.type = None
 
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
@@ -207,6 +211,8 @@ def mock_issue_closed_i1_bug(mocker):
     issue.body = "Some issue body text\nRelease Notes:\n- Fixed bug\n- Improved performance\n+ More nice code\n  * Awesome architecture"
     issue.repository.full_name = "org/repo"
     issue.closed_at = datetime.now()
+    issue.html_url = "https://github.com/org/repo/issues/122"
+    issue.type = None
 
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
@@ -468,6 +474,7 @@ def mock_pull_closed_with_rls_notes_101(mocker):
     pull.updated_at = datetime.now()
     pull.merged_at = None
     pull.closed_at = datetime.now()
+    pull.html_url = "http://example.com/pull/101"
 
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
@@ -489,6 +496,7 @@ def mock_pull_closed_with_rls_notes_102(mocker):
     pull.updated_at = datetime.now()
     pull.merged_at = None
     pull.closed_at = datetime.now()
+    pull.html_url = "http://example.com/pull/102"
 
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"

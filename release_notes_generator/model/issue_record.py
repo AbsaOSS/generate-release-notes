@@ -104,6 +104,7 @@ class IssueRecord(Record):
         format_values: dict[str, Any] = {}
 
         # collect format values
+        format_values["type"] = f"{self._issue.type.name if self._issue.type else 'N/A'}"
         format_values["number"] = f"#{self._issue.number}"
         format_values["title"] = self._issue.title
         list_pr_links = self.get_pr_links()

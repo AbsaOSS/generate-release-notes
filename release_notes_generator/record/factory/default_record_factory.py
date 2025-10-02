@@ -15,7 +15,7 @@
 #
 
 """
-DefaultRecordFactory builds Record objects (issues, pulls, commits) from mined GitHub data.
+IssueHierarchyRecordFactory builds hierarchical issue records (Epics/Features/Tasks) and associates PRs/commits.
 """
 
 import logging
@@ -24,21 +24,22 @@ from typing import cast, Optional
 from github import Github
 from github.Issue import Issue
 from github.PullRequest import PullRequest
-from github.Commit import Commit
 from github.Repository import Repository
 
 from release_notes_generator.model.commit_record import CommitRecord
+from release_notes_generator.model.hierarchy_issue_record import HierarchyIssueRecord
 from release_notes_generator.model.issue_record import IssueRecord
 from release_notes_generator.model.mined_data import MinedData
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.pull_request_record import PullRequestRecord
 from release_notes_generator.model.record import Record
+from release_notes_generator.model.sub_issue_record import SubIssueRecord
 from release_notes_generator.record.factory.record_factory import RecordFactory
-
 from release_notes_generator.utils.decorators import safe_call_decorator
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
+
 from release_notes_generator.utils.pull_request_utils import get_issues_for_pr, extract_issue_numbers_from_body
-from release_notes_generator.utils.record_utils import get_id
+from release_notes_generator.utils.record_utils import get_id, parse_issue_id
 
 logger = logging.getLogger(__name__)
 
@@ -56,143 +57,221 @@ class DefaultRecordFactory(RecordFactory):
 
         self._records: dict[str, Record] = {}
 
+        self.__registered_issues: set[str] = set()
+        self.__registered_commits: set[str] = set()
+
     def generate(self, data: MinedData) -> dict[str, Record]:
         """
         Generate records for release notes.
+
         Parameters:
             data (MinedData): The MinedData instance containing repository, issues, pull requests, and commits.
+
         Returns:
-            dict[str, Record]: A dictionary of records keyed by 'owner/repo#number' (or commit SHA for commits).
+            dict[str, Record]: A dictionary of records indexed by their IDs.
         """
-
-        def register_pull_request(pr: PullRequest, l_pid: str, skip_rec: bool) -> None:
-            l_pull_labels = [label.name for label in pr.get_labels()]
-            attached_any = False
-            detected_issues = extract_issue_numbers_from_body(pr, repository=data.home_repository)
-            logger.debug("Detected issues - from body: %s", detected_issues)
-            linked = self._safe_call(get_issues_for_pr)(pull_number=pr.number)
-            if linked:
-                detected_issues.update(linked)
-            logger.debug("Detected issues - merged: %s", detected_issues)
-
-            for parent_issue_id in detected_issues:
-                # create an issue record if not present for PR parent
-                if parent_issue_id not in self._records:
-                    logger.warning(
-                        "Detected PR %d linked to issue %s which is not in the list of received issues. "
-                        "Fetching ...",
-                        pr.number,
-                        parent_issue_id,
-                    )
-                    # dev note: here we expect that PR links to an issue in the same repository !!!
-                    pi_repo_name, pi_number_str = parent_issue_id.split("#", 1)
-                    try:
-                        pi_number = int(pi_number_str)
-                    except ValueError:
-                        logger.error("Invalid parent issue id: %s", parent_issue_id)
-                        continue
-                    parent_repository = data.get_repository(pi_repo_name)
-                    if parent_repository is not None:
-                        # cache for subsequent lookups
-                        if data.get_repository(pi_repo_name) is None:
-                            data.add_repository(parent_repository)
-                        parent_issue = self._safe_call(parent_repository.get_issue)(pi_number)
-                    else:
-                        parent_issue = None
-
-                    if parent_issue is not None:
-                        self._create_record_for_issue(parent_issue, parent_issue_id)
-
-                if parent_issue_id in self._records:
-                    cast(IssueRecord, self._records[parent_issue_id]).register_pull_request(pr)
-                    logger.debug("Registering PR %d: %s to Issue %s", pr.number, pr.title, parent_issue_id)
-                    attached_any = True
-                else:
-                    logger.debug(
-                        "Registering stand-alone PR %d: %s as mentioned Issue %s not found.",
-                        pr.number,
-                        pr.title,
-                        parent_issue_id,
-                    )
-
-            if not attached_any:
-                self._records[l_pid] = PullRequestRecord(pr, l_pull_labels, skip=skip_rec)
-                logger.debug("Created stand-alone PR record %s: %s (fallback)", l_pid, pr.title)
-
-        logger.debug("Registering issues to records...")
+        logger.debug("Creation of records started...")
         for issue, repo in data.issues.items():
-            self._create_record_for_issue(issue, get_id(issue, repo))
+            iid = get_id(issue, repo)
 
-        logger.debug("Registering pull requests to records...")
-        for pull, repo in data.pull_requests.items():
-            pid = get_id(pull, repo)
-            pull_labels = [label.name for label in pull.get_labels()]
-            skip_record: bool = any(item in pull_labels for item in ActionInputs.get_skip_release_notes_labels())
+            if len(data.parents_sub_issues.get(iid, [])) > 0:
+                # issue has sub-issues - it is either hierarchy issue or sub-hierarchy issue
+                self._create_record_for_hierarchy_issue(issue, iid)
 
-            linked_from_api = self._safe_call(get_issues_for_pr)(pull_number=pull.number) or set()
-            linked_from_body = extract_issue_numbers_from_body(pull, data.home_repository)
-            if not linked_from_api and not linked_from_body:
-                self._records[pid] = PullRequestRecord(pull, pull_labels, skip=skip_record)
-                logger.debug("Created record for PR %s: %s", pid, pull.title)
+            elif any(iid in sublist for sublist in data.parents_sub_issues.values()):
+                # issue has no sub-issues - it is sub-issue
+                self._create_record_for_sub_issue(issue, iid)
+
             else:
-                logger.debug("Registering pull number: %s, title : %s", pid, pull.title)
-                register_pull_request(pull, pid, skip_record)
+                # issue is not sub-issue and has no sub-issues - it is issue
+                self._create_record_for_issue(issue, iid)
 
-        logger.debug("Registering commits to records...")
-        detected_direct_commits_count = sum(
-            not self.register_commit_to_record(commit, get_id(commit, repo)) for commit, repo in data.commits.items()
-        )
+        # dev note: Each issue is now in records dict by its issue number - all on same level - no hierarchy
+        #   --> This is useful for population by PRs and commits
+
+        logger.debug("Registering Commits to Pull Requests and Pull Requests to Issues...")
+        for pull, repo in data.pull_requests.items():
+            self._register_pull_and_its_commits_to_issue(pull, get_id(pull, repo), data)
+
+        logger.debug("Registering direct commits to records...")
+        for commit, repo in data.commits.items():
+            if commit.sha not in self.__registered_commits:
+                self._records[get_id(commit, repo)] = CommitRecord(commit)
+
+        # dev note: now we have all PRs and commits registered to issues or as stand-alone records
+        logger.debug("Building issues hierarchy...")
+
+        sub_i_ids = list({iid for sublist in data.parents_sub_issues.values() for iid in sublist})
+        sub_i_prts = {sub_issue: parent for parent, sublist in data.parents_sub_issues.items() for sub_issue in sublist}
+        self._re_register_hierarchy_issues(sub_issues_ids=sub_i_ids, sub_issue_parents=sub_i_prts)
+        self.order_hierarchy_levels()
 
         logger.info(
             "Generated %d records from %d issues and %d PRs, with %d commits detected.",
             len(self._records),
             len(data.issues),
             len(data.pull_requests),
-            detected_direct_commits_count,
+            len(data.commits),
         )
         return self._records
 
-    def register_commit_to_record(self, commit: Commit, cid: str) -> bool:
-        """
-        Register a commit to a record.
-
-        @param commit: The commit to register.
-        @return: True if the commit was registered to a record, False otherwise
-        """
-        for record in self._records.values():
-            if isinstance(record, IssueRecord):
-                rec_i = cast(IssueRecord, record)
-                for number in rec_i.get_pull_request_numbers():
-                    pr = rec_i.get_pull_request(number)
-                    if pr and pr.merge_commit_sha == commit.sha:
-                        rec_i.register_commit(pr, commit)
-                        return True
-
-            elif isinstance(record, PullRequestRecord):
-                rec_pr = cast(PullRequestRecord, record)
-                if rec_pr.is_commit_sha_present(commit.sha):
-                    rec_pr.register_commit(commit)
-                    return True
-
-        self._records[cid] = CommitRecord(commit=commit)
-        logger.debug("Created record for direct commit %s: %s", commit.sha, commit.commit.message)
-        return False
-
     def _create_record_for_issue(self, issue: Issue, iid: str, issue_labels: Optional[list[str]] = None) -> None:
+        if issue_labels is None:
+            issue_labels = self._get_issue_labels_mix_with_type(issue)
+
+        # super()._create_record_for_issue(issue, iid, issue_labels)
+        skip_record = any(item in issue_labels for item in ActionInputs.get_skip_release_notes_labels())
+        self._records[iid] = IssueRecord(issue=issue, skip=skip_record, issue_labels=issue_labels)
+        self.__registered_issues.add(iid)
+
+    # pylint: disable=too-many-statements
+    def _register_pull_and_its_commits_to_issue(
+        self, pull: PullRequest, pid: str, data: MinedData, target_repository: Optional[Repository] = None
+    ) -> None:
+        pull_labels = [label.name for label in pull.get_labels()]
+        skip_record: bool = any(item in pull_labels for item in ActionInputs.get_skip_release_notes_labels())
+        related_commits = [c for c in data.commits if c.sha == pull.merge_commit_sha]
+        self.__registered_commits.update(c.sha for c in related_commits)
+
+        pr_repo = target_repository if target_repository is not None else data.home_repository
+
+        linked_from_api: set[str] = self._safe_call(get_issues_for_pr)(pull_number=pull.number) or set()
+        linked_from_body: set[str] = extract_issue_numbers_from_body(pull, pr_repo)
+        merged_linked_issues: set[str] = linked_from_api.union(linked_from_body)
+        pull_issues: list[str] = list(merged_linked_issues)
+        attached_any = False
+        if len(pull_issues) > 0:
+            for issue_id in pull_issues:
+                if issue_id not in self._records:
+                    logger.warning(
+                        "Detected PR %d linked to issue %s which is not in the list of received issues. "
+                        "Fetching ...",
+                        pull.number,
+                        issue_id,
+                    )
+                    # dev note: here we expect that PR links to an issue in the same repository !!!
+                    org, repo, num = parse_issue_id(issue_id)
+                    r = data.get_repository(f"{org}/{repo}")
+                    parent_issue = self._safe_call(r.get_issue)(num) if r is not None else None
+                    if parent_issue is not None:
+                        self._create_record_for_issue(parent_issue, get_id(parent_issue, r))  # type: ignore[arg-type]
+
+                if issue_id in self._records and isinstance(
+                    self._records[issue_id], (SubIssueRecord, HierarchyIssueRecord, IssueRecord)
+                ):
+                    rec = cast(IssueRecord, self._records[issue_id])
+                    rec.register_pull_request(pull)
+                    logger.debug("Registering pull number: %s, title : %s", pull.number, pull.title)
+
+                    for c in related_commits:  # register commits to the PR record
+                        rec.register_commit(pull, c)
+                        logger.debug("Registering commit %s to PR %d", c.sha, pull.number)
+
+                    attached_any = True
+
+        if not attached_any:
+            pr_rec = PullRequestRecord(pull, pull_labels, skip_record)
+            for c in related_commits:  # register commits to the PR record
+                pr_rec.register_commit(c)
+            self._records[pid] = pr_rec
+            logger.debug("Created record for PR %s: %s", pid, pull.title)
+
+    def _create_record_for_hierarchy_issue(self, i: Issue, iid: str, issue_labels: Optional[list[str]] = None) -> None:
         """
-        Create a record for an issue.
+        Create a hierarchy issue record and register sub-issues.
 
         Parameters:
-            issue (Issue): The issue to create a record for.
-            iid (str): The ID of the issue in the format 'owner/repo#number'.
-            issue_labels (Optional[list[str]]): Optional set of labels for the issue. If not provided, labels will be
-                fetched from the issue.
+            i: The issue to create the record for.
+            issue_labels: The labels of the issue.
+
         Returns:
             None
         """
         # check for skip labels presence and skip when detected
         if issue_labels is None:
-            issue_labels = [label.name for label in issue.get_labels()]
+            issue_labels = self._get_issue_labels_mix_with_type(i)
         skip_record = any(item in issue_labels for item in ActionInputs.get_skip_release_notes_labels())
-        self._records[iid] = IssueRecord(issue=issue, skip=skip_record, issue_labels=issue_labels)
-        logger.debug("Created record for non hierarchy issue '%s': %s", iid, issue.title)
+
+        self._records[iid] = HierarchyIssueRecord(issue=i, skip=skip_record, issue_labels=issue_labels)
+        self.__registered_issues.add(iid)
+        logger.debug("Created record for hierarchy issue %s: %s", iid, i.title)
+
+    def _get_issue_labels_mix_with_type(self, issue: Issue) -> list[str]:
+        labels: list[str] = [label.name for label in issue.get_labels()]
+
+        if issue.type is not None:
+            issue_type = issue.type.name.lower()
+            if issue_type not in labels:
+                labels.append(issue_type)
+
+        return labels
+
+    def _create_record_for_sub_issue(self, issue: Issue, iid: str, issue_labels: Optional[list[str]] = None) -> None:
+        if issue_labels is None:
+            issue_labels = self._get_issue_labels_mix_with_type(issue)
+
+        skip_record = any(item in issue_labels for item in ActionInputs.get_skip_release_notes_labels())
+        logger.debug("Created record for sub issue %s: %s", iid, issue.title)
+        self.__registered_issues.add(iid)
+        self._records[iid] = SubIssueRecord(issue, issue_labels, skip_record)
+
+        if iid.split("#")[0] == self._home_repository.full_name:
+            return
+
+        self._records[iid].is_cross_repo = True
+
+    def _re_register_hierarchy_issues(self, sub_issues_ids: list[str], sub_issue_parents: dict[str, str]):
+        logger.debug("Re-registering hierarchy issues ...")
+        reduced_sub_issue_ids: list[str] = sub_issues_ids[:]
+
+        made_progress = False
+        for sub_issue_id in sub_issues_ids:
+            # remove issue(sub_issue_id) from current records and add it to parent
+            #   as sub-issue or sub-hierarchy-issue
+            # but do it only for issue where parent issue number is not in _sub_issue_parents keys
+            #   Why? We building hierarchy from bottom. Access in records is very easy.
+            if sub_issue_id in sub_issue_parents.values():
+                continue
+
+            parent_issue_id: str = sub_issue_parents[sub_issue_id]
+            parent_rec = cast(HierarchyIssueRecord, self._records[parent_issue_id])
+            sub_rec = self._records[sub_issue_id]
+
+            if isinstance(sub_rec, SubIssueRecord):
+                parent_rec.sub_issues[sub_issue_id] = sub_rec  # add to parent as SubIssueRecord
+                self._records.pop(sub_issue_id)  # remove from main records as it is sub-one
+                reduced_sub_issue_ids.remove(sub_issue_id)  # remove from sub-parents as it is now sub-one
+                sub_issue_parents.pop(sub_issue_id)
+                made_progress = True
+                logger.debug("Added sub-issue %s to parent %s", sub_issue_id, parent_issue_id)
+            elif isinstance(sub_rec, HierarchyIssueRecord):
+                parent_rec.sub_hierarchy_issues[sub_issue_id] = sub_rec  # add to parent as 'Sub' HierarchyIssueRecord
+                self._records.pop(sub_issue_id)  # remove from main records as it is sub-one
+                reduced_sub_issue_ids.remove(sub_issue_id)  # remove from sub-parents as it is now sub-one
+                sub_issue_parents.pop(sub_issue_id)
+                made_progress = True
+                logger.debug("Added sub-hierarchy-issue %s to parent %s", sub_issue_id, parent_issue_id)
+            else:
+                logger.error(
+                    "Detected IssueRecord in position of SubIssueRecord - leaving as standalone and dropping mapping"
+                )
+                # Avoid infinite recursion by removing the unresolved mapping
+                reduced_sub_issue_ids.remove(sub_issue_id)
+                sub_issue_parents.pop(sub_issue_id)
+
+        if reduced_sub_issue_ids and made_progress:
+            self._re_register_hierarchy_issues(reduced_sub_issue_ids, sub_issue_parents)
+
+    def order_hierarchy_levels(self, level: int = 0) -> None:
+        """
+        Order hierarchy levels for proper rendering.
+
+        Parameters:
+            level (int): The current level in the hierarchy. Default is 0.
+        """
+        # we have now all hierarchy issues in records - but levels are not set
+        #   we need to set levels for proper rendering
+        #   This have to be done from up to down
+        top_hierarchy_records = [rec for rec in self._records.values() if isinstance(rec, HierarchyIssueRecord)]
+        for rec in top_hierarchy_records:
+            rec.order_hierarchy_levels(level=level)

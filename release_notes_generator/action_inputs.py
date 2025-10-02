@@ -326,7 +326,7 @@ class ActionInputs:
         if ActionInputs._row_format_issue is None:
             ActionInputs._row_format_issue = ActionInputs._detect_row_format_invalid_keywords(
                 get_action_input(
-                    ROW_FORMAT_ISSUE, "{number} _{title}_ in {pull-requests}"
+                    ROW_FORMAT_ISSUE, "{type}: {number} _{title}_ in {pull-requests}"
                 ).strip(),  # type: ignore[union-attr]
                 clean=True,
                 # mypy: string is returned as default
@@ -463,6 +463,8 @@ class ActionInputs:
         logger.debug("Tag name: %s", tag_name)
         logger.debug("From tag name: %s", from_tag_name)
         logger.debug("Chapters: %s", chapters)
+        logger.debug("Duplicity scope: %s", ActionInputs.get_duplicity_scope())
+        logger.debug("Duplicity icon: %s", ActionInputs.get_duplicity_icon())
         logger.debug("Hierarchy: %s", hierarchy)
         logger.debug("Published at: %s", published_at)
         logger.debug("Skip release notes labels: %s", ActionInputs.get_skip_release_notes_labels())
