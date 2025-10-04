@@ -50,6 +50,8 @@ class MinedData:
         self.commits: dict[Commit, Repository] = {}
 
         self.parents_sub_issues: dict[str, list[str]] = {}  # parent issue id -> list of its sub-issues ids
+        # dictionary of fetched cross issues and their pull requests
+        self.pull_requests_of_fetched_cross_issues: dict[str, list[PullRequest]] = {}
 
     @property
     def home_repository(self) -> Repository:

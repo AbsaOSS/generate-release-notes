@@ -97,6 +97,11 @@ class DefaultRecordFactory(RecordFactory):
         for pull, repo in data.pull_requests.items():
             self._register_pull_and_its_commits_to_issue(pull, get_id(pull, repo), data, target_repository=repo)
 
+        if data.pull_requests_of_fetched_cross_issues:
+            logger.debug("Register cross-repo Pull Requests to its issues")
+            for iid, prs in data.pull_requests_of_fetched_cross_issues.items():
+                self._register_cross_repo_prs_to_issue(iid, prs)
+
         logger.debug("Registering direct commits to records...")
         for commit, repo in data.commits.items():
             if commit.sha not in self.__registered_commits:
@@ -179,6 +184,14 @@ class DefaultRecordFactory(RecordFactory):
                 pr_rec.register_commit(c)
             self._records[pid] = pr_rec
             logger.debug("Created record for PR %s: %s", pid, pull.title)
+
+    def _register_cross_repo_prs_to_issue(self, iid: str, prs: list[PullRequest]) -> None:
+        if iid not in self.__registered_issues:
+            logger.error("Issue '%s' not found among collected records.", iid)
+            return
+
+        for pr in prs:
+            cast(IssueRecord, self._records[iid]).register_pull_request(pr)
 
     def _create_record_for_hierarchy_issue(self, i: Issue, iid: str, issue_labels: Optional[list[str]] = None) -> None:
         """
