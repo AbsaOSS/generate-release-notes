@@ -27,6 +27,7 @@ import semver
 from github import Github
 from github.GitRelease import GitRelease
 from github.Issue import Issue
+from github.PullRequest import PullRequest
 from github.Repository import Repository
 
 from release_notes_generator.action_inputs import ActionInputs
@@ -83,7 +84,7 @@ class DataMiner:
 
         return de_duplicated_data
 
-    def mine_missing_sub_issues(self, data: MinedData) -> dict[Issue, Repository]:
+    def mine_missing_sub_issues(self, data: MinedData) -> tuple[dict[Issue, Repository], dict[str, list[PullRequest]]]:
         """
         Mines missing sub-issues from GitHub.
         Parameters:
@@ -95,7 +96,12 @@ class DataMiner:
         data.parents_sub_issues = self._scan_sub_issues_for_parents([get_id(i, r) for i, r in data.issues.items()])
 
         logger.info("Fetching missing issues...")
-        return self._fetch_missing_issues_and_prs(data)
+        fetched_issues = self._fetch_missing_issues_and_prs(data)
+
+        logger.info("Getting PRs and Commits for missing issues...")
+        prs_of_fetched_cross_repo_issues = self._fetch_prs_for_fetched_cross_issues(fetched_issues, data)
+
+        return fetched_issues, prs_of_fetched_cross_repo_issues
 
     def _scan_sub_issues_for_parents(self, parents_to_check: list[str]) -> dict[str, list[str]]:
         """
@@ -167,6 +173,8 @@ class DataMiner:
                 else:
                     logger.debug("Skipping issue %s since it does not meet criteria.", parent_id)
                     issues_for_remove.append(parent_id)
+            else:
+                logger.error("Cannot get repository for issue %s. Skipping...", parent_id)
 
         # remove issue which does not meet criteria
         for iid in issues_for_remove:
@@ -350,3 +358,15 @@ class DataMiner:
 
         data.issues = filtered_issues
         return data
+
+    def _fetch_prs_for_fetched_cross_issues(self, issues: dict[Issue, Repository], data: MinedData) -> dict[str, list[PullRequest]]:
+        prs_of_cross_repo_issues: dict[str, list[PullRequest]] = {}
+        for i, repo in issues.items():
+            prs_of_cross_repo_issues[iid := get_id(i, repo)] = []
+            for ev in i.get_timeline():  # timeline includes cross-references
+                if ev.event == "cross-referenced" and getattr(ev, "source", None):
+                    src_issue = ev.source.issue  # <- this is a github.Issue.Issue
+                    if getattr(src_issue, "pull_request", None):
+                        pr = src_issue.as_pull_request()   # github.PullRequest.PullRequest
+                        prs_of_cross_repo_issues[iid].append(pr)
+        return prs_of_cross_repo_issues

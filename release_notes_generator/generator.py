@@ -24,6 +24,8 @@ import logging
 from typing import Optional
 
 from github import Github
+from github.Issue import Issue
+from github.Repository import Repository
 
 from release_notes_generator.data.filter import FilterByRelease
 from release_notes_generator.data.miner import DataMiner
@@ -91,7 +93,9 @@ class ReleaseNotesGenerator:
 
         # data expansion when hierarchy is enabled
         if ActionInputs.get_hierarchy():
-            data_filtered_by_release.issues.update(miner.mine_missing_sub_issues(data_filtered_by_release))
+            fetched_issues, prs_of_fetched_issues = miner.mine_missing_sub_issues(data_filtered_by_release)
+            data_filtered_by_release.issues.update(fetched_issues)
+            data_filtered_by_release.pull_requests_of_fetched_cross_issues = prs_of_fetched_issues
         else:
             # fill flat structure with empty lists, no hierarchy
             for i, repo in data_filtered_by_release.issues.items():
