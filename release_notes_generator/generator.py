@@ -24,8 +24,6 @@ import logging
 from typing import Optional
 
 from github import Github
-from github.Issue import Issue
-from github.Repository import Repository
 
 from release_notes_generator.data.filter import FilterByRelease
 from release_notes_generator.data.miner import DataMiner
