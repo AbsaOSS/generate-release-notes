@@ -368,7 +368,7 @@ class DataMiner:
                 for ev in i.get_timeline():  # timeline includes cross-references
                     if ev.event == "cross-referenced" and getattr(ev, "source", None):
                         # <- this is a github.Issue.Issue
-                        src_issue = ev.source.issue     # type: ignore[union-attr]
+                        src_issue = ev.source.issue  # type: ignore[union-attr]
                         if getattr(src_issue, "pull_request", None):
                             pr = src_issue.as_pull_request()  # github.PullRequest.PullRequest
                             prs_of_cross_repo_issues[iid].append(pr)
