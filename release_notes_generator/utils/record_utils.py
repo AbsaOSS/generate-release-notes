@@ -20,8 +20,6 @@ ISSUE_ID_RE = re.compile(r"^(?P<org>[^/\s]+)/(?P<repo>[^#\s]+)#(?P<num>\d+)$")
 class IssueIdParseError(ValueError):
     """Raised when an issue ID cannot be parsed."""
 
-    pass
-
 
 def get_id(obj, repository: Repository) -> str:
     """
@@ -35,10 +33,12 @@ def get_id(obj, repository: Repository) -> str:
     if isinstance(obj, Issue):
         issue = cast(Issue, obj)
         return _entity_id(repository.full_name, issue.number)
-    elif isinstance(obj, PullRequest):
+
+    if isinstance(obj, PullRequest):
         pr = cast(PullRequest, obj)
         return _entity_id(repository.full_name, pr.number)
-    elif isinstance(obj, Commit):
+
+    if isinstance(obj, Commit):
         commit = cast(Commit, obj)
         return f"{commit.sha}"
 

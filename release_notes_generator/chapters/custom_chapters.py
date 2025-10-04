@@ -19,16 +19,12 @@ This module contains the CustomChapters class which is responsible for represent
 notes.
 """
 import logging
-from typing import cast
 
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.chapters.base_chapters import BaseChapters
 from release_notes_generator.model.chapter import Chapter
 from release_notes_generator.model.commit_record import CommitRecord
-from release_notes_generator.model.hierarchy_issue_record import HierarchyIssueRecord
-from release_notes_generator.model.issue_record import IssueRecord
 from release_notes_generator.model.record import Record
-from release_notes_generator.model.sub_issue_record import SubIssueRecord
 from release_notes_generator.utils.enums import DuplicityScopeEnum
 
 logger = logging.getLogger(__name__)
@@ -50,6 +46,9 @@ class CustomChapters(BaseChapters):
             None
         """
         for record_id, record in records.items():  # iterate all records
+            if not records[record_id].contains_change_increment():
+                continue
+
             # check if the record should be skipped
             if records[record_id].skip:
                 continue
@@ -65,25 +64,19 @@ class CustomChapters(BaseChapters):
                 ):
                     continue
 
-                pulls_count = 1
-                if isinstance(records[record_id], (HierarchyIssueRecord, IssueRecord, SubIssueRecord)):
-                    pulls_count = cast(IssueRecord, records[record_id]).pull_requests_count()
-
                 for record_label in records[record_id].labels:  # iterate all labels of the record (issue, or 1st PR)
-                    if record_label in ch.labels and pulls_count > 0:
-                        if (
-                            not records[record_id].is_present_in_chapters
-                            and records[record_id].contains_change_increment()
-                        ):
+                    if record_label in ch.labels:
+                        if records[record_id].is_present_in_chapters:
                             allow_dup = ActionInputs.get_duplicity_scope() in (
                                 DuplicityScopeEnum.CUSTOM,
                                 DuplicityScopeEnum.BOTH,
                             )
-                            if (allow_dup or not records[record_id].is_present_in_chapters) and records[
-                                record_id
-                            ].contains_change_increment():
-                                ch.add_row(record_id, records[record_id].to_chapter_row(True))
-                                self.populated_record_numbers_list.append(record_id)
+                            if not allow_dup:
+                                continue
+
+                        if record_id not in ch.rows.keys():
+                            ch.add_row(record_id, records[record_id].to_chapter_row(True))
+                            self.populated_record_numbers_list.append(record_id)
 
     def from_yaml_array(self, chapters: list[dict[str, str]]) -> "CustomChapters":
         """

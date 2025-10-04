@@ -77,13 +77,13 @@ inputs:
     required: false
     default: ''
   row-format-hierarchy-issue:
-    description: 'Format of the hierarchy issue in the release notes. Available placeholders: {number}, {title}, {type}. Placeholders are case-insensitive.'
+    description: 'Format of the hierarchy issue in the release notes. Available placeholders: {type}, {number}, {title}. Placeholders are case-insensitive.'
     required: false
     default: '{type}: _{title}_ {number}'
   row-format-issue:
-    description: 'Format of the issue row in the release notes. Available placeholders: {number}, {title}, {pull-requests}. Placeholders are case-insensitive.'
+    description: 'Format of the issue row in the release notes. Available placeholders: {type}, {number}, {title}, {pull-requests}. Placeholders are case-insensitive.'
     required: false
-    default: '{number} _{title}_ in {pull-requests}'
+    default: '{type}: {number} _{title}_ in {pull-requests}'
   row-format-pr:
     description: 'Format of the pr row in the release notes. Available placeholders: {number}, {title}. Placeholders are case-insensitive.'
     required: false

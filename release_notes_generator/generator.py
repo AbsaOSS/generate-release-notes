@@ -24,7 +24,6 @@ import logging
 from typing import Optional
 
 from github import Github
-from github.Repository import Repository
 
 from release_notes_generator.data.filter import FilterByRelease
 from release_notes_generator.data.miner import DataMiner
@@ -33,8 +32,8 @@ from release_notes_generator.builder.builder import ReleaseNotesBuilder
 from release_notes_generator.chapters.custom_chapters import CustomChapters
 from release_notes_generator.model.record import Record
 from release_notes_generator.record.factory.default_record_factory import DefaultRecordFactory
-from release_notes_generator.record.factory.issue_hierarchy_record_factory import IssueHierarchyRecordFactory
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
+from release_notes_generator.utils.record_utils import get_id
 from release_notes_generator.utils.utils import get_change_url
 
 logger = logging.getLogger(__name__)
@@ -93,6 +92,10 @@ class ReleaseNotesGenerator:
         # data expansion when hierarchy is enabled
         if ActionInputs.get_hierarchy():
             data_filtered_by_release.issues.update(miner.mine_missing_sub_issues(data_filtered_by_release))
+        else:
+            # fill flat structure with empty lists, no hierarchy
+            for i, repo in data_filtered_by_release.issues.items():
+                data_filtered_by_release.parents_sub_issues[get_id(i, repo)] = []
 
         changelog_url: str = get_change_url(
             tag_name=ActionInputs.get_tag_name(),
@@ -102,7 +105,7 @@ class ReleaseNotesGenerator:
 
         assert data_filtered_by_release.home_repository is not None, "Repository must not be None"
 
-        rls_notes_records: dict[str, Record] = self._get_record_factory(
+        rls_notes_records: dict[str, Record] = DefaultRecordFactory(
             github=self._github_instance, home_repository=data_filtered_by_release.home_repository
         ).generate(data=data_filtered_by_release)
 
@@ -111,22 +114,3 @@ class ReleaseNotesGenerator:
             custom_chapters=self._custom_chapters,
             changelog_url=changelog_url,
         ).build()
-
-    @staticmethod
-    def _get_record_factory(github: Github, home_repository: Repository) -> DefaultRecordFactory:
-        """
-        Determines and returns the appropriate RecordFactory instance based on the action inputs.
-
-        Parameters:
-            github (GitHub): An instance of the GitHub class.
-            home_repository (Repository): The home repository for which records are to be generated.
-
-        Returns:
-            DefaultRecordFactory: An instance of either IssueHierarchyRecordFactory or RecordFactory.
-        """
-        if ActionInputs.get_hierarchy():
-            logger.info("Using IssueHierarchyRecordFactory based on action inputs.")
-            return IssueHierarchyRecordFactory(github, home_repository)
-
-        logger.info("Using default RecordFactory based on action inputs.")
-        return DefaultRecordFactory(github, home_repository)

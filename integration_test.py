@@ -11,7 +11,6 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class MissingTokenError(ValueError):
     """Raised when GITHUB_TOKEN environment variable is not set."""
-    pass
 
 token = os.getenv("GITHUB_TOKEN")
 if token is None:
