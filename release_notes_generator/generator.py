@@ -94,10 +94,8 @@ class ReleaseNotesGenerator:
             data_filtered_by_release.issues.update(miner.mine_missing_sub_issues(data_filtered_by_release))
         else:
             # fill flat structure with empty lists, no hierarchy
-            for issue in data_filtered_by_release.issues.values():
-                data_filtered_by_release.parents_sub_issues[get_id(issue, data_filtered_by_release.home_repository)] = (
-                    []
-                )
+            for i, repo in data_filtered_by_release.issues.items():
+                data_filtered_by_release.parents_sub_issues[get_id(i, repo)] = []
 
         changelog_url: str = get_change_url(
             tag_name=ActionInputs.get_tag_name(),

@@ -95,7 +95,7 @@ class DefaultRecordFactory(RecordFactory):
 
         logger.debug("Registering Commits to Pull Requests and Pull Requests to Issues...")
         for pull, repo in data.pull_requests.items():
-            self._register_pull_and_its_commits_to_issue(pull, get_id(pull, repo), data)
+            self._register_pull_and_its_commits_to_issue(pull, get_id(pull, repo), data, target_repository=repo)
 
         logger.debug("Registering direct commits to records...")
         for commit, repo in data.commits.items():
