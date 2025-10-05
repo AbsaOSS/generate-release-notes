@@ -21,7 +21,6 @@ This module contains logic for mining data from GitHub, including issues, pull r
 import logging
 import sys
 import traceback
-from asyncio import Lock
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Optional
 
@@ -102,7 +101,7 @@ class DataMiner:
         self._fetch_all_repositories_in_cache(data)
 
         logger.info("Fetching missing issues...")
-        fetched_issues = self._fetch_missing_issues_parallel(data)
+        fetched_issues = self._fetch_missing_issues(data)
 
         logger.info("Getting PRs and Commits for missing issues...")
         prs_of_fetched_cross_repo_issues = self._fetch_prs_for_fetched_cross_issues(fetched_issues)
@@ -131,79 +130,18 @@ class DataMiner:
 
         return parents_sub_issues
 
-    def _fetch_missing_issues(self, data: MinedData) -> dict[Issue, Repository]:
-        """
-        Fetch missing issues.
-
-        Parameters:
-            data (MinedData): The mined data containing origin sets of issues and pull requests.
-        Returns:
-            dict[Issue, Repository]: A dictionary mapping fetched issues to their repositories.
-        """
-        fetched_issues: dict[Issue, Repository] = {}
-
-        origin_issue_ids = {get_id(i, r) for i, r in data.issues.items()}
-        issues_for_remove: list[str] = []
-        for parent_id in data.parents_sub_issues.keys():
-            if parent_id in origin_issue_ids:
-                continue
-
-            # fetch issue by id
-            org, repo, num = parse_issue_id(parent_id)
-
-            if data.get_repository(f"{org}/{repo}") is None:
-                new_repo = self._fetch_repository(f"{org}/{repo}")
-                if new_repo is not None:
-                    # cache for subsequent lookups
-                    data.add_repository(new_repo)
-
-            issue = None
-            r = data.get_repository(f"{org}/{repo}")
-            if r is not None:
-                logger.debug("Fetching missing issue: %s", parent_id)
-                issue = self._safe_call(r.get_issue)(num)
-                if issue is None:
-                    logger.error("Issue not found: %s", parent_id)
-                    continue
-
-                fetch: bool = True
-                if not issue.closed_at:
-                    fetch = False
-                elif data.since:
-                    if issue.closed_at and data.since > issue.closed_at:
-                        fetch = False
-
-                if fetch:
-                    # add to issues list
-                    fetched_issues[issue] = r
-                else:
-                    logger.debug("Skipping issue %s since it does not meet criteria.", parent_id)
-                    issues_for_remove.append(parent_id)
-            else:
-                logger.error("Cannot get repository for issue %s. Skipping...", parent_id)
-
-        # remove issue which does not meet criteria
-        for iid in issues_for_remove:
-            data.parents_sub_issues.pop(iid, None)
-            for sub_issues in data.parents_sub_issues.values():
-                if iid in sub_issues:
-                    sub_issues.remove(iid)
-
-        logger.debug("Fetched %d missing issues.", len(fetched_issues))
-        return fetched_issues
-
     def _fetch_all_repositories_in_cache(self, data: MinedData) -> None:
         def _check_repo_and_add(iid: str):
-            org, repo, num = parse_issue_id(iid)
+            org, repo, _num = parse_issue_id(iid)
             full_name = f"{org}/{repo}"
             if data.get_repository(full_name) is None:
                 new_repo = self._fetch_repository(full_name)
                 if new_repo is None:
                     logger.error("Repository fetch returned None for %s", full_name)
-                    return None
-                else:
-                    data.add_repository(new_repo)
-                    logger.debug("Fetched missing repository: %s", full_name)
+                    return
+
+                data.add_repository(new_repo)
+                logger.debug("Fetched missing repository: %s", full_name)
 
         # check keys
         for iid in data.parents_sub_issues.keys():
@@ -214,10 +152,10 @@ class DataMiner:
             for iid in ids:
                 _check_repo_and_add(iid)
 
-    def _fetch_missing_issues_parallel(
-            self,
-            data: MinedData,
-            max_workers: int = 8,
+    def _fetch_missing_issues(
+        self,
+        data: MinedData,
+        max_workers: int = 8,
     ) -> dict[Issue, Repository]:
         """
         Parallel version of _fetch_missing_issues.
@@ -271,8 +209,8 @@ class DataMiner:
             # Criteria
             if should_fetch(issue):
                 return (parent_id, issue, r, None)
-            else:
-                return (parent_id, None, r, None)  # means: mark for remove
+
+            return (parent_id, None, r, None)  # means: mark for remove
 
         if not to_check:
             logger.debug("Fetched 0 missing issues (nothing to check).")
@@ -299,7 +237,7 @@ class DataMiner:
                     issues_for_remove.add(pid)
                 else:
                     # Add to results
-                    fetched_issues[issue] = repo  # repo non-None here
+                    fetched_issues[issue] = repo  # type: ignore[assignment]
 
         # Apply removals AFTER parallelism to avoid concurrent mutation
         if issues_for_remove:

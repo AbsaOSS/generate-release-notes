@@ -180,26 +180,6 @@ class DefaultRecordFactory(RecordFactory):
         for pr in prs:
             cast(IssueRecord, self._records[iid]).register_pull_request(pr)
 
-    def _create_record_for_hierarchy_issue(self, i: Issue, iid: str, issue_labels: Optional[list[str]] = None) -> None:
-        """
-        Create a hierarchy issue record and register sub-issues.
-
-        Parameters:
-            i: The issue to create the record for.
-            issue_labels: The labels of the issue.
-
-        Returns:
-            None
-        """
-        # check for skip labels presence and skip when detected
-        if issue_labels is None:
-            issue_labels = self._get_issue_labels_mix_with_type(i)
-        skip_record = any(item in issue_labels for item in ActionInputs.get_skip_release_notes_labels())
-
-        self._records[iid] = HierarchyIssueRecord(issue=i, skip=skip_record, issue_labels=issue_labels)
-        self.__registered_issues.add(iid)
-        logger.debug("Created record for hierarchy issue %s: %s", iid, i.title)
-
     def _get_issue_labels_mix_with_type(self, issue: Issue) -> list[str]:
         labels: list[str] = [label.name for label in issue.get_labels()]
 
@@ -209,20 +189,6 @@ class DefaultRecordFactory(RecordFactory):
                 labels.append(issue_type)
 
         return labels
-
-    def _create_record_for_sub_issue(self, issue: Issue, iid: str, issue_labels: Optional[list[str]] = None) -> None:
-        if issue_labels is None:
-            issue_labels = self._get_issue_labels_mix_with_type(issue)
-
-        skip_record = any(item in issue_labels for item in ActionInputs.get_skip_release_notes_labels())
-        logger.debug("Created record for sub issue %s: %s", iid, issue.title)
-        self.__registered_issues.add(iid)
-        self._records[iid] = SubIssueRecord(issue, issue_labels, skip_record)
-
-        if iid.split("#")[0] == self._home_repository.full_name:
-            return
-
-        self._records[iid].is_cross_repo = True
 
     def _re_register_hierarchy_issues(self, sub_issues_ids: list[str], sub_issue_parents: dict[str, str]):
         logger.debug("Re-registering hierarchy issues ...")
@@ -280,13 +246,32 @@ class DefaultRecordFactory(RecordFactory):
         for rec in top_hierarchy_records:
             rec.order_hierarchy_levels(level=level)
 
-    def _build_record_for_hierarchy_issue(self, issue: Issue, iid: str, issue_labels: Optional[list[str]] = None) -> Record:
+    def build_record_for_hierarchy_issue(self, issue: Issue, issue_labels: Optional[list[str]] = None) -> Record:
+        """
+        Build a hierarchy issue record.
+
+        Parameters:
+            issue (Issue): The issue to build.
+            issue_labels (list[str]): The labels to use for this issue.
+        Returns:
+            Record: The built record.
+        """
         if issue_labels is None:
             issue_labels = self._get_issue_labels_mix_with_type(issue)
         skip_record = any(lbl in ActionInputs.get_skip_release_notes_labels() for lbl in issue_labels)
         return HierarchyIssueRecord(issue=issue, skip=skip_record, issue_labels=issue_labels)
 
-    def _build_record_for_sub_issue(self, issue: Issue, iid: str, issue_labels: Optional[list[str]] = None) -> Record:
+    def build_record_for_sub_issue(self, issue: Issue, iid: str, issue_labels: Optional[list[str]] = None) -> Record:
+        """
+        Build a sub issue record.
+
+        Parameters:
+            issue (Issue): The issue to build.
+            iid (str): The id to use for this issue.
+            issue_labels (list[str]): The labels to use for this issue.
+        Returns:
+            Record: The built record.
+        """
         if issue_labels is None:
             issue_labels = self._get_issue_labels_mix_with_type(issue)
         skip_record = any(lbl in ActionInputs.get_skip_release_notes_labels() for lbl in issue_labels)
@@ -296,11 +281,21 @@ class DefaultRecordFactory(RecordFactory):
             rec.is_cross_repo = True
         return rec
 
-    def _build_record_for_issue(self, issue: Issue, iid: str, issue_labels: Optional[list[str]] = None) -> Record:
+    def build_record_for_issue(self, issue: Issue, issue_labels: Optional[list[str]] = None) -> Record:
+        """
+        Build an issue record.
+
+        Parameters:
+            issue (Issue): The issue to build.
+            issue_labels (list[str]): The labels to use for this issue.
+        Returns:
+            Record: The built record.
+        """
         if issue_labels is None:
             issue_labels = self._get_issue_labels_mix_with_type(issue)
         skip_record = any(lbl in ActionInputs.get_skip_release_notes_labels() for lbl in issue_labels)
         return IssueRecord(issue=issue, skip=skip_record, issue_labels=issue_labels)
+
 
 def build_issue_records_parallel(gen, data, max_workers: int = 8) -> dict[str, "Record"]:
     """
@@ -317,20 +312,20 @@ def build_issue_records_parallel(gen, data, max_workers: int = 8) -> dict[str, "
         # classification
         if len(parents_sub_issues.get(iid, [])) > 0:
             # hierarchy node (has sub-issues)
-            rec = gen._build_record_for_hierarchy_issue(issue, iid)
+            rec = gen.build_record_for_hierarchy_issue(issue)
         elif iid in all_sub_issue_ids:
             # leaf sub-issue
-            rec = gen._build_record_for_sub_issue(issue, iid)
+            rec = gen.build_record_for_sub_issue(issue, iid)
         else:
             # plain issue
-            rec = gen._build_record_for_issue(issue, iid)
+            rec = gen.build_record_for_issue(issue)
         return iid, rec
 
     results: dict[str, "Record"] = {}
     if not issues_items:
         return results
 
-    with ThreadPoolExecutor(max_workers=8, thread_name_prefix="build-issue-rec") as ex:
+    with ThreadPoolExecutor(max_workers=max_workers, thread_name_prefix="build-issue-rec") as ex:
         for iid, rec in ex.map(lambda ir: _classify_and_build(*ir), issues_items):
             results[iid] = rec
 
