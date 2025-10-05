@@ -19,6 +19,7 @@ DefaultRecordFactory builds both flat and hierarchical issue records (Epics/Feat
 """
 
 import logging
+from concurrent.futures import ThreadPoolExecutor
 from typing import cast, Optional
 
 from github import Github
@@ -70,45 +71,31 @@ class DefaultRecordFactory(RecordFactory):
         Returns:
             dict[str, Record]: A dictionary of records indexed by their IDs.
         """
-        logger.debug("Creation of records started...")
+        logger.info("Creation of records started...")
 
-        # Before the loop, compute a flat set of all sub-issue IDs
-        all_sub_issue_ids = {iid for sublist in data.parents_sub_issues.values() for iid in sublist}
-
-        for issue, repo in data.issues.items():
-            iid = get_id(issue, repo)
-
-            if len(data.parents_sub_issues.get(iid, [])) > 0:
-                # issue has sub-issues - it is either hierarchy issue or sub-hierarchy issue
-                self._create_record_for_hierarchy_issue(issue, iid)
-
-            elif iid in all_sub_issue_ids:
-                # issue has no sub-issues - it is sub-issue
-                self._create_record_for_sub_issue(issue, iid)
-
-            else:
-                # issue is not sub-issue and has no sub-issues - it is issue
-                self._create_record_for_issue(issue, iid)
+        built = build_issue_records_parallel(self, data, max_workers=8)
+        self._records.update(built)
+        self.__registered_issues.update(built.keys())
 
         # dev note: Each issue is now in records dict by its issue number - all on same level - no hierarchy
         #   --> This is useful for population by PRs and commits
 
-        logger.debug("Registering Commits to Pull Requests and Pull Requests to Issues...")
+        logger.info("Registering Commits to Pull Requests and Pull Requests to Issues...")
         for pull, repo in data.pull_requests.items():
             self._register_pull_and_its_commits_to_issue(pull, get_id(pull, repo), data, target_repository=repo)
 
         if data.pull_requests_of_fetched_cross_issues:
-            logger.debug("Register cross-repo Pull Requests to its issues")
+            logger.info("Register cross-repo Pull Requests to its issues")
             for iid, prs in data.pull_requests_of_fetched_cross_issues.items():
                 self._register_cross_repo_prs_to_issue(iid, prs)
 
-        logger.debug("Registering direct commits to records...")
+        logger.info("Registering direct commits to records...")
         for commit, repo in data.commits.items():
             if commit.sha not in self.__registered_commits:
                 self._records[get_id(commit, repo)] = CommitRecord(commit)
 
         # dev note: now we have all PRs and commits registered to issues or as stand-alone records
-        logger.debug("Building issues hierarchy...")
+        logger.info("Building issues hierarchy...")
 
         sub_i_ids = list({iid for sublist in data.parents_sub_issues.values() for iid in sublist})
         sub_i_prts = {sub_issue: parent for parent, sublist in data.parents_sub_issues.items() for sub_issue in sublist}
@@ -292,3 +279,59 @@ class DefaultRecordFactory(RecordFactory):
         top_hierarchy_records = [rec for rec in self._records.values() if isinstance(rec, HierarchyIssueRecord)]
         for rec in top_hierarchy_records:
             rec.order_hierarchy_levels(level=level)
+
+    def _build_record_for_hierarchy_issue(self, issue: Issue, iid: str, issue_labels: Optional[list[str]] = None) -> Record:
+        if issue_labels is None:
+            issue_labels = self._get_issue_labels_mix_with_type(issue)
+        skip_record = any(lbl in ActionInputs.get_skip_release_notes_labels() for lbl in issue_labels)
+        return HierarchyIssueRecord(issue=issue, skip=skip_record, issue_labels=issue_labels)
+
+    def _build_record_for_sub_issue(self, issue: Issue, iid: str, issue_labels: Optional[list[str]] = None) -> Record:
+        if issue_labels is None:
+            issue_labels = self._get_issue_labels_mix_with_type(issue)
+        skip_record = any(lbl in ActionInputs.get_skip_release_notes_labels() for lbl in issue_labels)
+        rec = SubIssueRecord(issue, issue_labels, skip_record)
+        # preserve cross-repo flag behavior
+        if iid.split("#")[0] != self._home_repository.full_name:
+            rec.is_cross_repo = True
+        return rec
+
+    def _build_record_for_issue(self, issue: Issue, iid: str, issue_labels: Optional[list[str]] = None) -> Record:
+        if issue_labels is None:
+            issue_labels = self._get_issue_labels_mix_with_type(issue)
+        skip_record = any(lbl in ActionInputs.get_skip_release_notes_labels() for lbl in issue_labels)
+        return IssueRecord(issue=issue, skip=skip_record, issue_labels=issue_labels)
+
+def build_issue_records_parallel(gen, data, max_workers: int = 8) -> dict[str, "Record"]:
+    """
+    Build issue records in parallel with no side effects on `gen`.
+    Returns: {iid: Record}
+    """
+    parents_sub_issues = data.parents_sub_issues  # read-only snapshot for this phase
+    all_sub_issue_ids = {iid for subs in parents_sub_issues.values() for iid in subs}
+    issues_items = list(data.issues.items())  # snapshot
+
+    def _classify_and_build(issue, repo) -> tuple[str, "Record"]:
+        iid = get_id(issue, repo)
+
+        # classification
+        if len(parents_sub_issues.get(iid, [])) > 0:
+            # hierarchy node (has sub-issues)
+            rec = gen._build_record_for_hierarchy_issue(issue, iid)
+        elif iid in all_sub_issue_ids:
+            # leaf sub-issue
+            rec = gen._build_record_for_sub_issue(issue, iid)
+        else:
+            # plain issue
+            rec = gen._build_record_for_issue(issue, iid)
+        return iid, rec
+
+    results: dict[str, "Record"] = {}
+    if not issues_items:
+        return results
+
+    with ThreadPoolExecutor(max_workers=8, thread_name_prefix="build-issue-rec") as ex:
+        for iid, rec in ex.map(lambda ir: _classify_and_build(*ir), issues_items):
+            results[iid] = rec
+
+    return results
