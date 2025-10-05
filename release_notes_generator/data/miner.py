@@ -21,6 +21,7 @@ This module contains logic for mining data from GitHub, including issues, pull r
 import logging
 import sys
 import traceback
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Optional
 
 import semver
@@ -96,6 +97,9 @@ class DataMiner:
         logger.info("Mapping sub-issues...")
         data.parents_sub_issues = self._scan_sub_issues_for_parents([get_id(i, r) for i, r in data.issues.items()])
 
+        logger.info("Fetch all repositories in cache...")
+        self._fetch_all_repositories_in_cache(data)
+
         logger.info("Fetching missing issues...")
         fetched_issues = self._fetch_missing_issues(data)
 
@@ -126,65 +130,131 @@ class DataMiner:
 
         return parents_sub_issues
 
-    def _fetch_missing_issues(self, data: MinedData) -> dict[Issue, Repository]:
-        """
-        Fetch missing issues.
+    def _fetch_all_repositories_in_cache(self, data: MinedData) -> None:
+        def _check_repo_and_add(iid: str):
+            org, repo, _num = parse_issue_id(iid)
+            full_name = f"{org}/{repo}"
+            if data.get_repository(full_name) is None:
+                new_repo = self._fetch_repository(full_name)
+                if new_repo is None:
+                    logger.error("Repository fetch returned None for %s", full_name)
+                    return
 
-        Parameters:
-            data (MinedData): The mined data containing origin sets of issues and pull requests.
-        Returns:
-            dict[Issue, Repository]: A dictionary mapping fetched issues to their repositories.
+                data.add_repository(new_repo)
+                logger.debug("Fetched missing repository: %s", full_name)
+
+        # check keys
+        for iid in data.parents_sub_issues.keys():
+            _check_repo_and_add(iid)
+
+        # check values
+        for ids in data.parents_sub_issues.values():
+            for iid in ids:
+                _check_repo_and_add(iid)
+
+    def _fetch_missing_issues(
+        self,
+        data: MinedData,
+        max_workers: int = 8,
+    ) -> dict[Issue, Repository]:
+        """
+        Parallel version of _fetch_missing_issues.
+        Threaded to speed up GitHub API calls while avoiding data races.
         """
         fetched_issues: dict[Issue, Repository] = {}
-
         origin_issue_ids = {get_id(i, r) for i, r in data.issues.items()}
-        issues_for_remove: list[str] = []
-        for parent_id in data.parents_sub_issues.keys():
-            if parent_id in origin_issue_ids:
-                continue
 
-            # fetch issue by id
-            org, repo, num = parse_issue_id(parent_id)
+        # Worklist: only parents not already present among origin_issue_ids
+        to_check: list[str] = [pid for pid in data.parents_sub_issues.keys() if pid not in origin_issue_ids]
 
-            if data.get_repository(f"{org}/{repo}") is None:
-                new_repo = self._fetch_repository(f"{org}/{repo}")
-                if new_repo is not None:
-                    # cache for subsequent lookups
-                    data.add_repository(new_repo)
+        # Collect IDs to remove (those that don't meet criteria) and errors
+        issues_for_remove: set[str] = set()
+        errors: list[tuple[str, str]] = []  # (parent_id, error_msg)
 
-            issue = None
+        def should_fetch(issue: Issue) -> bool:
+            # Mirrors original logic
+            if not issue.closed_at:
+                return False
+            if data.since:
+                # if since > closed_at => skip
+                if issue.closed_at and data.since > issue.closed_at:
+                    return False
+            return True
+
+        def worker(parent_id: str) -> tuple[str, Optional[Issue], Optional[Repository], Optional[str]]:
+            """
+            Returns (parent_id, issue|None, repo|None, error|None)
+            - issue=None & error=None  => mark for remove (didn't meet criteria)
+            - issue=None & error!=None => log error
+            """
+            try:
+                org, repo, num = parse_issue_id(parent_id)
+            except Exception as e:  # defensive
+                return (parent_id, None, None, f"parse_issue_id failed: {e}")
+
             r = data.get_repository(f"{org}/{repo}")
-            if r is not None:
+            if r is None:
+                return (parent_id, None, None, f"Cannot get repository for {org}/{repo}")
+
+            # GitHub call
+            try:
                 logger.debug("Fetching missing issue: %s", parent_id)
                 issue = self._safe_call(r.get_issue)(num)
-                if issue is None:
-                    logger.error("Issue not found: %s", parent_id)
+            except Exception as e:
+                return (parent_id, None, r, f"get_issue failed: {e}")
+
+            if issue is None:
+                return (parent_id, None, r, "Issue not found")
+
+            # Criteria
+            if should_fetch(issue):
+                return (parent_id, issue, r, None)
+
+            return (parent_id, None, r, None)  # means: mark for remove
+
+        if not to_check:
+            logger.debug("Fetched 0 missing issues (nothing to check).")
+            return fetched_issues
+
+        # Thread pool
+        with ThreadPoolExecutor(max_workers=max_workers, thread_name_prefix="fetch-issue") as ex:
+            futures = {ex.submit(worker, pid): pid for pid in to_check}
+            for fut in as_completed(futures):
+                parent_id = futures[fut]
+                try:
+                    pid, issue, repo, err = fut.result()
+                except Exception as e:
+                    errors.append((parent_id, f"worker crash: {e}"))
                     continue
 
-                fetch: bool = True
-                if not issue.closed_at:
-                    fetch = False
-                elif data.since:
-                    if issue.closed_at and data.since > issue.closed_at:
-                        fetch = False
+                if err:
+                    # Log and skip; don't remove mapping unless you’re sure you want to drop errored items
+                    logger.error("Error fetching %s: %s", pid, err)
+                    continue
 
-                if fetch:
-                    # add to issues list
-                    fetched_issues[issue] = r
+                if issue is None:
+                    # Did not meet criteria => schedule removal
+                    issues_for_remove.add(pid)
                 else:
-                    logger.debug("Skipping issue %s since it does not meet criteria.", parent_id)
-                    issues_for_remove.append(parent_id)
-            else:
-                logger.error("Cannot get repository for issue %s. Skipping...", parent_id)
+                    # Add to results
+                    fetched_issues[issue] = repo  # type: ignore[assignment]
 
-        # remove issue which does not meet criteria
-        for iid in issues_for_remove:
-            data.parents_sub_issues.pop(iid, None)
-            for sub_issues in data.parents_sub_issues.values():
-                if iid in sub_issues:
-                    sub_issues.remove(iid)
+        # Apply removals AFTER parallelism to avoid concurrent mutation
+        if issues_for_remove:
+            for iid in issues_for_remove:
+                data.parents_sub_issues.pop(iid, None)
+                for sub_issues in data.parents_sub_issues.values():
+                    # parents_sub_issues can be dict[str, list[str]] or now dict[str, str] per your later change;
+                    # if it's list[str], this removal is ok; if changed to str, guard it.
+                    if isinstance(sub_issues, list) and iid in sub_issues:
+                        sub_issues.remove(iid)
 
-        logger.debug("Fetched %d missing issues.", len(fetched_issues))
+        logger.debug(
+            "Fetched %d missing issues in parallel (removed %d).",
+            len(fetched_issues),
+            len(issues_for_remove),
+        )
+
         return fetched_issues
 
     def _fetch_repository(self, full_name: str) -> Optional[Repository]:
