@@ -23,8 +23,8 @@ import logging
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.chapters.base_chapters import BaseChapters
 from release_notes_generator.model.chapter import Chapter
-from release_notes_generator.model.commit_record import CommitRecord
-from release_notes_generator.model.record import Record
+from release_notes_generator.model.record.commit_record import CommitRecord
+from release_notes_generator.model.record.record import Record
 from release_notes_generator.utils.enums import DuplicityScopeEnum
 
 logger = logging.getLogger(__name__)

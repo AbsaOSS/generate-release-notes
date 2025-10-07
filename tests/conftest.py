@@ -13,13 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+from copy import deepcopy, copy
 from datetime import datetime, timedelta
 
-import copy
 import pytest
 
-from github import Github, IssueType
+from github import Github, IssueType, NamedUser
 from github.Commit import Commit
 from github.GitRelease import GitRelease
 from github.Issue import Issue
@@ -27,21 +26,20 @@ from github.PullRequest import PullRequest
 from github.Rate import Rate
 from github.Repository import Repository
 
-from release_notes_generator.model.commit_record import CommitRecord
-from release_notes_generator.model.hierarchy_issue_record import HierarchyIssueRecord
-from release_notes_generator.model.issue_record import IssueRecord
+from release_notes_generator.model.record.commit_record import CommitRecord
+from release_notes_generator.model.record.hierarchy_issue_record import HierarchyIssueRecord
+from release_notes_generator.model.record.issue_record import IssueRecord
 from release_notes_generator.model.mined_data import MinedData
-from release_notes_generator.model.pull_request_record import PullRequestRecord
+from release_notes_generator.model.record.pull_request_record import PullRequestRecord
 from release_notes_generator.chapters.service_chapters import ServiceChapters
 from release_notes_generator.model.chapter import Chapter
 from release_notes_generator.chapters.custom_chapters import CustomChapters
-from release_notes_generator.model.sub_issue_record import SubIssueRecord
+from release_notes_generator.model.record.sub_issue_record import SubIssueRecord
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
 from release_notes_generator.utils.record_utils import get_id
 
 
 # Test classes
-
 
 class MockLabel:
     def __init__(self, name):
@@ -63,6 +61,13 @@ def mock_get_issues_for_pr(pull_number: int) -> set[int]:
 
 
 # Fixtures for Custom Chapters
+@pytest.fixture
+def mock_user(mocker):
+    mock_named_user = mocker.Mock(spec=NamedUser)
+    mock_named_user.login = "user"
+    return mock_named_user
+
+
 @pytest.fixture
 def custom_chapters():
     chapters = CustomChapters()
@@ -141,7 +146,7 @@ def mock_rate_limiter(mocker):
 
 # Fixtures for GitHub Issue(s)
 @pytest.fixture
-def mock_issue_open(mocker):
+def mock_issue_open(mocker, mock_user):
     issue = mocker.Mock(spec=Issue)
     issue.state = IssueRecord.ISSUE_STATE_OPEN
     issue.number = 122
@@ -150,6 +155,11 @@ def mock_issue_open(mocker):
     issue.body = "I1 open"
     issue.repository.full_name = "org/repo"
     issue.type = None
+
+    mock_author = deepcopy(mock_user)
+    mock_author.login = "author"
+    issue.user = mock_author
+    issue.assignees = [mock_user]
 
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
@@ -161,7 +171,7 @@ def mock_issue_open(mocker):
 
 
 @pytest.fixture
-def mock_issue_open_2(mocker):
+def mock_issue_open_2(mocker, mock_user):
     issue = mocker.Mock(spec=Issue)
     issue.state = IssueRecord.ISSUE_STATE_OPEN
     issue.number = 123
@@ -170,6 +180,11 @@ def mock_issue_open_2(mocker):
     issue.body = "I2 open"
     issue.repository.full_name = "org/repo"
     issue.type = None
+
+    mock_author = deepcopy(mock_user)
+    mock_author.login = "author"
+    issue.user = mock_author
+    issue.assignees = [mock_user]
 
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
@@ -193,6 +208,10 @@ def mock_issue_closed(mocker):
     issue.html_url = "https://github.com/org/repo/issues/121"
     issue.type = None
 
+    mock_named_user = mocker.Mock(spec=NamedUser)
+    mock_named_user.login = "user"
+    issue.assignees = [mock_named_user]
+
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
     label2 = mocker.Mock(spec=MockLabel)
@@ -203,7 +222,7 @@ def mock_issue_closed(mocker):
 
 
 @pytest.fixture
-def mock_issue_closed_i1_bug(mocker):
+def mock_issue_closed_i1_bug(mocker, mock_user):
     issue = mocker.Mock(spec=Issue)
     issue.state = IssueRecord.ISSUE_STATE_CLOSED
     issue.title = "I1+bug"
@@ -213,6 +232,12 @@ def mock_issue_closed_i1_bug(mocker):
     issue.closed_at = datetime.now()
     issue.html_url = "https://github.com/org/repo/issues/122"
     issue.type = None
+
+    mock_author = deepcopy(mock_user)
+    mock_author.login = "author"
+    issue.user = mock_author
+
+    issue.assignees = [mock_user]
 
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
@@ -224,13 +249,19 @@ def mock_issue_closed_i1_bug(mocker):
 
 
 @pytest.fixture
-def mock_issue_closed_i1_bug_and_skip(mocker):
+def mock_issue_closed_i1_bug_and_skip(mocker, mock_user):
     issue = mocker.Mock(spec=Issue)
     issue.state = IssueRecord.ISSUE_STATE_CLOSED
     issue.title = "I1+bug"
     issue.number = 122
     issue.repository.full_name = "org/repo"
     issue.closed_at = datetime.now()
+
+    mock_author = deepcopy(mock_user)
+    mock_author.login = "author"
+    issue.user = mock_author
+
+    issue.assignees = [mock_user]
 
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "skip-release-notes"
@@ -242,7 +273,7 @@ def mock_issue_closed_i1_bug_and_skip(mocker):
 
 
 @pytest.fixture
-def mock_open_sub_issue(mocker):
+def mock_open_sub_issue(mocker, mock_user):
     issue = mocker.Mock(spec=Issue)
     issue.state = IssueRecord.ISSUE_STATE_OPEN
     issue.number = 400
@@ -254,6 +285,12 @@ def mock_open_sub_issue(mocker):
     issue.closed_at = None
     issue.repository.full_name = "org/repo"
 
+    mock_author = deepcopy(mock_user)
+    mock_author.login = "author"
+    issue.user = mock_author
+
+    issue.assignees = [mock_user]
+
     issue.get_labels.return_value = []
     issue.get_sub_issues.return_value = []
 
@@ -261,7 +298,7 @@ def mock_open_sub_issue(mocker):
 
 
 @pytest.fixture
-def mock_closed_sub_issue(mocker):
+def mock_closed_sub_issue(mocker, mock_user):
     issue = mocker.Mock(spec=Issue)
     issue.state = IssueRecord.ISSUE_STATE_CLOSED
     issue.number = 450
@@ -273,6 +310,12 @@ def mock_closed_sub_issue(mocker):
     issue.closed_at = datetime.now()
     issue.repository.full_name = "org/repo"
 
+    mock_author = deepcopy(mock_user)
+    mock_author.login = "author"
+    issue.user = mock_author
+
+    issue.assignees = [mock_user]
+
     issue.get_labels.return_value = []
     issue.get_sub_issues.return_value = []
 
@@ -280,7 +323,7 @@ def mock_closed_sub_issue(mocker):
 
 
 @pytest.fixture
-def mock_open_hierarchy_issue(mocker):
+def mock_open_hierarchy_issue(mocker, mock_user):
     issue = mocker.Mock(spec=Issue)
     issue.state = IssueRecord.ISSUE_STATE_OPEN
     issue.number = 300
@@ -292,13 +335,19 @@ def mock_open_hierarchy_issue(mocker):
     issue.closed_at = None
     issue.repository.full_name = "org/repo"
 
+    mock_author = deepcopy(mock_user)
+    mock_author.login = "author"
+    issue.user = mock_author
+
+    issue.assignees = [mock_user]
+
     issue.get_labels.return_value = []
     issue.get_sub_issues.return_value = []
 
     return issue
 
 @pytest.fixture
-def mock_open_hierarchy_issue_epic(mocker):
+def mock_open_hierarchy_issue_epic(mocker, mock_user):
     issue_type = mocker.Mock(spec=IssueType)
     issue_type.name = "Epic"
 
@@ -313,6 +362,12 @@ def mock_open_hierarchy_issue_epic(mocker):
     issue.closed_at = None
     issue.repository.full_name = "org/repo"
 
+    mock_author = deepcopy(mock_user)
+    mock_author.login = "author"
+    issue.user = mock_author
+
+    issue.assignees = [mock_user]
+
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
     label2 = mocker.Mock(spec=MockLabel)
@@ -323,7 +378,7 @@ def mock_open_hierarchy_issue_epic(mocker):
 
 
 @pytest.fixture
-def mock_open_hierarchy_issue_feature(mocker):
+def mock_open_hierarchy_issue_feature(mocker, mock_user):
     issue_type = mocker.Mock(spec=IssueType)
     issue_type.name = "Feature"
 
@@ -338,6 +393,12 @@ def mock_open_hierarchy_issue_feature(mocker):
     issue.closed_at = None
     issue.repository.full_name = "org/repo"
 
+    mock_author = deepcopy(mock_user)
+    mock_author.login = "author"
+    issue.user = mock_author
+
+    issue.assignees = [mock_user]
+
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
     label2 = mocker.Mock(spec=MockLabel)
@@ -348,7 +409,7 @@ def mock_open_hierarchy_issue_feature(mocker):
 
 
 @pytest.fixture
-def mock_closed_issue_type_task(mocker):
+def mock_closed_issue_type_task(mocker, mock_user):
     issue_type = mocker.Mock(spec=IssueType)
     issue_type.name = "Task"
 
@@ -362,6 +423,12 @@ def mock_closed_issue_type_task(mocker):
     issue.closed_at = datetime.now()
     issue.repository.full_name = "org/repo"
 
+    mock_author = deepcopy(mock_user)
+    mock_author.login = "author"
+    issue.user = mock_author
+
+    issue.assignees = [mock_user]
+
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
     label2 = mocker.Mock(spec=MockLabel)
@@ -372,7 +439,7 @@ def mock_closed_issue_type_task(mocker):
 
 
 @pytest.fixture
-def mock_closed_issue_type_none(mocker):
+def mock_closed_issue_type_none(mocker, mock_user):
     issue = mocker.Mock(spec=Issue)
     issue.state = IssueRecord.ISSUE_STATE_CLOSED
     issue.title = "Do this issue"
@@ -383,6 +450,12 @@ def mock_closed_issue_type_none(mocker):
     issue.closed_at = datetime.now()
     issue.repository.full_name = "org/repo"
 
+    mock_author = deepcopy(mock_user)
+    mock_author.login = "author"
+    issue.user = mock_author
+
+    issue.assignees = [mock_user]
+
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
     label2 = mocker.Mock(spec=MockLabel)
@@ -393,7 +466,7 @@ def mock_closed_issue_type_none(mocker):
 
 
 @pytest.fixture
-def mock_closed_issue_type_bug(mocker):
+def mock_closed_issue_type_bug(mocker, mock_user):
     issue_type = mocker.Mock(spec=IssueType)
     issue_type.name = "Bug"
 
@@ -407,6 +480,12 @@ def mock_closed_issue_type_bug(mocker):
     issue.closed_at = datetime.now()
     issue.repository.full_name = "org/repo"
 
+    mock_author = deepcopy(mock_user)
+    mock_author.login = "author"
+    issue.user = mock_author
+
+    issue.assignees = [mock_user]
+
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
     label2 = mocker.Mock(spec=MockLabel)
@@ -418,7 +497,7 @@ def mock_closed_issue_type_bug(mocker):
 
 # Fixtures for GitHub Pull Request(s)
 @pytest.fixture
-def mock_pull_closed(mocker):
+def mock_pull_closed(mocker, mock_user):
     pull = mocker.Mock(spec=PullRequest)
     pull.state = PullRequestRecord.PR_STATE_CLOSED
     pull.body = "Release Notes:\n- Fixed bug\n- Improved performance\n+ More nice code\n  * Awesome architecture"
@@ -430,6 +509,12 @@ def mock_pull_closed(mocker):
     pull.updated_at = datetime.now()
     pull.merged_at = None
     pull.closed_at = datetime.now()
+
+    mock_author = deepcopy(mock_user)
+    mock_author.login = "pr_author_101"
+    pull.user = mock_author
+
+    pull.assignees = [mock_user]
 
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
@@ -462,7 +547,7 @@ def mock_pull_closed_with_skip_label(mocker):
 
 
 @pytest.fixture
-def mock_pull_closed_with_rls_notes_101(mocker):
+def mock_pull_closed_with_rls_notes_101(mocker, mock_user):
     pull = mocker.Mock(spec=PullRequest)
     pull.state = PullRequestRecord.PR_STATE_CLOSED
     pull.body = "Release Notes:\n- PR 101 1st release note\n- PR 101 2nd release note\n"
@@ -476,6 +561,12 @@ def mock_pull_closed_with_rls_notes_101(mocker):
     pull.closed_at = datetime.now()
     pull.html_url = "http://example.com/pull/101"
 
+    mock_author = deepcopy(mock_user)
+    mock_author.login = "pr_author_101"
+    pull.user = mock_author
+
+    pull.assignees = [mock_user]
+
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
     pull.get_labels.return_value = [label1]
@@ -484,7 +575,7 @@ def mock_pull_closed_with_rls_notes_101(mocker):
 
 
 @pytest.fixture
-def mock_pull_closed_with_rls_notes_102(mocker):
+def mock_pull_closed_with_rls_notes_102(mocker, mock_user):
     pull = mocker.Mock(spec=PullRequest)
     pull.state = PullRequestRecord.PR_STATE_CLOSED
     pull.body = "Release Notes:\n- PR 102 1st release note\n- PR 102 2nd release note\n"
@@ -497,6 +588,12 @@ def mock_pull_closed_with_rls_notes_102(mocker):
     pull.merged_at = None
     pull.closed_at = datetime.now()
     pull.html_url = "http://example.com/pull/102"
+
+    mock_author = deepcopy(mock_user)
+    mock_author.login = "pr_author_102"
+    pull.user = mock_author
+
+    pull.assignees = [mock_user]
 
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
@@ -548,7 +645,7 @@ def mock_pull_merged_with_rls_notes_102(mocker):
 
 
 @pytest.fixture
-def mock_pull_merged(mocker):
+def mock_pull_merged(mocker, mock_user):
     pull = mocker.Mock(spec=PullRequest)
     pull.state = PullRequestRecord.PR_STATE_CLOSED
     pull.body = "Release Notes:\n- Fixed bug\n- Improved performance\n"
@@ -561,6 +658,12 @@ def mock_pull_merged(mocker):
     pull.merged_at = datetime.now()
     pull.closed_at = datetime.now()
 
+    mock_author = deepcopy(mock_user)
+    mock_author.login = "pr_author_124"
+    pull.user = mock_author
+
+    pull.assignees = [mock_user]
+
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
     pull.get_labels.return_value = [label1]
@@ -569,7 +672,7 @@ def mock_pull_merged(mocker):
 
 
 @pytest.fixture
-def mock_pull_open(mocker):
+def mock_pull_open(mocker, mock_user):
     pull = mocker.Mock(spec=PullRequest)
     pull.state = PullRequestRecord.PR_STATE_OPEN
     pull.body = "Release Notes:\n- Fixed bug\n- Improved performance\n"
@@ -581,6 +684,12 @@ def mock_pull_open(mocker):
     pull.updated_at = datetime.now()
     pull.merged_at = None
     pull.closed_at = None
+
+    mock_author = deepcopy(mock_user)
+    mock_author.login = "pr_author_123"
+    pull.user = mock_author
+
+    pull.assignees = [mock_user]
 
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
@@ -630,36 +739,36 @@ def mined_data_isolated_record_types_no_labels_no_type_defined(
     data = MinedData(mock_repo)
 
     # single issue record (closed)
-    solo_closed_issue = copy.deepcopy(mock_issue_closed)        # 121
+    solo_closed_issue = deepcopy(mock_issue_closed)        # 121
     solo_closed_issue.body += "\nRelease Notes:\n- Solo issue release note"
     solo_closed_issue.get_labels.return_value = []
     data.parents_sub_issues[get_id(solo_closed_issue, mock_repo)] = []
 
     # single hierarchy issue record - two sub-issues without PRs
-    hi_two_sub_issues_no_prs = copy.deepcopy(mock_open_hierarchy_issue)
+    hi_two_sub_issues_no_prs = deepcopy(mock_open_hierarchy_issue)
     hi_two_sub_issues_no_prs.number = 301
     hi_two_sub_issues_no_prs.title = "HI301 open"
     hi_two_sub_issues_no_prs.body = "I301 open\nRelease Notes:\n- Hierarchy level release note"
-    sub_issue_1 = copy.deepcopy(mock_open_sub_issue)
-    sub_issue_2 = copy.deepcopy(mock_closed_sub_issue)
+    sub_issue_1 = deepcopy(mock_open_sub_issue)
+    sub_issue_2 = deepcopy(mock_closed_sub_issue)
     data.parents_sub_issues[si1 := get_id(sub_issue_1, mock_repo)] = []
     data.parents_sub_issues[si2 := get_id(sub_issue_2, mock_repo)] = []
     data.parents_sub_issues[get_id(hi_two_sub_issues_no_prs, mock_repo)] = [si1, si2]
 
     # single hierarchy issue record - two sub-issues with PRs - no commits
-    hi_two_sub_issues_with_prs = copy.deepcopy(mock_open_hierarchy_issue)
+    hi_two_sub_issues_with_prs = deepcopy(mock_open_hierarchy_issue)
     hi_two_sub_issues_with_prs.number = 302
     hi_two_sub_issues_with_prs.title = "HI302 open"
     hi_two_sub_issues_with_prs.body = "I302 open\nRelease Notes:\n- Hierarchy level release note"
-    sub_issue_3 = copy.deepcopy(mock_open_sub_issue)
+    sub_issue_3 = deepcopy(mock_open_sub_issue)
     sub_issue_3.number = 401
     sub_issue_3.title = "SI401 open"
     sub_issue_3.body = "I401 open\nRelease Notes:\n- Hierarchy level release note"
-    sub_issue_4 = copy.deepcopy(mock_closed_sub_issue)
+    sub_issue_4 = deepcopy(mock_closed_sub_issue)
     sub_issue_4.number = 451
     sub_issue_4.title = "SI451 closed"
     sub_issue_4.body = "I451 open\nRelease Notes:\n- Hierarchy level release note"
-    mock_pr_closed_2 = copy.deepcopy(mock_pull_closed)
+    mock_pr_closed_2 = deepcopy(mock_pull_closed)
     mock_pr_closed_2.url = "http://example.com/pull/150"
     mock_pr_closed_2.number = 150
     mock_pr_closed_2.merge_commit_sha = "merge_commit_sha_150"
@@ -670,25 +779,25 @@ def mined_data_isolated_record_types_no_labels_no_type_defined(
     data.parents_sub_issues[get_id(hi_two_sub_issues_with_prs, mock_repo)] = [si3, si4]
 
     # single hierarchy issue record - two sub-issues with PRs - with commits
-    hi_two_sub_issues_with_prs_with_commit = copy.deepcopy(mock_open_hierarchy_issue)
+    hi_two_sub_issues_with_prs_with_commit = deepcopy(mock_open_hierarchy_issue)
     hi_two_sub_issues_with_prs_with_commit.number = 303
     hi_two_sub_issues_with_prs_with_commit.title = "HI303 open"
     hi_two_sub_issues_with_prs_with_commit.body = "I303 open\nRelease Notes:\n- Hierarchy level release note"
-    sub_issue_5 = copy.deepcopy(mock_open_sub_issue)
+    sub_issue_5 = deepcopy(mock_open_sub_issue)
     sub_issue_5.number = 402
     sub_issue_5.title = "SI402 open"
     sub_issue_5.body = "I402 open\nRelease Notes:\n- Hierarchy level release note"
-    sub_issue_6 = copy.deepcopy(mock_closed_sub_issue)
+    sub_issue_6 = deepcopy(mock_closed_sub_issue)
     sub_issue_6.number = 452
     sub_issue_6.title = "SI452 closed"
     sub_issue_6.body = "I452 open\nRelease Notes:\n- Hierarchy level release note"
-    mock_pr_closed_3 = copy.deepcopy(mock_pull_closed)
+    mock_pr_closed_3 = deepcopy(mock_pull_closed)
     mock_pr_closed_3.url = "http://example.com/pull/151"
     mock_pr_closed_3.number = 151
     mock_pr_closed_3.merge_commit_sha = "merge_commit_sha_151"
     mock_pr_closed_3.get_labels.return_value = []
     mock_pr_closed_3.body += "\nCloses #452"
-    mock_commit_1 = copy.deepcopy(mock_commit)
+    mock_commit_1 = deepcopy(mock_commit)
     mock_commit_1.sha = "merge_commit_sha_151"
     mock_commit_1.commit.message = "Fixed bug in PR 151"
     data.parents_sub_issues[si5 := get_id(sub_issue_5, mock_repo)] = []
@@ -696,29 +805,29 @@ def mined_data_isolated_record_types_no_labels_no_type_defined(
     data.parents_sub_issues[get_id(hi_two_sub_issues_with_prs_with_commit, mock_repo)] = [si5, si6]
 
     # single hierarchy issue record - one sub hierarchy issues - two sub-issues with PRs - with commits
-    hi_one_sub_hierarchy_two_sub_issues_with_prs_with_commit = copy.deepcopy(mock_open_hierarchy_issue)
+    hi_one_sub_hierarchy_two_sub_issues_with_prs_with_commit = deepcopy(mock_open_hierarchy_issue)
     hi_one_sub_hierarchy_two_sub_issues_with_prs_with_commit.number = 304
     hi_one_sub_hierarchy_two_sub_issues_with_prs_with_commit.title = "HI304 open"
     hi_one_sub_hierarchy_two_sub_issues_with_prs_with_commit.body = "I304 open\nRelease Notes:\n- Hierarchy level release note"
-    sub_hierarchy_issue = copy.deepcopy(mock_open_hierarchy_issue)
+    sub_hierarchy_issue = deepcopy(mock_open_hierarchy_issue)
     sub_hierarchy_issue.number = 350
     sub_hierarchy_issue.title = "HI350 open"
     sub_hierarchy_issue.body = "I350 open\nRelease Notes:\n- Sub-hierarchy level release note"
-    sub_issue_7 = copy.deepcopy(mock_open_sub_issue)
+    sub_issue_7 = deepcopy(mock_open_sub_issue)
     sub_issue_7.number = 403
     sub_issue_7.title = "SI403 open"
     sub_issue_7.body = "I403 open\nRelease Notes:\n- Hierarchy level release note"
-    sub_issue_8 = copy.deepcopy(mock_closed_sub_issue)
+    sub_issue_8 = deepcopy(mock_closed_sub_issue)
     sub_issue_8.number = 453
     sub_issue_8.title = "SI453 closed"
     sub_issue_8.body = "I453 open\nRelease Notes:\n- Hierarchy level release note"
-    mock_pr_closed_4 = copy.deepcopy(mock_pull_closed)
+    mock_pr_closed_4 = deepcopy(mock_pull_closed)
     mock_pr_closed_4.url = "http://example.com/pull/152"
     mock_pr_closed_4.number = 152
     mock_pr_closed_4.merge_commit_sha = "merge_commit_sha_152"
     mock_pr_closed_4.get_labels.return_value = []
     mock_pr_closed_4.body += "\nCloses #453"
-    mock_commit_2 = copy.deepcopy(mock_commit)
+    mock_commit_2 = deepcopy(mock_commit)
     mock_commit_2.sha = "merge_commit_sha_152"
     mock_commit_2.commit.message = "Fixed bug in PR 152"
     data.parents_sub_issues[si7 := get_id(sub_issue_7, mock_repo)] = []
@@ -727,13 +836,13 @@ def mined_data_isolated_record_types_no_labels_no_type_defined(
     data.parents_sub_issues[get_id(hi_one_sub_hierarchy_two_sub_issues_with_prs_with_commit, mock_repo)] = [shi]
 
     # single pull request record (closed, merged)
-    mock_pr_closed_1 = copy.deepcopy(mock_pull_closed)      # 123
+    mock_pr_closed_1 = deepcopy(mock_pull_closed)      # 123
     mock_pr_closed_1.get_labels.return_value = []
-    mock_pr_merged_1 = copy.deepcopy(mock_pull_merged)      # 124
+    mock_pr_merged_1 = deepcopy(mock_pull_merged)      # 124
     mock_pr_merged_1.get_labels.return_value = []
 
     # single direct commit record
-    mock_commit_3 = copy.deepcopy(mock_commit)
+    mock_commit_3 = deepcopy(mock_commit)
     mock_commit_3.sha = "merge_commit_sha_direct"
     mock_commit_3.commit.message = "Direct commit example"
 

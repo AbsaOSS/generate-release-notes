@@ -7,7 +7,7 @@ from typing import Optional
 from github.Commit import Commit
 
 from release_notes_generator.action_inputs import ActionInputs
-from release_notes_generator.model.record import Record
+from release_notes_generator.model.record.record import Record
 
 
 class CommitRecord(Record):
@@ -36,8 +36,17 @@ class CommitRecord(Record):
         return False
 
     @property
-    def authors(self) -> list[str]:
-        return [self._commit.author.login] if self._commit.author else []
+    def author(self) -> str:
+        return self._commit.author.login if self._commit.author else ""
+
+    @property
+    def assignees(self) -> list[str]:
+        # assignees are not applicable for commits
+        return []
+
+    @property
+    def developers(self) -> list[str]:
+        return [self.author]
 
     # properties - specific to CommitRecord
 

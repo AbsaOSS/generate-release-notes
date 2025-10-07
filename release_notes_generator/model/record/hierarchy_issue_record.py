@@ -7,8 +7,8 @@ from typing import Optional, Any
 from github.Issue import Issue
 
 from release_notes_generator.action_inputs import ActionInputs
-from release_notes_generator.model.issue_record import IssueRecord
-from release_notes_generator.model.sub_issue_record import SubIssueRecord
+from release_notes_generator.model.record.issue_record import IssueRecord
+from release_notes_generator.model.record.sub_issue_record import SubIssueRecord
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +57,30 @@ class HierarchyIssueRecord(IssueRecord):
         """
         return self._sub_hierarchy_issues
 
+    @property
+    def developers(self) -> list[str]:
+        issue = self._issue
+        if not issue:
+            return []
+
+        devs = set()
+
+        # Assignees (main implementers)
+        for assignee in self.assignees:
+            devs.add(f"{assignee}")
+
+        # hierarchy sub-issues
+        for sub_hierarchy_issue in self._sub_hierarchy_issues.values():
+            for dev in sub_hierarchy_issue.developers:
+                devs.add(dev)
+
+        # sub-issues
+        for sub_issue in self._sub_issues.values():
+            for dev in sub_issue.developers:
+                devs.add(dev)
+
+        return sorted(devs)
+
     def pull_requests_count(self) -> int:
         count = super().pull_requests_count()
 
@@ -100,6 +124,9 @@ class HierarchyIssueRecord(IssueRecord):
         # collect format values
         format_values["number"] = f"#{self.issue.number}"
         format_values["title"] = self.issue.title
+        format_values["author"] = self.author
+        format_values["assignees"] = ", ".join(self.assignees)
+        format_values["developers"] = ", ".join(self.developers)
         if self.issue_type is not None:
             format_values["type"] = self.issue_type
         else:

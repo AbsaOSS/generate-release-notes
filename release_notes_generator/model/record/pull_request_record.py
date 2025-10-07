@@ -9,7 +9,7 @@ from github.Commit import Commit
 from github.PullRequest import PullRequest
 
 from release_notes_generator.action_inputs import ActionInputs
-from release_notes_generator.model.record import Record
+from release_notes_generator.model.record.record import Record
 
 
 class PullRequestRecord(Record):
@@ -46,10 +46,34 @@ class PullRequestRecord(Record):
         return self._pull_request.state == self.PR_STATE_OPEN
 
     @property
-    def authors(self) -> list[str]:
+    def author(self) -> str:
         if not self._pull_request or not self._pull_request.user:
-            return []
-        return [f"@{self._pull_request.user.login}"]
+            return ""
+        return f"@{self._pull_request.user.login}"
+
+    @property
+    def assignees(self) -> list[str]:
+        assignees = set()
+
+        for assignee in self._pull_request.assignees:
+            assignees.add(f"@{assignee.login}")
+
+        return sorted(assignees)
+
+    @property
+    def developers(self) -> list[str]:
+        devs = set()
+
+        # Assignees (main implementers)
+        for assignee in self.assignees:
+            devs.add(f"{assignee}")
+
+        # Linked PR authors (people who created PRs closing this issue)
+        for _cid, commit in self._commits.items():
+            if commit.author and getattr(commit.author, "login", None):
+                devs.add(f"@{commit.author.login}")
+
+        return sorted(devs)
 
     # properties - specific to PullRequestRecord
 
@@ -118,8 +142,12 @@ class PullRequestRecord(Record):
         # collecting values for formatting
         format_values["number"] = f"#{self._pull_request.number}"
         format_values["title"] = self._pull_request.title
-        format_values["authors"] = self.authors if self.authors is not None else ""
-        format_values["contributors"] = self.contributors
+        format_values["author"] = self.author
+        format_values["assignees"] = ", ".join(self.assignees)
+        format_values["developers"] = ", ".join(self.developers)
+
+        # Not supported yet - TODO - spend time to research
+        # format_values["contributors"] = self.contributors
 
         pr_prefix = "PR: " if ActionInputs.get_row_format_link_pr() else ""
         row = f"{row_prefix}{pr_prefix}" + ActionInputs.get_row_format_pr().format(**format_values)

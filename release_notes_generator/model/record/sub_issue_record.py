@@ -7,7 +7,7 @@ from typing import Optional
 
 from github.Issue import SubIssue, Issue
 
-from release_notes_generator.model.issue_record import IssueRecord
+from release_notes_generator.model.record.issue_record import IssueRecord
 
 logger = logging.getLogger(__name__)
 
