@@ -17,7 +17,6 @@
 """
 This module contains logic for mining data from GitHub, including issues, pull requests, commits, and releases.
 """
-
 import logging
 import sys
 import traceback
@@ -108,6 +107,10 @@ class DataMiner:
 
         return fetched_issues, prs_of_fetched_cross_repo_issues
 
+    def _make_bulk_sub_issue_collector(self) -> BulkSubIssueCollector:
+        cfg = CollectorConfig(verify_tls=False)
+        return BulkSubIssueCollector(ActionInputs.get_github_token(), cfg)
+
     def _scan_sub_issues_for_parents(self, parents_to_check: list[str]) -> dict[str, list[str]]:
         """
         Scan sub-issues for parents.
@@ -118,8 +121,7 @@ class DataMiner:
             dict[str, list[str]]: A dictionary mapping parent issue IDs to their sub-issue IDs.
         """
         new_parent_ids: list[str] = parents_to_check
-        cfg = CollectorConfig(verify_tls=False)
-        bulk_sub_issue_collector = BulkSubIssueCollector(ActionInputs.get_github_token(), cfg)
+        bulk_sub_issue_collector = self._make_bulk_sub_issue_collector()
         parents_sub_issues: dict[str, list[str]] = {}
 
         # run in cycle to get all levels of hierarchy
@@ -135,7 +137,7 @@ class DataMiner:
             org, repo, _num = parse_issue_id(iid)
             full_name = f"{org}/{repo}"
             if data.get_repository(full_name) is None:
-                new_repo = self._fetch_repository(full_name)
+                new_repo = self._fetch_repository(full_name=full_name)
                 if new_repo is None:
                     logger.error("Repository fetch returned None for %s", full_name)
                     return
@@ -228,9 +230,7 @@ class DataMiner:
                     continue
 
                 if err:
-                    # Log and skip; don't remove mapping unless you’re sure you want to drop errored items
                     logger.error("Error fetching %s: %s", pid, err)
-                    continue
 
                 if issue is None:
                     # Did not meet criteria => schedule removal

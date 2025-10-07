@@ -13,8 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from copy import deepcopy, copy
+from copy import deepcopy
 from datetime import datetime, timedelta
+from types import SimpleNamespace
 
 import pytest
 
@@ -45,6 +46,8 @@ class MockLabel:
     def __init__(self, name):
         self.name = name
 
+class FakeRepo:
+    def __init__(self, full_name): self.full_name = full_name
 
 def mock_safe_call_decorator(_rate_limiter):
     def wrapper(fn):
@@ -722,6 +725,23 @@ def mock_commit(mocker):
     commit.commit.message = "Fixed bug"
     commit.repository.full_name = "org/repo"
     return commit
+
+
+@pytest.fixture
+def mined_data_simple(mock_repo, mock_issue_closed):
+    #   - single issue record (closed)
+    data = MinedData(mock_repo)
+
+    # single issue record (closed)
+    solo_closed_issue = deepcopy(mock_issue_closed)        # 121
+    solo_closed_issue.body += "\nRelease Notes:\n- Solo issue release note"
+    solo_closed_issue.get_labels.return_value = []
+
+    data.issues = {solo_closed_issue: mock_repo}
+    data.pull_requests = {}
+    data.commits = {}
+
+    return data
 
 
 @pytest.fixture

@@ -43,7 +43,8 @@ class MinedData:
         self._repositories: dict[str, Repository] = {repository.full_name: repository}
 
         self.release: Optional[GitRelease] = None
-        self.since = datetime(1970, 1, 1)  # Default to epoch start
+        self.since = None
+        # self.since = datetime(1970, 1, 1)  # Default to epoch start
 
         self.issues: dict[Issue, Repository] = {}
         self.pull_requests: dict[PullRequest, Repository] = {}
