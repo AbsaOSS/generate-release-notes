@@ -61,7 +61,7 @@ class IssueRecord(Record):
     def assignees(self) -> list[str]:
         assignees: set[str] = set()
 
-        for assignee in self.issue.assignees:
+        for assignee in self.issue.assignees or []:
             assignees.add(f"@{assignee.login}")
 
         return sorted(assignees)
@@ -144,7 +144,6 @@ class IssueRecord(Record):
             format_values["pull-requests"] = ", ".join(list_pr_links)
         else:
             format_values["pull-requests"] = ""
-        format_values["author"] = self.author if self.author is not None else ""
         # contributors are not used in IssueRecord, so commented out for now
         # format_values["contributors"] = self.contributors if self.contributors is not None else ""
 

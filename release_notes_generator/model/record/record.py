@@ -139,7 +139,8 @@ class Record(metaclass=ABCMeta):
         """
         Getter for the developers of the record.
             - assignees
-            - linked PR authors (if any)
+            - linked PR authors
+            - commit authors
         Returns:
             list[str]: A list of developers associated with the record.
         """
