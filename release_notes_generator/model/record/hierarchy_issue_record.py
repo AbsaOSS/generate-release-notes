@@ -67,7 +67,7 @@ class HierarchyIssueRecord(IssueRecord):
 
         # Assignees (main implementers)
         for assignee in self.assignees:
-            devs.add(f"@{assignee}")
+            devs.add(f"{assignee}")
 
         # hierarchy sub-issues
         for sub_hierarchy_issue in self._sub_hierarchy_issues.values():

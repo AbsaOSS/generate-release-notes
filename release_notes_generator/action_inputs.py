@@ -341,8 +341,8 @@ class ActionInputs:
         if ActionInputs._row_format_pr is None:
             ActionInputs._row_format_pr = ActionInputs._detect_row_format_invalid_keywords(
                 get_action_input(
-                    ROW_FORMAT_PR,
-                    "{number} _{title}_ developed by {developers}").strip(),  # type: ignore[union-attr]
+                    ROW_FORMAT_PR, "{number} _{title}_ developed by {developers}"
+                ).strip(),  # type: ignore[union-attr]
                 row_type=ActionInputs.ROW_TYPE_PR,
                 clean=True,
                 # mypy: string is returned as default
