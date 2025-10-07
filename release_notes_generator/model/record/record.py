@@ -127,7 +127,7 @@ class Record(metaclass=ABCMeta):
     @abstractmethod
     def assignees(self) -> list[str]:
         """
-        Getter for the authors of the record.
+        Getter for the assignees of the record.
             - the issue or PR assignees
         Returns:
             list[str]: A list of assignees associated with the record.

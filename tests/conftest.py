@@ -147,7 +147,7 @@ def mock_rate_limiter(mocker):
 
 # Fixtures for GitHub Issue(s)
 @pytest.fixture
-def mock_issue_open(mocker):
+def mock_issue_open(mocker, mock_user):
     issue = mocker.Mock(spec=Issue)
     issue.state = IssueRecord.ISSUE_STATE_OPEN
     issue.number = 122
@@ -157,9 +157,10 @@ def mock_issue_open(mocker):
     issue.repository.full_name = "org/repo"
     issue.type = None
 
-    mock_named_user = mocker.Mock(spec=NamedUser)
-    mock_named_user.login = "user"
-    issue.assignees = [mock_named_user]
+    mock_author = deepcopy(mock_user)
+    mock_author.login = "author"
+    issue.user = mock_author
+    issue.assignees = [mock_user]
 
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
@@ -171,7 +172,7 @@ def mock_issue_open(mocker):
 
 
 @pytest.fixture
-def mock_issue_open_2(mocker):
+def mock_issue_open_2(mocker, mock_user):
     issue = mocker.Mock(spec=Issue)
     issue.state = IssueRecord.ISSUE_STATE_OPEN
     issue.number = 123
@@ -181,9 +182,10 @@ def mock_issue_open_2(mocker):
     issue.repository.full_name = "org/repo"
     issue.type = None
 
-    mock_named_user = mocker.Mock(spec=NamedUser)
-    mock_named_user.login = "user"
-    issue.assignees = [mock_named_user]
+    mock_author = deepcopy(mock_user)
+    mock_author.login = "author"
+    issue.user = mock_author
+    issue.assignees = [mock_user]
 
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"

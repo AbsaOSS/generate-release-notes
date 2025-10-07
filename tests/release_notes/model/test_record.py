@@ -45,7 +45,7 @@ class DummyRecord(Record):
 
     @property
     def author(self):
-        return self._authors
+        return self._authors[0] if self._authors else ""
 
     @property
     def assignees(self):

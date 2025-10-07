@@ -80,7 +80,7 @@ class IssueRecord(Record):
             if author:
                 devs.add(f"@{author}")
 
-            for cid, commit in self._commits[pr.number].items():
+            for _cid, commit in self._commits[pr.number].items():
                 if commit.author and getattr(commit.author, "login", None):
                     devs.add(f"@{commit.author.login}")
 
@@ -144,7 +144,7 @@ class IssueRecord(Record):
             format_values["pull-requests"] = ", ".join(list_pr_links)
         else:
             format_values["pull-requests"] = ""
-        format_values["authors"] = self.author if self.author is not None else ""
+        format_values["author"] = self.author if self.author is not None else ""
         # contributors are not used in IssueRecord, so commented out for now
         # format_values["contributors"] = self.contributors if self.contributors is not None else ""
 
