@@ -27,14 +27,14 @@ from github.Issue import Issue
 from github.PullRequest import PullRequest
 from github.Repository import Repository
 
-from release_notes_generator.model.commit_record import CommitRecord
-from release_notes_generator.model.hierarchy_issue_record import HierarchyIssueRecord
-from release_notes_generator.model.issue_record import IssueRecord
+from release_notes_generator.model.record.commit_record import CommitRecord
+from release_notes_generator.model.record.hierarchy_issue_record import HierarchyIssueRecord
+from release_notes_generator.model.record.issue_record import IssueRecord
 from release_notes_generator.model.mined_data import MinedData
 from release_notes_generator.action_inputs import ActionInputs
-from release_notes_generator.model.pull_request_record import PullRequestRecord
-from release_notes_generator.model.record import Record
-from release_notes_generator.model.sub_issue_record import SubIssueRecord
+from release_notes_generator.model.record.pull_request_record import PullRequestRecord
+from release_notes_generator.model.record.record import Record
+from release_notes_generator.model.record.sub_issue_record import SubIssueRecord
 from release_notes_generator.record.factory.record_factory import RecordFactory
 from release_notes_generator.utils.decorators import safe_call_decorator
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter

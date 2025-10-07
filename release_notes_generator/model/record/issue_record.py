@@ -10,7 +10,7 @@ from github.Issue import Issue
 from github.PullRequest import PullRequest
 
 from release_notes_generator.action_inputs import ActionInputs
-from release_notes_generator.model.record import Record
+from release_notes_generator.model.record.record import Record
 
 
 class IssueRecord(Record):
@@ -52,10 +52,39 @@ class IssueRecord(Record):
         return self._issue.state == self.ISSUE_STATE_OPEN
 
     @property
-    def authors(self) -> list[str]:
+    def author(self) -> str:
         if not self._issue or not self._issue.user:
-            return []
-        return [f"@{self._issue.user.login}"]
+            return ""
+        return f"@{self._issue.user.login}"
+
+    @property
+    def assignees(self) -> list[str]:
+        assignees: set[str] = set()
+
+        for assignee in self.issue.assignees:
+            assignees.add(f"@{assignee.login}")
+
+        return sorted(assignees)
+
+    @property
+    def developers(self) -> list[str]:
+        devs: set[str] = set()
+
+        # Assignees (main implementers)
+        for assignee in self.assignees:
+            devs.add(f"{assignee}")
+
+        # Linked PR authors (people who created PRs closing this issue)
+        for pr in self._pull_requests.values():
+            author = getattr(pr.user, "login", None)
+            if author:
+                devs.add(f"@{author}")
+
+            for cid, commit in self._commits[pr.number].items():
+                if commit.author and getattr(commit.author, "login", None):
+                    devs.add(f"@{commit.author.login}")
+
+        return sorted(devs)
 
     # properties - specific to IssueRecord
 
@@ -107,12 +136,15 @@ class IssueRecord(Record):
         format_values["type"] = f"{self._issue.type.name if self._issue.type else 'N/A'}"
         format_values["number"] = f"#{self._issue.number}"
         format_values["title"] = self._issue.title
+        format_values["author"] = self.author
+        format_values["assignees"] = ", ".join(self.assignees)
+        format_values["developers"] = ", ".join(self.developers)
         list_pr_links = self.get_pr_links()
         if len(list_pr_links) > 0:
             format_values["pull-requests"] = ", ".join(list_pr_links)
         else:
             format_values["pull-requests"] = ""
-        format_values["authors"] = self.authors if self.authors is not None else ""
+        format_values["authors"] = self.author if self.author is not None else ""
         # contributors are not used in IssueRecord, so commented out for now
         # format_values["contributors"] = self.contributors if self.contributors is not None else ""
 
@@ -204,6 +236,7 @@ class IssueRecord(Record):
         Returns: None
         """
         self._pull_requests[pull.number] = pull
+        self._commits[pull.number] = {}
 
     def register_commit(self, pull: PullRequest, commit: Commit) -> None:
         """

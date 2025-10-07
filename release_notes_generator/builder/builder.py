@@ -23,8 +23,8 @@ from itertools import chain
 
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.chapters.custom_chapters import CustomChapters
-from release_notes_generator.model.record import Record
 from release_notes_generator.chapters.service_chapters import ServiceChapters
+from release_notes_generator.model.record.record import Record
 
 logger = logging.getLogger(__name__)
 

@@ -1,4 +1,4 @@
-from release_notes_generator.model.commit_record import CommitRecord
+from release_notes_generator.model.record.commit_record import CommitRecord
 
 
 def test_basic_properties(mock_commit):
@@ -10,16 +10,16 @@ def test_basic_properties(mock_commit):
 
 def test_authors_with_author(mock_commit):
     rec = CommitRecord(mock_commit)
-    assert rec.authors == ["author"]
+    assert rec.author == "author"
 
 def test_authors_no_author(mock_commit):
     mock_commit.author = None
     rec = CommitRecord(mock_commit)
-    assert rec.authors == []
+    assert rec.author == ""
 
 def test_to_chapter_row_single_occurrence(monkeypatch, mock_commit):
     monkeypatch.setattr(
-        "release_notes_generator.model.commit_record.ActionInputs.get_duplicity_icon",
+        "release_notes_generator.model.record.commit_record.ActionInputs.get_duplicity_icon",
         lambda: "🔁",
     )
     rec = CommitRecord(mock_commit)
@@ -30,7 +30,7 @@ def test_to_chapter_row_single_occurrence(monkeypatch, mock_commit):
 
 def test_to_chapter_row_duplicate_with_icon(monkeypatch, mock_commit):
     monkeypatch.setattr(
-        "release_notes_generator.model.commit_record.ActionInputs.get_duplicity_icon",
+        "release_notes_generator.model.record.commit_record.ActionInputs.get_duplicity_icon",
         lambda: "[D]",
     )
     rec = CommitRecord(mock_commit)

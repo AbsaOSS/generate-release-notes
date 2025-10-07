@@ -19,7 +19,7 @@ from datetime import datetime
 from github.Issue import Issue
 from github.IssueType import IssueType
 
-from release_notes_generator.model.issue_record import IssueRecord
+from release_notes_generator.model.record.issue_record import IssueRecord
 
 
 def _make_issue(mocker, type_name=None) -> Issue:

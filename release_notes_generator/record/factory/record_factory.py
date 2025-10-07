@@ -21,7 +21,7 @@ import abc
 import logging
 
 from release_notes_generator.model.mined_data import MinedData
-from release_notes_generator.model.record import Record
+from release_notes_generator.model.record.record import Record
 
 logger = logging.getLogger(__name__)
 

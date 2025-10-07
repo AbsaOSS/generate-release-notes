@@ -137,7 +137,7 @@ http://example.com/changelog
 RELEASE_NOTES_NO_DATA_NO_EMPTY_CHAPTERS = RELEASE_NOTES_NO_DATA_NO_WARNING_NO_EMPTY_CHAPTERS
 
 RELEASE_NOTES_DATA_CUSTOM_CHAPTERS_ONE_LABEL = """### Chapter 1 🛠
-- N/A: #122 _I1+bug_ in #101, #102
+- N/A: #122 _I1+bug_ developed by @pr_author_101, @pr_author_102, @user in #101, #102
   - Fixed bug
   - Improved performance
   + More nice code
@@ -152,20 +152,20 @@ http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_HIERARCHY_NO_LABELS_NO_TYPE = """### Closed Issues without Pull Request ⚠️
-- N/A: #121 _Fix the bug_ in 
+- N/A: #121 _Fix the bug_ developed by @user in 
   - Solo issue release note
 
 ### Closed Issues without User Defined Labels ⚠️
-- 🔔 N/A: #121 _Fix the bug_ in 
+- 🔔 N/A: #121 _Fix the bug_ developed by @user in 
   - Solo issue release note
 
 ### Merged PRs without Issue and User Defined Labels ⚠️
-- PR: #124 _Fixed bug_
+- PR: #124 _Fixed bug_ developed by @user
   - Fixed bug
   - Improved performance
 
 ### Closed PRs without Issue and User Defined Labels ⚠️
-- PR: #123 _Fixed bug_
+- PR: #123 _Fixed bug_ developed by @user
   - Fixed bug
   - Improved performance
   + More nice code
@@ -175,7 +175,7 @@ RELEASE_NOTES_DATA_HIERARCHY_NO_LABELS_NO_TYPE = """### Closed Issues without Pu
 - None: _HI302 open_ #302
   - _Release Notes_:
     - Hierarchy level release note
-  - N/A: #451 _SI451 closed_ in #150
+  - N/A: #451 _SI451 closed_ developed by @pr_author_101, @user in #150
     - Hierarchy level release note
     - Fixed bug
     - Improved performance
@@ -184,7 +184,7 @@ RELEASE_NOTES_DATA_HIERARCHY_NO_LABELS_NO_TYPE = """### Closed Issues without Pu
 - None: _HI303 open_ #303
   - _Release Notes_:
     - Hierarchy level release note
-  - N/A: #452 _SI452 closed_ in #151
+  - N/A: #452 _SI452 closed_ developed by @author, @pr_author_101, @user in #151
     - Hierarchy level release note
     - Fixed bug
     - Improved performance
@@ -196,7 +196,7 @@ RELEASE_NOTES_DATA_HIERARCHY_NO_LABELS_NO_TYPE = """### Closed Issues without Pu
   - None: _HI350 open_ #350
     - _Release Notes_:
       - Sub-hierarchy level release note
-    - N/A: #453 _SI453 closed_ in #152
+    - N/A: #453 _SI453 closed_ developed by @author, @pr_author_101, @user in #152
       - Hierarchy level release note
       - Fixed bug
       - Improved performance
@@ -218,7 +218,7 @@ RELEASE_NOTES_DATA_HIERARCHY_WITH_LABELS_NO_TYPE = """### Epics
 - None: _HI302 open_ #302
   - _Release Notes_:
     - Hierarchy level release note
-  - N/A: #451 _SI451 closed_ in #150
+  - N/A: #451 _SI451 closed_ developed by @pr_author_101, @user in #150
     - Hierarchy level release note
     - Fixed bug
     - Improved performance
@@ -227,7 +227,7 @@ RELEASE_NOTES_DATA_HIERARCHY_WITH_LABELS_NO_TYPE = """### Epics
 - None: _HI303 open_ #303
   - _Release Notes_:
     - Hierarchy level release note
-  - N/A: #452 _SI452 closed_ in #151
+  - N/A: #452 _SI452 closed_ developed by @author, @pr_author_101, @user in #151
     - Hierarchy level release note
     - Fixed bug
     - Improved performance
@@ -239,7 +239,7 @@ RELEASE_NOTES_DATA_HIERARCHY_WITH_LABELS_NO_TYPE = """### Epics
   - None: _HI350 open_ #350
     - _Release Notes_:
       - Sub-hierarchy level release note
-    - N/A: #453 _SI453 closed_ in #152
+    - N/A: #453 _SI453 closed_ developed by @author, @pr_author_101, @user in #152
       - Hierarchy level release note
       - Fixed bug
       - Improved performance
@@ -247,21 +247,21 @@ RELEASE_NOTES_DATA_HIERARCHY_WITH_LABELS_NO_TYPE = """### Epics
         * Awesome architecture
 
 ### Chapter 1 🛠
-- PR: #123 _Fixed bug_
+- PR: #123 _Fixed bug_ developed by @user
   - Fixed bug
   - Improved performance
   + More nice code
     * Awesome architecture
 
 ### Closed Issues without Pull Request ⚠️
-- N/A: #121 _Fix the bug_ in 
+- N/A: #121 _Fix the bug_ developed by @user in 
   - Solo issue release note
 
 ### Closed Issues without User Defined Labels ⚠️
 All closed issues contain at least one of user defined labels.
 
 ### Merged PRs without Issue and User Defined Labels ⚠️
-- PR: #124 _Fixed bug_
+- PR: #124 _Fixed bug_ developed by @user
   - Fixed bug
   - Improved performance
 
@@ -272,7 +272,7 @@ All closed PRs are linked to issues.
 - 🔔 None: _HI302 open_ #302
   - _Release Notes_:
     - Hierarchy level release note
-  - 🔔 N/A: #451 _SI451 closed_ in #150
+  - 🔔 N/A: #451 _SI451 closed_ developed by @pr_author_101, @user in #150
     - Hierarchy level release note
     - Fixed bug
     - Improved performance
@@ -281,7 +281,7 @@ All closed PRs are linked to issues.
 - 🔔 None: _HI303 open_ #303
   - _Release Notes_:
     - Hierarchy level release note
-  - 🔔 N/A: #452 _SI452 closed_ in #151
+  - 🔔 N/A: #452 _SI452 closed_ developed by @author, @pr_author_101, @user in #151
     - Hierarchy level release note
     - Fixed bug
     - Improved performance
@@ -293,7 +293,7 @@ All closed PRs are linked to issues.
   - 🔔 None: _HI350 open_ #350
     - _Release Notes_:
       - Sub-hierarchy level release note
-    - 🔔 N/A: #453 _SI453 closed_ in #152
+    - 🔔 N/A: #453 _SI453 closed_ developed by @author, @pr_author_101, @user in #152
       - Hierarchy level release note
       - Fixed bug
       - Improved performance
@@ -314,7 +314,7 @@ RELEASE_NOTES_DATA_HIERARCHY_NO_LABELS_WITH_TYPE = """### Epics
 - Epic: _HI302 open_ #302
   - _Release Notes_:
     - Hierarchy level release note
-  - Task: #451 _SI451 closed_ in #150
+  - Task: #451 _SI451 closed_ developed by @pr_author_101, @user in #150
     - Hierarchy level release note
     - Fixed bug
     - Improved performance
@@ -323,7 +323,7 @@ RELEASE_NOTES_DATA_HIERARCHY_NO_LABELS_WITH_TYPE = """### Epics
 - Epic: _HI303 open_ #303
   - _Release Notes_:
     - Hierarchy level release note
-  - Task: #452 _SI452 closed_ in #151
+  - Task: #452 _SI452 closed_ developed by @author, @pr_author_101, @user in #151
     - Hierarchy level release note
     - Fixed bug
     - Improved performance
@@ -335,7 +335,7 @@ RELEASE_NOTES_DATA_HIERARCHY_NO_LABELS_WITH_TYPE = """### Epics
   - Feature: _HI350 open_ #350
     - _Release Notes_:
       - Sub-hierarchy level release note
-    - Task: #453 _SI453 closed_ in #152
+    - Task: #453 _SI453 closed_ developed by @author, @pr_author_101, @user in #152
       - Hierarchy level release note
       - Fixed bug
       - Improved performance
@@ -343,19 +343,19 @@ RELEASE_NOTES_DATA_HIERARCHY_NO_LABELS_WITH_TYPE = """### Epics
         * Awesome architecture
 
 ### Closed Issues without Pull Request ⚠️
-- Feature: #121 _Fix the bug_ in 
+- Feature: #121 _Fix the bug_ developed by @user in 
   - Solo issue release note
 
 ### Closed Issues without User Defined Labels ⚠️
 All closed issues contain at least one of user defined labels.
 
 ### Merged PRs without Issue and User Defined Labels ⚠️
-- PR: #124 _Fixed bug_
+- PR: #124 _Fixed bug_ developed by @user
   - Fixed bug
   - Improved performance
 
 ### Closed PRs without Issue and User Defined Labels ⚠️
-- PR: #123 _Fixed bug_
+- PR: #123 _Fixed bug_ developed by @user
   - Fixed bug
   - Improved performance
   + More nice code
@@ -365,7 +365,7 @@ All closed issues contain at least one of user defined labels.
 - 🔔 Epic: _HI302 open_ #302
   - _Release Notes_:
     - Hierarchy level release note
-  - 🔔 Task: #451 _SI451 closed_ in #150
+  - 🔔 Task: #451 _SI451 closed_ developed by @pr_author_101, @user in #150
     - Hierarchy level release note
     - Fixed bug
     - Improved performance
@@ -374,7 +374,7 @@ All closed issues contain at least one of user defined labels.
 - 🔔 Epic: _HI303 open_ #303
   - _Release Notes_:
     - Hierarchy level release note
-  - 🔔 Task: #452 _SI452 closed_ in #151
+  - 🔔 Task: #452 _SI452 closed_ developed by @author, @pr_author_101, @user in #151
     - Hierarchy level release note
     - Fixed bug
     - Improved performance
@@ -386,7 +386,7 @@ All closed issues contain at least one of user defined labels.
   - 🔔 Feature: _HI350 open_ #350
     - _Release Notes_:
       - Sub-hierarchy level release note
-    - 🔔 Task: #453 _SI453 closed_ in #152
+    - 🔔 Task: #453 _SI453 closed_ developed by @author, @pr_author_101, @user in #152
       - Hierarchy level release note
       - Fixed bug
       - Improved performance
@@ -407,7 +407,7 @@ RELEASE_NOTES_DATA_HIERARCHY_WITH_LABELS_WITH_TYPE = """### Epics
 - Epic: _HI302 open_ #302
   - _Release Notes_:
     - Hierarchy level release note
-  - Task: #451 _SI451 closed_ in #150
+  - Task: #451 _SI451 closed_ developed by @pr_author_101, @user in #150
     - Hierarchy level release note
     - Fixed bug
     - Improved performance
@@ -416,7 +416,7 @@ RELEASE_NOTES_DATA_HIERARCHY_WITH_LABELS_WITH_TYPE = """### Epics
 - Epic: _HI303 open_ #303
   - _Release Notes_:
     - Hierarchy level release note
-  - Task: #452 _SI452 closed_ in #151
+  - Task: #452 _SI452 closed_ developed by @author, @pr_author_101, @user in #151
     - Hierarchy level release note
     - Fixed bug
     - Improved performance
@@ -428,7 +428,7 @@ RELEASE_NOTES_DATA_HIERARCHY_WITH_LABELS_WITH_TYPE = """### Epics
   - Feature: _HI350 open_ #350
     - _Release Notes_:
       - Sub-hierarchy level release note
-    - Task: #453 _SI453 closed_ in #152
+    - Task: #453 _SI453 closed_ developed by @author, @pr_author_101, @user in #152
       - Hierarchy level release note
       - Fixed bug
       - Improved performance
@@ -436,21 +436,21 @@ RELEASE_NOTES_DATA_HIERARCHY_WITH_LABELS_WITH_TYPE = """### Epics
         * Awesome architecture
 
 ### Chapter 1 🛠
-- PR: #123 _Fixed bug_
+- PR: #123 _Fixed bug_ developed by @user
   - Fixed bug
   - Improved performance
   + More nice code
     * Awesome architecture
 
 ### Closed Issues without Pull Request ⚠️
-- Bug: #121 _Fix the bug_ in 
+- Bug: #121 _Fix the bug_ developed by @user in 
   - Solo issue release note
 
 ### Closed Issues without User Defined Labels ⚠️
 All closed issues contain at least one of user defined labels.
 
 ### Merged PRs without Issue and User Defined Labels ⚠️
-- PR: #124 _Fixed bug_
+- PR: #124 _Fixed bug_ developed by @user
   - Fixed bug
   - Improved performance
 
@@ -461,7 +461,7 @@ All closed PRs are linked to issues.
 - 🔔 Epic: _HI302 open_ #302
   - _Release Notes_:
     - Hierarchy level release note
-  - 🔔 Task: #451 _SI451 closed_ in #150
+  - 🔔 Task: #451 _SI451 closed_ developed by @pr_author_101, @user in #150
     - Hierarchy level release note
     - Fixed bug
     - Improved performance
@@ -470,7 +470,7 @@ All closed PRs are linked to issues.
 - 🔔 Epic: _HI303 open_ #303
   - _Release Notes_:
     - Hierarchy level release note
-  - 🔔 Task: #452 _SI452 closed_ in #151
+  - 🔔 Task: #452 _SI452 closed_ developed by @author, @pr_author_101, @user in #151
     - Hierarchy level release note
     - Fixed bug
     - Improved performance
@@ -482,7 +482,7 @@ All closed PRs are linked to issues.
   - 🔔 Feature: _HI350 open_ #350
     - _Release Notes_:
       - Sub-hierarchy level release note
-    - 🔔 Task: #453 _SI453 closed_ in #152
+    - 🔔 Task: #453 _SI453 closed_ developed by @author, @pr_author_101, @user in #152
       - Hierarchy level release note
       - Fixed bug
       - Improved performance
@@ -742,7 +742,7 @@ http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_CUSTOM_CHAPTERS_MORE_LABELS_DUPLICITY_REDUCTION_ON = """### Chapter 1 🛠
-- N/A: #122 _I1+bug-enhancement_ in #101, #102
+- N/A: #122 _I1+bug-enhancement_ developed by @pr_author_101, @pr_author_102, @user in #101, #102
   - Fixed bug
   - Improved performance
   + More nice code
@@ -770,10 +770,10 @@ http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_ISSUE_NO_PR_NO_USER_LABELS = """### Closed Issues without Pull Request ⚠️
-- N/A: #121 _Fix the bug_ in
+- N/A: #121 _Fix the bug_ developed by @user in
 
 ### Closed Issues without User Defined Labels ⚠️
-- 🔔 N/A: #121 _Fix the bug_ in
+- 🔔 N/A: #121 _Fix the bug_ developed by @user in
 
 #### Full Changelog
 http://example.com/changelog
@@ -781,7 +781,7 @@ http://example.com/changelog
 
 # pylint: disable=line-too-long
 RELEASE_NOTES_DATA_SERVICE_CHAPTERS_MERGED_PR_NO_ISSUE_NO_USER_LABELS = """### Merged PRs without Issue and User Defined Labels ⚠️
-- PR: #124 _Fixed bug_
+- PR: #124 _Fixed bug_ developed by @author, @user
   - Fixed bug
   - Improved performance
 
@@ -790,7 +790,7 @@ http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_PR_NO_ISSUE_NO_USER_LABELS = """### Closed PRs without Issue and User Defined Labels ⚠️
-- PR: #123 _Fixed bug_
+- PR: #123 _Fixed bug_ developed by @author, @user
   - Fixed bug
   - Improved performance
   + More nice code
@@ -803,7 +803,7 @@ http://example.com/changelog
 RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_PR_NO_ISSUE_SKIP_USER_LABELS = RELEASE_NOTES_NO_DATA_NO_WARNING_NO_EMPTY_CHAPTERS
 
 RELEASE_NOTES_DATA_SERVICE_CHAPTERS_OPEN_ISSUE_AND_MERGED_PR_NO_USER_LABELS = """### Merged PRs Linked to 'Not Closed' Issue ⚠️
-- N/A: #122 _I1 open_ in #101, #102
+- N/A: #122 _I1 open_ developed by @pr_author_101, @pr_author_102, @user in #101, #102
   - PR 101 1st release note
   - PR 101 2nd release note
   - PR 102 1st release note
@@ -825,14 +825,14 @@ http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_CLOSED_ISSUE_NO_PR_WITH_USER_LABELS = """### Closed Issues without Pull Request ⚠️
-- N/A: #121 _Fix the bug_ in
+- N/A: #121 _Fix the bug_ developed by @user in
 
 #### Full Changelog
 http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_PR_WITHOUT_USER_LABELS = """### Closed Issues without User Defined Labels ⚠️
-- N/A: #122 _I1_ in #101, #102
+- N/A: #122 _I1_ developed by @pr_author_101, @pr_author_102, @user in #101, #102
   - Fixed bug
   - Improved performance
   + More nice code
@@ -847,7 +847,7 @@ http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_OPEN_PR_WITHOUT_ISSUE = """### Others - No Topic ⚠️
-- PR: #123 _Fix bug_
+- PR: #123 _Fix bug_ developed by @author, @user
   - Fixed bug
   - Improved performance
 
@@ -856,7 +856,7 @@ http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_MERGED_PR_WITH_USER_LABELS_DUPLICITY_REDUCTION_ON = """### Chapter 1 🛠
-- PR: #124 _Fixed bug_
+- PR: #124 _Fixed bug_ developed by @author, @user
   - Fixed bug
   - Improved performance
 
@@ -865,10 +865,10 @@ http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_MERGED_PRS_WITH_OPEN_ISSUES = """### Merged PRs Linked to 'Not Closed' Issue ⚠️
-- N/A: #122 _I1 open_ in #101
+- N/A: #122 _I1 open_ developed by @pr_author_101, @user in #101
   - PR 101 1st release note
   - PR 101 2nd release note
-- N/A: #123 _I2 open_ in #102
+- N/A: #123 _I2 open_ developed by @pr_author_102, @user in #102
   - PR 102 1st release note
   - PR 102 2nd release note
 
@@ -877,7 +877,7 @@ http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_MERGED_PRS_WITHOUT_USER_LABELS = """### Closed Issues without User Defined Labels ⚠️
-- N/A: #121 _Fix the bug_ in #123
+- N/A: #121 _Fix the bug_ developed by @pr_author_101, @user in #123
   - Fixed bug
   - Improved performance
   + More nice code
@@ -890,7 +890,7 @@ http://example.com/changelog
 RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_MERGED_PRS_WITH_USER_LABELS_WITH_SKIP_LABEL = RELEASE_NOTES_NO_DATA_NO_WARNING_NO_EMPTY_CHAPTERS
 
 RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_MERGED_PRS_WITH_USER_LABELS = """### Chapter 1 🛠
-- N/A: #122 _I1+bug_ in #124
+- N/A: #122 _I1+bug_ developed by @pr_author_124, @user in #124
   - Fixed bug
   - Improved performance
   + More nice code

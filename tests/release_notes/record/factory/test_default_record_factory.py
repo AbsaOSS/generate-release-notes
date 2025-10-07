@@ -22,11 +22,11 @@ from github.Commit import Commit
 from github.Issue import Issue
 from github.PullRequest import PullRequest
 
-from release_notes_generator.model.commit_record import CommitRecord
-from release_notes_generator.model.hierarchy_issue_record import HierarchyIssueRecord
-from release_notes_generator.model.issue_record import IssueRecord
+from release_notes_generator.model.record.commit_record import CommitRecord
+from release_notes_generator.model.record.hierarchy_issue_record import HierarchyIssueRecord
+from release_notes_generator.model.record.issue_record import IssueRecord
 from release_notes_generator.model.mined_data import MinedData
-from release_notes_generator.model.pull_request_record import PullRequestRecord
+from release_notes_generator.model.record.pull_request_record import PullRequestRecord
 from release_notes_generator.record.factory.default_record_factory import DefaultRecordFactory
 from tests.conftest import mock_safe_call_decorator
 

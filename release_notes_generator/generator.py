@@ -30,7 +30,7 @@ from release_notes_generator.data.miner import DataMiner
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.builder.builder import ReleaseNotesBuilder
 from release_notes_generator.chapters.custom_chapters import CustomChapters
-from release_notes_generator.model.record import Record
+from release_notes_generator.model.record.record import Record
 from release_notes_generator.record.factory.default_record_factory import DefaultRecordFactory
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
 from release_notes_generator.utils.record_utils import get_id

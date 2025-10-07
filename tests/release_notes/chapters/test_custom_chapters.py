@@ -16,8 +16,8 @@
 
 from release_notes_generator.model.chapter import Chapter
 from release_notes_generator.chapters.custom_chapters import CustomChapters
-from release_notes_generator.model.issue_record import IssueRecord
-from release_notes_generator.model.record import Record
+from release_notes_generator.model.record.issue_record import IssueRecord
+from release_notes_generator.model.record.record import Record
 from release_notes_generator.utils.enums import DuplicityScopeEnum
 
 

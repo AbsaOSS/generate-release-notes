@@ -115,11 +115,33 @@ class Record(metaclass=ABCMeta):
 
     @property
     @abstractmethod
-    def authors(self) -> list[str]:
+    def author(self) -> str:
+        """
+        Getter for the author of the record.
+            - the issue or PR creator
+        Returns:
+            str: The author associated with the record.
+        """
+
+    @property
+    @abstractmethod
+    def assignees(self) -> list[str]:
         """
         Getter for the authors of the record.
+            - the issue or PR assignees
         Returns:
-            list[str]: A list of authors associated with the record.
+            list[str]: A list of assignees associated with the record.
+        """
+
+    @property
+    @abstractmethod
+    def developers(self) -> list[str]:
+        """
+        Getter for the developers of the record.
+            - assignees
+            - linked PR authors (if any)
+        Returns:
+            list[str]: A list of developers associated with the record.
         """
 
     # abstract methods

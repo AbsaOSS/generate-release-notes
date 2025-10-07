@@ -23,10 +23,10 @@ from typing import Optional, cast
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.chapters.base_chapters import BaseChapters
 from release_notes_generator.model.chapter import Chapter
-from release_notes_generator.model.commit_record import CommitRecord
-from release_notes_generator.model.issue_record import IssueRecord
-from release_notes_generator.model.pull_request_record import PullRequestRecord
-from release_notes_generator.model.record import Record
+from release_notes_generator.model.record.commit_record import CommitRecord
+from release_notes_generator.model.record.issue_record import IssueRecord
+from release_notes_generator.model.record.pull_request_record import PullRequestRecord
+from release_notes_generator.model.record.record import Record
 from release_notes_generator.utils.constants import (
     CLOSED_ISSUES_WITHOUT_PULL_REQUESTS,
     CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS,

@@ -15,7 +15,8 @@
 #
 from typing import Optional
 
-from release_notes_generator.model.record import Record
+from release_notes_generator.model.record.record import Record
+
 
 class DummyRecord(Record):
     def __init__(self, skip=False, labels=None, authors=None, closed=True, record_id=1, rls_notes: Optional[str]="notes"):
@@ -43,7 +44,15 @@ class DummyRecord(Record):
         return self._labels
 
     @property
-    def authors(self):
+    def author(self):
+        return self._authors
+
+    @property
+    def assignees(self):
+        return self._authors
+
+    @property
+    def developers(self):
         return self._authors
 
     def to_chapter_row(self, add_into_chapters: bool = True):

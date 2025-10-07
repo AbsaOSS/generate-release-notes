@@ -14,11 +14,9 @@
 # limitations under the License.
 #
 
-import re
-import pytest
 from github.PullRequest import PullRequest
 
-from release_notes_generator.model.pull_request_record import PullRequestRecord
+from release_notes_generator.model.record.pull_request_record import PullRequestRecord
 
 # get_rls_notes
 

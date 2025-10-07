@@ -33,9 +33,9 @@ from github.Repository import Repository
 
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.data.utils.bulk_sub_issue_collector import CollectorConfig, BulkSubIssueCollector
-from release_notes_generator.model.issue_record import IssueRecord
+from release_notes_generator.model.record.issue_record import IssueRecord
 from release_notes_generator.model.mined_data import MinedData
-from release_notes_generator.model.pull_request_record import PullRequestRecord
+from release_notes_generator.model.record.pull_request_record import PullRequestRecord
 from release_notes_generator.utils.decorators import safe_call_decorator
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
 from release_notes_generator.utils.record_utils import get_id, parse_issue_id

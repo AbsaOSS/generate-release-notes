@@ -22,7 +22,7 @@ from typing import Optional
 from datetime import datetime
 
 from release_notes_generator.model.chapter import Chapter
-from release_notes_generator.model.record import Record
+from release_notes_generator.model.record.record import Record
 
 
 class BaseChapters(ABC):
