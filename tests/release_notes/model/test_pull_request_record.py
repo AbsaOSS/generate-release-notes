@@ -20,7 +20,7 @@ from release_notes_generator.model.record.pull_request_record import PullRequest
 
 # get_rls_notes
 
-def test_get_rls_notes_coderabbit_ignores_groups(mocker):
+def test_get_rls_notes_coderabbit_ignores_groups(mocker, mock_repo):
     pr = mocker.Mock(spec=PullRequest)
     pr.state = PullRequestRecord.PR_STATE_CLOSED
     pr.number = 42
@@ -36,7 +36,7 @@ def test_get_rls_notes_coderabbit_ignores_groups(mocker):
         "Other text"
     )
 
-    rec = PullRequestRecord(pr)
+    rec = PullRequestRecord(pr, mock_repo)
 
     mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_release_notes_title", return_value=r"^Release Notes:$")
     mocker.patch("release_notes_generator.action_inputs.ActionInputs.is_coderabbit_support_active", return_value=True)

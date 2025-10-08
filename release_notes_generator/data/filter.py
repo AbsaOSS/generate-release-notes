@@ -79,8 +79,9 @@ class FilterByRelease(Filter):
             pulls_seen: set[int] = set()
             pulls_dict: dict[PullRequest, Repository] = {}
             for pull, repo in data.pull_requests.items():
-                if (pull.merged_at is not None and pull.merged_at >= data.since) or (
-                    pull.closed_at is not None and pull.closed_at >= data.since
+                if data.since and (
+                    (pull.merged_at and pull.merged_at >= data.since)
+                    or (pull.closed_at and pull.closed_at >= data.since)
                 ):
                     if pull.number not in pulls_seen:
                         pulls_seen.add(pull.number)
@@ -90,7 +91,9 @@ class FilterByRelease(Filter):
             )
 
             commits_dict = {
-                commit: repo for commit, repo in data.commits.items() if commit.commit.author.date > data.since
+                commit: repo
+                for commit, repo in data.commits.items()
+                if data.since and commit.commit.author.date > data.since
             }
             logger.debug("Count of commits reduced from %d to %d", len(data.commits.items()), len(commits_dict.items()))
 
@@ -148,7 +151,7 @@ class FilterByRelease(Filter):
         return {
             issue: repo
             for issue, repo in data.issues.items()
-            if (issue.closed_at is None) or (issue.closed_at >= data.since)
+            if (issue.closed_at is None) or (data.since and issue.closed_at >= data.since)
         }
 
     @staticmethod
@@ -166,5 +169,5 @@ class FilterByRelease(Filter):
         return {
             issue: repo
             for issue, repo in data.issues.items()
-            if ((issue.closed_at is not None and issue.closed_at >= data.since) or (issue.state == "open"))
+            if ((issue.closed_at and data.since and issue.closed_at >= data.since) or (issue.state == "open"))
         }

@@ -17,12 +17,11 @@
 """
 This module contains logic for mining data from GitHub, including issues, pull requests, commits, and releases.
 """
-
 import logging
 import sys
 import traceback
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Optional
+from concurrent.futures import ThreadPoolExecutor, as_completed, CancelledError
+from typing import Optional, Callable
 
 import semver
 from github import Github
@@ -108,6 +107,10 @@ class DataMiner:
 
         return fetched_issues, prs_of_fetched_cross_repo_issues
 
+    def _make_bulk_sub_issue_collector(self) -> BulkSubIssueCollector:
+        cfg = CollectorConfig(verify_tls=False)
+        return BulkSubIssueCollector(ActionInputs.get_github_token(), cfg)
+
     def _scan_sub_issues_for_parents(self, parents_to_check: list[str]) -> dict[str, list[str]]:
         """
         Scan sub-issues for parents.
@@ -118,8 +121,7 @@ class DataMiner:
             dict[str, list[str]]: A dictionary mapping parent issue IDs to their sub-issue IDs.
         """
         new_parent_ids: list[str] = parents_to_check
-        cfg = CollectorConfig(verify_tls=False)
-        bulk_sub_issue_collector = BulkSubIssueCollector(ActionInputs.get_github_token(), cfg)
+        bulk_sub_issue_collector = self._make_bulk_sub_issue_collector()
         parents_sub_issues: dict[str, list[str]] = {}
 
         # run in cycle to get all levels of hierarchy
@@ -135,7 +137,7 @@ class DataMiner:
             org, repo, _num = parse_issue_id(iid)
             full_name = f"{org}/{repo}"
             if data.get_repository(full_name) is None:
-                new_repo = self._fetch_repository(full_name)
+                new_repo = self._fetch_repository(full_name=full_name)
                 if new_repo is None:
                     logger.error("Repository fetch returned None for %s", full_name)
                     return
@@ -171,66 +173,29 @@ class DataMiner:
         issues_for_remove: set[str] = set()
         errors: list[tuple[str, str]] = []  # (parent_id, error_msg)
 
-        def should_fetch(issue: Issue) -> bool:
-            # Mirrors original logic
-            if not issue.closed_at:
-                return False
-            if data.since:
-                # if since > closed_at => skip
-                if issue.closed_at and data.since > issue.closed_at:
-                    return False
-            return True
-
-        def worker(parent_id: str) -> tuple[str, Optional[Issue], Optional[Repository], Optional[str]]:
-            """
-            Returns (parent_id, issue|None, repo|None, error|None)
-            - issue=None & error=None  => mark for remove (didn't meet criteria)
-            - issue=None & error!=None => log error
-            """
-            try:
-                org, repo, num = parse_issue_id(parent_id)
-            except Exception as e:  # defensive
-                return (parent_id, None, None, f"parse_issue_id failed: {e}")
-
-            r = data.get_repository(f"{org}/{repo}")
-            if r is None:
-                return (parent_id, None, None, f"Cannot get repository for {org}/{repo}")
-
-            # GitHub call
-            try:
-                logger.debug("Fetching missing issue: %s", parent_id)
-                issue = self._safe_call(r.get_issue)(num)
-            except Exception as e:
-                return (parent_id, None, r, f"get_issue failed: {e}")
-
-            if issue is None:
-                return (parent_id, None, r, "Issue not found")
-
-            # Criteria
-            if should_fetch(issue):
-                return (parent_id, issue, r, None)
-
-            return (parent_id, None, r, None)  # means: mark for remove
-
         if not to_check:
             logger.debug("Fetched 0 missing issues (nothing to check).")
             return fetched_issues
 
         # Thread pool
         with ThreadPoolExecutor(max_workers=max_workers, thread_name_prefix="fetch-issue") as ex:
-            futures = {ex.submit(worker, pid): pid for pid in to_check}
+            futures = {ex.submit(self.__worker, pid, data, self._safe_call): pid for pid in to_check}
             for fut in as_completed(futures):
                 parent_id = futures[fut]
                 try:
                     pid, issue, repo, err = fut.result()
-                except Exception as e:
+                except CancelledError as e:
+                    errors.append((parent_id, f"worker cancelled: {e}"))
+                    continue
+                except TimeoutError as e:
+                    errors.append((parent_id, f"worker timed out: {e}"))
+                    continue
+                except Exception as e:  # pylint: disable=broad-exception-caught
                     errors.append((parent_id, f"worker crash: {e}"))
                     continue
 
                 if err:
-                    # Log and skip; don't remove mapping unless you’re sure you want to drop errored items
                     logger.error("Error fetching %s: %s", pid, err)
-                    continue
 
                 if issue is None:
                     # Did not meet criteria => schedule removal
@@ -256,6 +221,51 @@ class DataMiner:
         )
 
         return fetched_issues
+
+    @staticmethod
+    def __should_fetch(issue: Issue, data: MinedData) -> bool:
+        # Mirrors original logic
+        if not issue.closed_at:
+            return False
+        if data.since:
+            # if since > closed_at => skip
+            if issue.closed_at and data.since > issue.closed_at:
+                return False
+        return True
+
+    @staticmethod
+    def __worker(
+        parent_id: str, data: MinedData, safe_call: Callable
+    ) -> tuple[str, Optional[Issue], Optional[Repository], Optional[str]]:
+        """
+        Returns (parent_id, issue|None, repo|None, error|None)
+        - issue=None & error=None  => mark for remove (didn't meet criteria)
+        - issue=None & error!=None => log error
+        """
+        try:
+            org, repo, num = parse_issue_id(parent_id)
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            return (parent_id, None, None, f"parse_issue_id failed: {e}")
+
+        r = data.get_repository(f"{org}/{repo}")
+        if r is None:
+            return (parent_id, None, None, f"Cannot get repository for {org}/{repo}")
+
+        # GitHub call
+        try:
+            logger.debug("Fetching missing issue: %s", parent_id)
+            issue = safe_call(r.get_issue)(num)
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            return (parent_id, None, r, f"get_issue failed: {e}")
+
+        if issue is None:
+            return (parent_id, None, r, "Issue not found")
+
+        # Criteria
+        if DataMiner.__should_fetch(issue, data):
+            return (parent_id, issue, r, None)
+
+        return (parent_id, None, r, None)  # means: mark for remove
 
     def _fetch_repository(self, full_name: str) -> Optional[Repository]:
         """
@@ -357,11 +367,13 @@ class DataMiner:
 
         # Derive 'since' from release
         prefer_published = ActionInputs.get_published_at()
-        data.since = (
-            data.release.published_at
-            if prefer_published and getattr(data.release, "published_at", None)
-            else data.release.created_at
-        )
+        # Ensure data.since is only set if a valid datetime is available
+        data.since = None
+        if prefer_published and getattr(data.release, "published_at", None) is not None:
+            data.since = data.release.published_at  # type: ignore[assignment]
+        elif getattr(data.release, "created_at", None) is not None:
+            data.since = data.release.created_at  # type: ignore[assignment]
+
         issues_since = self._safe_call(data.home_repository.get_issues)(
             state=IssueRecord.ISSUE_STATE_ALL,
             since=data.since,
@@ -442,7 +454,7 @@ class DataMiner:
                         if getattr(src_issue, "pull_request", None):
                             pr = src_issue.as_pull_request()  # github.PullRequest.PullRequest
                             prs_of_cross_repo_issues[iid].append(pr)
-            except Exception as e:
+            except Exception as e:  # pylint: disable=broad-exception-caught
                 logger.warning("Failed to fetch timeline events for issue %s: %s", iid, str(e))
 
         return prs_of_cross_repo_issues

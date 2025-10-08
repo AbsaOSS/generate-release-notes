@@ -175,7 +175,7 @@ def mock_get_issues_for_pr(pull_number: int) -> list[str]:
 def test_generate_with_issues_and_pulls_and_commits(mocker, mock_repo):
     mocker.patch("release_notes_generator.record.factory.default_record_factory.safe_call_decorator", side_effect=mock_safe_call_decorator)
     mock_github_client = mocker.Mock(spec=Github)
-    issue1, issue2, pr1, pr2, commit1, commit2 = setup_issues_pulls_commits(mocker, mock_repo)
+    issue1, _issue2, pr1, _pr2, commit1, commit2 = setup_issues_pulls_commits(mocker, mock_repo)
 
     mock_rate_limit = mocker.Mock()
     mock_rate_limit.rate.remaining = 10
@@ -267,7 +267,7 @@ def test_generate_with_no_commits(mocker, mock_repo):
     mock_github_client = mocker.Mock(spec=Github)
     data = MinedData(mock_repo)
     # pylint: disable=unused-variable
-    issue1, issue2, pr1, pr2, commit1, commit2 = setup_issues_pulls_commits(mocker, mock_repo)
+    issue1, issue2, pr1, _pr2, _commit1, _commit2 = setup_issues_pulls_commits(mocker, mock_repo)
     data.issues = {issue1: mock_repo}
     data.pull_requests = {pr1: mock_repo}  # PR linked to a non-fetched issues (due to since condition)
 

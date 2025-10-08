@@ -19,8 +19,11 @@ This module contains the BaseChapters class, which is responsible for representi
 """
 
 import logging
+import re
 from abc import ABCMeta, abstractmethod
 from typing import Optional
+
+from release_notes_generator.action_inputs import ActionInputs
 
 logger = logging.getLogger(__name__)
 
@@ -186,13 +189,14 @@ class Record(metaclass=ABCMeta):
         """
 
     # shared methods
+
     def added_into_chapters(self) -> None:
         """
         Increments the count of chapters in which the record is present.
         Returns: None
         """
+        # TODO - fix in #191
         self._present_in_chapters += 1
-        # TODO - this is wrong - it does not count chapters but conversions
 
     def present_in_chapters(self) -> int:
         """
@@ -239,3 +243,16 @@ class Record(metaclass=ABCMeta):
             self._rls_notes = self.get_rls_notes()
         self._is_release_note_detected = bool(self._rls_notes and self._rls_notes.strip())
         return self._is_release_note_detected
+
+    # shared protected methods
+
+    def _get_rls_notes_setup(self, line_marks: Optional[list[str]] = None) -> tuple[re.Pattern[str], list[str], bool]:
+        detection_pattern = ActionInputs.get_release_notes_title()
+
+        if line_marks is None:
+            line_marks = self.RELEASE_NOTE_LINE_MARKS
+
+        # Compile detection regex
+        detection_regex = re.compile(detection_pattern)
+
+        return detection_regex, line_marks, ActionInputs.is_coderabbit_support_active()

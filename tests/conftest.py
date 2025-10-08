@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from copy import deepcopy, copy
+from copy import deepcopy
 from datetime import datetime, timedelta
 
 import pytest
@@ -45,6 +45,8 @@ class MockLabel:
     def __init__(self, name):
         self.name = name
 
+class FakeRepo:
+    def __init__(self, full_name): self.full_name = full_name
 
 def mock_safe_call_decorator(_rate_limiter):
     def wrapper(fn):
@@ -725,6 +727,23 @@ def mock_commit(mocker):
 
 
 @pytest.fixture
+def mined_data_simple(mock_repo, mock_issue_closed):
+    #   - single issue record (closed)
+    data = MinedData(mock_repo)
+
+    # single issue record (closed)
+    solo_closed_issue = deepcopy(mock_issue_closed)        # 121
+    solo_closed_issue.body += "\nRelease Notes:\n- Solo issue release note"
+    solo_closed_issue.get_labels.return_value = []
+
+    data.issues = {solo_closed_issue: mock_repo}
+    data.pull_requests = {}
+    data.commits = {}
+
+    return data
+
+
+@pytest.fixture
 def mined_data_isolated_record_types_no_labels_no_type_defined(
         mock_repo, mock_issue_closed, mock_pull_closed, mock_pull_merged, mock_commit,
         mock_open_hierarchy_issue, mock_open_sub_issue, mock_closed_sub_issue
@@ -1114,15 +1133,15 @@ def pull_request_record_no_rls_notes(request):
 
 
 @pytest.fixture
-def pull_request_record_merged(request):
-    record = PullRequestRecord(pull=request.getfixturevalue("mock_pull_merged"))
+def pull_request_record_merged(request, mock_repo):
+    record = PullRequestRecord(pull=request.getfixturevalue("mock_pull_merged"), repo=mock_repo)
     record.register_commit(request.getfixturevalue("mock_commit"))
     return record
 
 
 @pytest.fixture
-def pull_request_record_open(request):
-    record = PullRequestRecord(pull=request.getfixturevalue("mock_pull_open"))
+def pull_request_record_open(request, mock_repo):
+    record = PullRequestRecord(pull=request.getfixturevalue("mock_pull_open"), repo=mock_repo)
     record.register_commit(request.getfixturevalue("mock_commit"))
     return record
 
@@ -1139,16 +1158,17 @@ def issue_request_record_with_merged_pr_with_issue_mentioned(request):
 
 
 @pytest.fixture
-def pull_request_record_closed(request):
-    record = PullRequestRecord(pull=request.getfixturevalue("mock_pull_closed"))
+def pull_request_record_closed(request, mock_repo):
+    record = PullRequestRecord(pull=request.getfixturevalue("mock_pull_closed"), repo=mock_repo)
     record.register_commit(request.getfixturevalue("mock_commit"))
     return record
 
 
 @pytest.fixture
-def pull_request_record_closed_with_skip_label(request):
+def pull_request_record_closed_with_skip_label(request, mock_repo):
     record = PullRequestRecord(
         pull=request.getfixturevalue("mock_pull_closed_with_skip_label"),
+        repo=mock_repo,
         skip=True,
     )
     record.register_commit(request.getfixturevalue("mock_commit"))
@@ -1156,8 +1176,8 @@ def pull_request_record_closed_with_skip_label(request):
 
 
 @pytest.fixture
-def pull_request_record_closed_no_rls_notes(request):
-    record = PullRequestRecord(pull=request.getfixturevalue("mock_pull_no_rls_notes"))
+def pull_request_record_closed_no_rls_notes(request, mock_repo):
+    record = PullRequestRecord(pull=request.getfixturevalue("mock_pull_no_rls_notes"), repo=mock_repo)
     return record
 
 
