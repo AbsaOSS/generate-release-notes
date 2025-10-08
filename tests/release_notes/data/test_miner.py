@@ -58,9 +58,9 @@ def fake_fetch_repository(full_name: str):
     # you can branch based on input
     if full_name == "org_1/another_repo":
         return FakeRepo("org_1/another_repo")
-    elif full_name in "org_2/another_repo":
+    elif full_name == "org_2/another_repo":
         return FakeRepo("org_2/another_repo")
-    elif full_name in "org_3/another_repo":
+    elif full_name == "org_3/another_repo":
         return FakeRepo("org_3/another_repo")
     else:
         return None   # simulate “not found”
@@ -298,12 +298,12 @@ def test_mine_data_commits_without_since(mocker, mock_repo):
     # Assert commits retrieved without since arg
     mock_repo.get_commits.assert_called_once()
     assert mock_repo.get_commits.call_args.kwargs == {}
-    assert getattr(data, "since", None) is None
+    assert data.since is None
 
 
 # mine_missing_sub_issues
 
-def test_scan_sub_issues_for_parents(mocker, mock_repo, mined_data_simple, monkeypatch):
+def test_scan_sub_issues_for_parents(mocker, mock_repo, mined_data_simple):
     gh = mocker.Mock()
     gh.get_repo.return_value = mock_repo
 
@@ -326,7 +326,7 @@ def test_scan_sub_issues_for_parents(mocker, mock_repo, mined_data_simple, monke
     assert {} == prs_of_fetched_cross_repo_issues
 
 
-def test_fetch_all_repositories_in_cache(mocker, mock_repo, mined_data_simple, monkeypatch):
+def test_fetch_all_repositories_in_cache(mocker, mock_repo, mined_data_simple):
     gh = mocker.Mock()
     gh.get_repo.return_value = mock_repo
 
@@ -356,7 +356,7 @@ def test_fetch_all_repositories_in_cache(mocker, mock_repo, mined_data_simple, m
     assert {} == prs_of_fetched_cross_repo_issues
 
 
-def test_fetch_missing_issues(mocker, mock_repo, mined_data_simple, monkeypatch, mock_issue_closed_i1_bug):
+def test_fetch_missing_issues(mocker, mock_repo, mined_data_simple, mock_issue_closed_i1_bug):
     def fake_get_issue(num):
         if num == 1:
             return mock_issue_closed_i1_bug
@@ -369,7 +369,7 @@ def test_fetch_missing_issues(mocker, mock_repo, mined_data_simple, monkeypatch,
             i.closed_at = datetime(2019, 12, 31)
             return i
         if num == 7:
-            raise Exception("Issue 7 not found")
+            raise RuntimeError("Issue 7 not found")
         else:
             return None
 
@@ -404,11 +404,11 @@ def test_fetch_missing_issues(mocker, mock_repo, mined_data_simple, monkeypatch,
 
     # No additional calls to get_issues
     assert 1 == len(fetched_issues.keys())
-    assert mock_issue_closed_i1_bug == list(fetched_issues.keys())[0]
+    assert mock_issue_closed_i1_bug == next(iter(fetched_issues.keys()))
     assert {} == prs_of_fetched_cross_repo_issues
 
 
-def test_fetch_missing_issues_no_fetch(mocker, mock_repo, mined_data_simple, monkeypatch, mock_issue_closed_i1_bug):
+def test_fetch_missing_issues_no_fetch(mocker, mock_repo, mined_data_simple, mock_issue_closed_i1_bug):
     def fake_get_issue(num):
         return None
 
@@ -446,7 +446,7 @@ def test_fetch_prs_for_fetched_cross_issues(mocker, mock_repo):
 
     # Event that should add PR
     src_issue_with_pr = mocker.Mock()
-    setattr(src_issue_with_pr, "pull_request", object())
+    src_issue_with_pr.pull_request = object()
     src_issue_with_pr.as_pull_request.return_value = pr_obj
     ev_add = SimpleNamespace(event="cross-referenced", source=SimpleNamespace(issue=src_issue_with_pr))
 
