@@ -11,6 +11,7 @@ from github.PullRequest import PullRequest
 
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.record.record import Record
+from release_notes_generator.utils.record_utils import get_rls_notes_default, get_rls_notes_code_rabbit
 
 
 class IssueRecord(Record):
@@ -162,30 +163,21 @@ class IssueRecord(Record):
 
     def get_rls_notes(self, line_marks: Optional[list[str]] = None) -> str:
         release_notes = ""
-        detection_pattern = ActionInputs.get_release_notes_title()
-
-        if line_marks is None:
-            line_marks = self.RELEASE_NOTE_LINE_MARKS
-
-        # default detection regex
-        detection_regex = re.compile(detection_pattern)
-
-        # Code Rabbit detection regex
-        cr_active: bool = ActionInputs.is_coderabbit_support_active()
+        detection_regex, line_marks, cr_active = self._get_rls_notes_setup(line_marks)
 
         # Get release notes from Issue
         if self._issue.body and detection_regex.search(self._issue.body):
-            release_notes += self._get_rls_notes_default(self._issue, line_marks, detection_regex)
+            release_notes += get_rls_notes_default(self._issue.body, line_marks, detection_regex)
 
         # Iterate over all PRs
         for pull in self._pull_requests.values():
             if pull.body and detection_regex.search(pull.body):
-                release_notes += self._get_rls_notes_default(pull, line_marks, detection_regex)
+                release_notes += get_rls_notes_default(pull.body, line_marks, detection_regex)
             elif pull.body and cr_active:
                 cr_detection_regex: re.Pattern[Any] = re.compile(ActionInputs.get_coderabbit_release_notes_title())
 
                 if cr_detection_regex.search(pull.body):
-                    release_notes += self._get_rls_notes_code_rabbit(pull, line_marks, cr_detection_regex)
+                    release_notes += get_rls_notes_code_rabbit(pull.body, line_marks, cr_detection_regex)
 
         # Return the concatenated release notes
         return release_notes.rstrip()
@@ -274,94 +266,3 @@ class IssueRecord(Record):
         res = [template.format(number=pull.number) for pull in self._pull_requests.values()]
 
         return res
-
-    def _get_rls_notes_default(
-        self, record: Issue | PullRequest, line_marks: list[str], detection_regex: re.Pattern[str]
-    ) -> str:
-        """
-        Extracts release notes from the pull request body based on the provided line marks and detection regex.
-        Parameters:
-            record (Issue or PullRequest): The issue or pull request from which to extract release notes.
-            line_marks (list[str]): A list of characters that indicate the start of a release notes section.
-            detection_regex (re.Pattern[str]): A regex pattern to detect the start of the release notes section.
-        Returns:
-            str: The extracted release notes as a string. If no release notes are found, returns an empty string.
-        """
-        # TODO - this code will be changes soon, there is wish from project to manage different release notes
-        match record.body:
-            case None | "":
-                return ""
-            case str() as body:
-                lines = body.splitlines()
-
-        release_notes_lines = []
-
-        found_section = False
-        for line in lines:
-            stripped = line.strip()
-            if not stripped:
-                continue
-
-            if not found_section:
-                if detection_regex.search(line):
-                    found_section = True
-                continue
-
-            if stripped[0] in line_marks:
-                release_notes_lines.append(f"  {line.rstrip()}")
-            else:
-                break
-
-        return "\n".join(release_notes_lines) + ("\n" if release_notes_lines else "")
-
-    def _get_rls_notes_code_rabbit(
-        self, pull: PullRequest, line_marks: list[str], cr_detection_regex: re.Pattern[str]
-    ) -> str:
-        """
-        Extracts release notes from a pull request body formatted for Code Rabbit.
-        Parameters:
-            pull (PullRequestRecord): The pull request from which to extract release notes.
-            line_marks (list[str]): A list of characters that indicate the start of a release notes section.
-            cr_detection_regex (re.Pattern[str]): A regex pattern to detect the start of the Code
-        Returns:
-            str: The extracted release notes as a string. If no release notes are found, returns an empty string.
-        """
-        # TODO - this code will be changes soon, there is wish from project to manage different release notes
-        if not pull.body:
-            return ""
-
-        lines = pull.body.splitlines()
-        ignore_groups: list[str] = ActionInputs.get_coderabbit_summary_ignore_groups()
-        release_notes_lines = []
-
-        inside_section = False
-        skipping_group = False
-
-        for line in lines:
-            stripped = line.strip()
-            if not stripped:
-                continue
-
-            if not inside_section:
-                if cr_detection_regex.search(line):
-                    inside_section = True
-                continue
-
-            if inside_section:
-                # Check if this is a bold group heading, e.g.
-                first_char = stripped[0]
-                if first_char in line_marks and "**" in stripped:
-                    # Group heading – check if it should be skipped
-                    group_name = stripped.split("**")[1]
-                    skipping_group = any(group.lower() == group_name.lower() for group in ignore_groups)
-                    continue
-
-                if skipping_group and any(line.startswith(f"  {ch} ") for ch in line_marks):
-                    continue
-
-                if first_char in line_marks and any(line.startswith(f"  {ch} ") for ch in line_marks):
-                    release_notes_lines.append(line.rstrip())
-                else:
-                    break
-
-        return "\n".join(release_notes_lines) + ("\n" if release_notes_lines else "")

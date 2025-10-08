@@ -15,7 +15,6 @@
 #
 from copy import deepcopy
 from datetime import datetime, timedelta
-from types import SimpleNamespace
 
 import pytest
 
@@ -1134,15 +1133,15 @@ def pull_request_record_no_rls_notes(request):
 
 
 @pytest.fixture
-def pull_request_record_merged(request):
-    record = PullRequestRecord(pull=request.getfixturevalue("mock_pull_merged"))
+def pull_request_record_merged(request, mock_repo):
+    record = PullRequestRecord(pull=request.getfixturevalue("mock_pull_merged"), repo=mock_repo)
     record.register_commit(request.getfixturevalue("mock_commit"))
     return record
 
 
 @pytest.fixture
-def pull_request_record_open(request):
-    record = PullRequestRecord(pull=request.getfixturevalue("mock_pull_open"))
+def pull_request_record_open(request, mock_repo):
+    record = PullRequestRecord(pull=request.getfixturevalue("mock_pull_open"), repo=mock_repo)
     record.register_commit(request.getfixturevalue("mock_commit"))
     return record
 
@@ -1159,16 +1158,17 @@ def issue_request_record_with_merged_pr_with_issue_mentioned(request):
 
 
 @pytest.fixture
-def pull_request_record_closed(request):
-    record = PullRequestRecord(pull=request.getfixturevalue("mock_pull_closed"))
+def pull_request_record_closed(request, mock_repo):
+    record = PullRequestRecord(pull=request.getfixturevalue("mock_pull_closed"), repo=mock_repo)
     record.register_commit(request.getfixturevalue("mock_commit"))
     return record
 
 
 @pytest.fixture
-def pull_request_record_closed_with_skip_label(request):
+def pull_request_record_closed_with_skip_label(request, mock_repo):
     record = PullRequestRecord(
         pull=request.getfixturevalue("mock_pull_closed_with_skip_label"),
+        repo=mock_repo,
         skip=True,
     )
     record.register_commit(request.getfixturevalue("mock_commit"))
@@ -1176,8 +1176,8 @@ def pull_request_record_closed_with_skip_label(request):
 
 
 @pytest.fixture
-def pull_request_record_closed_no_rls_notes(request):
-    record = PullRequestRecord(pull=request.getfixturevalue("mock_pull_no_rls_notes"))
+def pull_request_record_closed_no_rls_notes(request, mock_repo):
+    record = PullRequestRecord(pull=request.getfixturevalue("mock_pull_no_rls_notes"), repo=mock_repo)
     return record
 
 

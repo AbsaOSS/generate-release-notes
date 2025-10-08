@@ -12,6 +12,8 @@ from github.Issue import Issue
 from github.PullRequest import PullRequest
 from github.Repository import Repository
 
+from release_notes_generator.action_inputs import ActionInputs
+
 logger = logging.getLogger(__name__)
 
 ISSUE_ID_RE = re.compile(r"^(?P<org>[^/\s]+)/(?P<repo>[^#\s]+)#(?P<num>\d+)$")
@@ -65,3 +67,86 @@ def parse_issue_id(issue_id: str) -> tuple[str, str, int]:
 def format_issue_id(org: str, repo: str, number: int) -> str:
     """Format 'org/repo#123' from components."""
     return f"{org}/{repo}#{number}"
+
+
+def get_rls_notes_default(body: str, line_marks: list[str], detection_regex: re.Pattern[str]) -> str:
+    """
+    Extracts release notes from the pull request body based on the provided line marks and detection regex.
+    Parameters:
+        body: The body of the issue or pull request from which to extract release notes.
+        line_marks (list[str]): A list of characters that indicate the start of a release notes section.
+        detection_regex (re.Pattern[str]): A regex pattern to detect the start of the release notes section.
+    Returns:
+        str: The extracted release notes as a string. If no release notes are found, returns an empty string.
+    """
+    # TODO - Refactor with issue #190
+    match body:
+        case None | "":
+            return ""
+
+    release_notes_lines = []
+
+    found_section = False
+    for line in body.splitlines():
+        stripped = line.strip()
+        if not stripped:
+            continue
+
+        if not found_section:
+            if detection_regex.search(line):
+                found_section = True
+            continue
+
+        if stripped[0] in line_marks:
+            release_notes_lines.append(f"  {line.rstrip()}")
+        else:
+            break
+
+    return "\n".join(release_notes_lines) + ("\n" if release_notes_lines else "")
+
+def get_rls_notes_code_rabbit(body: str, line_marks: list[str], cr_detection_regex: re.Pattern[str]) -> str:
+    """
+    Extracts release notes from a pull request body formatted for Code Rabbit.
+    Parameters:
+        body: The body of the issue or pull request from which to extract release notes.
+        line_marks (list[str]): A list of characters that indicate the start of a release notes section.
+        cr_detection_regex (re.Pattern[str]): A regex pattern to detect the start of the Code
+    Returns:
+        str: The extracted release notes as a string. If no release notes are found, returns an empty string.
+    """
+    # TODO - Refactor with issue #190
+    lines = body.splitlines()
+    ignore_groups: list[str] = ActionInputs.get_coderabbit_summary_ignore_groups()
+    release_notes_lines = []
+
+    inside_section = False
+    skipping_group = False
+
+    for line in lines:
+        stripped = line.strip()
+        if not stripped:
+            continue
+
+        if not inside_section:
+            if cr_detection_regex.search(line):
+                inside_section = True
+            continue
+
+        if inside_section:
+            # Check if this is a bold group heading, e.g.
+            first_char = stripped[0]
+            if first_char in line_marks and "**" in stripped:
+                # Group heading – check if it should be skipped
+                group_name = stripped.split("**")[1]
+                skipping_group = any(group.lower() == group_name.lower() for group in ignore_groups)
+                continue
+
+            if skipping_group and any(line.startswith(f"  {ch} ") for ch in line_marks):
+                continue
+
+            if first_char in line_marks and any(line.startswith(f"  {ch} ") for ch in line_marks):
+                release_notes_lines.append(line.rstrip())
+            else:
+                break
+
+    return "\n".join(release_notes_lines) + ("\n" if release_notes_lines else "")

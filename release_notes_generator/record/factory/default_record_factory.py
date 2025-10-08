@@ -131,9 +131,8 @@ class DefaultRecordFactory(RecordFactory):
 
         pr_repo = target_repository if target_repository is not None else data.home_repository
 
-        linked_from_api: set[str] = self._safe_call(get_issues_for_pr)(pull_number=pull.number) or set()
-        linked_from_body: set[str] = extract_issue_numbers_from_body(pull, pr_repo)
-        merged_linked_issues: set[str] = linked_from_api.union(linked_from_body)
+        merged_linked_issues: set[str] = self._safe_call(get_issues_for_pr)(pull_number=pull.number) or set()
+        merged_linked_issues.union(extract_issue_numbers_from_body(pull, pr_repo))
         pull_issues: list[str] = list(merged_linked_issues)
         attached_any = False
         if len(pull_issues) > 0:
@@ -166,10 +165,9 @@ class DefaultRecordFactory(RecordFactory):
                     attached_any = True
 
         if not attached_any:
-            pr_rec = PullRequestRecord(pull, pull_labels, skip_record)
+            self._records[pid] = PullRequestRecord(pull, pr_repo, pull_labels, skip_record)
             for c in related_commits:  # register commits to the PR record
-                pr_rec.register_commit(c)
-            self._records[pid] = pr_rec
+                cast(PullRequestRecord, self._records[pid]).register_commit(c)
             logger.debug("Created record for PR %s: %s", pid, pull.title)
 
     def _register_cross_repo_prs_to_issue(self, iid: str, prs: list[PullRequest]) -> None:

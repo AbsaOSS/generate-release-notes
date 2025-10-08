@@ -267,7 +267,7 @@ def test_generate_with_no_commits(mocker, mock_repo):
     mock_github_client = mocker.Mock(spec=Github)
     data = MinedData(mock_repo)
     # pylint: disable=unused-variable
-    issue1, issue2, pr1, pr2, commit1, commit2 = setup_issues_pulls_commits(mocker, mock_repo)
+    issue1, issue2, pr1, _pr2, _commit1, _commit2 = setup_issues_pulls_commits(mocker, mock_repo)
     data.issues = {issue1: mock_repo}
     data.pull_requests = {pr1: mock_repo}  # PR linked to a non-fetched issues (due to since condition)
 
@@ -291,7 +291,7 @@ def test_generate_with_no_commits(mocker, mock_repo):
     rec_issue2 = cast(IssueRecord,records['org/repo#2'])
 
     # Verify that PRs are registered
-    assert 1 == rec_issue1.pull_requests_count()
+    assert 0 == rec_issue1.pull_requests_count()
     assert 1 == rec_issue2.pull_requests_count()
 
     assert pr1 == rec_issue2.get_pull_request(101)

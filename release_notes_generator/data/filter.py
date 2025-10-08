@@ -79,8 +79,9 @@ class FilterByRelease(Filter):
             pulls_seen: set[int] = set()
             pulls_dict: dict[PullRequest, Repository] = {}
             for pull, repo in data.pull_requests.items():
-                if (pull.merged_at and data.since and pull.merged_at >= data.since) or (
-                    pull.closed_at and data.since and pull.closed_at >= data.since
+                if data.since and (
+                    (pull.merged_at and pull.merged_at >= data.since)
+                    or (pull.closed_at and pull.closed_at >= data.since)
                 ):
                     if pull.number not in pulls_seen:
                         pulls_seen.add(pull.number)
