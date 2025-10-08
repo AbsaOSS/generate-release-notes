@@ -252,7 +252,7 @@ class Record(metaclass=ABCMeta):
         if line_marks is None:
             line_marks = self.RELEASE_NOTE_LINE_MARKS
 
-            # default detection regex
+        # Compile detection regex
         detection_regex = re.compile(detection_pattern)
 
         return detection_regex, line_marks, ActionInputs.is_coderabbit_support_active()
