@@ -104,6 +104,7 @@ def get_rls_notes_default(body: str, line_marks: list[str], detection_regex: re.
 
     return "\n".join(release_notes_lines) + ("\n" if release_notes_lines else "")
 
+
 def get_rls_notes_code_rabbit(body: str, line_marks: list[str], cr_detection_regex: re.Pattern[str]) -> str:
     """
     Extracts release notes from a pull request body formatted for Code Rabbit.
@@ -115,6 +116,10 @@ def get_rls_notes_code_rabbit(body: str, line_marks: list[str], cr_detection_reg
         str: The extracted release notes as a string. If no release notes are found, returns an empty string.
     """
     # TODO - Refactor with issue #190
+    match body:
+        case None | "":
+            return ""
+
     lines = body.splitlines()
     ignore_groups: list[str] = ActionInputs.get_coderabbit_summary_ignore_groups()
     release_notes_lines = []

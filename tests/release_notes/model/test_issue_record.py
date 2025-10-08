@@ -21,6 +21,7 @@ from github.Issue import Issue
 from github.IssueType import IssueType
 
 from release_notes_generator.model.record.issue_record import IssueRecord
+from release_notes_generator.utils.record_utils import get_rls_notes_code_rabbit
 
 
 def _make_issue(mocker, type_name=None) -> Issue:
@@ -80,7 +81,7 @@ def test_issue_record_init_with_type_value(mocker):
 def test_code_rabbit_empty_body(issue_record, mocker):
     mocker.patch("release_notes_generator.model.record.issue_record.ActionInputs.get_coderabbit_summary_ignore_groups", return_value=[])
     pr = make_pr(mocker, None)
-    out = issue_record._get_rls_notes_code_rabbit(pr, LINE_MARKS, CR_REGEX)
+    out = get_rls_notes_code_rabbit(pr.body, LINE_MARKS, CR_REGEX)
     assert out == ""
 
 
@@ -93,7 +94,7 @@ Summary by CodeRabbit
 Other trailing text not part
 """
     pr = make_pr(mocker, body)
-    out = issue_record._get_rls_notes_code_rabbit(pr, LINE_MARKS, CR_REGEX)
+    out = get_rls_notes_code_rabbit(pr.body, LINE_MARKS, CR_REGEX)
     assert out == "  - Added feature A\n  - Fixed bug B\n"
 
 
@@ -111,7 +112,7 @@ Summary by CodeRabbit
   - Faster engine
 """
     pr = make_pr(mocker, body)
-    out = issue_record._get_rls_notes_code_rabbit(pr, LINE_MARKS, CR_REGEX)
+    out = get_rls_notes_code_rabbit(pr.body, LINE_MARKS, CR_REGEX)
     # Chore group bullets skipped, Features group kept
     assert out == "  - Public API v2\n  - Faster engine\n"
 
@@ -125,7 +126,7 @@ Notes:
   - Should NOT appear (after termination)
 """
     pr = make_pr(mocker, body)
-    out = issue_record._get_rls_notes_code_rabbit(pr, LINE_MARKS, CR_REGEX)
+    out = get_rls_notes_code_rabbit(pr.body, LINE_MARKS, CR_REGEX)
     assert out == "  - First line\n"
 
 

@@ -246,7 +246,9 @@ class Record(metaclass=ABCMeta):
 
     # shared protected methods
 
-    def _get_rls_notes_setup(self, line_marks: Optional[list[str]] = None) -> tuple[re.Pattern[AnyStr], list[str], bool]:
+    def _get_rls_notes_setup(
+        self, line_marks: Optional[list[str]] = None
+    ) -> tuple[re.Pattern[str], list[str], bool]:
         detection_pattern = ActionInputs.get_release_notes_title()
 
         if line_marks is None:
