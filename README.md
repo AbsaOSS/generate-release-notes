@@ -97,7 +97,8 @@ Only a few inputs are required to get started:
 | `chapters`     | List of chapters and labels for categorization | No       | -       |
 | `verbose`      | Enable detailed logging                        | No       | false   |
 
-For the full input and output reference, see [Configuration reference](docs/configuration_reference.md)
+For the full input and output reference, see [Configuration reference](docs/configuration_reference.md).  
+For how label → chapter mapping and aggregation works, see [Custom Chapters Behavior](docs/configuration_reference.md#custom-chapters-behavior).
 
 > **Important**: tag defined by `tag-name` must exist in the repository; otherwise, the action fails.
 
@@ -131,7 +132,11 @@ jobs:
           tag-name: ${{ github.event.inputs.tag-name }}
           chapters: |
             - {"title": "New Features 🎉", "label": "enhancement"}
+            - {"title": "New Features 🎉", "label": "feature"}
+            - {"title": "Bugfixes 🛠", "label": "error"}
             - {"title": "Bugfixes 🛠", "label": "bug"}
+            - {"title": "Infrastructure 🚧", "label": "infrastructure"}
+            - {"title": "Documentation 📚", "label": "documentation"}
 
       - name: Create Draft Release
         uses: softprops/action-gh-release@v2
@@ -158,6 +163,7 @@ Each feature is documented separately — click a name below to learn configurat
 | [Tag Range Selection](docs/features/tag_range.md)                     | Time Range                 | Chooses scope via `tag-name`/`from-tag-name`.                                                                 |
 | [Date Selection](docs/features/date_selection.md)                     | Time Range                 | Chooses scope via timestamps (`published-at` vs `created-at`).                                                |
 | [Custom Row Formats](docs/features/custom_row_formats.md)             | Formatting & Presentation  | Controls row templates and placeholders (`{number}`, `{title}`, `{developers}`, …).                           |
+| [Custom Chapters](docs/features/custom_chapters.md)                  | Formatting & Presentation  | Maps labels to chapter headings; aggregates multiple labels under one title.                                  |
 | [Issue Hierarchy Support](docs/features/issue_hierarchy_support.md)   | Formatting & Presentation  | Displays issue → sub-issue relationships.                                                                     |
 | [Verbose Mode](docs/features/verbose_mode.md)                         | Diagnostics & Technical    | Adds detailed logs for debugging.                                                                             |
 

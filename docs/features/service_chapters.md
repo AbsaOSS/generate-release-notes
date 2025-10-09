@@ -9,6 +9,7 @@ Highlight quality gaps or inconsistencies in the release scope: missing PR for c
 - Honors `print-empty-chapters` (default `true`) to either show or suppress empty diagnostic sections.
 - Respects `duplicity-scope`: if duplicates not allowed in Service chapters (`duplicity-scope` excludes `service`/`both`), a record appears only once.
 - Skipped records (Skip Labels) are not considered.
+- Issue ↔ PR linkage here relies on the same detection as main extraction: GitHub closing keywords (e.g. `Fixes #123`) plus API lookups of closing references. See [Issue ↔ PR Linking](../configuration_reference.md#issue--pr-linking).
 
 ### Service Chapter Set
 | Chapter Title | Condition Reported                                                     |
@@ -57,7 +58,8 @@ All direct commits are linked pull requests.
 ## Related Features
 - [Duplicity Handling](./duplicity_handling.md) – controls duplicate visibility and icons.
 - [Skip Labels](./skip_labels.md) – skipped records never appear here.
+- [Release Notes Extraction](./release_notes_extraction.md) – determines change increments referenced.
 - [Custom Row Formats](./custom_row_formats.md) – defines row layout reused here.
+- Custom (user-defined) chapters are configured via YAML (`chapters` input); this page only covers diagnostic Service Chapters. For configuration details see [Configuration Reference](../configuration_reference.md#custom-chapters-behavior).
 
 ← [Back to Feature Tutorials](../../README.md#feature-tutorials)
-

@@ -8,6 +8,7 @@ Extract structured release note lines from pull request (and issue) descriptions
 - Reads subsequent list lines until a blank line, a new heading, or end of body. Supported bullet markers: `-`, `*`, `+` (mixed usage allowed).
 - Each bullet becomes a release note entry attached to the PR (and, when applicable, its linked issue); formatting of the final output row is controlled separately by Custom Row Formats.
 - If no matching section (or it’s empty after filtering) AND CodeRabbit Integration is enabled, the CodeRabbit summary section may be used as a fallback (see CodeRabbit Integration).
+- Issue ↔ PR linkage is determined both by GitHub closing keywords in PR bodies (e.g. `Fixes #123`) and by API lookups of closing references. See [Issue ↔ PR Linking](../configuration_reference.md#issue--pr-linking).
 
 ## Configuration
 ```yaml
