@@ -99,6 +99,8 @@ Only a few inputs are required to get started:
 
 For the full input and output reference, see [Configuration reference](docs/configuration_reference.md)
 
+> **Important**: tag defined by `tag-name` must exist in the repository; otherwise, the action fails.
+
 ## Example Workflow
 
 You can integrate this Action with your release process.
@@ -150,7 +152,7 @@ Each feature is documented separately — click a name below to learn configurat
 |-----------------------------------------------------------------------|----------------------------|---------------------------------------------------------------------------------------------------------------|
 | [Release Notes Extraction](docs/features/release_notes_extraction.md) | Extraction                 | Core logic that scans descriptions to extract structured release notes (and optionally CodeRabbit summaries). |
 | [CodeRabbit Integration](docs/features/coderabbit_integration.md)     | Extraction                 | Optional extension to Release Notes Extraction, enabling AI-generated summaries when PR notes are missing.    |
-| [Skip Labels](docs/features/skip_labels.md)                           | Filtering                  | TODO                                                                                                          |
+| [Skip Labels](docs/features/skip_labels.md)                           | Filtering                  | Exclude issues/PRs carrying configured labels from all release notes.                                         |
 | [Service Chapters](docs/features/service_chapters.md)                 | Quality & Warnings         | Surfaces gaps: issues without PRs, unlabeled items, PRs without notes, etc.                                   |
 | [Duplicity Handling](docs/features/duplicity_handling.md)             | Quality & Warnings         | Marks duplicate lines when the same issue appears in multiple chapters.                                       |
 | [Tag Range Selection](docs/features/tag_range.md)                     | Time Range                 | Chooses scope via `tag-name`/`from-tag-name`.                                                                 |
