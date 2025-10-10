@@ -116,7 +116,7 @@ on:
     inputs:
       tag-name:
         description: 'Name of git tag to be created, and then draft release created. Syntax: "v[0-9]+.[0-9]+.[0-9]+".'
-        required: false
+        required: true
 
 jobs:
   release:
