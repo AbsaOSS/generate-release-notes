@@ -1,0 +1,29 @@
+name: Update v1 tag on release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  update-v1-tag:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set Git user
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+      - name: Move v1 tag to this release
+        run: |
+          git fetch --tags
+          COMMIT_SHA=$(git rev-list -n 1 ${{ github.event.release.tag_name }})
+          echo "Release tag '${{ github.event.release.tag_name }}' resolves to commit $COMMIT_SHA"
+          git tag -f v1 $COMMIT_SHA
+          git push origin -f v1
