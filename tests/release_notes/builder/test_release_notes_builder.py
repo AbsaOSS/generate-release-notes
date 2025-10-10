@@ -269,36 +269,7 @@ All closed issues contain at least one of user defined labels.
 All closed PRs are linked to issues.
 
 ### Merged PRs Linked to 'Not Closed' Issue ⚠️
-- 🔔 None: _HI302 open_ #302
-  - _Release Notes_:
-    - Hierarchy level release note
-  - 🔔 N/A: #451 _SI451 closed_ developed by @pr_author_101, @user in #150
-    - Hierarchy level release note
-    - Fixed bug
-    - Improved performance
-    + More nice code
-      * Awesome architecture
-- 🔔 None: _HI303 open_ #303
-  - _Release Notes_:
-    - Hierarchy level release note
-  - 🔔 N/A: #452 _SI452 closed_ developed by @author, @pr_author_101, @user in #151
-    - Hierarchy level release note
-    - Fixed bug
-    - Improved performance
-    + More nice code
-      * Awesome architecture
-- 🔔 None: _HI304 open_ #304
-  - _Release Notes_:
-    - Hierarchy level release note
-  - 🔔 None: _HI350 open_ #350
-    - _Release Notes_:
-      - Sub-hierarchy level release note
-    - 🔔 N/A: #453 _SI453 closed_ developed by @author, @pr_author_101, @user in #152
-      - Hierarchy level release note
-      - Fixed bug
-      - Improved performance
-      + More nice code
-        * Awesome architecture
+All merged PRs are linked to Closed issues.
 
 ### Direct commits ⚠️
 - Commit: merge_c... - Direct commit example
@@ -362,36 +333,7 @@ All closed issues contain at least one of user defined labels.
     * Awesome architecture
 
 ### Merged PRs Linked to 'Not Closed' Issue ⚠️
-- 🔔 Epic: _HI302 open_ #302
-  - _Release Notes_:
-    - Hierarchy level release note
-  - 🔔 Task: #451 _SI451 closed_ developed by @pr_author_101, @user in #150
-    - Hierarchy level release note
-    - Fixed bug
-    - Improved performance
-    + More nice code
-      * Awesome architecture
-- 🔔 Epic: _HI303 open_ #303
-  - _Release Notes_:
-    - Hierarchy level release note
-  - 🔔 Task: #452 _SI452 closed_ developed by @author, @pr_author_101, @user in #151
-    - Hierarchy level release note
-    - Fixed bug
-    - Improved performance
-    + More nice code
-      * Awesome architecture
-- 🔔 Epic: _HI304 open_ #304
-  - _Release Notes_:
-    - Hierarchy level release note
-  - 🔔 Feature: _HI350 open_ #350
-    - _Release Notes_:
-      - Sub-hierarchy level release note
-    - 🔔 Task: #453 _SI453 closed_ developed by @author, @pr_author_101, @user in #152
-      - Hierarchy level release note
-      - Fixed bug
-      - Improved performance
-      + More nice code
-        * Awesome architecture
+All merged PRs are linked to Closed issues.
 
 ### Direct commits ⚠️
 - Commit: merge_c... - Direct commit example
@@ -458,36 +400,7 @@ All closed issues contain at least one of user defined labels.
 All closed PRs are linked to issues.
 
 ### Merged PRs Linked to 'Not Closed' Issue ⚠️
-- 🔔 Epic: _HI302 open_ #302
-  - _Release Notes_:
-    - Hierarchy level release note
-  - 🔔 Task: #451 _SI451 closed_ developed by @pr_author_101, @user in #150
-    - Hierarchy level release note
-    - Fixed bug
-    - Improved performance
-    + More nice code
-      * Awesome architecture
-- 🔔 Epic: _HI303 open_ #303
-  - _Release Notes_:
-    - Hierarchy level release note
-  - 🔔 Task: #452 _SI452 closed_ developed by @author, @pr_author_101, @user in #151
-    - Hierarchy level release note
-    - Fixed bug
-    - Improved performance
-    + More nice code
-      * Awesome architecture
-- 🔔 Epic: _HI304 open_ #304
-  - _Release Notes_:
-    - Hierarchy level release note
-  - 🔔 Feature: _HI350 open_ #350
-    - _Release Notes_:
-      - Sub-hierarchy level release note
-    - 🔔 Task: #453 _SI453 closed_ developed by @author, @pr_author_101, @user in #152
-      - Hierarchy level release note
-      - Fixed bug
-      - Improved performance
-      + More nice code
-        * Awesome architecture
+All merged PRs are linked to Closed issues.
 
 ### Direct commits ⚠️
 - Commit: merge_c... - Direct commit example

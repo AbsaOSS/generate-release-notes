@@ -18,15 +18,18 @@
 This module contains the ServiceChapters class which is responsible for representing the service chapters in the release
  notes.
 """
+import logging
 from typing import Optional, cast
 
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.chapters.base_chapters import BaseChapters
 from release_notes_generator.model.chapter import Chapter
 from release_notes_generator.model.record.commit_record import CommitRecord
+from release_notes_generator.model.record.hierarchy_issue_record import HierarchyIssueRecord
 from release_notes_generator.model.record.issue_record import IssueRecord
 from release_notes_generator.model.record.pull_request_record import PullRequestRecord
 from release_notes_generator.model.record.record import Record
+from release_notes_generator.model.record.sub_issue_record import SubIssueRecord
 from release_notes_generator.utils.constants import (
     CLOSED_ISSUES_WITHOUT_PULL_REQUESTS,
     CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS,
@@ -37,6 +40,8 @@ from release_notes_generator.utils.constants import (
     DIRECT_COMMITS,
 )
 from release_notes_generator.utils.enums import DuplicityScopeEnum
+
+logger = logging.getLogger(__name__)
 
 
 # pylint: disable=too-many-instance-attributes
@@ -121,20 +126,23 @@ class ServiceChapters(BaseChapters):
 
             # other edge case situations
             else:
-                if (
-                    record.is_open
-                    and isinstance(record, IssueRecord)
-                    and cast(IssueRecord, record).pull_requests_count() == 0
-                ):
-                    # no change increment delivered
-                    pass
-                elif (
-                    record.is_open
-                    and isinstance(record, IssueRecord)
-                    and cast(IssueRecord, record).pull_requests_count() > 0
-                ):
-                    self.chapters[MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES].add_row(record_id, record.to_chapter_row())
-                    self.used_record_numbers.append(record_id)
+                pr_count = cast(IssueRecord, record).pull_requests_count()
+                is_issue_like = isinstance(record, (IssueRecord, SubIssueRecord))
+                is_hierarchy = isinstance(record, HierarchyIssueRecord)
+
+                if record.is_open:
+                    if is_hierarchy and record.is_present_in_chapters:
+                        logger.debug("Skipping open HierarchyIssueRecord %s (pr_count=%d)", record_id, pr_count)
+                    elif is_issue_like and pr_count > 0:
+                        # Open issue/sub-issue with linked PRs → add to the specific chapter
+                        self.chapters[MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES].add_row(
+                            record_id, record.to_chapter_row()
+                        )
+                        logger.debug("Linked PRs for open issue %s; added to chapter.", record_id)
+                        self.used_record_numbers.append(record_id)
+                    else:
+                        # Open issue/sub-issue with no PRs → explicitly do nothing (keeps original behavior)
+                        pass
                 else:
                     if record_id not in self.used_record_numbers:
                         self.chapters[OTHERS_NO_TOPIC].add_row(record_id, record.to_chapter_row())
