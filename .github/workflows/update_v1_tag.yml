@@ -32,4 +32,4 @@ jobs:
           fi
           echo "Release tag '$TAG_NAME' resolves to commit $COMMIT_SHA"
           git tag -f v1 "$COMMIT_SHA"
-          git push origin -f refs/tags/v1
+          git push origin --force-with-lease=refs/tags/v1 refs/tags/v1
