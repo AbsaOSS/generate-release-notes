@@ -22,7 +22,7 @@ Categorize changes, highlight contributors, and maintain consistent release docu
 **Release Notes Scrapper Action** scans issues, pull requests, and commits to create categorized release notes for your project releases.  
 It groups changes by labels (e.g., “Bugfixes 🛠”, “New Features 🎉”) and extracts relevant content from PR descriptions or CodeRabbit summaries.
 
-**Key Benefits**
+### Key Benefits
 - Fully automated release note generation
 - Categorization by labels or issue hierarchy
 - Built-in “Service Chapters” to detect missing or incomplete release notes
@@ -63,7 +63,7 @@ Add the following step to your workflow to start generating release notes.
 
 ### Bugfixes 🛠
 - PR: #25 _Copy not allowed_ author is @dependabot[bot] assigned to @smith developed by @smith
-  - Handfull copy operation has been developed.
+  - File copy operation has been implemented.
 
 #### Full Changelog
 https://github.com/org/repo/compare/v1.1.0...v1.2.0
@@ -115,7 +115,7 @@ on:
   workflow_dispatch:
     inputs:
       tag-name:
-        description: 'Name of git tag to be created, and then draft release created. Syntax: "v[0-9]+.[0-9]+.[0-9]+".'
+        description: 'Existing git tag to use for this draft release. Syntax: "v[0-9]+.[0-9]+.[0-9]+". Ensure the tag is created and pushed before running.'
         required: true
 
 jobs:
