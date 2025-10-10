@@ -13,6 +13,7 @@ Categorize changes, highlight contributors, and maintain consistent release docu
 - [Configuration](#configuration)
 - [Example Workflow](#example-workflow)
 - [Feature Tutorials](#feature-tutorials)
+- [Troubleshooting](#troubleshooting)
 - [Developer & Contribution Guide](#developer--contribution-guide)
 - [License & Support](#license--support)
 
@@ -175,6 +176,19 @@ _Category legend (keep it consistent across docs)_
 - **Time Range** – how the release window is determined.
 - **Formatting & Presentation** – how lines look.
 - **Diagnostics & Technical** – tooling, logs, debug.
+
+## Troubleshooting
+Common questions and quick pointers.
+
+| Symptom | Likely Cause | Where to Read More |
+|---------|--------------|--------------------|
+| Issue/PR missing from a chapter | Skip label applied | [Skip Labels](docs/features/skip_labels.md) |
+| Issue missing but its PR appears | No change increment detected for issue (no merged PR linkage) | [Release Notes Extraction](docs/features/release_notes_extraction.md) |
+| Chapter heading is empty | No qualifying records OR duplicates suppressed | [Custom Chapters](docs/features/custom_chapters.md#faq) |
+| Expected duplicate not shown | `duplicity-scope` excludes that chapter category | [Duplicity Handling](docs/features/duplicity_handling.md) |
+| CodeRabbit section ignored | Manual release notes section already present OR support disabled | [CodeRabbit Integration](docs/features/coderabbit_integration.md) |
+
+More Q&A: see the [Custom Chapters FAQ](docs/features/custom_chapters.md#faq).
 
 ## Developer & Contribution Guide
 

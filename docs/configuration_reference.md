@@ -26,6 +26,8 @@ This page lists all action inputs and outputs with defaults. Grouped for readabi
 | `row-format-pr` | No | `{number} _{title}_ developed by {developers}` | Template for PR rows. |
 | `row-format-link-pr` | No | `true` | If true adds `PR:` prefix when a PR is listed without an issue. |
 
+> CodeRabbit summaries must already be present in the PR body (produced by your own CI/App setup). This action only parses existing summaries; it does not configure or call CodeRabbit.
+
 ### Placeholder Reference
 
 | Context | Placeholders |
@@ -52,9 +54,12 @@ Resulting chapter headings are unique by title; labels aggregate.
 ### Custom Chapters Behavior
 - A record (issue / PR / hierarchy issue) is eligible for a user-defined chapter if it:
   - Is not skipped (no skip label), and
-  - Contains a change increment (has linked merged PR supplying at least one change), and
-  - Owns at least one label matching any configured chapter label.
+  - Contains a change increment (has extracted release notes OR at least one linked merged PR supplying changes), and
+  - Owns at least one label matching any configured chapter label (including implicit issue type label), and
+  - (For hierarchy) ultimately aggregates qualifying sub-issues/PRs.
+- Issue Type is automatically merged into the issue's label set as a lowercase implicit label (e.g. `Epic`, `Feature`, `Bug`, `Task` → `epic`, `feature`, `bug`, `task`). You can reference these directly in `chapters` without adding a duplicate formal label in GitHub.
 - Direct commits are excluded (no labels to match).
+- Multiple entries with identical `title` merge label sets (logical OR across labels under the same heading).
 - Rendering order follows the YAML order of first appearance for each unique title.
 - If `duplicity-scope` excludes `custom`, a record that matched one chapter will not be added to others.
 - Empty chapters: suppressed only when `print-empty-chapters: false`.
@@ -68,6 +73,8 @@ Link detection influences chapter population and Service Chapters:
 
 ### Skip Logic
 Any issue or PR containing at least one label from `skip-release-notes-labels` is entirely excluded from:
+- Release Notes Extraction (manual section parsing)
+- CodeRabbit fallback detection
 - Custom (user-defined) Chapters
 - Service Chapters
 

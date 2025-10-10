@@ -3,6 +3,8 @@
 ## Purpose
 Provide an automatic fallback summary for pull requests that lack an explicit Release Notes section. Uses a CodeRabbit-generated summary block when available and configured, reducing manual effort and minimizing empty chapters.
 
+> NOTE: This action only CONSUMES a CodeRabbit summary already present in the PR body. It does NOT configure, invoke, or authenticate CodeRabbit itself. Any CodeRabbit workflow, app installation, or settings are managed outside of this action.
+
 ## How It Works
 - Activation is controlled by input `coderabbit-support-active` (default: `false`). When `false`, no CodeRabbit parsing occurs.
 - If Release Notes Extraction fails to find a matching section (or yields zero valid bullet lines), the action searches for a section whose heading matches `coderabbit-release-notes-title` (regex, default: `Summary by CodeRabbit`).
