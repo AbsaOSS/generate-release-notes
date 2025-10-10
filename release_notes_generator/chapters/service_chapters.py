@@ -220,7 +220,6 @@ class ServiceChapters(BaseChapters):
                     return
 
                 self.chapters[MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES].add_row(record_id, record.to_chapter_row())
-                print("XXX 2")
                 self.used_record_numbers.append(record_id)
 
             if not record.is_present_in_chapters:
