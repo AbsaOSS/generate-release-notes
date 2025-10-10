@@ -22,14 +22,8 @@ jobs:
 
       - name: Move v1 tag to this release
         run: |
-          set -euo pipefail
-          git fetch --tags --force --prune
-          TAG_NAME="${{ github.event.release.tag_name }}"
-          COMMIT_SHA="$(git rev-list -n 1 "$TAG_NAME")"
-          if [ -z "$COMMIT_SHA" ]; then
-            echo "Error: release tag '$TAG_NAME' not found or has no reachable commit."
-            exit 1
-          fi
-          echo "Release tag '$TAG_NAME' resolves to commit $COMMIT_SHA"
-          git tag -f v1 "$COMMIT_SHA"
-          git push origin --force-with-lease=refs/tags/v1 refs/tags/v1
+          git fetch --tags
+          COMMIT_SHA=$(git rev-list -n 1 ${{ github.event.release.tag_name }})
+          echo "Release tag '${{ github.event.release.tag_name }}' resolves to commit $COMMIT_SHA"
+          git tag -f v1 $COMMIT_SHA
+          git push origin -f v1
