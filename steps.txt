@@ -1,0 +1,120 @@
+1) Instalace a základní inicializace (lokálně)
+
+# A) Nainstaluj CLI (doporučuji pipx; zsh je OK)
+python3 -m pip install --user pipx
+python3 -m pipx ensurepath
+pipx install git+https://github.com/github/spec-kit.git
+
+specify init .
+- copilot
+- sh
+
+
+2) Struktura repa (doporučené minimum)
+.
+├── .specify/
+│   ├── constitution.md        # identita projektu (realita, ne wishlist)
+│   ├── plan.md                # tech plán zlepšení
+│   ├── tasks/                 # rozpad na úkoly
+│   └── config.yml             # cesty výstupů atd.
+├── specs/                     # výstupy /specify (YAML/MD)
+└── .github/    ???
+    └── workflows/
+        └── spec-kit.yml       # CI validace/generování
+
+
+3) Konfigurace Spec-Kit (vytvoř/přidej)
+# .specify/config.yml
+specs_dir: specs
+outputs:
+  constitution: .specify/constitution.md
+  plan: .specify/plan.md
+  tasks: .specify/tasks/
+
+project:
+  name: <TVŮJ PROJEKT>
+  type: QA / CI Automation
+  language: Python + Scala
+  description: >
+    Existing project; maintain brownfield specs, CI guardrails, and tasks.
+agent:
+  mode: brownfield
+  focus:
+    - QA automation
+    - CI workflows
+    - Coverage & documentation
+
+
+4) První naplnění obsahu (prompty pro Copilot / agenta)
+
+- Select copilot and its model
+- select agent
+- select project folder
+
+V editoru spusť postupně:
+
+A) /speckit.constitution - Prompt: Project Constitution for an Existing (Brownfield) Project
+
+Create a full `.specify/constitution.md` file for this existing brownfield project.
+
+Include the following structured sections:
+
+1. **Project Overview**
+   - Purpose: what the system does, who uses it, and what primary value it provides.
+   - Scope and current coverage.
+   - Context within the broader ecosystem (department, OSS context, etc.).
+
+2. **Architecture Summary**
+   - Core modules and their boundaries.
+   - Dependencies and frameworks used.
+   - Data/control flow between components.
+
+3. **Data & Integrations**
+   - Key inputs, outputs, and data formats.
+   - External APIs, services, or repositories integrated with.
+   - Any persistent storage or configuration details.
+
+4. **Workflows & CI/CD**
+   - Build tools and packaging.
+   - Automated testing, linting, and quality gates.
+   - Deployment pipelines and environments (e.g., GitHub Actions, CI/CD).
+
+5. **Quality & Testing**
+   - Test frameworks and types of tests.
+   - Code coverage and reporting tools.
+   - Static analysis (SAST), dependency scans, and code review practices.
+
+6. **Constraints & Compatibility**
+   - Supported platforms, OS, and language versions.
+   - Backward compatibility and supported formats.
+   - Organizational or licensing constraints.
+
+7. **Non-Goals**
+   - List what the project intentionally does not aim to solve.
+   - Clarify boundaries to prevent scope creep.
+
+8. **Key Risks & Assumptions**
+   - Technical, operational, or dependency risks.
+   - Assumptions about environments, usage, or integrations.
+
+9. **Governance & Ownership**
+   - Maintainers and responsible teams.
+   - Decision and contribution process.
+   - Release management and roadmap governance.
+
+10. **Next Steps / Specification Flow**
+   - How to proceed through `/specify → /plan → /tasks`.
+   - Include example commands for running each phase.
+
+Optional:
+- **Metrics & Observability:** Mention tracking or quality metrics.
+- **Change Log / Versioning:** Reference release or version management.
+
+Write this file in a clear, factual tone, formatted as Markdown, suitable for storing under `.specify/constitution.md`.
+
+
+
+B) /specify (jen pro klíčové moduly, ať je to rychlé)
+
+
+
