@@ -125,7 +125,7 @@ Example:
 Unit tests are written using pytest. To run the tests, use the following command:
 
 ```shell
-pytest tests/
+pytest tests/unit
 ```
 
 This will execute all tests located in the tests directory.
@@ -135,8 +135,8 @@ This will execute all tests located in the tests directory.
 Code coverage is collected using the pytest-cov coverage tool. To run the tests and collect coverage information, use the following command:
 
 ```shell
-pytest --cov=. -v tests/ --cov-fail-under=80                      # Check coverage threshold
-pytest --cov=. -v tests/ --cov-fail-under=80 --cov-report=html    # Generate HTML report
+pytest --cov=. -v tests/unit --cov-fail-under=80                      # Check coverage threshold
+pytest --cov=. -v tests/unit --cov-fail-under=80 --cov-report=html    # Generate HTML report
 ```
 
 This will execute all tests in the tests directory and generate a code coverage report.

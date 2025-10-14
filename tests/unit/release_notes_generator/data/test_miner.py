@@ -30,7 +30,7 @@ from github.Repository import Repository
 from release_notes_generator.data.miner import DataMiner
 from release_notes_generator.data.utils.bulk_sub_issue_collector import BulkSubIssueCollector
 from release_notes_generator.model.mined_data import MinedData
-from tests.conftest import FakeRepo
+from tests.unit.conftest import FakeRepo
 
 
 class ChildBulkSubIssueCollector(BulkSubIssueCollector):
