@@ -36,6 +36,7 @@ Mandatory alignment items:
 - Lean Python Design: Justify each new class; prefer functions for stateless logic.
 - Localized Error Handling: Define how errors are logged instead of cross-module exceptions.
 - Dead Code Prohibition: Identify any code to delete made obsolete by this feature.
+- Test Path Mirroring: Confirm new unit tests placed in `tests/unit/<source-relative-path>/test_<file>.py`.
 
 ## Project Structure
 

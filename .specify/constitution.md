@@ -1,12 +1,12 @@
 <!--
 Sync Impact Report
-Version change: 1.0.1 -> 1.1.0
-Modified sections: 5. Quality & Testing; 2. Architecture Summary (Boundary Rules refinement); 9. Governance & Ownership (metadata dates); Core Principles (added 3 new principles); Metrics & Observability (implicit alignment)
-Added sections: Test Directory Structure; Module Boundary Follow-Up; Documentation & Comments Guidance
+Version change: 1.1.0 -> 1.2.0
+Modified sections: 5. Quality & Testing (added test path mirroring rule), Core Principles (added Principle 12), Templates updated for mirroring (plan/tasks/spec)
+Added sections: Principle 12: Test Path Mirroring
 Removed sections: None
-Change type: MINOR (added new enforceable principles & structural guidance)
-Templates requiring updates: .specify/templates/plan-template.md (✅ test structure updated); .specify/templates/tasks-template.md (✅ test mandate clarified); .specify/templates/spec-template.md (⚠ optional - no change needed but may reference new principles if desired)
-Deferred TODOs: None
+Change type: MINOR (new enforceable testing structure rule)
+Templates requiring updates: .specify/templates/plan-template.md (✅), .specify/templates/tasks-template.md (✅), .specify/templates/spec-template.md (✅)
+Deferred TODOs: Migrate legacy categorized test folders (`tests/release_notes`, `tests/data`, `tests/model`, `tests/utils`) to mirrored structure
 -->
 
 # Release Notes Scrapper Action Constitution
@@ -153,6 +153,8 @@ Rules:
 - Fixtures: define shared objects in `tests/conftest.py` or per-file fixtures; keep scope minimal.
 - Parametrization: use `@pytest.mark.parametrize` for input matrix instead of loops.
 - Coverage: new logic MUST raise overall coverage or keep it steady; dropping coverage requires explicit justification.
+- NEW: Unit test file path MUST mirror source relative package path (Principle 12). For source file `release_notes_generator/utils/constants.py`, the test lives at `tests/unit/release_notes_generator/utils/test_constants.py`.
+- Transitional Exception: Existing categorized test directories (`tests/release_notes`, `tests/data`, `tests/model`, `tests/utils`) are grandfathered until migrated; new tests MUST follow mirroring immediately.
 
 ### Organization & Integration
 - Integration tests MUST import public interfaces only (`main`, `ReleaseNotesGenerator`) not internal private helpers.
@@ -275,7 +277,7 @@ Ensure Constitution Check section in `plan.md` passes before advancing to detail
 
 ## Change Log / Versioning
 - Project releases follow Git tags; this constitution uses semantic versioning independent of code releases.
-- Current Constitution Version: 1.1.0 (amended with new principles & test structure).
+- Current Constitution Version: 1.2.0 (amended with new principles & test structure).
 - Future amendments tracked via Sync Impact Report at top of this file.
 
 ## Core Principles
@@ -339,5 +341,13 @@ speculative comments. Allowed: brief context before complex loops, rationale for
 Comments SHOULD be maintained or updated alongside code changes; stale comments MUST be removed.
 Rationale: Enhances clarity without adding noise.
 
+### Principle 12: Test Path Mirroring
+Each unit test file MUST reside under `tests/unit/` mirroring the source package path and file name: `tests/unit/<source_root_relative_path>/test_<original_file_name>.py`.
+Mandatory Rules:
+- One test file per source file unless tightly coupled logic demands grouping (justify in PR).
+- Legacy non-mirrored category folders are deprecated; migrate incrementally without reducing coverage.
+- New or refactored modules require mirrored test path in same PR.
+Rationale: Ensures predictable test discovery, simplifies navigation between code and tests, and supports scalable refactors.
+
 ## Governance Metadata
-**Version**: 1.1.0 | **Ratified**: 2025-10-12 | **Last Amended**: 2025-10-14
+**Version**: 1.2.0 | **Ratified**: 2025-10-12 | **Last Amended**: 2025-10-14

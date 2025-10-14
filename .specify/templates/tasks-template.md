@@ -19,6 +19,7 @@ description: "Task list template for feature implementation"
 ## Path Conventions
 - Single project: `release_notes_generator/` for source, `tests/` for tests
 - Tests MUST go under `tests/unit/` (unit) or `tests/integration/` (integration)
+- Mirrored paths: For `release_notes_generator/x/y.py` create `tests/unit/release_notes_generator/x/test_y.py`.
 
 <!-- 
   ============================================================================
@@ -32,8 +33,9 @@ description: "Task list template for feature implementation"
 **Purpose**: Project initialization and basic structure
 
 - [ ] T001 Create any new module directories in `release_notes_generator/`
-- [ ] T002 [P] Add initial failing unit tests in `tests/unit/` for new logic (Test‑First gate)
-- [ ] T003 [P] Configure/verify linting and formatting tools
+- [ ] T002 [P] Ensure mirrored test path structure for new/relocated tests (Principle 12)
+- [ ] T003 [P] Add initial failing unit tests in `tests/unit/` for new logic (Test‑First gate)
+- [ ] T004 [P] Configure/verify linting and formatting tools
 
 ---
 
@@ -43,10 +45,10 @@ description: "Task list template for feature implementation"
 
 **⚠ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 Implement feature configuration parsing (test: `tests/unit/test_action_inputs.py` extended)
-- [ ] T005 [P] Add utilities (if needed) with tests (`tests/unit/test_utils_<name>.py`)
-- [ ] T006 Setup error handling pattern (log & return) — no cross-module exception leakage
-- [ ] T007 Dead code removal (list obsolete functions) + tests ensuring replacement paths
+- [ ] T005 Implement feature configuration parsing (test: `tests/unit/test_action_inputs.py` extended)
+- [ ] T006 [P] Add utilities (if needed) with tests (`tests/unit/test_utils_<name>.py`)
+- [ ] T007 Setup error handling pattern (log & return) — no cross-module exception leakage
+- [ ] T008 Dead code removal (list obsolete functions) + tests ensuring replacement paths
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -60,14 +62,14 @@ description: "Task list template for feature implementation"
 
 ### Mandatory Tests for User Story 1
 
-- [ ] T010 [P] [US1] Unit tests for new pure functions in `tests/unit/test_<name>.py` (start failing)
-- [ ] T011 [US1] Update integration test (if scope touched) in `tests/integration/test_generation.py` (optional creation)
+- [ ] T009 [P] [US1] Unit tests for new pure functions in `tests/unit/test_<name>.py` (start failing)
+- [ ] T010 [US1] Update integration test (if scope touched) in `tests/integration/test_generation.py` (optional creation)
 
 ### Implementation for User Story 1
 
-- [ ] T012 [P] [US1] Implement function(s) in `release_notes_generator/<module>.py`
-- [ ] T013 [US1] Logging additions (INFO lifecycle, DEBUG details)
-- [ ] T014 [US1] Ensure deterministic ordering adjustments
+- [ ] T011 [P] [US1] Implement function(s) in `release_notes_generator/<module>.py`
+- [ ] T012 [US1] Logging additions (INFO lifecycle, DEBUG details)
+- [ ] T013 [US1] Ensure deterministic ordering adjustments
 
 **Checkpoint**: User Story 1 fully functional & independently testable
 
@@ -81,12 +83,12 @@ description: "Task list template for feature implementation"
 
 ### Mandatory Tests for User Story 2
 
-- [ ] T015 [P] [US2] Unit tests for added logic
+- [ ] T014 [P] [US2] Unit tests for added logic
 
 ### Implementation for User Story 2
 
-- [ ] T016 [US2] Implement logic in existing module
-- [ ] T017 [US2] Update records builder ensuring no cross-module exceptions
+- [ ] T015 [US2] Implement logic in existing module
+- [ ] T016 [US2] Update records builder ensuring no cross-module exceptions
 
 **Checkpoint**: User Stories 1 & 2 independently functional
 
@@ -100,12 +102,12 @@ description: "Task list template for feature implementation"
 
 ### Mandatory Tests for User Story 3
 
-- [ ] T018 [P] [US3] Unit tests for added logic
+- [ ] T017 [P] [US3] Unit tests for added logic
 
 ### Implementation for User Story 3
 
-- [ ] T019 [US3] Implement functionality
-- [ ] T020 [US3] Update documentation/comments (concise, logic-focused)
+- [ ] T018 [US3] Implement functionality
+- [ ] T019 [US3] Update documentation/comments (concise, logic-focused)
 
 **Checkpoint**: All user stories functional; tests green
 
@@ -148,3 +150,4 @@ Add each story with its own failing tests → implementation → validation cycl
 - Prefer functions over classes unless state/polymorphism required
 - Handle errors locally; log & return
 - Comments concise & logic-focused
+- Test Path Mirroring required for new tests

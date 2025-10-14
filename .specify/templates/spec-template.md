@@ -14,6 +14,7 @@ List how this feature will comply with core principles:
 - Localized Error Handling (P9): Describe logging + return strategy; no cross-module exception raises.
 - Dead Code Prohibition (P10): Identify any functions to remove or refactor; commit with tests.
 - Focused Comments (P11): Plan for concise logic/rationale comments; avoid narrative.
+- Test Path Mirroring (P12): Place unit tests at `tests/unit/<source-relative>/test_<file>.py`.
 
 ## User Scenarios & Testing *(mandatory)*
 
