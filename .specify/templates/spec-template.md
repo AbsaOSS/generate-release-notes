@@ -1,9 +1,21 @@
 # Feature Specification: [FEATURE NAME]
 
-**Feature Branch**: `[###-feature-name]`  
+**Work Branch**: `<prefix>/[###-descriptor]` where `<prefix>` ∈ {feature, fix, docs, chore}  
 **Created**: [DATE]  
 **Status**: Draft  
 **Input**: User description: "$ARGUMENTS"
+
+## Constitution Alignment (Mandatory)
+List how this feature will comply with core principles:
+- Test‑First (P1): Failing unit tests in `tests/unit/test_<feature>.py` BEFORE implementation.
+- Explicit Configuration Boundaries (P2): New behavior exposed only via documented action inputs (list if any needed).
+- Deterministic Output (P3): Define ordering / formatting impacts; MUST remain stable across runs.
+- Lean Python Design (P8): Prefer functions; justify any new class (state or polymorphism requirement).
+- Localized Error Handling (P9): Describe logging + return strategy; no cross-module exception raises.
+- Dead Code Prohibition (P10): Identify any functions to remove or refactor; commit with tests.
+- Focused Comments (P11): Plan for concise logic/rationale comments; avoid narrative.
+- Test Path Mirroring (P12): Place unit tests at `tests/unit/<source-relative>/test_<file>.py`.
+- Branch Naming Consistency (P13): Branch MUST start with one of: `feature/`, `fix/`, `docs/`, `chore/`. Use kebab-case descriptor (optional numeric ID). Rename before merge if violated.
 
 ## User Scenarios & Testing *(mandatory)*
 

@@ -20,7 +20,7 @@ from github import Github
 from release_notes_generator.builder.builder import ReleaseNotesBuilder
 from release_notes_generator.chapters.custom_chapters import CustomChapters
 from release_notes_generator.record.factory.default_record_factory import DefaultRecordFactory
-from tests.conftest import mock_safe_call_decorator, MockLabel
+from tests.unit.conftest import mock_safe_call_decorator, MockLabel
 
 # pylint: disable=pointless-string-statement
 """

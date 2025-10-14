@@ -28,7 +28,7 @@ from release_notes_generator.model.record.issue_record import IssueRecord
 from release_notes_generator.model.mined_data import MinedData
 from release_notes_generator.model.record.pull_request_record import PullRequestRecord
 from release_notes_generator.record.factory.default_record_factory import DefaultRecordFactory
-from tests.conftest import mock_safe_call_decorator
+from tests.unit.conftest import mock_safe_call_decorator
 
 
 # generate - non hierarchy issue records

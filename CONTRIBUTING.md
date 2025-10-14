@@ -25,6 +25,19 @@
     * Ensure the Pull Request description clearly outlines your solution.
     * Link your PR to the relevant _Issue_.
 
+## Branch Naming (Principle 13)
+Branches MUST start with one of the allowed prefixes: `feature/`, `fix/`, `docs/`, `chore/`
+Examples:
+- `feature/add-hierarchy-support`
+- `fix/567-handle-empty-chapter`
+- `docs/improve-contribution-guide`
+- `chore/update-ci-python-version`
+Rename if needed before pushing:
+```shell
+git branch -m fix/<new-name>
+```
+Use lowercase kebab-case and reflect actual scope.
+
 ### Community and Communication
 
 If you have any questions or need help, don't hesitate to reach out through our GitHub discussion section. We're here to help!

@@ -107,7 +107,7 @@ jobs:
         run: echo "PYTHONPATH=${GITHUB_WORKSPACE}/release_notes_generator/release_notes_generator" >> $GITHUB_ENV
 
       - name: Check code coverage with Pytest
-        run: pytest --cov=. -v tests/ --cov-fail-under=80
+        run: pytest --cov=. -v tests/unit --cov-fail-under=80
 
   mypy-check:
     runs-on: ubuntu-latest

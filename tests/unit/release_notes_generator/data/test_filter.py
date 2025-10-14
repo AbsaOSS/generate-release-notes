@@ -22,7 +22,6 @@ from github.Repository import Repository
 
 from release_notes_generator.data.filter import FilterByRelease
 from release_notes_generator.model.mined_data import MinedData
-from tests.conftest import mock_repo
 
 
 def test_filter_no_release(mocker):
