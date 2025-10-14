@@ -17,21 +17,25 @@
   the iteration process.
 -->
 
-**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
-**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
-**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
-**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
-**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
-**Project Type**: [single/web/mobile - determines source structure]  
-**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
-**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
-**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
+**Language/Version**: [e.g., Python 3.11 or NEEDS CLARIFICATION]  
+**Primary Dependencies**: [e.g., PyGithub, PyYAML, semver or NEEDS CLARIFICATION]  
+**Testing**: pytest ONLY (per Constitution)  
+**Target Platform**: GitHub Action runners (Ubuntu) or NEEDS CLARIFICATION  
+**Performance Goals**: [domain-specific, e.g., <5s generation time for 500 issues]  
+**Constraints**: [e.g., rate limit adherence, stable deterministic output]  
+**Scale/Scope**: [e.g., repos up to 10k issues in release window]
 
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+Mandatory alignment items:
+- Test‑First Reliability: Provide failing unit test list BEFORE implementation.
+- Explicit Configuration Boundaries: All new behavior exposed via action inputs (list any new inputs needed).
+- Deterministic Output Formatting: Confirm ordering & placeholders remain stable.
+- Lean Python Design: Justify each new class; prefer functions for stateless logic.
+- Localized Error Handling: Define how errors are logged instead of cross-module exceptions.
+- Dead Code Prohibition: Identify any code to delete made obsolete by this feature.
 
 ## Project Structure
 
@@ -48,51 +52,19 @@ specs/[###-feature]/
 ```
 
 ### Source Code (repository root)
-<!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
--->
 
 ```
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
-src/
-├── models/
-├── services/
-├── cli/
-└── lib/
+release_notes_generator/
+  ...existing modules...
 
 tests/
-├── contract/
-├── integration/
-└── unit/
-
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
-backend/
-├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
-└── tests/
-
-frontend/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
-
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+  unit/          # All unit tests (REQUIRED)
+  integration/   # End-to-end tests (if any new ones added by feature)
+  fixtures/      # Static data samples (optional)
+  helpers/       # Test helper utilities
 ```
 
-**Structure Decision**: [Document the selected structure and reference the real
-directories captured above]
+**Structure Decision**: [Document any new modules or directories added]
 
 ## Complexity Tracking
 
@@ -100,5 +72,5 @@ directories captured above]
 
 | Violation | Why Needed | Simpler Alternative Rejected Because |
 |-----------|------------|-------------------------------------|
-| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
-| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
+| [e.g., new class] | [current need] | [function approach insufficient due to state] |
+| [e.g., added input] | [feature toggle] | [implicit behavior would break determinism] |
