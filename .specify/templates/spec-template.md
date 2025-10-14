@@ -1,6 +1,6 @@
 # Feature Specification: [FEATURE NAME]
 
-**Feature Branch**: `[###-feature-name]`  
+**Work Branch**: `<prefix>/[###-descriptor]` where `<prefix>` ∈ {feature, fix, docs, chore}  
 **Created**: [DATE]  
 **Status**: Draft  
 **Input**: User description: "$ARGUMENTS"
@@ -15,6 +15,7 @@ List how this feature will comply with core principles:
 - Dead Code Prohibition (P10): Identify any functions to remove or refactor; commit with tests.
 - Focused Comments (P11): Plan for concise logic/rationale comments; avoid narrative.
 - Test Path Mirroring (P12): Place unit tests at `tests/unit/<source-relative>/test_<file>.py`.
+- Branch Naming Consistency (P13): Branch MUST start with one of: `feature/`, `fix/`, `docs/`, `chore/`. Use kebab-case descriptor (optional numeric ID). Rename before merge if violated.
 
 ## User Scenarios & Testing *(mandatory)*
 

@@ -20,6 +20,7 @@ description: "Task list template for feature implementation"
 - Single project: `release_notes_generator/` for source, `tests/` for tests
 - Tests MUST go under `tests/unit/` (unit) or `tests/integration/` (integration)
 - Mirrored paths: For `release_notes_generator/x/y.py` create `tests/unit/release_notes_generator/x/test_y.py`.
+- Branch naming: Branch MUST start with allowed prefix (feature|fix|docs|chore) + kebab-case descriptor.
 
 <!-- 
   ============================================================================
@@ -34,6 +35,7 @@ description: "Task list template for feature implementation"
 
 - [ ] T001 Create any new module directories in `release_notes_generator/`
 - [ ] T002 [P] Ensure mirrored test path structure for new/relocated tests (Principle 12)
+- [ ] T002a Verify branch prefix matches regex `^(feature|fix|docs|chore)/` (Principle 13) or rename before proceeding
 - [ ] T003 [P] Add initial failing unit tests in `tests/unit/` for new logic (Test‑First gate)
 - [ ] T004 [P] Configure/verify linting and formatting tools
 

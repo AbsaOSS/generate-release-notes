@@ -1,12 +1,12 @@
 <!--
 Sync Impact Report
-Version change: 1.1.0 -> 1.2.0
-Modified sections: 5. Quality & Testing (added test path mirroring rule), Core Principles (added Principle 12), Templates updated for mirroring (plan/tasks/spec)
-Added sections: Principle 12: Test Path Mirroring
+Version change: 1.3.0 -> 1.4.0
+Modified sections: Principle 13 expanded to include fix/, docs/, chore/; Quality Gates branch naming; Compliance Review
+Added sections: Allowed prefix list & category descriptions; CI workflow enforcement `.github/workflows/branch-prefix-check.yml`
 Removed sections: None
-Change type: MINOR (new enforceable testing structure rule)
-Templates requiring updates: .specify/templates/plan-template.md (✅), .specify/templates/tasks-template.md (✅), .specify/templates/spec-template.md (✅)
-Deferred TODOs: Migrate legacy categorized test folders (`tests/release_notes`, `tests/data`, `tests/model`, `tests/utils`) to mirrored structure
+Change type: MINOR (expanded enforceable governance rule)
+Templates requiring updates: plan-template.md (✅), tasks-template.md (✅), spec-template.md (✅), DEVELOPER.md (✅), CONTRIBUTING.md (✅), branch-prefix-check.yml (✅)
+Deferred TODOs: None
 -->
 
 # Release Notes Scrapper Action Constitution
@@ -154,7 +154,7 @@ Rules:
 - Parametrization: use `@pytest.mark.parametrize` for input matrix instead of loops.
 - Coverage: new logic MUST raise overall coverage or keep it steady; dropping coverage requires explicit justification.
 - NEW: Unit test file path MUST mirror source relative package path (Principle 12). For source file `release_notes_generator/utils/constants.py`, the test lives at `tests/unit/release_notes_generator/utils/test_constants.py`.
-- Transitional Exception: Existing categorized test directories (`tests/release_notes`, `tests/data`, `tests/model`, `tests/utils`) are grandfathered until migrated; new tests MUST follow mirroring immediately.
+- Branch Naming: Feature / fix / docs / chore PRs MUST originate from correctly prefixed branch (Principle 13); CI may validate.
 
 ### Organization & Integration
 - Integration tests MUST import public interfaces only (`main`, `ReleaseNotesGenerator`) not internal private helpers.
@@ -176,6 +176,7 @@ Rules:
 - Lint + type: zero blocking errors.
 - No unused functions/methods (see Principle 10) — introduce usage or delete in same PR.
 - Backward compatibility: no silent change to input names or placeholder semantics without version bump & documentation update.
+- Branch naming compliance (Principle 13) — allowed prefixes: feature/, fix/, docs/, chore/; rename if violated.
 
 ## 6. Constraints & Compatibility
 
@@ -241,6 +242,7 @@ Rules:
 ### Compliance Review
 - PR template or automated check SHOULD reference Constitution principles (especially Test‑First & Stability) before merge.
 - Violations require explicit justification section in PR description.
+- Review checklist MUST confirm Principle 13 prefix correctness and scope alignment.
 
 ### Release Management
 - Tagging strategy external; this action consumes tags. Recommend semantic versioning for repository releases.
@@ -277,7 +279,7 @@ Ensure Constitution Check section in `plan.md` passes before advancing to detail
 
 ## Change Log / Versioning
 - Project releases follow Git tags; this constitution uses semantic versioning independent of code releases.
-- Current Constitution Version: 1.2.0 (amended with new principles & test structure).
+- Current Constitution Version: 1.4.0 (amended with new principles & test structure).
 - Future amendments tracked via Sync Impact Report at top of this file.
 
 ## Core Principles
@@ -349,5 +351,22 @@ Mandatory Rules:
 - New or refactored modules require mirrored test path in same PR.
 Rationale: Ensures predictable test discovery, simplifies navigation between code and tests, and supports scalable refactors.
 
+### Principle 13: Branch Naming Consistency
+All new branches for work MUST start with one of the approved prefixes followed by a concise kebab-case descriptor (optional numeric ID).
+Approved prefixes:
+- `feature/` – new features & enhancements
+- `fix/` – bug fixes / defect resolutions
+- `docs/` – documentation-only updates
+- `chore/` – maintenance, dependency bumps, CI, non-behavioral refactors
+Examples:
+`feature/add-hierarchy-support`, `fix/567-handle-empty-chapters`, `docs/improve-readme-start`, `chore/upgrade-semver-lib`
+Rules:
+- Prefix REQUIRED and MUST be in approved set; rename non-compliant branches prior to PR.
+- Descriptor: lowercase kebab-case; hyphen separators; no spaces/underscores/trailing slash.
+- Optional numeric ID may precede description (`fix/987-null-title`).
+- Category alignment: branch prefix MUST match primary scope of PR contents.
+- Avoid vague descriptors (`update`, `changes`). Prefer action or subject (`improve-logging`, `remove-dead-code`).
+Rationale: Standardizes history, enables automated governance checks, clarifies intent for reviewers & tooling.
+
 ## Governance Metadata
-**Version**: 1.2.0 | **Ratified**: 2025-10-12 | **Last Amended**: 2025-10-14
+**Version**: 1.4.0 | **Ratified**: 2025-10-12 | **Last Amended**: 2025-10-14

@@ -179,3 +179,25 @@ export INPUT_GITHUB_TOKEN=$(printenv <your-env-token-var>)
 # Run the Python script
 python3 ./<path-to-action-project-root>/main.py
 ```
+
+## Branch Naming Convention (Principle 13)
+All work branches MUST use an allowed prefix followed by a concise kebab-case descriptor (optional numeric ID):
+Allowed prefixes:
+- feature/ : new functionality & enhancements
+- fix/     : bug fixes / defect resolutions
+- docs/    : documentation-only updates
+- chore/   : maintenance, CI, dependency bumps, non-behavioral refactors
+Examples:
+- feature/add-hierarchy-support
+- fix/456-null-title-parsing
+- docs/update-readme-quickstart
+- chore/upgrade-pygithub
+Rules:
+- Prefix mandatory; rename non-compliant branches before PR (`git branch -m feature/<new-name>` etc.).
+- Descriptor lowercase kebab-case; hyphens only; avoid vague terms (`update`, `changes`).
+- Align scope: a docs-only PR MUST use docs/ prefix, not feature/.
+Verification Tip:
+```shell
+git rev-parse --abbrev-ref HEAD | grep -E '^(feature|fix|docs|chore)/' || echo 'Branch naming violation (expected allowed prefix)'
+```
+Future possible prefixes (not enforced yet): `refactor/`, `perf/`.

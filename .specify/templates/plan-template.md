@@ -1,6 +1,6 @@
 # Implementation Plan: [FEATURE]
 
-**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
+**Branch**: `<prefix>/[###-descriptor]` (prefix ∈ {feature, fix, docs, chore}) | **Date**: [DATE] | **Spec**: [link]
 **Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
 
 **Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.
@@ -37,6 +37,8 @@ Mandatory alignment items:
 - Localized Error Handling: Define how errors are logged instead of cross-module exceptions.
 - Dead Code Prohibition: Identify any code to delete made obsolete by this feature.
 - Test Path Mirroring: Confirm new unit tests placed in `tests/unit/<source-relative-path>/test_<file>.py`.
+- Branch Naming Consistency: Confirm current branch uses allowed prefix (feature|fix|docs|chore):
+  `git rev-parse --abbrev-ref HEAD | grep -E '^(feature|fix|docs|chore)/'`.
 
 ## Project Structure
 

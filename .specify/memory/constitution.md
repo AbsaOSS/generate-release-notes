@@ -1,11 +1,11 @@
 <!--
 Sync Impact Report
-Version change: 1.1.0 -> 1.2.0
-Modified principles: Added Principle 12 (Test Path Mirroring)
-Added sections: Expanded Test Directory Structure rules with mirroring requirement
+Version change: 1.3.0 -> 1.4.0
+Modified principles: Principle 13 (Branch Naming Consistency expanded to multi-prefix standard)
+Added sections: Prefix category definitions table; CI enforcement workflow `.github/workflows/branch-prefix-check.yml`
 Removed sections: None
-Templates requiring updates: plan-template.md (✅), tasks-template.md (✅), spec-template.md (✅)
-Deferred TODOs: Migrate legacy categorized test folders to mirrored paths
+Templates requiring updates: plan-template.md (✅), spec-template.md (✅), tasks-template.md (✅), DEVELOPER.md (✅), CONTRIBUTING.md (✅), branch-prefix-check.yml (✅)
+Deferred TODOs: None
 -->
 
 # Generate Release Notes Action Constitution
@@ -76,6 +76,27 @@ Rules:
 - Legacy categorized folders (`tests/release_notes`, `tests/data`, `tests/model`, `tests/utils`) are transitional; migrate gradually without lowering coverage.
 Rationale: Streamlines navigation, encourages focused tests, reduces ambiguity in ownership.
 
+### Principle 13: Branch Naming Consistency
+All new work branches MUST start with an approved prefix followed by a concise kebab-case descriptor (optional leading numeric ID).
+Allowed prefixes (enforced):
+- `feature/`  → Feature & enhancement work introducing new capability or non-trivial behavior
+- `fix/`      → Bug fixes addressing defects (issues labeled bug/error)
+- `docs/`     → Documentation-only changes (README, docs/, CONTRIBUTING, DEVELOPER guides)
+- `chore/`    → Maintenance, dependency updates, CI adjustments, refactors without behavioral change
+Examples:
+- `feature/add-hierarchy-support`, `feature/123-hierarchy-support`
+- `fix/456-null-pointer-on-empty-labels`
+- `docs/improve-hierarchy-guide`
+- `chore/update-pylint-config`
+Rules:
+- Prefix MUST be one of the allowed set; otherwise branch renamed before PR.
+- Descriptor: lowercase kebab-case; hyphens only; no spaces/underscores/trailing slash.
+- Optional numeric ID may precede description: `fix/987-label-trim`.
+- Avoid vague terms (`update`, `changes`); state intent (`improve-logging`, `relabel-duplicate-detection`).
+- Forbidden: mixing categories (e.g., `feature-fix/`), uppercase, camelCase.
+- Scope alignment: PR description MUST align with chosen prefix category; reviewers reject mismatches (e.g., docs-only PR on feature/ branch).
+Rationale: Enables automated classification, precise audit tooling, clearer commit/PR history semantics, and supports future CI policy enforcement.
+
 ## Quality & Testing
 
 - Test Directory Structure:
@@ -91,6 +112,7 @@ Rationale: Streamlines navigation, encourages focused tests, reduces ambiguity i
 - Failing tests are written first (Principle 1) for new core logic.
 - NEW: Path mirroring (Principle 12) enforced for all new/changed modules.
 - Transitional Migration Plan: Add tasks in upcoming PRs to relocate remaining categorized tests.
+- Branch Naming Check: Implementation PRs MUST originate from an allowed prefixed branch (`feature/`, `fix/`, `docs/`, `chore/`). (Principle 13)
 
 ## Workflow & Quality Gates
 
@@ -102,27 +124,28 @@ Pre-merge local mandatory checkers (from DEVELOPER.md):
 5. Coverage: ≥80% overall; justify any temporary dip (must be recovered within next PR).
 6. Dead Code: grep for unused utilities; remove or reference usage in same PR.
 7. Determinism: (Manual) Validate repeated runs produce identical output for sample dataset.
+8. Branch Naming: CI/Review MUST verify allowed prefix (feature|fix|docs|chore). Non-compliant branches BLOCK merge until renamed.
 
 Quality Gate Failure Handling:
 - Minor failures (formatting, lint) → fix immediately; do not merge with waivers unless urgent hotfix.
 - Coverage dip → requires explicit justification + recovery plan (link issue ID).
 - Non-deterministic output → BLOCKING until resolved.
+- Branch naming violation → BLOCKING until branch renamed; no exception (prefix set: feature|fix|docs|chore).
 
 ## Governance
 
 - Constitution supersedes ad-hoc practices; PRs MUST state compliance or list justified exceptions.
 - Versioning (this constitution): Semantic (MAJOR.MINOR.PATCH).
   - MAJOR: Remove/redefine a principle or backward incompatible process change.
-  - MINOR: Add new principle/section (current change qualifies here).
+  - MINOR: Add new principle/section (current change qualifies here: Branch Naming Consistency).
   - PATCH: Clarifications/typos with no semantic effect.
 - Amendment Flow:
   1. Propose change with rationale & impact assessment.
   2. Update Sync Impact Report header (include affected templates & TODOs).
   3. Bump version according to rule above.
   4. Obtain maintainer approval (≥1) — emergency fixes allow retroactive review.
-- Compliance Review: PR template SHOULD reference Principles 1 (Test‑First), 2 (Configuration Boundaries), 10 (Dead Code),
-  and coverage threshold. Reviewers reject if principles violated without justification.
+- Compliance Review: PR template SHOULD reference Principles 1, 2, 10, 12, 13 (multi-prefix) + coverage threshold. Reviewers reject if principles violated without justification.
 - Backward Compatibility: Input names & placeholder semantics require MAJOR bump if changed.
-- Enforcement: CI pipeline SHOULD automate black, pylint, mypy, pytest, coverage threshold; manual deterministic checks remain.
+- Enforcement: CI pipeline SHOULD automate black, pylint, mypy, pytest, coverage threshold; manual deterministic checks remain. Branch naming can be auto-validated by simple prefix check script.
 
-**Version**: 1.2.0 | **Ratified**: 2025-10-12 | **Last Amended**: 2025-10-14
+**Version**: 1.4.0 | **Ratified**: 2025-10-12 | **Last Amended**: 2025-10-14
