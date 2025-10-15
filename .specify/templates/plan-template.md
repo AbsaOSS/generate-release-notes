@@ -30,15 +30,20 @@
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
 Mandatory alignment items:
-- Test‑First Reliability: Provide failing unit test list BEFORE implementation.
-- Explicit Configuration Boundaries: All new behavior exposed via action inputs (list any new inputs needed).
-- Deterministic Output Formatting: Confirm ordering & placeholders remain stable.
-- Lean Python Design: Justify each new class; prefer functions for stateless logic.
-- Localized Error Handling: Define how errors are logged instead of cross-module exceptions.
-- Dead Code Prohibition: Identify any code to delete made obsolete by this feature.
-- Test Path Mirroring: Confirm new unit tests placed in `tests/unit/<source-relative-path>/test_<file>.py`.
-- Branch Naming Consistency: Confirm current branch uses allowed prefix (feature|fix|docs|chore):
+- Test‑First Reliability (P1): Provide failing unit test list BEFORE implementation.
+- Explicit Configuration Boundaries (P2): All new behavior exposed via action inputs (list any new inputs needed).
+- Deterministic Output Formatting (P3): Confirm ordering & placeholders remain stable.
+- Performance Budget & API Usage (P7): Estimate added API calls (target ≤3*(issues+PRs)), define logging/measurement plan, and fallback behavior if rate limit low.
+- Lean Python Design (P8): Justify each new class; prefer functions for stateless logic.
+- Localized Error Handling (P9): Define how errors are logged instead of cross-module exceptions.
+- Dead Code Prohibition (P10): Identify any code to delete made obsolete by this feature.
+- Test Path Mirroring (P12): Confirm new unit tests placed in `tests/unit/<source-relative-path>/test_<file>.py`.
+- Branch Naming Consistency (P13): Confirm current branch uses allowed prefix (feature|fix|docs|chore):
   `git rev-parse --abbrev-ref HEAD | grep -E '^(feature|fix|docs|chore)/'`.
+- Static Typing Discipline (P14): Public APIs fully typed; list any unavoidable `Any` / `type: ignore` with justification.
+- TODO Debt Governance (P15): Any introduced TODO lines MUST carry issue reference; list initial issues here.
+- Security & Token Handling (P16): No logging of secrets; describe any new external API interactions & masking strategy.
+- Documentation‑Derived Rule Sync (P17): Any new/changed normative doc statements reconciled (reference principle / amendment / NON-NORMATIVE justification).
 
 ## Project Structure
 

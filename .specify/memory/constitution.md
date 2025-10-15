@@ -1,11 +1,11 @@
 <!--
 Sync Impact Report
-Version change: 1.3.0 -> 1.4.0
-Modified principles: Principle 13 (Branch Naming Consistency expanded to multi-prefix standard)
-Added sections: Prefix category definitions table; CI enforcement workflow `.github/workflows/branch-prefix-check.yml`
+Version change: 1.5.1 -> 1.6.0
+Modified principles: None
+Added sections: Principle 17 (Documentation-Derived Rule Synchronization)
 Removed sections: None
-Templates requiring updates: plan-template.md (✅), spec-template.md (✅), tasks-template.md (✅), DEVELOPER.md (✅), CONTRIBUTING.md (✅), branch-prefix-check.yml (✅)
-Deferred TODOs: None
+Templates requiring updates: plan-template.md (✅), spec-template.md (✅), tasks-template.md (✅)
+Follow-up TODOs: Implement doc rule scan script (regex normative terms) & add CI job; baseline first scan by 2025-11-01.
 -->
 
 # Generate Release Notes Action Constitution
@@ -42,10 +42,16 @@ New placeholders, chapters, or hierarchy features MUST default to non-breaking b
 uncertain. Document additions in README + release notes.
 Rationale: Incremental evolution without destabilizing existing users.
 
-### Principle 7: Resource-Conscious GitHub API Usage
-All mining MUST route through rate limiter abstractions. Disable hierarchy expansion when feature off. Avoid redundant
-fetches (cache IDs once retrieved). Performance concerns addressed before merging API-heavy features.
-Rationale: Preserves rate limits & improves speed.
+### Principle 7: Resource-Conscious GitHub API Usage & Performance Budgeting
+All mining MUST route through rate limiter abstractions and remain within a documented soft performance budget.
+Rules:
+- Disable hierarchy expansion when feature off to avoid unnecessary calls.
+- Avoid redundant fetches (cache IDs once retrieved).
+- Verbose runs SHOULD (and CI MAY) log: total API requests, elapsed wall-clock seconds, issues processed, PRs processed, remaining rate limit.
+- Soft API call target: ≤ 3 * (issues + PRs) for typical release windows; overages require justification & follow-up optimization task.
+- If remaining core rate limit <10% before optional hierarchy expansion, skip hierarchy mining with a warning (do not fail build).
+- Performance baselines MUST be periodically (at least once per quarter) captured for representative repositories.
+Rationale: Preserves rate limits, ensures predictably fast runtime, and prevents hidden performance regressions.
 
 ### Principle 8: Lean Python Design
 Prefer pure functions; introduce classes ONLY when stateful behavior or polymorphism required. Avoid deep inheritance;
@@ -64,7 +70,7 @@ Rationale: Prevents confusion & keeps coverage meaningful.
 
 ### Principle 11: Focused & Informative Comments
 Comments MUST succinctly explain non-obvious logic, constraints, or workaround rationale. Prohibited: stale, narrative,
-Speculative, or redundant comments. Maintain or delete on change; never leave outdated intent.
+speculative, or redundant comments. Maintain or delete on change; never leave outdated intent.
 Rationale: Enhances clarity without noise.
 
 ### Principle 12: Test Path Mirroring
@@ -93,9 +99,48 @@ Rules:
 - Descriptor: lowercase kebab-case; hyphens only; no spaces/underscores/trailing slash.
 - Optional numeric ID may precede description: `fix/987-label-trim`.
 - Avoid vague terms (`update`, `changes`); state intent (`improve-logging`, `relabel-duplicate-detection`).
-- Forbidden: mixing categories (e.g., `feature-fix/`), uppercase, camelCase.
-- Scope alignment: PR description MUST align with chosen prefix category; reviewers reject mismatches (e.g., docs-only PR on feature/ branch).
-Rationale: Enables automated classification, precise audit tooling, clearer commit/PR history semantics, and supports future CI policy enforcement.
+- Forbidden: mixing categories, uppercase, camelCase.
+- Scope alignment: PR description MUST align with chosen prefix category.
+Rationale: Enables automated classification, clearer history semantics, and supports CI policy enforcement.
+
+### Principle 14: Static Typing Discipline
+All production modules MUST be fully type-checked with `mypy` (no silent exclusion beyond legacy transitional areas explicitly documented).
+Rules:
+- New code MAY NOT introduce `# type: ignore` without inline justification.
+- Broad `Any` disallowed unless interacting with third-party library lacking stubs (justify in PR).
+- Progressive enforcement: expand mypy coverage to tests by 2025-11-01 (create issue if deadline adjustment needed).
+Rationale: Early defect detection, self-documenting APIs, safer refactors.
+
+### Principle 15: TODO Debt Governance
+Inline `TODO` (or `FIXME`) MUST include an issue reference (`#<id>`). Format: `# TODO(<issue-id>|<tracking-tag>): <action>`.
+Rules:
+- Missing issue link blocks merge (unless converted immediately to issue during review).
+- TODO lifetime max: 2 MINOR releases; aged TODOs trigger escalation issue.
+- Deprecated TODO replaced by comment removal OR fixed code in same PR.
+Rationale: Prevents silent entropy & ensures planned remediation of technical debt.
+
+### Principle 16: Security & Token Handling
+No secrets or token fragments MAY be logged (even at DEBUG). Environment access limited to documented inputs.
+Rules:
+- Mask potentially sensitive substrings when logging dynamic user inputs.
+- Dependencies updated under `chore/` branches; review for supply chain risk (pin versions in requirements files).
+- Introduce new external services ONLY with explicit README threat notes (data sent, retention, opt-in flag).
+Rationale: Protects consumers using default GITHUB_TOKEN and mitigates leakage risk.
+
+### Principle 17: Documentation‑Derived Rule Synchronization
+Normative statements (MUST/SHOULD/SHALL/REQUIRED) introduced or changed in project Markdown docs (e.g., `README.md`,
+`CONTRIBUTING.md`, `DEVELOPER.md`, any `docs/**/*.md`) MUST be reconciled with this constitution & templates.
+Rules:
+- Every PR modifying *.md files that adds/changes normative language MUST include one of:
+  1. “Aligns with existing Principle X” (explicit reference), OR
+  2. A Constitution amendment (new/updated principle), OR
+  3. Justification that wording is purely explanatory (no new rule) using phrase: `NON-NORMATIVE` in PR description.
+- If conflict between doc text and a principle arises, the constitution prevails until amended; PR MUST either patch docs or amends principles in same PR.
+- Introduced process steps (e.g., ��run script X before commit”) MUST appear in: (a) constitution governance or quality gates section, OR (b) tasks template if feature-scoped.
+- A Doc Rule Scan Script (planned) parses changed Markdown lines for regex: `\b(MUST|SHOULD|SHALL|REQUIRED)\b` and fails CI unless reconciliation note present.
+- Template Propagation: When new normative doc rule is adopted, update: plan-template Constitution Check, spec-template alignment bullets, tasks-template path/quality gates.
+- Quarterly Audit: Run scan across repo; produce report listing normative statements without principle references; open issues for each orphan.
+Rationale: Prevents silent drift between contributor docs and enforceable governance; ensures single source of truth & predictable automation.
 
 ## Quality & Testing
 
@@ -103,49 +148,58 @@ Rationale: Enables automated classification, precise audit tooling, clearer comm
   - tests/unit/: All unit tests (test_<module>.py) — required location.
   - tests/integration/: End-to-end tests (integration_test.py to be migrated here when reorganized).
   - tests/fixtures/: Optional static data samples.
-  - tests/helpers/ & tests/utils/: Test-only helpers (utils may merge into helpers).
-- Framework: pytest ONLY (no unittest classes).
-- Coverage: Enforce threshold ≥80% (existing command uses --cov-fail-under=80). New logic must keep or raise coverage.
-- Independence: Tests MUST not depend on run order or mutate shared global state beyond fixture scope.
+  - tests/helpers/ & tests/utils/: Test-only helpers.
+- Framework: pytest ONLY.
+- Coverage: Enforce threshold ≥80% (uses --cov-fail-under=80). New logic must keep or raise coverage.
+- Independence: Tests MUST not depend on execution order or mutate global state beyond fixture scope.
 - Parametrization: Use @pytest.mark.parametrize instead of manual loops.
-- Integration tests import public interfaces only (e.g., main entry, generator class).
+- Integration tests import public interfaces only.
 - Failing tests are written first (Principle 1) for new core logic.
-- NEW: Path mirroring (Principle 12) enforced for all new/changed modules.
-- Transitional Migration Plan: Add tasks in upcoming PRs to relocate remaining categorized tests.
-- Branch Naming Check: Implementation PRs MUST originate from an allowed prefixed branch (`feature/`, `fix/`, `docs/`, `chore/`). (Principle 13)
+- Path mirroring (Principle 12) enforced for all new/changed modules.
+- Branch naming check enforced (Principle 13).
+- Typing coverage gate (Principle 14).
+- TODO audit gate (Principle 15).
+- Performance summary logged in verbose mode (Principle 7) when enabled.
+- Documentation rule sync: PR review checklist confirms Principle 17 compliance for any *.md normative additions.
 
 ## Workflow & Quality Gates
 
-Pre-merge local mandatory checkers (from DEVELOPER.md):
-1. Formatting: black --check (line length 120 per pyproject.toml).
-2. Linting: pylint global score target ≥9.5 (no fatal errors).
-3. Typing: mypy (0 blocking errors) — treat Any proliferation as smell (justify if unavoidable).
+Pre-merge mandatory local (and CI) gates:
+1. Formatting: black --check (line length 120).
+2. Linting: pylint global score ≥9.5 (no fatal errors).
+3. Typing: mypy (0 blocking errors); justify new ignores.
 4. Tests: pytest all green.
-5. Coverage: ≥80% overall; justify any temporary dip (must be recovered within next PR).
-6. Dead Code: grep for unused utilities; remove or reference usage in same PR.
-7. Determinism: (Manual) Validate repeated runs produce identical output for sample dataset.
-8. Branch Naming: CI/Review MUST verify allowed prefix (feature|fix|docs|chore). Non-compliant branches BLOCK merge until renamed.
+5. Coverage: ≥80% overall; justify any temporary dip.
+6. Dead Code: remove or justify.
+7. Determinism: repeat test run yields identical sample output.
+8. Branch Naming: enforced allowed prefix.
+9. TODO Governance: all TODOs issue-linked & within lifetime window.
+10. Performance Budget (when verbose/perf job active): API call soft target evaluation (Principle 7).
+11. Documentation Rule Sync: normative doc changes reconciled per Principle 17.
 
 Quality Gate Failure Handling:
-- Minor failures (formatting, lint) → fix immediately; do not merge with waivers unless urgent hotfix.
-- Coverage dip → requires explicit justification + recovery plan (link issue ID).
-- Non-deterministic output → BLOCKING until resolved.
-- Branch naming violation → BLOCKING until branch renamed; no exception (prefix set: feature|fix|docs|chore).
+- Minor failures (formatting, lint) → immediate fix; no waivers unless urgent hotfix.
+- Coverage dip → explicit justification + recovery issue.
+- Non-deterministic output → BLOCKING.
+- Branch naming violation → BLOCKING until renamed.
+- TODO governance failure → BLOCKING (fix or link issue).
+- Performance overrun → CONDITIONAL (document + follow-up optimization task) unless causing timeouts → BLOCKING.
+- Documentation rule sync failure → BLOCKING until reconciliation (add amendment or clarify NON-NORMATIVE).
 
 ## Governance
 
 - Constitution supersedes ad-hoc practices; PRs MUST state compliance or list justified exceptions.
 - Versioning (this constitution): Semantic (MAJOR.MINOR.PATCH).
   - MAJOR: Remove/redefine a principle or backward incompatible process change.
-  - MINOR: Add new principle/section (current change qualifies here: Branch Naming Consistency).
-  - PATCH: Clarifications/typos with no semantic effect.
+  - MINOR: Add new principle/section or materially expand guidance.
+  - PATCH: Clarifications, numbering/order corrections, non-semantic wording.
 - Amendment Flow:
   1. Propose change with rationale & impact assessment.
   2. Update Sync Impact Report header (include affected templates & TODOs).
   3. Bump version according to rule above.
-  4. Obtain maintainer approval (≥1) — emergency fixes allow retroactive review.
-- Compliance Review: PR template SHOULD reference Principles 1, 2, 10, 12, 13 (multi-prefix) + coverage threshold. Reviewers reject if principles violated without justification.
+  4. Obtain ≥1 maintainer approval (emergency fixes allow post-hoc review).
+- Compliance Review: PR template SHOULD reference Principles 1, 2, 7, 10, 12, 13, 14, 15, 17 + coverage threshold.
 - Backward Compatibility: Input names & placeholder semantics require MAJOR bump if changed.
-- Enforcement: CI pipeline SHOULD automate black, pylint, mypy, pytest, coverage threshold; manual deterministic checks remain. Branch naming can be auto-validated by simple prefix check script.
+- Enforcement: CI automates formatting, lint, typing, tests, coverage, branch prefix, TODO lint, and optional performance logging.
 
-**Version**: 1.4.0 | **Ratified**: 2025-10-12 | **Last Amended**: 2025-10-14
+**Version**: 1.6.0 | **Ratified**: 2025-10-12 | **Last Amended**: 2025-10-15

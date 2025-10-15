@@ -10,12 +10,17 @@ List how this feature will comply with core principles:
 - Test‑First (P1): Failing unit tests in `tests/unit/test_<feature>.py` BEFORE implementation.
 - Explicit Configuration Boundaries (P2): New behavior exposed only via documented action inputs (list if any needed).
 - Deterministic Output (P3): Define ordering / formatting impacts; MUST remain stable across runs.
+- Performance Budget & API Usage (P7): Provide expected API call impact, measurement method (verbose logs / baseline script), and mitigation if nearing rate limit.
 - Lean Python Design (P8): Prefer functions; justify any new class (state or polymorphism requirement).
 - Localized Error Handling (P9): Describe logging + return strategy; no cross-module exception raises.
 - Dead Code Prohibition (P10): Identify any functions to remove or refactor; commit with tests.
 - Focused Comments (P11): Plan for concise logic/rationale comments; avoid narrative.
 - Test Path Mirroring (P12): Place unit tests at `tests/unit/<source-relative>/test_<file>.py`.
 - Branch Naming Consistency (P13): Branch MUST start with one of: `feature/`, `fix/`, `docs/`, `chore/`. Use kebab-case descriptor (optional numeric ID). Rename before merge if violated.
+- Static Typing Discipline (P14): All new public functions fully typed; list any `Any` / `type: ignore` with justification.
+- TODO Debt Governance (P15): Any new TODO includes issue link (format `TODO(<issue-id>):`); enumerate added TODO items.
+- Security & Token Handling (P16): Confirm no sensitive values logged; describe any new external service interactions + masking.
+- Documentation‑Derived Rule Sync (P17): Normative *.md changes reference principle, create amendment, or are marked NON-NORMATIVE.
 
 ## User Scenarios & Testing *(mandatory)*
 
