@@ -16,10 +16,12 @@
 import pytest
 
 from release_notes_generator.model.chapter import Chapter
-from release_notes_generator.chapters.custom_chapters import CustomChapters
+from release_notes_generator.chapters.custom_chapters import CustomChapters, _normalize_labels
 from release_notes_generator.model.record.issue_record import IssueRecord
 from release_notes_generator.model.record.record import Record
+from release_notes_generator.model.record.commit_record import CommitRecord
 from release_notes_generator.utils.enums import DuplicityScopeEnum
+from release_notes_generator.action_inputs import ActionInputs
 
 
 # __init__
@@ -271,3 +273,93 @@ def test_invalid_definitions_empty_and_wrong_type(caplog):  # T008
     assert empty_warnings, "Expected warning about empty labels set"
     assert wrong_type_warnings, "Expected warning about invalid labels type"
 
+
+def test_from_yaml_array_missing_title(caplog):
+    caplog.set_level("WARNING")
+    cc = CustomChapters()
+    cc.from_yaml_array([
+        {"label": "bug"},  # missing title triggers skip
+    ])
+    # Expect no chapters added
+    assert len(cc.chapters) == 0
+    assert any("Skipping chapter without title key" in m for m in caplog.messages)
+
+
+def test_from_yaml_array_unknown_keys_warning(caplog):
+    caplog.set_level("WARNING")
+    cc = CustomChapters()
+    cc.from_yaml_array([
+        {"title": "WithExtra", "label": "bug", "extra": 123, "another": "x"},
+    ])
+    assert "WithExtra" in cc.chapters  # chapter still added
+    # Warning about unknown keys
+    assert any("has unknown keys ignored" in m for m in caplog.messages)
+
+
+def test_from_yaml_array_no_label_keys(caplog):
+    caplog.set_level("WARNING")
+    cc = CustomChapters()
+    cc.from_yaml_array([
+        {"title": "NoLabels"},  # triggers no 'label' or 'labels' warning
+    ])
+    assert "NoLabels" not in cc.chapters
+    assert any("has no 'label' or 'labels' key; skipping" in m for m in caplog.messages)
+
+
+def test_from_yaml_array_verbose_debug_branch(monkeypatch, caplog):
+    # Force verbose path
+    monkeypatch.setattr(ActionInputs, "get_verbose", staticmethod(lambda: True))
+    caplog.set_level("DEBUG")
+    cc = CustomChapters()
+    cc.from_yaml_array([
+        {"title": "Verbose", "labels": "bug"},
+    ])
+    assert "Verbose" in cc.chapters
+    # Debug log emitted
+    assert any("normalized labels" in m for m in caplog.messages)
+
+
+def test_normalize_labels_invalid_type_returns_empty():
+    assert _normalize_labels(12345) == []
+
+
+def test_normalize_labels_list_with_non_string_items():
+    # non-string element should be skipped
+    result = _normalize_labels(["bug", 42, "feature", None, "bug"])  # duplicates & non-strings
+    assert result == ["bug", "feature"], "Should keep order, skip non-strings, de-dup"
+
+
+def test_populate_skips_when_no_change_increment(mocker):
+    cc = CustomChapters()
+    cc.from_yaml_array([{ "title": "Bugs", "labels": "bug"}])
+    rec = mocker.Mock(spec=Record)
+    rec.contains_change_increment.return_value = False
+    rec.skip = False
+    rec.labels = ["bug"]
+    records = {"org/repo#10": rec}
+    cc.populate(records)
+    assert not cc.chapters["Bugs"].rows, "Record should be skipped when no change increment"
+
+
+def test_populate_skips_commit_record(mocker):
+    cc = CustomChapters()
+    cc.from_yaml_array([{ "title": "Bugs", "labels": "bug"}])
+    commit = mocker.create_autospec(CommitRecord, instance=True)
+    commit.contains_change_increment.return_value = True
+    commit.skip = False
+    # CommitRecord has no labels attribute; emulate absence to later test empty labels branch separately
+    records = {"org/repo#11": commit}
+    cc.populate(records)
+    assert not cc.chapters["Bugs"].rows, "CommitRecord should be skipped"
+
+
+def test_populate_skips_when_no_labels(mocker):
+    cc = CustomChapters()
+    cc.from_yaml_array([{ "title": "Bugs", "labels": "bug"}])
+    rec = mocker.Mock(spec=Record)
+    rec.contains_change_increment.return_value = True
+    rec.skip = False
+    rec.labels = []
+    records = {"org/repo#12": rec}
+    cc.populate(records)
+    assert not cc.chapters["Bugs"].rows, "Record without labels should be skipped"

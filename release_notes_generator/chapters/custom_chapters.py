@@ -38,7 +38,7 @@ def _normalize_labels(raw: Any) -> list[str]:  # helper for multi-label
         - list[str]: already a sequence of labels (will still be trimmed & deduped)
 
     Returns:
-        Ordered list preserving first occurrence order.
+        Ordered list preserving first occurrence order; excludes empty tokens.
         Invalid (non str/list) returns empty list to be handled by caller.
     """
     if isinstance(raw, list):
@@ -54,10 +54,16 @@ def _normalize_labels(raw: Any) -> list[str]:  # helper for multi-label
         return []
 
     cleaned: list[str] = []
+    seen: set[str] = set()
     for item in working:
-        if not isinstance(item, str):  # skip non-string items silently (could warn later if needed)
+        if not isinstance(item, str):  # skip non-string items silently
             continue
         token = item.strip()
+        if not token:  # skip empty after trimming
+            continue
+        if token in seen:  # de-duplicate preserving first occurrence
+            continue
+        seen.add(token)
         cleaned.append(token)
     return cleaned
 
@@ -77,10 +83,10 @@ class CustomChapters(BaseChapters):
         Returns:
             None
         """
-        for record_id, record in records.items():   # iterate all records
+        for record_id, record in records.items():  # iterate all records
             if not record.contains_change_increment():
                 continue
-            if record.skip: # check if the record should be skipped - by user defined skip labels
+            if record.skip:  # check if the record should be skipped - by user defined skip labels
                 continue
             if isinstance(record, CommitRecord):  # commits have no labels
                 continue
@@ -129,9 +135,7 @@ class CustomChapters(BaseChapters):
 
             raw_labels: Any = None
             if has_labels and has_label:
-                logger.warning(
-                    "Chapter '%s' both 'label' and 'labels' provided; using 'labels' (precedence)", title
-                )
+                logger.warning("Chapter '%s' both 'label' and 'labels' provided; using 'labels' (precedence)", title)
                 raw_labels = chapter.get("labels")
             elif has_labels:
                 raw_labels = chapter.get("labels")
