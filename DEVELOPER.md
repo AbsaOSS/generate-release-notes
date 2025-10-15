@@ -180,7 +180,7 @@ export INPUT_GITHUB_TOKEN=$(printenv <your-env-token-var>)
 python3 ./<path-to-action-project-root>/main.py
 ```
 
-## Branch Naming Convention (Principle 13)
+## Branch Naming Convention (PID:H-1)
 All work branches MUST use an allowed prefix followed by a concise kebab-case descriptor (optional numeric ID):
 Allowed prefixes:
 - feature/ : new functionality & enhancements

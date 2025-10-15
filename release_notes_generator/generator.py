@@ -20,7 +20,7 @@ the Release Notes output.
 """
 
 import logging
-
+from datetime import datetime
 from typing import Optional
 
 from github import Github
@@ -84,7 +84,7 @@ class ReleaseNotesGenerator:
         if data.is_empty():
             return None
 
-        self.custom_chapters.since = data.since
+        self.custom_chapters.since = data.since or datetime.min
 
         filterer = FilterByRelease()
         data_filtered_by_release = filterer.filter(data=data)

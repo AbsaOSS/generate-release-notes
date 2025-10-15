@@ -8,7 +8,7 @@ This page lists all action inputs and outputs with defaults. Grouped for readabi
 |------|----------|---------|-------------|
 | `tag-name` | Yes | – | Target release tag (must already exist). |
 | `from-tag-name` | No | "" | Explicit previous release tag; if empty semantic latest published release is used. |
-| `chapters` | No | "" | YAML list of chapter objects `{ "title": str, "label": str }`. Multiple entries may share a title to aggregate labels. |
+| `chapters` | No | "" | YAML multi-line list of chapter entries (title + label or labels). Supports legacy `label` or multi `labels` definitions. |
 | `hierarchy` | No | `false` | Enable Issue Hierarchy Support. |
 | `published-at` | No | `false` | Use previous release `published_at` timestamp instead of `created_at`. |
 | `skip-release-notes-labels` | No | `skip-release-notes` | Comma‑separated labels that fully exclude issues/PRs. |
@@ -39,31 +39,28 @@ This page lists all action inputs and outputs with defaults. Grouped for readabi
 Placeholders are case-insensitive; unknown placeholders are removed silently.
 
 ### Chapters Configuration
-Provide chapters as a YAML multi-line string. Each entry must define a `title` and `label`.
+Provide chapters as a YAML multi-line string. Each entry must define a `title` and either `label` (legacy) or `labels` (multi-label).
 
 ```yaml
 with:
   chapters: |
-    - {"title": "New Features 🎉", "label": "feature"}
-    - {"title": "Bugfixes 🛠", "label": "bug"}
-    - {"title": "Bugfixes 🛠", "label": "error"}  # merges both labels under one heading
+    - {"title": "Breaking Changes 💥", "label": "breaking-change"}          # legacy single-label form
 ```
 
-Resulting chapter headings are unique by title; labels aggregate.
+Resulting chapter headings are unique by title; label sets aggregate across repeated titles (logical OR). Whitespace is trimmed; duplicates removed preserving first-seen order.
 
 ### Custom Chapters Behavior
 - A record (issue / PR / hierarchy issue) is eligible for a user-defined chapter if it:
   - Is not skipped (no skip label), and
-  - Contains a change increment (has extracted release notes OR at least one linked merged PR supplying changes), and
-  - Owns at least one label matching any configured chapter label (including implicit issue type label), and
-  - (For hierarchy) ultimately aggregates qualifying sub-issues/PRs.
-- Issue Type is automatically merged into the issue's label set as a lowercase implicit label (e.g. `Epic`, `Feature`, `Bug`, `Task` → `epic`, `feature`, `bug`, `task`). You can reference these directly in `chapters` without adding a duplicate formal label in GitHub.
-- Direct commits are excluded (no labels to match).
-- Multiple entries with identical `title` merge label sets (logical OR across labels under the same heading).
-- Rendering order follows the YAML order of first appearance for each unique title.
-- If `duplicity-scope` excludes `custom`, a record that matched one chapter will not be added to others.
-- Empty chapters: suppressed only when `print-empty-chapters: false`.
-- Duplicity icon is applied per appearance count after all chapters are populated.
+  - Contains a change increment, and
+  - Has at least one label intersecting the chapter’s label set.
+- Direct commits are excluded (no labels).
+- `label` vs `labels` precedence: if both exist, `labels` is used and a warning logged once.
+- Multi-label tokens may be separated by commas.
+- Empty or invalid label definitions skip the chapter with a warning (do not abort generation).
+- A record may appear in multiple chapters (cross-chapter duplication always allowed, independent of `duplicity-scope`). Intra-chapter duplicates are suppressed.
+- Ordering: Chapters rendered in order of first appearance of each unique title.
+- When verbose mode is enabled, normalized label sets are logged at DEBUG level.
 
 ### Issue ↔ PR Linking
 Link detection influences chapter population and Service Chapters:

@@ -49,9 +49,9 @@ Add the following step to your workflow to start generating release notes.
   with:
     tag-name: "v1.2.0"
     chapters: |
-      - {"title": "Breaking Changes 💥", "label": "breaking-change"}
-      - {"title": "New Features 🎉", "label": "feature"}
-      - {"title": "Bugfixes 🛠", "label": "bug"}
+      - {"title": "Breaking Changes 💥", "label": "breaking-change"}          # legacy single-label form
+      - {"title": "New Features 🎉", "labels": "feature, enhancement"}        # multi-label form (comma separated)
+      - {"title": "Bugfixes 🛠", "labels": ["bug", "error"]}                  # multi-label form (YAML list)
 ```
 
 **Example output snippet:**
@@ -91,12 +91,12 @@ To run this action successfully, make sure your environment meets the following 
 
 Only a few inputs are required to get started:
 
-| Name           | Description                                    | Required | Default |
-|----------------|------------------------------------------------|----------|---------|
-| `GITHUB_TOKEN` | GitHub token for authentication                | Yes      | -       |
-| `tag-name`     | Target tag for the release                     | Yes      | -       |
-| `chapters`     | List of chapters and labels for categorization | No       | -       |
-| `verbose`      | Enable detailed logging                        | No       | false   |
+| Name           | Description                                                                  | Required | Default |
+|----------------|------------------------------------------------------------------------------|----------|---------|
+| `GITHUB_TOKEN` | GitHub token for authentication                                              | Yes      | -       |
+| `tag-name`     | Target tag for the release                                                   | Yes      | -       |
+| `chapters`     | YAML multi-line list mapping titles to labels (supports `label` or `labels`) | No       | -       | 
+| `verbose`      | Enable detailed logging                                                      | No       | false   |
 
 For the full input and output reference, see [Configuration reference](docs/configuration_reference.md).  
 For how label → chapter mapping and aggregation works, see [Custom Chapters Behavior](docs/configuration_reference.md#custom-chapters-behavior).
@@ -132,10 +132,8 @@ jobs:
         with:
           tag-name: ${{ github.event.inputs.tag-name }}
           chapters: |
-            - {"title": "New Features 🎉", "label": "enhancement"}
-            - {"title": "New Features 🎉", "label": "feature"}
-            - {"title": "Bugfixes 🛠", "label": "error"}
-            - {"title": "Bugfixes 🛠", "label": "bug"}
+            - {"title": "New Features 🎉", "labels": "enhancement, feature"}
+            - {"title": "Bugfixes 🛠", "labels": "error, bug"}
             - {"title": "Infrastructure 🚧", "label": "infrastructure"}
             - {"title": "Documentation 📚", "label": "documentation"}
 
@@ -154,19 +152,19 @@ For more complex automation scenarios, see the [examples](examples) folder.
 
 Each feature is documented separately — click a name below to learn configuration, examples, and best practices.
 
-| Feature                                                               | Scope                      | Description                                                                                                   |
-|-----------------------------------------------------------------------|----------------------------|---------------------------------------------------------------------------------------------------------------|
-| [Release Notes Extraction](docs/features/release_notes_extraction.md) | Extraction                 | Core logic that scans descriptions to extract structured release notes (and optionally CodeRabbit summaries). |
-| [CodeRabbit Integration](docs/features/coderabbit_integration.md)     | Extraction                 | Optional extension to Release Notes Extraction, enabling AI-generated summaries when PR notes are missing.    |
-| [Skip Labels](docs/features/skip_labels.md)                           | Filtering                  | Exclude issues/PRs carrying configured labels from all release notes.                                         |
-| [Service Chapters](docs/features/service_chapters.md)                 | Quality & Warnings         | Surfaces gaps: issues without PRs, unlabeled items, PRs without notes, etc.                                   |
-| [Duplicity Handling](docs/features/duplicity_handling.md)             | Quality & Warnings         | Marks duplicate lines when the same issue appears in multiple chapters.                                       |
-| [Tag Range Selection](docs/features/tag_range.md)                     | Time Range                 | Chooses scope via `tag-name`/`from-tag-name`.                                                                 |
-| [Date Selection](docs/features/date_selection.md)                     | Time Range                 | Chooses scope via timestamps (`published-at` vs `created-at`).                                                |
-| [Custom Row Formats](docs/features/custom_row_formats.md)             | Formatting & Presentation  | Controls row templates and placeholders (`{number}`, `{title}`, `{developers}`, …).                           |
-| [Custom Chapters](docs/features/custom_chapters.md)                  | Formatting & Presentation  | Maps labels to chapter headings; aggregates multiple labels under one title.                                  |
-| [Issue Hierarchy Support](docs/features/issue_hierarchy_support.md)   | Formatting & Presentation  | Displays issue → sub-issue relationships.                                                                     |
-| [Verbose Mode](docs/features/verbose_mode.md)                         | Diagnostics & Technical    | Adds detailed logs for debugging.                                                                             |
+| Feature                                                               | Scope                     | Description                                                                                                    |
+|-----------------------------------------------------------------------|---------------------------|----------------------------------------------------------------------------------------------------------------|
+| [Release Notes Extraction](docs/features/release_notes_extraction.md) | Extraction                | Core logic that scans descriptions to extract structured release notes (and optionally CodeRabbit summaries).  |
+| [CodeRabbit Integration](docs/features/coderabbit_integration.md)     | Extraction                | Optional extension to Release Notes Extraction, enabling AI-generated summaries when PR notes are missing.     |
+| [Skip Labels](docs/features/skip_labels.md)                           | Filtering                 | Exclude issues/PRs carrying configured labels from all release notes.                                          |
+| [Service Chapters](docs/features/service_chapters.md)                 | Quality & Warnings        | Surfaces gaps: issues without PRs, unlabeled items, PRs without notes, etc.                                    |
+| [Duplicity Handling](docs/features/duplicity_handling.md)             | Quality & Warnings        | Marks duplicate lines when the same issue appears in multiple chapters.                                        |
+| [Tag Range Selection](docs/features/tag_range.md)                     | Time Range                | Chooses scope via `tag-name`/`from-tag-name`.                                                                  |
+| [Date Selection](docs/features/date_selection.md)                     | Time Range                | Chooses scope via timestamps (`published-at` vs `created-at`).                                                 |
+| [Custom Row Formats](docs/features/custom_row_formats.md)             | Formatting & Presentation | Controls row templates and placeholders (`{number}`, `{title}`, `{developers}`, …).                            |
+| [Custom Chapters](docs/features/custom_chapters.md)                   | Formatting & Presentation | Maps labels to chapter headings; aggregates multiple labels under one title.                                   |
+| [Issue Hierarchy Support](docs/features/issue_hierarchy_support.md)   | Formatting & Presentation | Displays issue → sub-issue relationships.                                                                      |
+| [Verbose Mode](docs/features/verbose_mode.md)                         | Diagnostics & Technical   | Adds detailed logs for debugging.                                                                              |
 
 _Category legend (keep it consistent across docs)_
 
