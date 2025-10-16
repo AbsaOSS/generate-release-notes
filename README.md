@@ -80,12 +80,12 @@ https://github.com/org/repo/compare/v1.1.0...v1.2.0
 
 To run this action successfully, make sure your environment meets the following requirements:
 
-| Requirement                | Description                                                                                                                      |
-|----------------------------|----------------------------------------------------------------------------------------------------------------------------------|
-| **GitHub Token**           | A GitHub token with permission to read issues, pull requests, and releases. Usually available as `${{ secrets.GITHUB_TOKEN }}`.  |
-| **Python 3.11+**           | The action internally runs on Python 3.11 or higher. If you’re developing locally or testing, ensure this version is available.  |
-| **Repository Permissions** | The action needs at least `read` access to issues and pull requests, and `write` access to create or update release drafts.      |
-| **YAML Chapters Config**   | Each chapter must have a `title` and a `label`. Example: `{"title": "Bugfixes 🛠", "label": "bug"}`.                             |
+| Requirement                | Description                                                                                                                     |
+|----------------------------|---------------------------------------------------------------------------------------------------------------------------------|
+| **GitHub Token**           | A GitHub token with permission to read issues, pull requests, and releases. Usually available as `${{ secrets.GITHUB_TOKEN }}`. |
+| **Python 3.11+**           | The action internally runs on Python 3.11 or higher. If you’re developing locally or testing, ensure this version is available. |
+| **Repository Permissions** | The action needs at least `read` access to issues and pull requests, and `write` access to create or update release drafts.     |
+| **YAML Chapters Config**   | Each chapter must have a `title`, and a `label` or `labels`. Example: `{"title": "Bugfixes 🛠", "labels": "bug, fix"}`.         |
 
 ## Configuration
 
