@@ -30,12 +30,10 @@ def record_stub():  # concrete minimal subclass of Record to satisfy typing
             self,
             rid: str,
             labels: list[str] | None,
-            pulls_count: int,
             skip: bool,
             contains_change_increment: bool,
         ):
             super().__init__(labels=labels, skip=skip)
-            self.pulls_count = pulls_count
             self._rid = rid
             self._contains = contains_change_increment
 
@@ -73,17 +71,16 @@ def record_stub():  # concrete minimal subclass of Record to satisfy typing
         def get_labels(self) -> list[str]:
             return self.labels
 
-        def get_rls_notes(self, line_marks: list[str] | None = None) -> str:
+        def get_rls_notes(self, _line_marks: list[str] | None = None) -> str:
             return ""
 
     def _make(
         rid: str = "org/repo#X",
         labels: list[str] | None = None,
-        pulls_count: int = 1,
         skip: bool = False,
         contains_change_increment: bool = True,
     ) -> Record:
-        return RecordStub(rid, labels or [], pulls_count, skip, contains_change_increment)
+        return RecordStub(rid, labels or [], skip, contains_change_increment)
 
     return _make
 
@@ -117,8 +114,8 @@ def test_populate_adds_rows_for_matching_labels(custom_chapters, record_stub):
 
 @pytest.mark.parametrize(
     "scope_enum",
-    [DuplicityScopeEnum.SERVICE, DuplicityScopeEnum.NONE],
-    ids=["duplicity-scope-service", "duplicity-scope-none"],
+    [DuplicityScopeEnum.SERVICE, DuplicityScopeEnum.NONE, DuplicityScopeEnum.BOTH],
+    ids=["duplicity-scope-service", "duplicity-scope-none", "duplicity-scope-both"],
 )
 def test_populate_duplicity_scope_rows_present(custom_chapters, record_stub, mocker, scope_enum):
     # Arrange
@@ -170,7 +167,7 @@ def test_custom_chapters_from_yaml_array():
 )
 def test_from_yaml_array_normalization_variants(chapter_def, expected, warning_substring, caplog):
     # Arrange
-    caplog.set_level("WARNING")
+    caplog.set_level("WARNING", logger="release_notes_generator.chapters.custom_chapters")
     cc = CustomChapters()
     # Act
     cc.from_yaml_array([chapter_def])
@@ -225,7 +222,7 @@ def test_overlapping_chapters_record_in_both(record_stub):
 )
 def test_invalid_and_edge_chapter_definitions(chapter_def, expectation, warning_fragment, caplog):
     # Arrange
-    caplog.set_level("WARNING")
+    caplog.set_level("WARNING", logger="release_notes_generator.chapters.custom_chapters")
     cc = CustomChapters()
     # Act
     cc.from_yaml_array([chapter_def])
