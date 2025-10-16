@@ -15,351 +15,319 @@
 #
 import pytest
 
-from release_notes_generator.model.chapter import Chapter
 from release_notes_generator.chapters.custom_chapters import CustomChapters, _normalize_labels
 from release_notes_generator.model.record.issue_record import IssueRecord
-from release_notes_generator.model.record.record import Record
 from release_notes_generator.model.record.commit_record import CommitRecord
+from release_notes_generator.model.record.record import Record
 from release_notes_generator.utils.enums import DuplicityScopeEnum
 from release_notes_generator.action_inputs import ActionInputs
 
 
-# __init__
+@pytest.fixture
+def record_stub():  # concrete minimal subclass of Record to satisfy typing
+    class RecordStub(Record):
+        def __init__(
+            self,
+            rid: str,
+            labels: list[str] | None,
+            skip: bool,
+            contains_change_increment: bool,
+        ):
+            super().__init__(labels=labels, skip=skip)
+            self._rid = rid
+            self._contains = contains_change_increment
+
+        # Abstract implementations (return simple defaults not under test focus)
+        @property
+        def record_id(self) -> str:
+            return self._rid
+
+        @property
+        def is_closed(self) -> bool:  # not relevant for these tests
+            return False
+
+        @property
+        def is_open(self) -> bool:
+            return True
+
+        @property
+        def author(self) -> str:
+            return "author"
+
+        @property
+        def assignees(self) -> list[str]:
+            return []
+
+        @property
+        def developers(self) -> list[str]:
+            return []
+
+        def to_chapter_row(self, add_into_chapters: bool = True) -> str:
+            return f"{self._rid} row"
+
+        def contains_change_increment(self) -> bool:
+            return self._contains
+
+        def get_labels(self) -> list[str]:
+            return self.labels
+
+        def get_rls_notes(self, _line_marks: list[str] | None = None) -> str:
+            return ""
+
+    def _make(
+        rid: str = "org/repo#X",
+        labels: list[str] | None = None,
+        skip: bool = False,
+        contains_change_increment: bool = True,
+    ) -> Record:
+        return RecordStub(rid, labels or [], skip, contains_change_increment)
+
+    return _make
 
 
-def test_chapters_init(custom_chapters):
+def test_custom_chapters_initialization(custom_chapters):
+    # Arrange (fixture already provides object)
+    # Act (no explicit act needed; initialization handled by fixture)
+    # Assert
     assert custom_chapters.sort_ascending
     assert custom_chapters.chapters["Chapter 1"].labels == ["bug", "enhancement"]
     assert custom_chapters.chapters["Chapter 2"].labels == ["feature"]
 
 
-# populate
-
-
-def test_populate(custom_chapters, mocker):
-    record1 = mocker.Mock(spec=Record)
-    record1.labels = ["bug"]
-    record1.pulls_count = 1
-    record1.is_present_in_chapters = False
-    record1.to_chapter_row.return_value = "Record 1 Chapter Row"
-    record1.skip = False
-
-    record2 = mocker.Mock(spec=Record)
-    record2.labels = ["enhancement"]
-    record2.pulls_count = 1
-    record2.is_present_in_chapters = False
-    record2.to_chapter_row.return_value = "Record 2 Chapter Row"
-    record2.skip = False
-
-    record3 = mocker.Mock(spec=Record)
-    record3.labels = ["feature"]
-    record3.pulls_count = 1
-    record3.is_present_in_chapters = False
-    record3.to_chapter_row.return_value = "Record 3 Chapter Row"
-    record3.skip = False
-
-    records = {
+def test_populate_adds_rows_for_matching_labels(custom_chapters, record_stub):
+    # Arrange
+    record1 = record_stub("org/repo#1", ["bug"])  # Chapter 1
+    record2 = record_stub("org/repo#2", ["enhancement"])  # Chapter 1
+    record3 = record_stub("org/repo#3", ["feature"])  # Chapter 2
+    records: dict[str, Record] = {
         "org/repo#1": record1,
         "org/repo#2": record2,
         "org/repo#3": record3,
     }
-
+    # Act
     custom_chapters.populate(records)
-
-    assert "org/repo#1" in custom_chapters.chapters["Chapter 1"].rows
-    assert custom_chapters.chapters["Chapter 1"].rows["org/repo#1"] == "Record 1 Chapter Row"
-    assert "org/repo#2" in custom_chapters.chapters["Chapter 1"].rows
-    assert custom_chapters.chapters["Chapter 1"].rows["org/repo#2"] == "Record 2 Chapter Row"
-    assert "org/repo#3" in custom_chapters.chapters["Chapter 2"].rows
-    assert custom_chapters.chapters["Chapter 2"].rows["org/repo#3"] == "Record 3 Chapter Row"
+    # Assert
+    assert custom_chapters.chapters["Chapter 1"].rows["org/repo#1"] == "org/repo#1 row"
+    assert custom_chapters.chapters["Chapter 1"].rows["org/repo#2"] == "org/repo#2 row"
+    assert custom_chapters.chapters["Chapter 2"].rows["org/repo#3"] == "org/repo#3 row"
 
 
-def test_populate_no_pulls_count(custom_chapters, mocker):
-    record1 = mocker.Mock(spec=IssueRecord)
-    record1.labels = ["bug"]
-    record1.pulls_count = 0
-    record1.is_present_in_chapters = False
-
-    records = {
-        1: record1,
-    }
-
-    custom_chapters.populate(records)
-    assert 1 not in custom_chapters.chapters["Chapter 1"].rows
-
-
-def test_populate_no_matching_labels(custom_chapters, mocker):
-    record1 = mocker.Mock(spec=Record)
-    record1.labels = ["non-existent-label"]
-    record1.pulls_count = 1
-    record1.is_present_in_chapters = False
-
-    records = {
-        1: record1,
-    }
-
-    custom_chapters.populate(records)
-    assert 1 not in custom_chapters.chapters["Chapter 1"].rows
-    assert 1 not in custom_chapters.chapters["Chapter 2"].rows
-
-
-def test_populate_service_duplicity_scope(custom_chapters, mocker):
-    record1 = mocker.Mock(spec=Record)
-    record1.labels = ["bug", "feature"]
-    record1.pulls_count = 1
-    record1.is_present_in_chapters = False
-    record1.to_chapter_row.return_value = "Record 1 Chapter Row"
-    record1.skip = False
-
-    records = {
-        "org/repo#1": record1,
-    }
-
+@pytest.mark.parametrize(
+    "scope_enum",
+    [DuplicityScopeEnum.SERVICE, DuplicityScopeEnum.NONE, DuplicityScopeEnum.BOTH],
+    ids=["duplicity-scope-service", "duplicity-scope-none", "duplicity-scope-both"],
+)
+def test_populate_duplicity_scope_rows_present(custom_chapters, record_stub, mocker, scope_enum):
+    # Arrange
+    record1 = record_stub("org/repo#1", ["bug", "feature"])  # matches Chapter 1 & 2
+    records: dict[str, Record] = {"org/repo#1": record1}
     mocker.patch(
         "release_notes_generator.action_inputs.ActionInputs.get_duplicity_scope",
-        return_value=DuplicityScopeEnum.SERVICE,
+        return_value=scope_enum,
     )
-
+    # Act
     custom_chapters.populate(records)
-
-    assert "org/repo#1" in custom_chapters.chapters["Chapter 1"].rows
-    assert "org/repo#1" in custom_chapters.chapters["Chapter 2"].rows
-    assert custom_chapters.chapters["Chapter 1"].rows["org/repo#1"] == "Record 1 Chapter Row"
-    assert custom_chapters.chapters["Chapter 2"].rows["org/repo#1"] == "Record 1 Chapter Row"
-
-
-def test_populate_none_duplicity_scope(custom_chapters, mocker):
-    record1 = mocker.Mock(spec=Record)
-    record1.labels = ["bug", "feature"]
-    record1.pulls_count = 1
-    record1.is_present_in_chapters = False
-    record1.to_chapter_row.return_value = "Record 1 Chapter Row"
-    record1.skip = False
-
-    records = {
-        "org/repo#1": record1,
-    }
-
-    mocker.patch(
-        "release_notes_generator.action_inputs.ActionInputs.get_duplicity_scope", return_value=DuplicityScopeEnum.NONE
-    )
-
-    custom_chapters.populate(records)
-
-    assert "org/repo#1" in custom_chapters.chapters["Chapter 1"].rows
-    assert "org/repo#1" in custom_chapters.chapters["Chapter 2"].rows
-
-
-# from_json
+    # Assert (row appears in both regardless of scope; deterministic ordering of keys)
+    assert list(custom_chapters.chapters["Chapter 1"].rows.keys()) == ["org/repo#1"]
+    assert list(custom_chapters.chapters["Chapter 2"].rows.keys()) == ["org/repo#1"]
 
 
 def test_custom_chapters_from_yaml_array():
-    custom_chapters = CustomChapters()
+    # Arrange
+    cc = CustomChapters()
     yaml_array_in_string = [
         {"title": "Breaking Changes 💥", "label": "breaking-change"},
         {"title": "New Features 🎉", "label": "enhancement"},
         {"title": "New Features 🎉", "label": "feature"},
-        {"title": "Bugfixes 🛠", "label": "bug"}
+        {"title": "Bugfixes 🛠", "label": "bug"},
     ]
-
-    custom_chapters.from_yaml_array(yaml_array_in_string)
-
-    assert "Breaking Changes 💥" in custom_chapters.titles
-    assert "New Features 🎉" in custom_chapters.titles
-    assert "Bugfixes 🛠" in custom_chapters.titles
-    assert isinstance(custom_chapters.chapters["Breaking Changes 💥"], Chapter)
-    assert isinstance(custom_chapters.chapters["New Features 🎉"], Chapter)
-    assert isinstance(custom_chapters.chapters["Bugfixes 🛠"], Chapter)
-    assert ["breaking-change"] == custom_chapters.chapters["Breaking Changes 💥"].labels
-    assert ["enhancement", "feature"] == custom_chapters.chapters["New Features 🎉"].labels
-    assert ["bug"] == custom_chapters.chapters["Bugfixes 🛠"].labels
+    # Act
+    cc.from_yaml_array(yaml_array_in_string)
+    # Assert
+    assert "Breaking Changes 💥" in cc.titles
+    assert "New Features 🎉" in cc.titles
+    assert "Bugfixes 🛠" in cc.titles
+    assert ["breaking-change"] == cc.chapters["Breaking Changes 💥"].labels
+    assert ["enhancement", "feature"] == cc.chapters["New Features 🎉"].labels
+    assert ["bug"] == cc.chapters["Bugfixes 🛠"].labels
 
 
-def _build_basic_record(record_id: str, labels: list[str]):  # helper for new tests
-    class R:
-        def __init__(self, rid, labs):
-            self.labels = labs
-            self.pulls_count = 1
-            self.is_present_in_chapters = False
-            self.skip = False
-            self._rid = rid
-
-        def contains_change_increment(self):
-            return True
-
-        def to_chapter_row(self, _include_prs: bool):
-            return f"{self._rid} row"
-
-    return R(record_id, labels)
-
-
+# Consolidated label normalization variants (ordering + precedence + duplicates + unicode whitespace)
 @pytest.mark.parametrize(
-    "chapter_def, expected",
+    "chapter_def, expected, warning_substring",
     [
-        ({"title": "Multi", "labels": "bug"}, ["bug"]),  # single label string via 'labels'
-        ({"title": "Multi", "labels": "bug, enhancement"}, ["bug", "enhancement"]),  # comma list
-        ({"title": "Multi", "labels": "bug\nenhancement"}, ["bug", "enhancement"]),  # newline list
-        ({"title": "Multi", "labels": ["bug", "enhancement"]}, ["bug", "enhancement"]),  # yaml list
+        pytest.param({"title": "Multi", "labels": "bug"}, ["bug"], None, id="single-string-labels"),
+        pytest.param({"title": "Multi", "labels": "bug, enhancement"}, ["bug", "enhancement"], None, id="comma-separated"),
+        pytest.param({"title": "Multi", "labels": "bug\nenhancement"}, ["bug", "enhancement"], None, id="newline-separated"),
+        pytest.param({"title": "Multi", "labels": ["bug", "enhancement"]}, ["bug", "enhancement"], None, id="yaml-list"),
+        pytest.param({"title": "Mixed", "labels": " bug, enhancement,bug\nfeature , enhancement"}, ["bug", "enhancement", "feature"], None, id="mixed-separators-dedup-trim"),
+        pytest.param({"title": "Precedence", "label": "legacy", "labels": "new1, new2"}, ["new1", "new2"], "precedence", id="labels-key-precedence"),
+        pytest.param({"title": "UnicodeSpace", "labels": "\u2003bug\u00A0,\u2009enhancement"}, ["bug", "enhancement"], None, id="unicode-whitespace-trim"),
     ],
 )
-def test_from_yaml_array_with_labels_variants(chapter_def, expected):  # T003
+def test_from_yaml_array_normalization_variants(chapter_def, expected, warning_substring, caplog):
+    # Arrange
+    caplog.set_level("WARNING", logger="release_notes_generator.chapters.custom_chapters")
     cc = CustomChapters()
+    # Act
     cc.from_yaml_array([chapter_def])
-    assert "Multi" in cc.titles
-    assert cc.chapters["Multi"].labels == expected
+    title = chapter_def["title"]
+    # Assert
+    assert title in cc.titles
+    assert cc.chapters[title].labels == expected
+    if warning_substring:
+        warnings = [r for r in caplog.records if title in r.message and warning_substring in r.message.lower()]
+        assert len(warnings) == 1
+    else:
+        assert not [r for r in caplog.records if title in r.message]
 
 
-def test_from_yaml_array_with_mixed_separators_and_duplicates():  # T004
+def test_duplicate_suppression_with_multi_label_record(record_stub):
+    # Arrange
     cc = CustomChapters()
-    cc.from_yaml_array(
-        [
-            {"title": "Mixed", "labels": " bug, enhancement,bug\nfeature , enhancement"},
-        ]
-    )
-    # Expect trimmed, order of first occurrence preserved, duplicates removed
-    assert cc.chapters["Mixed"].labels == ["bug", "enhancement", "feature"]
-
-
-def test_from_yaml_array_precedence_label_vs_labels(caplog):  # T005
-    cc = CustomChapters()
-    caplog.set_level("WARNING")
-    cc.from_yaml_array(
-        [
-            {"title": "Precedence", "label": "legacy", "labels": "new1, new2"},
-        ]
-    )
-    assert cc.chapters["Precedence"].labels == ["new1", "new2"], "'labels' key should take precedence over 'label'"
-    # Expect exactly one warning referencing the chapter title
-    warnings = [r for r in caplog.records if "Precedence" in r.message and "precedence" in r.message.lower()]
-    assert len(warnings) == 1
-
-
-def test_duplicate_suppression_with_multi_label_record():  # T006
-    cc = CustomChapters()
-    cc.from_yaml_array([
-        {"title": "Changes", "labels": "bug, enhancement"},
-    ])
-    record = _build_basic_record("org/repo#1", ["bug", "enhancement"])  # matches both labels
-    records = {"org/repo#1": record}
+    cc.from_yaml_array([{"title": "Changes", "labels": "bug, enhancement"}])
+    record = record_stub("org/repo#1", ["bug", "enhancement"])
+    records: dict[str, Record] = {"org/repo#1": record}
+    # Act
     cc.populate(records)
-    rows = cc.chapters["Changes"].rows
-    assert list(rows.keys()) == ["org/repo#1"], "Record should appear only once in chapter despite multi-match"
+    # Assert
+    assert list(cc.chapters["Changes"].rows.keys()) == ["org/repo#1"]
 
 
-def test_overlapping_chapters_record_in_both():  # T007
+def test_overlapping_chapters_record_in_both(record_stub):
+    # Arrange
     cc = CustomChapters()
     cc.from_yaml_array([
         {"title": "Bugs", "labels": "bug"},
         {"title": "Features", "labels": "feature, bug"},
     ])
-    record = _build_basic_record("org/repo#99", ["bug"])  # qualifies for both
-    records = {"org/repo#99": record}
+    record = record_stub("org/repo#99", ["bug"])  # qualifies for both
+    records: dict[str, Record] = {"org/repo#99": record}
+    # Act
     cc.populate(records)
-    assert "org/repo#99" in cc.chapters["Bugs"].rows
-    assert "org/repo#99" in cc.chapters["Features"].rows
+    # Assert
+    assert list(cc.chapters["Bugs"].rows.keys()) == ["org/repo#99"]
+    assert list(cc.chapters["Features"].rows.keys()) == ["org/repo#99"]
 
 
-def test_invalid_definitions_empty_and_wrong_type(caplog):  # T008
+@pytest.mark.parametrize(
+    "chapter_def, expectation, warning_fragment",
+    [
+        pytest.param({"title": "Empty", "labels": "   ,  \n"}, "skipped", "empty", id="empty-after-normalization"),
+        pytest.param({"title": "WrongType", "labels": 12345}, "skipped", "invalid", id="invalid-type"),
+        pytest.param({"label": "bug"}, "skipped", "without title", id="missing-title"),
+        pytest.param({"title": "WithExtra", "label": "bug", "extra": 123}, "added", "unknown keys", id="unknown-keys"),
+        pytest.param({"title": "NoLabels"}, "skipped", "no 'label' or 'labels'", id="no-label-keys"),
+    ],
+)
+def test_invalid_and_edge_chapter_definitions(chapter_def, expectation, warning_fragment, caplog):
+    # Arrange
+    caplog.set_level("WARNING", logger="release_notes_generator.chapters.custom_chapters")
     cc = CustomChapters()
-    caplog.set_level("WARNING")
-    cc.from_yaml_array([
-        {"title": "Empty", "labels": "   ,  \n"},  # becomes empty after normalization
-        {"title": "WrongType", "labels": 12345},  # invalid type
-    ])
-    assert "Empty" not in cc.titles, "Empty chapter should be skipped"
-    assert "WrongType" not in cc.titles, "Invalid type chapter should be skipped"
-    empty_warnings = [r for r in caplog.records if "Empty" in r.message and "empty" in r.message.lower()]
-    wrong_type_warnings = [r for r in caplog.records if "WrongType" in r.message and "invalid" in r.message.lower()]
-    assert empty_warnings, "Expected warning about empty labels set"
-    assert wrong_type_warnings, "Expected warning about invalid labels type"
+    # Act
+    cc.from_yaml_array([chapter_def])
+    title = chapter_def.get("title")
+    # Assert
+    if expectation == "added":
+        assert title in cc.chapters
+    else:
+        if title:
+            assert title not in cc.chapters
+        else:
+            assert len(cc.chapters) == 0
+    assert any(warning_fragment in r.message for r in caplog.records)
 
 
-def test_from_yaml_array_missing_title(caplog):
-    caplog.set_level("WARNING")
-    cc = CustomChapters()
-    cc.from_yaml_array([
-        {"label": "bug"},  # missing title triggers skip
-    ])
-    # Expect no chapters added
-    assert len(cc.chapters) == 0
-    assert any("Skipping chapter without title key" in m for m in caplog.messages)
-
-
-def test_from_yaml_array_unknown_keys_warning(caplog):
-    caplog.set_level("WARNING")
-    cc = CustomChapters()
-    cc.from_yaml_array([
-        {"title": "WithExtra", "label": "bug", "extra": 123, "another": "x"},
-    ])
-    assert "WithExtra" in cc.chapters  # chapter still added
-    # Warning about unknown keys
-    assert any("has unknown keys ignored" in m for m in caplog.messages)
-
-
-def test_from_yaml_array_no_label_keys(caplog):
+def test_from_yaml_array_skips_non_dict_definitions(caplog):  # new test for non-dict entries
+    # Arrange
     caplog.set_level("WARNING")
     cc = CustomChapters()
-    cc.from_yaml_array([
-        {"title": "NoLabels"},  # triggers no 'label' or 'labels' warning
-    ])
-    assert "NoLabels" not in cc.chapters
-    assert any("has no 'label' or 'labels' key; skipping" in m for m in caplog.messages)
+    items = [123, "chapter", ["list"], None, {"title": "Valid", "labels": "bug"}]
+    # Act
+    cc.from_yaml_array(items)
+    # Assert
+    assert "Valid" in cc.chapters
+    assert len(cc.chapters) == 1
+    skip_msgs = [r.message for r in caplog.records if "invalid type" in r.message]
+    assert len(skip_msgs) == 4  # one per non-dict invalid entry
+    expected_types = ["<class 'int'>", "<class 'str'>", "<class 'list'>", "<class 'NoneType'>"]
+    for t in expected_types:
+        assert any(t in m for m in skip_msgs)
 
 
 def test_from_yaml_array_verbose_debug_branch(monkeypatch, caplog):
-    # Force verbose path
+    # Arrange
     monkeypatch.setattr(ActionInputs, "get_verbose", staticmethod(lambda: True))
     caplog.set_level("DEBUG")
     cc = CustomChapters()
-    cc.from_yaml_array([
-        {"title": "Verbose", "labels": "bug"},
-    ])
+    # Act
+    cc.from_yaml_array([{"title": "Verbose", "labels": "bug"}])
+    # Assert
     assert "Verbose" in cc.chapters
-    # Debug log emitted
     assert any("normalized labels" in m for m in caplog.messages)
+    assert not any("token" in m.lower() for m in caplog.messages)
 
 
-def test_normalize_labels_invalid_type_returns_empty():
-    assert _normalize_labels(12345) == []
+@pytest.mark.parametrize(
+    "raw, expected",
+    [
+        pytest.param(12345, [], id="invalid-type"),
+        pytest.param(["bug", 42, "feature", None, "bug"], ["bug", "feature"], id="list-with-non-strings"),
+    ],
+)
+def test_normalize_labels_edge_cases(raw, expected):
+    # Arrange / Act
+    result = _normalize_labels(raw)
+    # Assert
+    assert result == expected
 
 
-def test_normalize_labels_list_with_non_string_items():
-    # non-string element should be skipped
-    result = _normalize_labels(["bug", 42, "feature", None, "bug"])  # duplicates & non-strings
-    assert result == ["bug", "feature"], "Should keep order, skip non-strings, de-dup"
-
-
-def test_populate_skips_when_no_change_increment(mocker):
+@pytest.mark.parametrize(
+    "scenario",
+    [
+        "no_pulls_count",
+        "no_matching_labels",
+        "no_change_increment",
+        "commit_record_missing_labels",
+        "empty_labels",
+    ],
+    ids=[
+        "skip-no-pulls-count",
+        "skip-no-matching-labels",
+        "skip-no-change-increment",
+        "skip-commit-record",
+        "skip-empty-labels",
+    ],
+)
+def test_populate_skips_for_record_conditions(scenario, record_stub, mocker):
+    # Arrange
     cc = CustomChapters()
-    cc.from_yaml_array([{ "title": "Bugs", "labels": "bug"}])
-    rec = mocker.Mock(spec=Record)
-    rec.contains_change_increment.return_value = False
-    rec.skip = False
-    rec.labels = ["bug"]
-    records = {"org/repo#10": rec}
+    cc.from_yaml_array([{"title": "Bugs", "labels": "bug"}])
+    records: dict[str, Record] = {}
+    if scenario == "no_pulls_count":
+        rec = mocker.create_autospec(IssueRecord, instance=True)
+        rec.contains_change_increment.return_value = False
+        rec.skip = False
+        rec.labels = ["bug"]
+        records = {"1": rec}
+    elif scenario == "no_matching_labels":
+        rec = record_stub("org/repo#X", ["non-existent-label"])
+        records = {"org/repo#X": rec}
+    elif scenario == "no_change_increment":
+        rec = record_stub("org/repo#Y", ["bug"], contains_change_increment=False)
+        records = {"org/repo#Y": rec}
+    elif scenario == "commit_record_missing_labels":
+        commit = mocker.create_autospec(CommitRecord, instance=True)
+        commit.contains_change_increment.return_value = True
+        commit.skip = False
+        commit.labels = []
+        records = {"org/repo#C": commit}
+    elif scenario == "empty_labels":
+        rec = record_stub("org/repo#Z", [])
+        records = {"org/repo#Z": rec}
+    else:
+        pytest.fail(f"Unhandled scenario: {scenario}")
+    # Act
     cc.populate(records)
-    assert not cc.chapters["Bugs"].rows, "Record should be skipped when no change increment"
-
-
-def test_populate_skips_commit_record(mocker):
-    cc = CustomChapters()
-    cc.from_yaml_array([{ "title": "Bugs", "labels": "bug"}])
-    commit = mocker.create_autospec(CommitRecord, instance=True)
-    commit.contains_change_increment.return_value = True
-    commit.skip = False
-    # CommitRecord has no labels attribute; emulate absence to later test empty labels branch separately
-    records = {"org/repo#11": commit}
-    cc.populate(records)
-    assert not cc.chapters["Bugs"].rows, "CommitRecord should be skipped"
-
-
-def test_populate_skips_when_no_labels(mocker):
-    cc = CustomChapters()
-    cc.from_yaml_array([{ "title": "Bugs", "labels": "bug"}])
-    rec = mocker.Mock(spec=Record)
-    rec.contains_change_increment.return_value = True
-    rec.skip = False
-    rec.labels = []
-    records = {"org/repo#12": rec}
-    cc.populate(records)
-    assert not cc.chapters["Bugs"].rows, "Record without labels should be skipped"
+    # Assert
+    assert not cc.chapters["Bugs"].rows

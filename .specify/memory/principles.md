@@ -262,22 +262,22 @@ Scope Separation:
 
 Preferred (Canonical) Function / Method Template (RECOMMENDED):
 """
-<One-sentence imperative summary.>
+One-sentence imperative summary.
 
 Parameters:
-- <name>: <concise description>
+- name: concise description
 - ...
 
 Returns:
-- <Description of value semantics.>
+- Description of value semantics.
 
 Raises: (optional)
-- <ExceptionType>: <condition>
+- ExceptionType: condition
 """
 
 Canonical Class Template:
 """
-<Class purpose in one sentence (declarative is acceptable).>
+Class purpose in one sentence (declarative is acceptable).
 """
 
 Rules:
@@ -305,6 +305,68 @@ Rules:
 - Remove unused imports in same PR that renders them unused.
 - Wildcard imports (`from x import *`) forbidden.
 Rationale: Improves clarity, reduces merge conflicts, enables deterministic isort enforcement, and surfaces dependency scope early.
+
+### Principle 5: Python Unit Test Conventions [PID:K-5]
+Python unit tests (pytest) MUST follow standardized layout, naming, isolation, determinism, and readability rules that complement PID:A-1 through PID:A-4.
+Scope:
+- Applies to all files under `tests/` for Python; integration tests are pytest-based but MAY be excluded from default fast run via markers.
+
+Layout & Naming:
+- Test files MUST be named `test_*.py`; NEVER mix production & tests in one file.
+- File/dir mirroring MUST follow PID:A-2 (e.g., `release_notes_generator/util/paths.py` → `tests/unit/release_notes_generator/util/test_paths.py`).
+- Integration tests (optional) MUST reside under `tests/integration/` or carry `@pytest.mark.integration` added by collection hooks; they MUST NOT run by default when invoking bare `pytest`.
+- Fixture names MUST use `snake_case` expressing purpose (e.g., `tmp_repo`, `make_user`).
+
+Functions vs Classes:
+- Default style: free test functions. Classes MAY be used ONLY when one of: (a) a shared class-level marker applies to all tests, (b) a repeated complex fixture pattern benefits from grouping, (c) they group clearly related modes (happy path / edge / error) improving readability.
+- Test classes MUST be named `Test<ThingOrBehavior>`; MUST NOT define `__init__`, inheritance, or state; methods STILL start with `test_`.
+- Shared setup MUST prefer fixtures over `setup_class` / `teardown_class` unless a fixture cannot express the pattern.
+
+Execution Style & Readability:
+- Tests MUST express Arrange → Act → Assert (AAA) blocks separated by blank lines or comments; multiple asserts allowed when validating facets of a single behavior.
+- Prefer `@pytest.mark.parametrize` over manual loops or duplication to express input→output tables.
+
+Fixtures & Conftest Hygiene:
+- Fixtures MUST be small & composable; file-local unless broadly reused (then move to `tests/conftest.py`).
+- `tests/conftest.py` MUST contain ONLY shared fixtures, hooks, and marker definitions—no production logic or test bodies.
+- Fixture default scope MUST remain `function`; broader scopes (`module`, `session`) MAY be used ONLY when measurably faster AND no state leakage occurs.
+
+Isolation & Determinism:
+- Unit tests MUST NOT perform real network calls, sleeps, or rely on wall-clock time; use fakes, `monkeypatch`, `tmp_path`, and passed clocks.
+- Randomness MUST be seeded or controlled inside the test; time-dependent code MUST patch or inject clock sources.
+- Global or mutable module state MUST NOT leak between tests; if unavoidable, MUST be reset via fixture finalizers.
+
+Assertions & Failure Clarity:
+- Prefer direct equality assertions (`assert value == expected`) for auto-diffs over boolean conditions.
+- Exception checks MUST use `pytest.raises(<ExactType>, match=<substring>)` when message validation adds value.
+- Logging checks MUST set explicit level (`with caplog.at_level("WARNING")`) before asserting log text.
+
+Markers & Classification:
+- `slow` and `integration` tests MUST be explicitly marked and excluded from the default fast run via `pytest.ini` configuration.
+- `smoke` marker MAY identify a minimal high-signal subset.
+- Known unfixed bugs MUST use `pytest.mark.xfail(strict=True, reason="bug #<id>")`; accidental passes then fail CI.
+- `skip` MUST only guard true environmental/precondition absence (e.g., OS-specific behavior).
+- Internal-only tests touching non-public functions MUST be named `test__internal_*` OR marked `@pytest.mark.internal`.
+
+Test Doubles:
+- Fakes (simple dataclasses, lambdas, small in-memory implementations) SHOULD be preferred over deep mocks.
+- Monkeypatches MUST patch where an object is looked up (import site) not where originally defined.
+
+Performance:
+- Individual unit tests SHOULD target <100ms local runtime; slower tests MUST be marked appropriately or optimized.
+- Default `pytest` invocation MUST yield a fast, offline suite.
+
+State & Output Tools:
+- Use `tmp_path` for filesystem isolation, `monkeypatch` for environment/attribute overrides, `capsys` for stdout/stderr, and `caplog` for logging.
+- Tests MUST NOT rely on implicit logging levels; they MUST set levels explicitly when asserting logs.
+
+Decision Checklist (Guidance / NON-NORMATIVE):
+- Is a class genuinely clearer than multiple free functions? If not, keep functions.
+- Can variations be expressed with parametrization? If yes, parametrize.
+- Does the test touch network/time/FS? If yes, isolate or mark.
+- Does failure message clearly show diff? If not, prefer equality or add `match=`.
+
+Rationale: Ensures consistent, deterministic, maintainable Python tests; reduces duplication, improves readability & diagnostics, and preserves fast feedback loops without sacrificing clarity.
 
 ### Principle 6: Import Insertion Discipline [PID:K-6]
 When adding a new import, it MUST be placed into the existing top-of-file grouped import block (see PID:K-4) without creating duplicate group separators or resorting the entire file unnecessarily.

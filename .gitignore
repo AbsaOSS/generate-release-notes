@@ -158,5 +158,9 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 .idea/
 
+# Added common OS/editor artifacts
+.DS_Store
+.vscode/
+
 default_output.txt
 run_locally.sh
