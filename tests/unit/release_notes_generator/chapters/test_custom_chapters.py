@@ -64,7 +64,7 @@ def record_stub():  # concrete minimal subclass of Record to satisfy typing
         def developers(self) -> list[str]:
             return []
 
-        def to_chapter_row(self, add_into_chapters: bool = True) -> str:  # noqa: D401
+        def to_chapter_row(self, add_into_chapters: bool = True) -> str:
             return f"{self._rid} row"
 
         def contains_change_increment(self) -> bool:
@@ -73,7 +73,7 @@ def record_stub():  # concrete minimal subclass of Record to satisfy typing
         def get_labels(self) -> list[str]:
             return self.labels
 
-        def get_rls_notes(self, line_marks: list[str] | None = None) -> str:  # noqa: D401
+        def get_rls_notes(self, line_marks: list[str] | None = None) -> str:
             return ""
 
     def _make(
@@ -308,10 +308,10 @@ def test_populate_skips_for_record_conditions(scenario, record_stub, mocker):
     cc.from_yaml_array([{"title": "Bugs", "labels": "bug"}])
     records: dict[str, Record] = {}
     if scenario == "no_pulls_count":
-        rec = mocker.Mock(spec=IssueRecord)
+        rec = mocker.create_autospec(IssueRecord, instance=True)
+        rec.contains_change_increment.return_value = False
+        rec.skip = False
         rec.labels = ["bug"]
-        rec.pulls_count = 0
-        rec.is_present_in_chapters = False
         records = {"1": rec}
     elif scenario == "no_matching_labels":
         rec = record_stub("org/repo#X", ["non-existent-label"])
@@ -323,6 +323,7 @@ def test_populate_skips_for_record_conditions(scenario, record_stub, mocker):
         commit = mocker.create_autospec(CommitRecord, instance=True)
         commit.contains_change_increment.return_value = True
         commit.skip = False
+        commit.labels = []
         records = {"org/repo#C": commit}
     elif scenario == "empty_labels":
         rec = record_stub("org/repo#Z", [])
