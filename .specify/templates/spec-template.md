@@ -1,11 +1,14 @@
 # Feature Specification: [FEATURE NAME]
 
+<!-- Principles central reference: .specify/memory/principles.md -->
+
 **Work Branch**: `<prefix>/[###-descriptor]` where `<prefix>` ∈ {feature, fix, docs, chore}  
 **Created**: [DATE]  
 **Status**: Draft  
 **Input**: User description: "$ARGUMENTS"
 
 ## Constitution Alignment (Mandatory)
+*Refer to `.specify/memory/principles.md` for the canonical principle wording; list only the relevant numbers and compliance notes here.*
 List how this feature will comply with core principles:
 - Test‑First (P1): Failing unit tests in `tests/unit/test_<feature>.py` BEFORE implementation.
 - Explicit Configuration Boundaries (P2): New behavior exposed only via documented action inputs (list if any needed).

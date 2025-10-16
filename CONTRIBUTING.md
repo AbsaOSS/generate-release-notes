@@ -25,7 +25,7 @@
     * Ensure the Pull Request description clearly outlines your solution.
     * Link your PR to the relevant _Issue_.
 
-## Branch Naming (Principle 13)
+## Branch Naming (PID:H-1)
 Branches MUST start with one of the allowed prefixes: `feature/`, `fix/`, `docs/`, `chore/`
 Examples:
 - `feature/add-hierarchy-support`

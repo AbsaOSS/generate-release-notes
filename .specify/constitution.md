@@ -1,12 +1,12 @@
 <!--
 Sync Impact Report
-Version change: 1.3.0 -> 1.4.0
-Modified sections: Principle 13 expanded to include fix/, docs/, chore/; Quality Gates branch naming; Compliance Review
-Added sections: Allowed prefix list & category descriptions; CI workflow enforcement `.github/workflows/branch-prefix-check.yml`
-Removed sections: None
-Change type: MINOR (expanded enforceable governance rule)
-Templates requiring updates: plan-template.md (✅), tasks-template.md (✅), spec-template.md (✅), DEVELOPER.md (✅), CONTRIBUTING.md (✅), branch-prefix-check.yml (✅)
-Deferred TODOs: None
+Version change: 1.4.0 -> 1.4.1
+Modified sections: Core Principles (definitions removed, now reference single source)
+Added sections: Principle index reference note
+Removed sections: Inlined principle bodies (1–13 presently, truncated set previously embedded)
+Change type: PATCH (structural relocation; no semantic governance change)
+Templates requiring updates: None (plan/spec/tasks already reference centralized principles) ✅
+Deferred TODOs: Consider CI guard to block reintroduction of principle text outside principles.md
 -->
 
 # Release Notes Scrapper Action Constitution
@@ -72,8 +72,8 @@ manage version tagging; it consumes existing tags.
 - Formatting boundary: only row format templates and chapters influence visible line structure; business logic must not
   directly embed presentation markup elsewhere.
 - Error boundary: modules MUST NOT leak raw exceptions across boundaries; they must convert failures into logged events
-  and structured return values (see Principle 9). Internal exceptions MAY be raised and caught within the same module.
-- Utility boundary: functions in `utils/` MUST be demonstrably used by at least one importing module or removed (see Principle 8 & 10).
+  and structured return values (see PID:F-1). Internal exceptions MAY be raised and caught within the same module.
+- Utility boundary: functions in `utils/` MUST be demonstrably used by at least one importing module or removed (see PID:K-2 & PID:G-1).
 
 ### Module Boundary Follow-Up
 A scheduled audit SHALL verify:
@@ -83,51 +83,6 @@ A scheduled audit SHALL verify:
 - `record/factory` isolates construction logic; future refactors MAY extract validation into a separate `validators/` module.
 - Logging configuration centralization: confirm no duplicate ad-hoc log setup outside `main.py`.
 Outcome: Produce a follow-up task list referencing each violation if found; merge only with accompanying unit tests.
-
-## 3. Data & Integrations
-
-### Key Inputs
-- Environment variables prefixed with `INPUT_` (GitHub Action input mapping) including: tag-name, from-tag-name,
-  chapters YAML, duplicity scope/icon, hierarchy flag, published-at flag, skip-release-notes-labels, row-format patterns,
-  CodeRabbit toggles, verbose/debug flags.
-- GitHub repository identifier (owner/name) and token.
-
-### Key Outputs
-- Single Markdown block (string) under the GitHub Action output name `release-notes`.
-- Optional service/warning chapter sections (embedded within same Markdown).
-- Changelog comparison URL derived from tags.
-
-### Data Formats
-- Chapters Input: YAML array string (each item `{title: str, label: str}`) supplied via multiline input.
-- Row Formats: Template strings with placeholders `{number}`, `{title}`, `{developers}`, etc. Case-insensitive.
-- Output: Markdown (headings + bullet/line entries).
-- Tags: Semantic version strings normalized (e.g. `v1.2.3`).
-
-### External APIs & Services
-- GitHub REST (via PyGithub) for issues, pull requests, commits, release metadata.
-- Optional CodeRabbit summary (if enabled) parsed from PR bodies; no direct external API calls here unless present in
-  future extension (current code references textual extraction only).
-
-### Persistence & Configuration
-- No persistent external storage: all operations in-memory per invocation.
-- Configuration solely via action inputs; no config file required beyond runtime `.github/workflows/*.yml` usage.
-
-## 4. Workflows & CI/CD
-
-### Build & Packaging
-- Composite GitHub Action (no container image). Creates local virtual environment, installs `requirements.txt`.
-- Python version gate: MUST be ≥ 3.11 (enforced in `action.yml` step).
-
-### Automation
-- Continuous Integration expected to run `pytest` + coverage.
-- Formatting: `black` (line length 120), static typing: `mypy`, lint: `pylint`.
-
-### Deployment
-- Distributed via GitHub Marketplace release tags (e.g. `AbsaOSS/generate-release-notes@v1`).
-- Consumers pin version tags for stability; internal changes require semantic release tagging.
-
-### Environments
-- Primary: GitHub-hosted runners (Ubuntu). Local development: any OS with Python 3.11+.
 
 ## 5. Quality & Testing
 
@@ -153,8 +108,8 @@ Rules:
 - Fixtures: define shared objects in `tests/conftest.py` or per-file fixtures; keep scope minimal.
 - Parametrization: use `@pytest.mark.parametrize` for input matrix instead of loops.
 - Coverage: new logic MUST raise overall coverage or keep it steady; dropping coverage requires explicit justification.
-- NEW: Unit test file path MUST mirror source relative package path (Principle 12). For source file `release_notes_generator/utils/constants.py`, the test lives at `tests/unit/release_notes_generator/utils/test_constants.py`.
-- Branch Naming: Feature / fix / docs / chore PRs MUST originate from correctly prefixed branch (Principle 13); CI may validate.
+- NEW: Unit test file path MUST mirror source relative package path (PID:A-2). For source file `release_notes_generator/utils/constants.py`, the test lives at `tests/unit/release_notes_generator/utils/test_constants.py`.
+- Branch Naming: Feature / fix / docs / chore PRs MUST originate from correctly prefixed branch (PID:H-1); CI may validate.
 
 ### Organization & Integration
 - Integration tests MUST import public interfaces only (`main`, `ReleaseNotesGenerator`) not internal private helpers.
@@ -174,32 +129,8 @@ Rules:
 ### Quality Gates (Minimum Acceptance)
 - Tests: ALL must pass.
 - Lint + type: zero blocking errors.
-- No unused functions/methods (see Principle 10) — introduce usage or delete in same PR.
-- Backward compatibility: no silent change to input names or placeholder semantics without version bump & documentation update.
-- Branch naming compliance (Principle 13) — allowed prefixes: feature/, fix/, docs/, chore/; rename if violated.
-
-## 6. Constraints & Compatibility
-
-### Platform & Language
-- Python: 3.11+ ONLY (action enforces). Future expansion to newer minor versions allowed if test matrix passes.
-- OS: GitHub Ubuntu runners officially supported; macOS/Linux local dev assumed; Windows not primary (should function but not guaranteed).
-
-### Backward Compatibility
-- Input names are stable; modification/removal requires MAJOR version bump.
-- Row format placeholder set must not shrink without MAJOR bump; additions allowed under MINOR.
-- Service chapter semantics must remain predictable; new service chapters = MINOR bump.
-
-### Licensing & Organizational
-- Apache 2.0 license; contributions MUST comply and include license headers in new Python files.
-- No proprietary dependencies; all third-party libraries are OSS.
-
-## 7. Non-Goals
-- Managing or creating Git tags/releases (handled by other actions like softprops/action-gh-release).
-- Multi-repository or cross-project aggregation of release notes.
-- Persistent storage of historical notes beyond generated output.
-- Automatic labeling, triage, or issue/PR mutation.
-- Security scanning or dependency auto-updates (Dependabot recommended separately).
-- Full changelog generation beyond link and categorized notes (raw diff content not embedded).
+- No unused functions/methods (see PID:G-1) — introduce usage or delete in same PR.
+- Branch naming compliance (PID:H-1) — allowed prefixes: feature/, fix/, docs/, chore/; rename if violated.
 
 ## 8. Key Risks & Assumptions
 
@@ -210,7 +141,7 @@ Rules:
 - Hierarchy expansion could incur additional API calls increasing latency.
 - Duplicate detection edge cases may confuse users if same issue intentionally spans categories.
 - CodeRabbit integration features may parse unintended summary content (format variance risk).
-- Dead code accumulation in `utils/` may reduce clarity if Principle 10 not enforced promptly.
+- Dead code accumulation in `utils/` may reduce clarity if PID:G-1 not enforced promptly.
 
 ### Assumptions
 - Repository uses semantic version tags (prefixed optionally by `v`).
@@ -242,11 +173,7 @@ Rules:
 ### Compliance Review
 - PR template or automated check SHOULD reference Constitution principles (especially Test‑First & Stability) before merge.
 - Violations require explicit justification section in PR description.
-- Review checklist MUST confirm Principle 13 prefix correctness and scope alignment.
-
-### Release Management
-- Tagging strategy external; this action consumes tags. Recommend semantic versioning for repository releases.
-- Breaking changes documented in release notes + README update.
+- Review checklist MUST confirm PID:H-1 prefix correctness and scope alignment.
 
 ## 10. Next Steps / Specification Flow
 
@@ -279,94 +206,35 @@ Ensure Constitution Check section in `plan.md` passes before advancing to detail
 
 ## Change Log / Versioning
 - Project releases follow Git tags; this constitution uses semantic versioning independent of code releases.
-- Current Constitution Version: 1.4.0 (amended with new principles & test structure).
+- Current Constitution Version: 1.4.1 (amended with new principles & test structure).
 - Future amendments tracked via Sync Impact Report at top of this file.
 
 ## Core Principles
 
-### Principle 1: Test‑First Reliability
-All core logic (mining, filtering, record building, formatting) MUST have failing tests written before implementation and
-passing after. New features without tests SHALL NOT merge. Refactors must preserve existing test suite green state.
-Rationale: Prevent regressions & ensure deterministic behavior for CI consumers.
+The authoritative principle definitions have been externalized to a single source file:
+`/.specify/memory/principles.md`.
 
-### Principle 2: Explicit Configuration Boundaries
-All runtime behavior MUST be driven by declared GitHub Action inputs. Hidden flags or reliance on undeclared environment
-variables is prohibited. Additions go through MINOR version bumps. Removals/renames require MAJOR.
-Rationale: Predictable automation & backward compatibility for consumers pinning versions.
+Principle PID Index (see `principles.md` for full text):
+- PID:A-1 Test‑First Reliability
+- PID:B-1 Explicit Configuration Boundaries
+- PID:B-2 Deterministic Output Formatting
+- PID:C-1 Minimal Surface & Single Responsibility
+- PID:C-2 Safe Extensibility
+- PID:D-1 Transparency & Observability
+- PID:E-1 Resource‑Conscious API Usage & Performance Budgeting
+- PID:K-2 Lean Python Design
+- PID:F-1 Localized Error Handling & Non‑Exceptional Flow
+- PID:G-1 Dead Code Prohibition
+- PID:G-2 Focused & Informative Comments
+- PID:A-2 Test Path Mirroring
+- PID:H-1 Branch Naming Consistency
+- PID:K-1 Static Typing Discipline
+- PID:G-3 TODO Debt Governance
+- PID:I-1 Security & Token Handling
+- PID:J-1 Documentation‑Derived Rule Synchronization
+- PID:J-2 Example Reuse & Location Discipline
 
-### Principle 3: Deterministic Output Formatting
-Row templates and chapter ordering MUST produce repeatable output given identical repository state & inputs.
-Non-deterministic ordering (e.g. unordered sets) MUST be normalized (e.g. stable sorting). Markdown headings MUST follow
-established pattern for readability.
-Rationale: Stable diffs and reliable downstream consumption (e.g. release publishing actions).
-
-### Principle 4: Minimal Surface & Single Responsibility
-Modules MUST remain focused (input parsing, mining, building). Introducing cross-cutting logic (e.g. tag creation,
-external notifications) within this action is prohibited; such features require separate tools or integrations.
-Rationale: Keeps maintenance effort low and reduces risk of feature creep obscuring core value.
-
-### Principle 5: Transparency & Observability
-Logging MUST clearly trace generation lifecycle (start, inputs validated, mining complete, build complete). Errors and
-validation failures MUST be explicit. Verbose mode extends diagnostics without changing functional behavior.
-Rationale: Facilitates debugging in ephemeral CI environments.
-
-### Principle 6: Safe Extensibility
-New placeholders, service chapters, or hierarchy expansions MUST not break existing users. Provide default values/flags
-for new features (opt-in unless clearly safe). Document changes in README and release notes.
-Rationale: Encourages evolution without destabilizing automation pipelines.
-
-### Principle 7: Resource-Conscious GitHub API Usage
-Mining MUST use rate limiter abstraction; avoid redundant API calls (e.g. re-fetching unchanged issues). Hierarchy fetches
-MUST short-circuit when disabled. Performance considerations addressed before accepting features that multiply API calls.
-Rationale: Preserves quota & improves speed on large repositories.
-
-### Principle 8: Lean Python Design
-Prefer simple functions and modules over unnecessary classes. A class MUST only be introduced when stateful behavior or
-polymorphism is required. Utility modules SHOULD expose pure functions. Avoid deep inheritance; favor composition.
-Rationale: Reduces complexity and improves readability & testability.
-
-### Principle 9: Localized Error Handling & Non-Exceptional Flow
-Modules MUST catch internal exceptions and convert them into structured return values plus logged messages. Cross-module
-exception propagation (raising raw exceptions across boundaries) is prohibited except for truly unrecoverable setup
-failures at the entry point (`main`). Return either a valid result or a clearly logged empty/partial result.
-Rationale: Ensures predictable action behavior and prevents silent termination in CI pipelines.
-
-### Principle 10: Dead Code Prohibition
-No unused methods/functions SHALL remain in the codebase (properties or inherited abstract/interface methods excepted).
-Utility files MUST contain only actively invoked functions. Removal of unused code MUST occur in the same PR that
-introduces its obsolescence.
-Rationale: Prevents confusion, reduces maintenance overhead, and keeps coverage meaningful.
-
-### Principle 11: Focused & Informative Comments
-Comments MUST explain non-obvious logic, constraints, or reasoning succinctly. Prohibited: narrative, outdated, or
-speculative comments. Allowed: brief context before complex loops, rationale for workaround, links to issue references.
-Comments SHOULD be maintained or updated alongside code changes; stale comments MUST be removed.
-Rationale: Enhances clarity without adding noise.
-
-### Principle 12: Test Path Mirroring
-Each unit test file MUST reside under `tests/unit/` mirroring the source package path and file name: `tests/unit/<source_root_relative_path>/test_<original_file_name>.py`.
-Mandatory Rules:
-- One test file per source file unless tightly coupled logic demands grouping (justify in PR).
-- Legacy non-mirrored category folders are deprecated; migrate incrementally without reducing coverage.
-- New or refactored modules require mirrored test path in same PR.
-Rationale: Ensures predictable test discovery, simplifies navigation between code and tests, and supports scalable refactors.
-
-### Principle 13: Branch Naming Consistency
-All new branches for work MUST start with one of the approved prefixes followed by a concise kebab-case descriptor (optional numeric ID).
-Approved prefixes:
-- `feature/` – new features & enhancements
-- `fix/` – bug fixes / defect resolutions
-- `docs/` – documentation-only updates
-- `chore/` – maintenance, dependency bumps, CI, non-behavioral refactors
-Examples:
-`feature/add-hierarchy-support`, `fix/567-handle-empty-chapters`, `docs/improve-readme-start`, `chore/upgrade-semver-lib`
-Rules:
-- Prefix REQUIRED and MUST be in approved set; rename non-compliant branches prior to PR.
-- Descriptor: lowercase kebab-case; hyphen separators; no spaces/underscores/trailing slash.
-- Optional numeric ID may precede description (`fix/987-null-title`).
-- Category alignment: branch prefix MUST match primary scope of PR contents.
-- Avoid vague descriptors (`update`, `changes`). Prefer action or subject (`improve-logging`, `remove-dead-code`).
-Rationale: Standardizes history, enables automated governance checks, clarifies intent for reviewers & tooling.
+Refer to `principles.md` for full text, rationale, and rule bullets.
 
 ## Governance Metadata
-**Version**: 1.4.0 | **Ratified**: 2025-10-12 | **Last Amended**: 2025-10-14
+**Version**: 1.4.1 | **Ratified**: 2025-10-12 | **Last Amended**: 2025-10-15

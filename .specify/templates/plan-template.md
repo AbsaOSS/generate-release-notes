@@ -1,5 +1,7 @@
 # Implementation Plan: [FEATURE]
 
+<!-- Principles: authoritative text lives in .specify/memory/principles.md; do not copy full definitions here. -->
+
 **Branch**: `<prefix>/[###-descriptor]` (prefix ∈ {feature, fix, docs, chore}) | **Date**: [DATE] | **Spec**: [link]
 **Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
 
@@ -26,6 +28,8 @@
 **Scale/Scope**: [e.g., repos up to 10k issues in release window]
 
 ## Constitution Check
+
+*Consult full principle definitions in `.specify/memory/principles.md` (single source of truth).* 
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 

@@ -220,11 +220,12 @@ class ActionInputs:
     def get_verbose() -> bool:
         """
         Get the verbose parameter value from the action inputs.
+        Safe for non-GitHub test contexts where the input may be unset (returns False by default).
         """
-        return (
-            os.getenv(RUNNER_DEBUG, "0") == "1"
-            or get_action_input(VERBOSE).lower() == "true"  # type: ignore[union-attr]
-        )
+        raw = get_action_input(VERBOSE, "false")  # type: ignore[assignment]
+        # Some test contexts (unit/integration) do not populate GitHub inputs; fall back to default.
+        raw_normalized = (raw or "false").strip().lower()
+        return os.getenv(RUNNER_DEBUG, "0") == "1" or raw_normalized == "true"
         # mypy: string is returned as default
 
     @staticmethod

@@ -1,36 +1,61 @@
 # Feature: Custom Chapters
 
 ## Purpose
-Map issue and PR labels to human-friendly chapter titles. Lets teams group multiple labels under a single heading and control output order without modifying repository label taxonomy.
+Define how issues and pull requests are grouped under human-friendly headings in the generated release notes.
 
-## How It Works
-- Input `chapters` is a YAML list; each entry contains `title` + `label`.
-- Multiple entries with the same `title` aggregate labels into one chapter (logical OR).
-- Records qualify when: not skipped, contain a change increment (at least one linked merged PR), and have ≥1 matching label (explicit or implicit Issue Type label).
-  - Issue Type is automatically merged as a lowercase implicit label (e.g. `Epic` → `epic`, `Feature` → `feature`, `Bug` → `bug`, `Task` → `task`). You can reference these directly in `chapters` without creating extra labels in the repository.
-- Direct commits are ignored (no labels) and appear only in Service Chapters if relevant.
-- Duplicates across chapters depend on `duplicity-scope` (see Duplicity Handling). If disallowed, first match wins.
-- Empty chapters printed only when `print-empty-chapters: true`.
+## Basics
+Each chapter entry requires a `title` and either:
+- `label`: (legacy) single label string
+- `labels`: (new) multi-label definition (comma separated string OR YAML list)
 
-## Configuration
 ```yaml
-- name: Generate Release Notes
-  id: release_notes_scrapper
-  uses: AbsaOSS/generate-release-notes@v1
-  env:
-    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  with:
-    tag-name: "v2.1.0"
-    chapters: |
-      - {"title": "New Features 🎉", "label": "feature"}
-      - {"title": "New Features 🎉", "label": "enhancement"}
-      - {"title": "Bugfixes 🛠", "label": "bug"}
-      - {"title": "Epics", "label": "epic"}          # using implicit issue type label
-    duplicity-scope: "custom"
-    print-empty-chapters: true
+with:
+  chapters: |
+    - {"title": "New Features 🎉", "labels": "feature, enhancement"}    # multi-label form (comma separated)
+    - {"title": "Bugfixes 🛠️", "label": "bug"}                          # legacy single-label form
+    - {"title": "Platform 🧱", "labels": ["platform", "infra"]}         # multi-label form (YAML list)
 ```
 
-## Example Result
+## Normalization Rules
+1. Comma split.
+2. Whitespace trimmed per token.
+3. Empty tokens discarded.
+4. Duplicates removed preserving first occurrence order.
+5. If both `label` and `labels` present, `labels` takes precedence (single warning).
+6. Invalid types (non-string/non-list) cause chapter skip with a warning.
+
+## Inclusion Logic
+A record is added to a chapter if its label set intersects the chapter’s normalized label set. Direct commits are ignored (they have no labels). A record can appear in multiple chapters; intra-chapter duplication is always suppressed.
+
+## Deterministic Output
+Chapter rendering order = order of first appearance of each unique title in the YAML input.
+
+## Warnings
+- Missing `title`
+- Both `label` & `labels` (precedence notice)
+- Invalid `labels` type
+- Empty label set after normalization
+- Unknown extra keys (ignored)
+
+All warnings include the chapter title (when available) for traceability.
+
+## Verbose Mode
+Set `verbose: true` to log normalized label sets at DEBUG level.
+
+## FAQ
+**Q: Does `duplicity-scope` stop a record appearing in multiple custom chapters?**  
+A: No. Cross-chapter duplication is always allowed; only intra-chapter duplication is suppressed.
+
+**Q: Are labels case-normalized?**  
+A: No. Matching is case-sensitive and uses the labels as returned by GitHub.
+
+**Q: How do I merge more labels into an existing heading?**  
+Provide multiple entries with the same `title` (legacy style) or just list them in one `labels` definition.
+
+**Q: What if I accidentally leave a trailing comma?**  
+Empty tokens are discarded; the chapter remains valid if at least one non-empty token exists.
+
+## Example Output
 ```markdown
 ### New Features 🎉
 - #410 _Add inline diff viewer_ developed by @alice in #415
@@ -38,21 +63,8 @@ Map issue and PR labels to human-friendly chapter titles. Lets teams group multi
 ### Bugfixes 🛠
 - #412 _Fix cache stampede_ developed by @bob in #418
 ```
-(Multiple labels under the same title unify into one heading.)
 
-## FAQ
-**Why didn’t my issue appear in any chapter?**
-- It has a skip label (see [Skip Labels](./skip_labels.md)).
-- It has no change increment (no merged PR linked to it).
-- Its labels (including implicit issue type) don’t match any configured chapter labels.
-- It’s still open and hierarchy/Service Chapters logic filtered it (for some diagnostics scenarios) but not eligible for user chapters.
-- Duplicates disabled (`duplicity-scope` excludes `custom`) and it already appeared under an earlier matching chapter.
-
-**How do I group by issue types without adding labels?**  Use the lowercase implicit type (`epic`, `feature`, `bug`, `task`) in `chapters`.
-
-**Why is a chapter heading empty?** Either no records qualified or they were all skipped/excluded by duplicity scope. Disable empty headings via `print-empty-chapters: false`.
-
-**Can a PR-only item appear without an issue?** Yes—if its labels match a chapter. The line will format using the PR row template.
+Use this feature to keep release notes concise and logically organized while supporting broader label groupings.
 
 ## Related Features
 - [Duplicity Handling](./duplicity_handling.md) – governs multi-chapter visibility.
