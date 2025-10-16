@@ -123,7 +123,6 @@ class CustomChapters(BaseChapters):
             if not isinstance(chapter, dict):
                 logger.warning("Skipping chapter definition with invalid type %s: %s", type(chapter), chapter)
                 continue
-                continue
             if "title" not in chapter:
                 logger.warning("Skipping chapter without title key: %s", chapter)
                 continue
