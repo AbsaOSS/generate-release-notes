@@ -21,7 +21,8 @@ This module contains utility functions for extracting and fetching issue numbers
 import re
 from functools import lru_cache
 
-import requests
+from github import GithubException
+from github.Requester import Requester
 from github.PullRequest import PullRequest
 from github.Repository import Repository
 
@@ -53,9 +54,8 @@ def extract_issue_numbers_from_body(pr: PullRequest, repository: Repository) -> 
 
 
 @lru_cache(maxsize=1024)
-def get_issues_for_pr(pull_number: int) -> set[str]:
+def get_issues_for_pr(pull_number: int, requester: Requester) -> set[str]:
     """Fetch closing issue numbers for a PR via GitHub GraphQL and return them as a set."""
-    github_api_url = "https://api.github.com/graphql"
     owner = ActionInputs.get_github_owner()
     name = ActionInputs.get_github_repo_name()
     query = ISSUES_FOR_PRS.format(
@@ -69,13 +69,24 @@ def get_issues_for_pr(pull_number: int) -> set[str]:
         "Content-Type": "application/json",
     }
 
-    response = requests.post(github_api_url, json={"query": query}, headers=headers, verify=False, timeout=10)
-    response.raise_for_status()  # Raise an error for HTTP issues
-    data = response.json()
-    if data.get("errors"):
-        raise RuntimeError(f"GitHub GraphQL errors: {data['errors']}")
+    try:
+        headers, payload = requester.graphql_query(query, headers)
+    except GithubException as e:
+        # e.status (int), e.data (dict/str) often contains useful details
+        raise RuntimeError(f"GitHub HTTP error {getattr(e, 'status', '?')}: {getattr(e, 'data', e)}") from e
+
+    if not isinstance(payload, dict):
+        raise RuntimeError(f"Malformed response payload type: {type(payload)}")
+
+    # GraphQL-level errors come inside a successful HTTP 200
+    if "errors" in payload:
+        messages = "; ".join(err.get("message", str(err)) for err in payload["errors"])
+        raise RuntimeError(f"GitHub GraphQL errors: {messages}")
+
+    if "data" not in payload:
+        raise RuntimeError("Malformed GraphQL response: missing 'data'")
 
     return {
         f"{owner}/{name}#{node['number']}"
-        for node in data["data"]["repository"]["pullRequest"]["closingIssuesReferences"]["nodes"]
+        for node in payload["data"]["repository"]["pullRequest"]["closingIssuesReferences"]["nodes"]
     }

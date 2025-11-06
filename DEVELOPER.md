@@ -176,6 +176,13 @@ export INPUT_VERBOSE="true"
 export GITHUB_REPOSITORY="< owner >/< repo-name >"
 export INPUT_GITHUB_TOKEN=$(printenv <your-env-token-var>)
 
+PROJECT_ROOT="$(pwd)"
+export PYTHONPATH="${PYTHONPATH}:${PROJECT_ROOT}"
+
+# Debugging statements
+echo "PYTHONPATH: ${PYTHONPATH}"
+echo "Current working directory: ${PROJECT_ROOT}"
+
 # Run the Python script
 python3 ./<path-to-action-project-root>/main.py
 ```
