@@ -131,8 +131,9 @@ class DefaultRecordFactory(RecordFactory):
 
         pr_repo = target_repository if target_repository is not None else data.home_repository
 
-        merged_linked_issues: set[str] = self._safe_call(get_issues_for_pr)(pull_number=pull.number,
-                                                                            requester=self._github.requester) or set()
+        merged_linked_issues: set[str] = (
+            self._safe_call(get_issues_for_pr)(pull_number=pull.number, requester=self._github.requester) or set()
+        )
         merged_linked_issues.update(extract_issue_numbers_from_body(pull, pr_repo))
         pull_issues: list[str] = list(merged_linked_issues)
         attached_any = False
