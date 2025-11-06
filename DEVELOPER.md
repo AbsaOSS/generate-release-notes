@@ -181,7 +181,7 @@ export PYTHONPATH="${PYTHONPATH}:${PROJECT_ROOT}"
 
 # Debugging statements
 echo "PYTHONPATH: ${PYTHONPATH}"
-echo "Current working directory: $(pwd)"
+echo "Current working directory: ${PROJECT_ROOT}"
 
 # Run the Python script
 python3 ./<path-to-action-project-root>/main.py

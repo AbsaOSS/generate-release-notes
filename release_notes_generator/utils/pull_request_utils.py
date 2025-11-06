@@ -86,9 +86,7 @@ def get_issues_for_pr(pull_number: int, requester: Requester) -> set[str]:
     if "data" not in payload:
         raise RuntimeError("Malformed GraphQL response: missing 'data'")
 
-    test_set = {
+    return {
         f"{owner}/{name}#{node['number']}"
         for node in payload["data"]["repository"]["pullRequest"]["closingIssuesReferences"]["nodes"]
     }
-
-    return test_set
