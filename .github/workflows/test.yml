@@ -52,7 +52,7 @@ jobs:
           score=${{ steps.analyze-code.outputs.score }}
           echo "Pylint score is $score"
           
-          if (( $(echo "$PYLINT_SCORE < 9.5" | bc -l) )); then
+          if (( $(echo "$score < 9.5" | bc -l) )); then
             echo "Failure: Pylint score is below 9.5 (project score: $score)."
             exit 1
           else
