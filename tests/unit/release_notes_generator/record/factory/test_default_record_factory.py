@@ -21,6 +21,7 @@ from github import Github
 from github.Commit import Commit
 from github.Issue import Issue
 from github.PullRequest import PullRequest
+from github.Requester import Requester
 
 from release_notes_generator.model.record.commit_record import CommitRecord
 from release_notes_generator.model.record.hierarchy_issue_record import HierarchyIssueRecord
@@ -337,7 +338,7 @@ def mock_safe_call_decorator_no_issues(_rate_limiter):
         return fn
     return wrapper
 
-def mock_get_issues_for_pr_no_issues(pull_number: int) -> list[str]:
+def mock_get_issues_for_pr_no_issues(pull_number: int, requester: Requester) -> list[str]:
     return []
 
 

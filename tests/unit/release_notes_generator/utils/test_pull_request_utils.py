@@ -113,7 +113,7 @@ def test_get_issues_for_pr_success(monkeypatch):
                 }
             }
 
-    def fake_post(url, json=None, headers=None, verify=None, timeout=None):
+    def fake_graphql_query(url, json=None, headers=None, verify=None, timeout=None):
         captured["url"] = url
         captured["json"] = json
         captured["headers"] = headers
@@ -121,7 +121,7 @@ def test_get_issues_for_pr_success(monkeypatch):
         captured["timeout"] = timeout
         return Resp()
 
-    monkeypatch.setattr(pru.requests, "post", fake_post)
+    monkeypatch.setattr(pru.Requester, "graphql_query", fake_graphql_query)
 
     result = pru.get_issues_for_pr(123)
     assert result == {'OWN/REPO#11', 'OWN/REPO#22'}

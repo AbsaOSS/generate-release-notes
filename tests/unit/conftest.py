@@ -25,6 +25,7 @@ from github.Issue import Issue
 from github.PullRequest import PullRequest
 from github.Rate import Rate
 from github.Repository import Repository
+from github.Requester import Requester
 
 from release_notes_generator.model.record.commit_record import CommitRecord
 from release_notes_generator.model.record.hierarchy_issue_record import HierarchyIssueRecord
@@ -56,7 +57,7 @@ def mock_safe_call_decorator(_rate_limiter):
     return wrapper
 
 
-def mock_get_issues_for_pr(pull_number: int) -> set[int]:
+def mock_get_issues_for_pr(pull_number: int, requester: Requester) -> set[int]:
     # if pull_number == 150:
     #     return [451]
     return set()
