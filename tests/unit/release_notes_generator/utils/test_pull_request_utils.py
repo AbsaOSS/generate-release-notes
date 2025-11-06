@@ -97,11 +97,17 @@ def test_get_issues_for_pr_success(monkeypatch):
     _patch_action_inputs(monkeypatch)
     _patch_issues_template(monkeypatch)
 
-    captured = {}
-    class Resp:
-        def raise_for_status(self): pass
-        def json(self):
-            return {
+    class MockRequester:
+        def __init__(self):
+            self.called = False
+            self.last_query = None
+            self.last_headers = None
+        def graphql_query(self, query, headers):
+            self.called = True
+            self.last_query = query
+            self.last_headers = headers
+            # Return (headers, payload) as expected by the new implementation
+            return headers, {
                 "data": {
                     "repository": {
                         "pullRequest": {
@@ -113,34 +119,21 @@ def test_get_issues_for_pr_success(monkeypatch):
                 }
             }
 
-    def fake_graphql_query(url, json=None, headers=None, verify=None, timeout=None):
-        captured["url"] = url
-        captured["json"] = json
-        captured["headers"] = headers
-        captured["verify"] = verify
-        captured["timeout"] = timeout
-        return Resp()
-
-    monkeypatch.setattr(pru.Requester, "graphql_query", fake_graphql_query)
-
-    result = pru.get_issues_for_pr(123)
+    requester = MockRequester()
+    result = pru.get_issues_for_pr(123, requester)
     assert result == {'OWN/REPO#11', 'OWN/REPO#22'}
-    assert captured["url"] == "https://api.github.com/graphql"
-    # Query string correctly formatted
-    assert captured["json"]["query"] == "Q 123 OWN REPO 10"
-    # Headers include token
-    assert captured["headers"]["Authorization"] == "Bearer TOK"
-    assert captured["verify"] is False
-    assert captured["timeout"] == 10
+    assert requester.called
+    assert requester.last_query == "Q 123 OWN REPO 10"
+    assert requester.last_headers["Authorization"] == "Bearer TOK"
+    assert requester.last_headers["Content-Type"] == "application/json"
 
 def test_get_issues_for_pr_empty_nodes(monkeypatch):
     _patch_action_inputs(monkeypatch)
     _patch_issues_template(monkeypatch)
 
-    class Resp:
-        def raise_for_status(self): pass
-        def json(self):
-            return {
+    class MockRequester:
+        def graphql_query(self, query, headers):
+            return headers, {
                 "data": {
                     "repository": {
                         "pullRequest": {
@@ -150,48 +143,49 @@ def test_get_issues_for_pr_empty_nodes(monkeypatch):
                 }
             }
 
-    monkeypatch.setattr(pru.requests, "post", lambda *a, **k: Resp())
-    assert pru.get_issues_for_pr(5) == set()
+    requester = MockRequester()
+    assert pru.get_issues_for_pr(5, requester) == set()
 
 def test_get_issues_for_pr_http_error(monkeypatch):
     _patch_action_inputs(monkeypatch)
     _patch_issues_template(monkeypatch)
 
-    class Resp:
-        def raise_for_status(self):
-            raise requests.HTTPError("Boom")
-        def json(self):
-            return {}
+    from github import GithubException
+    class MockGithubException(GithubException):
+        def __init__(self, status, data):
+            super().__init__(status, data)
+            # Do not set self.status or self.data directly
 
-    monkeypatch.setattr(pru.requests, "post", lambda *a, **k: Resp())
+    class MockRequester:
+        def graphql_query(self, query, headers):
+            raise MockGithubException(500, "Boom")
 
-    with pytest.raises(requests.HTTPError):
-        pru.get_issues_for_pr(77)
+    requester = MockRequester()
+    with pytest.raises(RuntimeError) as excinfo:
+        pru.get_issues_for_pr(77, requester)
+    assert "GitHub HTTP error 500" in str(excinfo.value)
 
 def test_get_issues_for_pr_malformed_response(monkeypatch):
     _patch_action_inputs(monkeypatch)
     _patch_issues_template(monkeypatch)
 
-    class Resp:
-        def raise_for_status(self): pass
-        def json(self):
-            # Missing the expected nested keys -> triggers KeyError
-            return {"data": {}}
+    class MockRequester:
+        def graphql_query(self, query, headers):
+            return headers, {"data": {}}  # Missing nested keys
 
-    monkeypatch.setattr(pru.requests, "post", lambda *a, **k: Resp())
-
+    requester = MockRequester()
     with pytest.raises(KeyError):
-        pru.get_issues_for_pr(42)
+        pru.get_issues_for_pr(42, requester)
 
 def test_get_issues_for_pr_caching(monkeypatch):
     _patch_action_inputs(monkeypatch)
     _patch_issues_template(monkeypatch)
 
     calls = {"count": 0}
-    class Resp:
-        def raise_for_status(self): pass
-        def json(self):
-            return {
+    class MockRequester:
+        def graphql_query(self, query, headers):
+            calls["count"] += 1
+            return headers, {
                 "data": {
                     "repository": {
                         "pullRequest": {
@@ -201,14 +195,9 @@ def test_get_issues_for_pr_caching(monkeypatch):
                 }
             }
 
-    def fake_post(*a, **k):
-        calls["count"] += 1
-        return Resp()
-
-    monkeypatch.setattr(pru.requests, "post", fake_post)
-
-    first = pru.get_issues_for_pr(900)
-    second = pru.get_issues_for_pr(900)  # should use cache
+    requester = MockRequester()
+    first = pru.get_issues_for_pr(900, requester)
+    second = pru.get_issues_for_pr(900, requester)  # should use cache
     assert first == {'OWN/REPO#9'} and second == {'OWN/REPO#9'}
     assert calls["count"] == 1  # only one network call
 
@@ -217,30 +206,24 @@ def test_get_issues_for_pr_different_numbers_not_cached(monkeypatch):
     _patch_issues_template(monkeypatch)
 
     calls = {"nums": []}
-    class Resp:
-        def __init__(self, n): self.n = n
-        def raise_for_status(self): pass
-        def json(self):
-            return {
+    class MockRequester:
+        def graphql_query(self, query, headers):
+            # Extract pull number back from formatted query tail
+            pull_num = int(query.split()[1])
+            calls["nums"].append(pull_num)
+            return headers, {
                 "data": {
                     "repository": {
                         "pullRequest": {
-                            "closingIssuesReferences": {"nodes": [{"number": self.n}]}
+                            "closingIssuesReferences": {"nodes": [{"number": pull_num}]}
                         }
                     }
                 }
             }
 
-    def fake_post(url, json=None, **k):
-        # Extract pull number back from formatted query tail
-        pull_num = int(json["query"].split()[1])
-        calls["nums"].append(pull_num)
-        return Resp(pull_num)
-
-    monkeypatch.setattr(pru.requests, "post", fake_post)
-
-    r1 = pru.get_issues_for_pr(1)
-    r2 = pru.get_issues_for_pr(2)
+    requester = MockRequester()
+    r1 = pru.get_issues_for_pr(1, requester)
+    r2 = pru.get_issues_for_pr(2, requester)
     assert r1 == {'OWN/REPO#1'}
     assert r2 == {'OWN/REPO#2'}
     assert calls["nums"] == [1, 2]
