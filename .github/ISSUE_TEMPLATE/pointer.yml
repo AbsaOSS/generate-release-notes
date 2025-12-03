@@ -1,0 +1,71 @@
+name: Pointer
+description: Track external work referenced across repositories
+labels: ["pointer"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use pointer issues to track external work (other repos, third-party tasks) impacting this domain.
+
+  - type: input
+    id: summary
+    attributes:
+      label: Summary
+      description: Short description of external work.
+      placeholder: e.g. Migration of auth service in repo X
+    validations:
+      required: true
+
+  - type: textarea
+    id: references
+    attributes:
+      label: Source / External References
+      description: List external issues/PRs/links (one per line).
+      placeholder: |
+        repo-a#123
+        repo-b#456
+        Design doc link
+    validations:
+      required: true
+
+  - type: dropdown
+    id: relationship
+    attributes:
+      label: Relationship Type
+      description: Nature of linkage
+      options:
+        - Dependency
+        - Blocking
+        - Follow-up
+        - Mirroring
+        - Audit
+        - Observability
+    validations:
+      required: true
+
+  - type: textarea
+    id: reason
+    attributes:
+      label: Reason for Tracking
+      description: Why visibility matters (release, compliance, coordination).
+      placeholder: Release impact; compliance trace; dependency risk.
+    validations:
+      required: true
+
+  - type: textarea
+    id: closure
+    attributes:
+      label: Closure Conditions
+      description: When can this pointer be closed?
+      placeholder: External PR merged + deployed + docs updated.
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other information about the pointer here.
+      placeholder: Add any other relevant context.
+    validations:
+      required: false

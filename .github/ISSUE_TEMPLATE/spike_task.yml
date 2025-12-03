@@ -1,0 +1,60 @@
+name: Spike
+description: Issue template for spikes, research and investigation tasks.
+labels: ["spike"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for research/investigation tasks. Keep scope tight.
+
+  - type: textarea
+    id: background
+    attributes:
+      label: Background
+      description: Describe the problem or topic we need to understand.
+      placeholder: Tell us what you need to research or investigate.
+    validations:
+      required: true
+
+  - type: textarea
+    id: questions
+    attributes:
+      label: Questions To Answer
+      description: List the key questions that need to be answered
+      placeholder: |
+        1. Question one
+        2. Question two
+        3. Question three
+    validations:
+      required: true
+
+  - type: textarea
+    id: desired-outcome
+    attributes:
+      label: Desired Outcome
+      description: List the desired outcomes of this spike ticket.
+      placeholder: What should be the result of this investigation?
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: tasks
+    attributes:
+      label: Tasks
+      options:
+        - label: Questions have been answered or we have a clearer idea of how to get to our goal
+        - label: Discussion with the team
+        - label: Documentation
+        - label: Create recommendations and new implementation tickets
+
+  - type: textarea
+    id: additional-info
+    attributes:
+      label: Additional Info/Resources
+      description: Optional additional information or resources
+      placeholder: |
+        1. Resource one
+        2. Resource two
+        3. Resource three
+    validations:
+      required: false

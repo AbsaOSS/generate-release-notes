@@ -1,0 +1,82 @@
+name: Bug Report
+description: Create a report to help us improve
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please supply complete reproduction details to speed up resolution.
+
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+      placeholder: Tell us what went wrong.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction-steps
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior OR commands run
+      placeholder: |
+        1. Go to '...'
+        2. Click on '....'
+        3. Enter value '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-state
+    attributes:
+      label: Expected state
+      description: A clear and concise description of what you expected to happen
+      placeholder: What should have happened?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Impact / Severity
+      description: Level of impact
+      options:
+        - Blocker
+        - High
+        - Medium
+        - Low
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Attachments / Evidence
+      description: Logs, screenshots, traces.
+      placeholder: Paste relevant excerpts.
+    validations:
+      required: false
+
+  - type: textarea
+    id: os-browser-version
+    attributes:
+      label: Desktop
+      description: What are your OS, browser, and version?
+      placeholder: |
+        OS: e.g., Windows 10, macOS 11.2, Ubuntu 20.04
+        Browser: e.g., Chrome, Safari, Firefox
+        Version: e.g., 22
+    validations:
+      required: false
+
+  - type: textarea
+    id: related
+    attributes:
+      label: Related / References
+      description: Link other issues/PRs.
+      placeholder: "#456, #789"
+    validations:
+      required: false

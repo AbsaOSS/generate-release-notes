@@ -1,0 +1,65 @@
+name: Feature Request
+description: Suggest an idea for this project.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting an improvement. Please provide clear, actionable detail.
+
+  - type: textarea
+    id: feature-description
+    attributes:
+      label: Feature Description
+      description: A clear and concise description of what you want to happen.
+      placeholder: Describe the feature you'd like to see.
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / Opportunity
+      description: What user/business problem does this solve? Who benefits?
+      placeholder: Current pain, limitation, or missed opportunity.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: Clear, testable outcomes. Use bullet points.
+      placeholder: |
+        1. User can...
+        2. API returns...
+        3. Performance within...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed Solution
+      description: High-level approach. Mention alternatives if considered.
+      placeholder: Describe the direction without full implementation detail.
+    validations:
+      required: false
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies / Related
+      description: Link related issues, epics, or external docs.
+      placeholder: "#123, #456, ADR link"
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other information or screenshots about the feature request here
+      placeholder: Add any other relevant context or screenshots
+    validations:
+      required: false
