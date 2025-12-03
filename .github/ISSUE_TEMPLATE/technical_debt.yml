@@ -1,0 +1,96 @@
+name: Technical Debt
+description: Track and address technical debt items to improve code quality, maintainability, or architecture.
+labels: ["tech debt"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template to document technical debt that should be addressed to improve long-term code health.
+
+  - type: textarea
+    id: debt-description
+    attributes:
+      label: Description of Technical Debt
+      description: What is the current state that needs improvement?
+      placeholder: Describe the technical debt (outdated dependencies, code smells, architecture issues, etc.)
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact of Technical Debt
+      description: What problems does this debt cause or risk causing?
+      placeholder: |
+        - Slows down development
+        - Increases bug risk
+        - Makes testing difficult
+        - Blocks future features
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      description: Type of technical debt
+      options:
+        - Code Quality / Refactoring
+        - Architecture / Design
+        - Dependencies / Libraries
+        - Documentation
+        - Testing / Test Coverage
+        - Performance
+        - Security
+        - DevOps / Infrastructure
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How urgent is this to address?
+      options:
+        - High - Actively causing problems
+        - Medium - Should be addressed soon
+        - Low - Nice to have
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed Solution
+      description: How should this be addressed? Include alternatives if applicable.
+      placeholder: Describe the refactoring approach, migration plan, or improvement strategy.
+    validations:
+      required: false
+
+  - type: input
+    id: effort-estimate
+    attributes:
+      label: Effort Estimate
+      description: Rough estimate of work required
+      placeholder: e.g., 1 day, 1 week, 2 sprints
+    validations:
+      required: false
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies / Related
+      description: Link related issues, epics, or documentation.
+      placeholder: "#123, #456, ADR link"
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other relevant information, links to discussions, or examples.
+      placeholder: Add code snippets, links to similar work, or other references.
+    validations:
+      required: false

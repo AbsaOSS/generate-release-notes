@@ -1,0 +1,47 @@
+name: Epic
+description: A larger task consisting of more deliverables.
+labels: ["epic"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for large initiatives with multiple child issues.
+
+  - type: textarea
+    id: background
+    attributes:
+      label: Background
+      description: High-level narrative and intended outcomes.
+      placeholder: Platform modernization initiative.
+    validations:
+      required: true
+
+  - type: textarea
+    id: goals
+    attributes:
+      label: Goals
+      description: Bullet list of measurable goals.
+      placeholder: What do we want to accomplish?
+    validations:
+      required: true
+
+  - type: textarea
+    id: subtasks
+    attributes:
+      label: Subtasks
+      description: List of planned child issues.
+      placeholder: |
+        - [ ] #123 Subtask 1
+        - [ ] #223 Subtask 2
+        - [ ] #323 Subtask 3
+    validations:
+      required: false
+
+  - type: textarea
+    id: references
+    attributes:
+      label: Related / References
+      description: Docs, ADRs, previous epics links.
+      placeholder: ADR-12 link, design doc.
+    validations:
+      required: false

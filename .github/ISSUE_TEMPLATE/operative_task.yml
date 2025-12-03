@@ -1,0 +1,55 @@
+name: Operative / Management Task
+description: General-purpose template for operational, management, and non-development tasks
+labels: ["operative"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this flexible template for operational, management, planning, or administrative tasks.
+
+  - type: input
+    id: summary
+    attributes:
+      label: Task Summary
+      description: Brief one-line description of the task
+      placeholder: e.g., Organize Q2 planning meeting, Update team guidelines.
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Detailed description of what needs to be done and why
+      placeholder: Provide context, background, and objectives for this task
+    validations:
+      required: true
+
+  - type: textarea
+    id: objectives
+    attributes:
+      label: Objectives / Goals
+      description: What are we trying to achieve?
+      placeholder: |
+        - Objective 1
+        - Objective 2
+    validations:
+      required: false
+
+  - type: input
+    id: deadline
+    attributes:
+      label: Deadline / Target Date
+      description: When should this be completed?
+      placeholder: YYYY-MM-DD or "End of Sprint 5"
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other relevant information, links, or attachments
+      placeholder: Links to documents, previous discussions, related materials
+    validations:
+      required: false

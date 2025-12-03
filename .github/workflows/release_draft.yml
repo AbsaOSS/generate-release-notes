@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-name: Release - create draft release
+name: Draft Release
 on:
   workflow_dispatch:
     inputs:
@@ -29,25 +29,25 @@ jobs:
   release-draft:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           persist-credentials: false
 
-      - uses: actions/setup-python@v5.1.1
+      - uses: actions/setup-python@v6
         with:
-          python-version: '3.11'
+          python-version: '3.13'
 
-      - name: Check format of received tag
+      - name: Check Format of Received Tag
         id: check-version-tag
         uses: AbsaOSS/version-tag-check@v0.3.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-            github-repository: ${{ github.repository }}
-            version-tag: ${{ github.event.inputs.tag-name }}
+          github-repository: ${{ github.repository }}
+          version-tag: ${{ github.event.inputs.tag-name }}
 
-      - name: Check format of received from tag
+      - name: Check Format of Received From Tag
         if: ${{ github.event.inputs.from-tag-name }}
         id: check-version-from-tag
         uses: AbsaOSS/version-tag-check@v0.3.0
@@ -60,33 +60,35 @@ jobs:
 
       - name: Generate Release Notes
         id: generate_release_notes
-        uses: AbsaOSS/generate-release-notes@master
+        uses: AbsaOSS/generate-release-notes@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag-name: ${{ github.event.inputs.tag-name }}
           chapters: |
-            - { title: No entry 🚫, label: duplicate }
-            - { title: No entry 🚫, label: no RN }
-            - { title: Breaking Changes 💥, label: breaking-change }
-            - { title: New Features 🎉, label: enhancement }
-            - { title: New Features 🎉, label: feature }
-            - { title: Bugfixes 🛠, label: bug }
-            - { title: Infrastructure ⚙️, label: infrastructure }
-            - { title: Silent-live 🤫, label: silent-live }
-            - { title: Documentation 📜, label: documentation }
-          coderabbit-support-active: 'true'
-          coderabbit-release-notes-title: 'Summary by CodeRabbit'
-          coderabbit-summary-ignore-groups: 'Documentation, Tests, Chores, Bug Fixes, Refactor'
-
-          skip-release-notes-label: 'no RN'
-          verbose: true
-
+            - {"title": "Entries to skip 🚫", "label": "duplicate"}
+            - {"title": "Entries to skip 🚫", "label": "invalid"}
+            - {"title": "Entries to skip 🚫", "label": "wontfix"}
+            - {"title": "Entries to skip 🚫", "label": "no RN"}
+            - {"title": "Breaking Changes 💥", "label": "breaking change"}
+            - {"title": "Security updates 👮", "label": "security"}
+            - {"title": "New Features 🎉", "label": "enhancement"}
+            - {"title": "Bugfixes 🛠", "label": "bug"}
+            - {"title": "Epics 📖", "label": "epic"}
+            - {"title": "Infrastructure ⚙️", "label": "infrastructure"}
+            - {"title": "Silent-live 🤫", "label": "silent live"}
+            - {"title": "Documentation 📜", "label": "documentation"}
+          duplicity-scope: 'none'
           warnings: true
-          print-empty-chapters: true
+          skip-release-notes-labels: "no RN,duplicate,invalid,wontfix"
+          print-empty-chapters: false
+          row-format-issue: '_{title}_ {developers} in {number}'
+          row-format-pr: '_{title}_ {developers} in {number}'
+          row-format-link-pr: true
+          hierarchy: true
 
       - name: Create and Push Tag
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const tag = core.getInput('tag-name')
@@ -105,7 +107,7 @@ jobs:
           tag-name: ${{ github.event.inputs.tag-name }}
 
       - name: Create Draft Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:

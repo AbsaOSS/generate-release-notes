@@ -1,0 +1,17 @@
+name: DevOps Task
+description: Issue template for a task about setting up the project. Usually not touching the codebase.
+labels: ["infrastructure"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A clear and concise description of the task to be done.
+
+  - type: textarea
+    id: task-description
+    attributes:
+      label: The task
+      description: Short description of the task
+      placeholder: Describe what needs to be done
+    validations:
+      required: true
