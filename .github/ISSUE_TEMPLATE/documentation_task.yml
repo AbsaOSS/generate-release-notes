@@ -1,0 +1,53 @@
+name: Documentation
+description: Update or create technical or operational documentation
+labels: ["documentation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Provide clear purpose and scope for the documentation update.
+
+  - type: input
+    id: summary
+    attributes:
+      label: Summary
+      description: Short description of the documentation update.
+      placeholder: e.g. Add onboarding guide for new microservice
+    validations:
+      required: true
+
+  - type: textarea
+    id: current_state
+    attributes:
+      label: Current State (If Updating)
+      description: Briefly describe existing content or gap.
+      placeholder: Existing runbook lacks failure recovery steps.
+    validations:
+      required: false
+
+  - type: textarea
+    id: proposed_changes
+    attributes:
+      label: Proposed Changes
+      description: Key additions, removals, or restructures.
+      placeholder: Add section on X; remove deprecated Y.
+    validations:
+      required: true
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies / References
+      description: Link related issues, PRs, external standards.
+      placeholder: "#123, ADR-7, compliance doc link."
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other information about the documentation update here.
+      placeholder: Add any other relevant context.
+    validations:
+      required: false
