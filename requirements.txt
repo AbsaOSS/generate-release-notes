@@ -9,5 +9,5 @@ semver==3.0.4
 mypy==1.17.1
 mypy-extensions==1.1.0
 types-requests==2.32.4.20250809
-types-PyYAML==6.0.12.20250822
+types-PyYAML==6.0.12.20250915
 PyGithub==2.8.1
