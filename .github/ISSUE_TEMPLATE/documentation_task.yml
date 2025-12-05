@@ -17,7 +17,7 @@ body:
       required: true
 
   - type: textarea
-    id: current_state
+    id: current-state
     attributes:
       label: Current State (If Updating)
       description: Briefly describe existing content or gap.
@@ -26,7 +26,7 @@ body:
       required: false
 
   - type: textarea
-    id: proposed_changes
+    id: proposed-changes
     attributes:
       label: Proposed Changes
       description: Key additions, removals, or restructures.
