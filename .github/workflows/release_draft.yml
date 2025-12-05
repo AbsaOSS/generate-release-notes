@@ -65,6 +65,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag-name: ${{ github.event.inputs.tag-name }}
+          from-tag-name: ${{ github.event.inputs.from-tag-name }}
           chapters: |
             - {"title": "Entries to skip 🚫", "label": "duplicate"}
             - {"title": "Entries to skip 🚫", "label": "invalid"}
@@ -89,9 +90,11 @@ jobs:
 
       - name: Create and Push Tag
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
+        env:
+          TAG_NAME: ${{ github.event.inputs.tag-name }}
         with:
           script: |
-            const tag = core.getInput('tag-name')
+            const tag = process.env.TAG_NAME
             const ref = `refs/tags/${tag}`;
             const sha = context.sha; // The SHA of the commit to tag
 
@@ -104,7 +107,6 @@ jobs:
 
             console.log(`Tag created: ${tag}`);
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          tag-name: ${{ github.event.inputs.tag-name }}
 
       - name: Create Draft Release
         uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b
