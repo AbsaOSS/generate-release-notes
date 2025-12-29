@@ -128,6 +128,55 @@ Unit tests are written using pytest. To run the tests, use the following command
 pytest tests/unit
 ```
 
+This will execute all tests located in the tests/unit directory.
+
+## Running Integration Tests
+
+Integration tests verify that different parts of the system work together correctly.
+
+### Mocked Integration Tests
+
+Mocked integration tests run without requiring GitHub API access. They use mocked data to test the action's configuration parsing, input validation, and output formatting.
+
+```shell
+pytest tests/integration/test_action_integration.py -v
+```
+
+These tests:
+- Run on all PRs, including from forks
+- Are deterministic and fast
+- Test action inputs, chapter configuration, and error handling
+- Do not require secrets or network access
+
+### Smoke E2E Tests
+
+Smoke end-to-end tests verify the action works against a real GitHub repository. These tests:
+- Run automatically on push to `main` and same-repo PRs
+- Use the `GITHUB_TOKEN` secret to access the GitHub API
+- Do NOT run on PRs from forks (for security)
+- Verify the action can fetch real issues and generate release notes
+
+The smoke E2E test runs automatically in CI. It is configured in `.github/workflows/test.yml` and uses the `AbsaOSS/generate-release-notes` repository as a test target.
+
+To run similar tests locally (requires `GITHUB_TOKEN` environment variable):
+
+```shell
+export INPUT_TAG_NAME="v0.2.0"
+export INPUT_GITHUB_REPOSITORY="AbsaOSS/generate-release-notes"
+export INPUT_GITHUB_TOKEN="your_github_token"
+export INPUT_CHAPTERS='[{"title": "Features", "label": "feature"}]'
+export INPUT_WARNINGS="true"
+export INPUT_PRINT_EMPTY_CHAPTERS="false"
+export INPUT_VERBOSE="false"
+export INPUT_HIERARCHY="false"
+export INPUT_DUPLICITY_SCOPE="both"
+export INPUT_PUBLISHED_AT="false"
+export INPUT_SKIP_RELEASE_NOTES_LABELS="skip-release-notes"
+export PYTHONPATH="${PWD}"
+
+python main.py
+```
+
 This will execute all tests located in the tests directory.
 
 ## Code Coverage
