@@ -1,35 +1,37 @@
 # NOTE: This workflow expects that branch protection rules require all checks to pass before merging.
 # Auto-merge will only occur if all required status checks and reviews are successful.
 
-name: Dependabot auto-approve and auto-merge
-on:
-  pull_request:
-    types: [opened, synchronize]
+# INFO: This is deactivated temporarily till final decision with Renovate is made.
 
-permissions:
-  contents: write
-  pull-requests: write
+# name: Dependabot auto-approve and auto-merge
+# on:
+#   pull_request:
+#     types: [opened, synchronize]
 
-jobs:
-  dependabot:
-    name: Auto-approve and auto-merge Dependabot PRs
-    runs-on: ubuntu-latest
-    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.repository == 'AbsaOSS/generate-release-notes'
-    steps:
-      - name: Dependabot metadata
-        id: metadata
-        uses: dependabot/fetch-metadata@08eff52bf64351f401fb50d4972fa95b9f2c2d1b
-        with:
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
-      - name: Approve a PR
-        run: gh pr review --approve "$PR_URL"
-        env:
-          PR_URL: ${{ github.event.pull_request.html_url }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Enable auto-merge for Dependabot PRs
-        if: startsWith(steps.metadata.outputs.update-type, 'version-update') || startsWith(steps.metadata.outputs.update-type, 'security')
-        run: gh pr merge --auto --squash "$PR_URL"
-        continue-on-error: true
-        env:
-          PR_URL: ${{ github.event.pull_request.html_url }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+# permissions:
+#   contents: write
+#   pull-requests: write
+
+# jobs:
+#   dependabot:
+#     name: Auto-approve and auto-merge Dependabot PRs
+#     runs-on: ubuntu-latest
+#     if: github.event.pull_request.user.login == 'dependabot[bot]' && github.repository == 'AbsaOSS/generate-release-notes'
+#     steps:
+#       - name: Dependabot metadata
+#         id: metadata
+#         uses: dependabot/fetch-metadata@08eff52bf64351f401fb50d4972fa95b9f2c2d1b
+#         with:
+#           github-token: "${{ secrets.GITHUB_TOKEN }}"
+#       - name: Approve a PR
+#         run: gh pr review --approve "$PR_URL"
+#         env:
+#           PR_URL: ${{ github.event.pull_request.html_url }}
+#           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#       - name: Enable auto-merge for Dependabot PRs
+#         if: startsWith(steps.metadata.outputs.update-type, 'version-update') || startsWith(steps.metadata.outputs.update-type, 'security')
+#         run: gh pr merge --auto --squash "$PR_URL"
+#         continue-on-error: true
+#         env:
+#           PR_URL: ${{ github.event.pull_request.html_url }}
+#           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

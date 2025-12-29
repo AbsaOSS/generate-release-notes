@@ -1,33 +1,34 @@
-version: 2
-updates:
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    target-branch: "master"
-    schedule:
-      interval: "weekly"
-      day: "sunday"
-    labels:
-      - "auto update"
-      - "infrastructure"
-      - "no RN"
-    open-pull-requests-limit: 3
-    commit-message:
-      prefix: "chore"
-      include: "scope"
+# INFO: This is deactivated temporarily till final decision with Renovate is made.
+# version: 2
+# updates:
+#   - package-ecosystem: "github-actions"
+#     directory: "/"
+#     target-branch: "master"
+#     schedule:
+#       interval: "weekly"
+#       day: "sunday"
+#     labels:
+#       - "auto update"
+#       - "infrastructure"
+#       - "no RN"
+#     open-pull-requests-limit: 3
+#     commit-message:
+#       prefix: "chore"
+#       include: "scope"
 
-  - package-ecosystem: "pip"
-    directory: "/"
-    target-branch: "master"
-    schedule:
-      interval: "weekly"
-      day: "sunday"
-    labels:
-      - "auto update"
-      - "infrastructure"
-      - "no RN"
-    open-pull-requests-limit: 3
-    commit-message:
-      prefix: "chore"
-      include: "scope"
-    allow:
-      - dependency-type: "direct"
+#   - package-ecosystem: "pip"
+#     directory: "/"
+#     target-branch: "master"
+#     schedule:
+#       interval: "weekly"
+#       day: "sunday"
+#     labels:
+#       - "auto update"
+#       - "infrastructure"
+#       - "no RN"
+#     open-pull-requests-limit: 3
+#     commit-message:
+#       prefix: "chore"
+#       include: "scope"
+#     allow:
+#       - dependency-type: "direct"
