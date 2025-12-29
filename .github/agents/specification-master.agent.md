@@ -20,7 +20,7 @@ Responsibilities
 - Provide example data, deterministic scenarios, performance budgets.
 - Coordinate with SDET to translate specs into tests.
 - Document any contract changes and rationale.
- - Own `SPEC.md`: structure, consistency, and traceability to tests and `TASKS.md`.
+  - Own `SPEC.md`: structure, consistency, and traceability to tests and `TASKS.md`.
 
 `SPEC.md` Minimum Structure
 - Overview & Scope
@@ -38,4 +38,4 @@ Collaboration
 Definition of Done
 - Unambiguous, testable acceptance criteria linked to verification scripts/tests.
 - Contract changes accompanied by test updates plan.
- - `SPEC.md` exists, is current, and references concrete tests/verification scripts.
+  - `SPEC.md` exists, is current, and references concrete tests/verification scripts.
