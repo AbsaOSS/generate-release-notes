@@ -1,6 +1,6 @@
 # Copilot Review Rules
 
-## Default review
+Default review
 
 - **Scope:** Single PR, normal risk.
 - **Priorities (in order):** correctness → security → tests → maintainability → style.
@@ -14,7 +14,7 @@
   - Reference files + line ranges where possible.
   - Do NOT rewrite the whole PR or produce long reports.
 
-## Double-check review
+Double-check review
 
 - **Scope:** Higher‑risk PRs (security, infra, money flows, wide refactors).
 - **Additional focus:**
