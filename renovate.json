@@ -1,0 +1,30 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "helpers:pinGitHubActionDigests",
+    "helpers:githubDigestChangelogs"
+  ],
+  "labels": ["dependencies"],
+  "addLabels": ["No RN", "infrastructure"],
+  "prHourlyLimit": 2,
+  "prConcurrentLimit": 10,
+  "packageRules": [
+    {
+      "description": "Group GitHub Actions updates (including digest updates)",
+      "matchManagers": ["github-actions"],
+      "groupName": "GitHub Actions",
+      "commitMessageTopic": "{{depName}}"
+    },
+    {
+      "description": "Group Python dependency updates",
+      "matchCategories": ["python"],
+      "groupName": "Python dependencies"
+    },
+    {
+      "description": "Require dashboard approval for major updates",
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true
+    }
+  ]
+}

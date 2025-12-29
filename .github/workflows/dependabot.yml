@@ -1,10 +1,13 @@
 # NOTE: This workflow expects that branch protection rules require all checks to pass before merging.
 # Auto-merge will only occur if all required status checks and reviews are successful.
 
-name: Dependabot auto-approve and auto-merge
+# INFO: This is deactivated temporarily till final decision with Renovate is made.
+
+# name: Dependabot auto-approve and auto-merge
 on:
-  pull_request:
-    types: [opened, synchronize]
+    repository_dispatch: 
+#   pull_request:
+#     types: [opened, synchronize]
 
 permissions:
   contents: write

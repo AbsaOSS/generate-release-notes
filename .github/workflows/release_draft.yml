@@ -29,18 +29,18 @@ jobs:
   release-draft:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v4
         with:
           fetch-depth: 0
           persist-credentials: false
 
-      - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548
+      - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v5
         with:
           python-version: '3.13'
 
       - name: Check Format of Received Tag
         id: check-version-tag
-        uses: AbsaOSS/version-tag-check@36496be76eab24e1f14d45d3b8292311a2aebaaa
+        uses: AbsaOSS/version-tag-check@36496be76eab24e1f14d45d3b8292311a2aebaaa # v0.3.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -50,7 +50,7 @@ jobs:
       - name: Check Format of Received From Tag
         if: ${{ github.event.inputs.from-tag-name }}
         id: check-version-from-tag
-        uses: AbsaOSS/version-tag-check@36496be76eab24e1f14d45d3b8292311a2aebaaa
+        uses: AbsaOSS/version-tag-check@36496be76eab24e1f14d45d3b8292311a2aebaaa # v0.3.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -60,7 +60,7 @@ jobs:
 
       - name: Generate Release Notes
         id: generate_release_notes
-        uses: AbsaOSS/generate-release-notes@B90223510d1704301a36a36f0d86a72a0e72f0cf
+        uses: AbsaOSS/generate-release-notes@B90223510d1704301a36a36f0d86a72a0e72f0cf # v1.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -89,7 +89,7 @@ jobs:
           hierarchy: true
 
       - name: Create and Push Tag
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v7
         env:
           TAG_NAME: ${{ github.event.inputs.tag-name }}
         with:
@@ -109,7 +109,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create Draft Release
-        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b
+        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
