@@ -135,8 +135,8 @@ jobs:
         run: |
           mypy .
 
-  integration-test:
-    name: Integration Tests (Mocked)
+  integration-tests:
+    name: Integration Tests (All Mocked)
     runs-on: ubuntu-latest
 
     defaults:
@@ -161,11 +161,11 @@ jobs:
       - name: Set PYTHONPATH environment variable
         run: echo "PYTHONPATH=${GITHUB_WORKSPACE}" >> $GITHUB_ENV
 
-      - name: Run mocked integration tests
-        run: pytest -v tests/integration/test_action_integration.py
+      - name: Run all integration tests
+        run: pytest -v tests/integration/
 
-  smoke-e2e-test:
-    name: Smoke E2E Test (Real API)
+  smoke-e2e-real-api-test:
+    name: Smoke E2E (Real GitHub API)
     runs-on: ubuntu-latest
     # Only run on PRs from same repo (not forks)
     if: github.event.pull_request.head.repo.full_name == github.repository
