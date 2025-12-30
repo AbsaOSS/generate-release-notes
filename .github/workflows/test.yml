@@ -227,10 +227,18 @@ jobs:
             exit 1
           fi
           
-          # Check for Release Notes in output (case-insensitive)
-          if grep -qi "release notes" output.txt; then
-            echo "✅ Action successfully generated release notes"
+          # Check for actual generated release notes content (markdown chapters)
+          if grep -q "^### " output.txt; then
+            echo "✅ Action successfully generated release notes with chapters"
           else
-            echo "❌ No release notes found in output"
+            echo "❌ No release notes chapters found in output"
+            exit 1
+          fi
+          
+          # Verify the action completed successfully
+          if grep -q "completed successfully" output.txt; then
+            echo "✅ Action completed successfully"
+          else
+            echo "⚠️  Warning: Action may not have completed successfully"
             exit 1
           fi
