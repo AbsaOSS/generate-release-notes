@@ -227,8 +227,8 @@ jobs:
             exit 1
           fi
           
-          # Check for actual generated release notes content (markdown chapters)
-          if grep -q "^### " output.txt; then
+          # Check for actual generated release notes content (specific markdown chapters)
+          if grep -qE '^### (Breaking Changes 💥|New Features 🎉|Bugfixes 🛠)' output.txt; then
             echo "✅ Action successfully generated release notes with chapters"
           else
             echo "❌ No release notes chapters found in output"
