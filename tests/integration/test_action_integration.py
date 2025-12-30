@@ -15,9 +15,11 @@
 #
 
 """
-Integration smoke tests for the Release Notes Generator GitHub Action.
-These tests verify that critical paths don't crash and handle errors gracefully.
-All tests use mocked GitHub APIs to ensure determinism and avoid requiring secrets.
+Integration tests for the Release Notes Generator GitHub Action configuration.
+These tests verify action input parsing, validation, and configuration handling.
+
+NOTE: For end-to-end tests that execute the full action flow (env → GitHub API → 
+markdown generation), see test_action_e2e.py.
 """
 
 import os
