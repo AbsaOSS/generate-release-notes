@@ -135,8 +135,8 @@ jobs:
         run: |
           mypy .
 
-  integration-tests:
-    name: Integration Tests (All Mocked)
+  snapshot-tests:
+    name: Snapshot Tests (Mocked)
     runs-on: ubuntu-latest
 
     defaults:
@@ -164,8 +164,8 @@ jobs:
       - name: Run all integration tests
         run: pytest -v tests/integration/
 
-  smoke-e2e-real-api-test:
-    name: Smoke E2E (Real GitHub API)
+  integration-test-real-api:
+    name: Integration Test (Real GitHub API)
     runs-on: ubuntu-latest
     # Only run on PRs from same repo (not forks)
     if: github.event.pull_request.head.repo.full_name == github.repository
@@ -192,7 +192,7 @@ jobs:
       - name: Set PYTHONPATH environment variable
         run: echo "PYTHONPATH=${GITHUB_WORKSPACE}" >> $GITHUB_ENV
 
-      - name: Run action against real repository
+      - name: Run action against real repository and validate output
         env:
           INPUT_TAG_NAME: 'v0.2.0'
           INPUT_GITHUB_REPOSITORY: 'AbsaOSS/generate-release-notes'
@@ -221,16 +221,62 @@ jobs:
           cat output.txt
           echo "=== End of Output ==="
           
-          # Check exit code
+          # Validation 1: Check exit code
           if [ $exit_code -ne 0 ]; then
             echo "❌ Action failed with exit code $exit_code"
             exit 1
           fi
+          echo "✅ Action completed with exit code 0"
           
-          # Check for actual generated release notes content (specific markdown chapters)
+          # Validation 2: Check for markdown chapter headers
           if grep -qE '^### (Breaking Changes 💥|New Features 🎉|Bugfixes 🛠)' output.txt; then
-            echo "✅ Action successfully generated release notes with chapters"
+            echo "✅ Found expected chapter headers in output"
           else
-            echo "❌ No release notes chapters found in output"
+            echo "❌ No expected chapter headers found in output"
             exit 1
           fi
+          
+          # Validation 3: Check for issue/PR references (e.g., #123)
+          if grep -qE '#[0-9]+' output.txt; then
+            echo "✅ Found issue/PR references in output"
+          else
+            echo "❌ No issue/PR references found in output"
+            exit 1
+          fi
+          
+          # Validation 4: Check for developer mentions (e.g., @username)
+          if grep -qE '@[a-zA-Z0-9_-]+' output.txt; then
+            echo "✅ Found developer mentions in output"
+          else
+            echo "❌ No developer mentions found in output"
+            exit 1
+          fi
+          
+          # Validation 5: Check for completion message
+          if grep -q "completed successfully" output.txt; then
+            echo "✅ Found completion success message in logs"
+          else
+            echo "❌ No completion success message found in logs"
+            exit 1
+          fi
+          
+          # Validation 6: Check for DEBUG log level (verbose mode)
+          if grep -q "DEBUG" output.txt; then
+            echo "✅ Verbose logging is working (DEBUG level found)"
+          else
+            echo "❌ No DEBUG log messages found (verbose mode may not be working)"
+            exit 1
+          fi
+          
+          # Validation 7: Verify generated release notes block
+          if grep -q "Generated release notes:" output.txt; then
+            echo "✅ Found 'Generated release notes:' marker in output"
+          else
+            echo "❌ No 'Generated release notes:' marker found"
+            exit 1
+          fi
+          
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✅ All smoke E2E validations passed!"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

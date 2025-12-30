@@ -132,41 +132,47 @@ This will execute all tests located in the tests/unit directory.
 
 ## Running Integration Tests
 
-Integration tests verify that different parts of the system work together correctly.
+Integration tests verify the complete action workflow from input to output using real GitHub API data.
 
-### Mocked Integration Tests
+### Snapshot Tests (Mocked)
 
-Mocked integration tests run without requiring GitHub API access. They use mocked data to test the action's configuration parsing, input validation, and output formatting.
+Snapshot tests validate chapter population and markdown generation logic using mock data. They run on all PRs without requiring secrets.
 
 ```shell
-pytest tests/integration/test_action_integration.py -v
+pytest tests/integration/ -v
 ```
 
 These tests:
 - Run on all PRs, including from forks
-- Are deterministic and fast
-- Test action inputs, chapter configuration, and error handling
+- Are deterministic and fast (<1 second)
+- Test chapter population and backward compatibility
 - Do not require secrets or network access
 
-### Smoke E2E Tests
+### Integration Test (Real GitHub API)
 
-Smoke end-to-end tests verify the action works against a real GitHub repository. These tests:
-- Run automatically on same-repo PRs (NOT on forks for security)
-- Use the `GITHUB_TOKEN` secret to access the GitHub API
-- Verify the action can fetch real issues and generate release notes
-- Run with verbose/debug logging enabled to validate output
+The integration test runs the complete action flow against a real GitHub repository to validate end-to-end functionality.
 
-The smoke E2E test runs automatically in CI as a PR check. It is configured in `.github/workflows/test.yml` and uses the `AbsaOSS/generate-release-notes` repository as a test target. The test validates:
-1. The action exits with code 0 (success)
-2. The output contains "Release Notes" text
+**When it runs:**
+- Automatically on same-repo PRs (NOT on forks for security)
+- Uses the `GITHUB_TOKEN` secret to access the GitHub API
+- Configured in `.github/workflows/test.yml` as the `integration-test-real-api` job
 
-To run similar tests locally (requires `GITHUB_TOKEN` environment variable):
+**What it validates:**
+1. ✅ Action exits with code 0 (success)
+2. ✅ Output contains expected markdown chapter headers (e.g., `### New Features 🎉`)
+3. ✅ Output contains issue/PR references (e.g., `#123`)
+4. ✅ Output contains developer mentions (e.g., `@username`)
+5. ✅ Logs include "completed successfully" message
+6. ✅ Verbose logging is working (DEBUG level found)
+7. ✅ Output contains "Generated release notes:" marker
+
+**To run locally** (requires `GITHUB_TOKEN` environment variable):
 
 ```shell
 export INPUT_TAG_NAME="v0.2.0"
 export INPUT_GITHUB_REPOSITORY="AbsaOSS/generate-release-notes"
 export INPUT_GITHUB_TOKEN="your_github_token"
-export INPUT_CHAPTERS='[{"title": "Features", "label": "feature"}]'
+export INPUT_CHAPTERS='[{"title": "Features 🎉", "label": "feature"}, {"title": "Bugfixes 🛠", "label": "bug"}]'
 export INPUT_WARNINGS="true"
 export INPUT_PRINT_EMPTY_CHAPTERS="false"
 export INPUT_VERBOSE="true"
