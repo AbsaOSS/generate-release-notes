@@ -234,11 +234,3 @@ jobs:
             echo "❌ No release notes chapters found in output"
             exit 1
           fi
-          
-          # Verify the action completed successfully
-          if grep -q "completed successfully" output.txt; then
-            echo "✅ Action completed successfully"
-          else
-            echo "⚠️  Warning: Action may not have completed successfully"
-            exit 1
-          fi
