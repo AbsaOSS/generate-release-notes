@@ -23,7 +23,6 @@ All tests use mocked GitHub APIs to ensure determinism and avoid requiring secre
 import os
 import json
 import pytest
-from unittest import mock
 
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.chapters.custom_chapters import CustomChapters
@@ -59,39 +58,39 @@ def base_env_vars():
     }
 
 
-def test_action_inputs_parsing(base_env_vars):
+def test_action_inputs_parsing(base_env_vars, mocker):
     """
     Test that action inputs are correctly parsed from environment variables.
     This is a critical integration point that must work for the action to function.
     """
-    with mock.patch.dict(os.environ, base_env_vars, clear=False):
-        assert ActionInputs.get_tag_name() == "v1.0.0"
-        assert ActionInputs.get_github_repository() == "test-owner/test-repo"
-        assert ActionInputs.get_github_token() == "mock_token_for_testing"
-        assert ActionInputs.get_warnings() is True
-        assert ActionInputs.get_print_empty_chapters() is False
-        assert ActionInputs.get_verbose() is False
-        assert ActionInputs.get_hierarchy() is False
+    mocker.patch.dict(os.environ, base_env_vars, clear=False)
+    assert ActionInputs.get_tag_name() == "v1.0.0"
+    assert ActionInputs.get_github_repository() == "test-owner/test-repo"
+    assert ActionInputs.get_github_token() == "mock_token_for_testing"
+    assert ActionInputs.get_warnings() is True
+    assert ActionInputs.get_print_empty_chapters() is False
+    assert ActionInputs.get_verbose() is False
+    assert ActionInputs.get_hierarchy() is False
 
 
-def test_chapters_configuration_parsing(base_env_vars):
+def test_chapters_configuration_parsing(base_env_vars, mocker):
     """
     Test that chapter configuration is correctly parsed from YAML input.
     Validates the action can handle different chapter configurations.
     """
-    with mock.patch.dict(os.environ, base_env_vars, clear=False):
-        chapters_config = ActionInputs.get_chapters()
-        custom_chapters = CustomChapters(print_empty_chapters=False).from_yaml_array(chapters_config)
-        
-        assert custom_chapters is not None
-        assert len(custom_chapters.chapters) == 2
-        # Check chapter titles exist (handle unicode escaping)
-        chapter_titles = list(custom_chapters.chapters.keys())
-        assert any("Features" in title for title in chapter_titles)
-        assert any("Bug Fixes" in title for title in chapter_titles)
+    mocker.patch.dict(os.environ, base_env_vars, clear=False)
+    chapters_config = ActionInputs.get_chapters()
+    custom_chapters = CustomChapters(print_empty_chapters=False).from_yaml_array(chapters_config)
+    
+    assert custom_chapters is not None
+    assert len(custom_chapters.chapters) == 2
+    # Check chapter titles exist (handle unicode escaping)
+    chapter_titles = list(custom_chapters.chapters.keys())
+    assert any("Features" in title for title in chapter_titles)
+    assert any("Bug Fixes" in title for title in chapter_titles)
 
 
-def test_chapters_with_multiple_labels(base_env_vars):
+def test_chapters_with_multiple_labels(base_env_vars, mocker):
     """
     Test chapter configuration with multiple labels per chapter.
     """
@@ -103,49 +102,54 @@ def test_chapters_with_multiple_labels(base_env_vars):
         ])
     }
     
-    with mock.patch.dict(os.environ, multi_label_config, clear=False):
-        chapters_config = ActionInputs.get_chapters()
-        custom_chapters = CustomChapters(print_empty_chapters=False).from_yaml_array(chapters_config)
-        
-        assert len(custom_chapters.chapters) == 2
-        assert "Changes" in custom_chapters.chapters
-        assert "Platform" in custom_chapters.chapters
+    mocker.patch.dict(os.environ, multi_label_config, clear=False)
+    chapters_config = ActionInputs.get_chapters()
+    custom_chapters = CustomChapters(print_empty_chapters=False).from_yaml_array(chapters_config)
+    
+    assert len(custom_chapters.chapters) == 2
+    assert "Changes" in custom_chapters.chapters
+    assert "Platform" in custom_chapters.chapters
 
 
-def test_invalid_duplicity_scope_handling(base_env_vars):
+def test_invalid_duplicity_scope_handling(base_env_vars, mocker, caplog):
     """
     Test that invalid duplicity scope values are logged as errors.
     """
+    import logging
+    
     invalid_config = {
         **base_env_vars,
         "INPUT_DUPLICITY_SCOPE": "invalid_value"
     }
     
-    with mock.patch.dict(os.environ, invalid_config, clear=False):
+    mocker.patch.dict(os.environ, invalid_config, clear=False)
+    with caplog.at_level(logging.ERROR):
         # Should log error but not raise (validation doesn't raise for duplicity scope)
         ActionInputs.validate_inputs()
-        # Just verify the function completes without crashing
-        assert True
+        
+        # Verify that an error was logged for invalid duplicity scope
+        assert any("INVALID_VALUE" in record.message or "not a valid DuplicityType" in record.message 
+                  for record in caplog.records), "Expected error log for invalid duplicity scope"
 
 
-def test_row_format_validation(base_env_vars):
+def test_row_format_validation(base_env_vars, mocker):
     """
     Test that row format templates are validated correctly.
     """
-    with mock.patch.dict(os.environ, base_env_vars, clear=False):
-        # Valid formats should not raise
-        ActionInputs.validate_inputs()
-        
-        hierarchy_format = ActionInputs.get_row_format_hierarchy_issue()
-        issue_format = ActionInputs.get_row_format_issue()
-        pr_format = ActionInputs.get_row_format_pr()
-        
-        assert "{type}" in hierarchy_format or "{title}" in hierarchy_format
-        assert "{number}" in issue_format or "{title}" in issue_format
-        assert "{number}" in pr_format or "{title}" in pr_format
+    mocker.patch.dict(os.environ, base_env_vars, clear=False)
+    # Valid formats should not raise
+    ActionInputs.validate_inputs()
+    
+    hierarchy_format = ActionInputs.get_row_format_hierarchy_issue()
+    issue_format = ActionInputs.get_row_format_issue()
+    pr_format = ActionInputs.get_row_format_pr()
+    
+    assert "{type}" in hierarchy_format or "{title}" in hierarchy_format
+    assert "{number}" in issue_format or "{title}" in issue_format
+    assert "{number}" in pr_format or "{title}" in pr_format
 
 
-def test_empty_chapters_yaml(base_env_vars):
+def test_empty_chapters_yaml(base_env_vars, mocker):
     """
     Test handling of empty chapters configuration.
     """
@@ -154,16 +158,16 @@ def test_empty_chapters_yaml(base_env_vars):
         "INPUT_CHAPTERS": ""
     }
     
-    with mock.patch.dict(os.environ, empty_config, clear=False):
-        chapters_config = ActionInputs.get_chapters()
-        custom_chapters = CustomChapters(print_empty_chapters=False).from_yaml_array(chapters_config)
-        
-        # Should create empty chapters dict
-        assert custom_chapters is not None
-        assert len(custom_chapters.chapters) == 0
+    mocker.patch.dict(os.environ, empty_config, clear=False)
+    chapters_config = ActionInputs.get_chapters()
+    custom_chapters = CustomChapters(print_empty_chapters=False).from_yaml_array(chapters_config)
+    
+    # Should create empty chapters dict
+    assert custom_chapters is not None
+    assert len(custom_chapters.chapters) == 0
 
 
-def test_verbose_mode_activation(base_env_vars):
+def test_verbose_mode_activation(base_env_vars, mocker):
     """
     Test that verbose mode can be activated via input.
     """
@@ -172,20 +176,20 @@ def test_verbose_mode_activation(base_env_vars):
         **base_env_vars,
         "INPUT_VERBOSE": "true"
     }
-    with mock.patch.dict(os.environ, verbose_config, clear=False):
-        assert ActionInputs.get_verbose() is True
+    mocker.patch.dict(os.environ, verbose_config, clear=False)
+    assert ActionInputs.get_verbose() is True
     
     # Test VERBOSE false
     normal_config = {
         **base_env_vars,
         "INPUT_VERBOSE": "false"
     }
-    with mock.patch.dict(os.environ, normal_config, clear=False):
-        # Verbose is False unless explicitly set
-        assert ActionInputs.get_verbose() is False
+    mocker.patch.dict(os.environ, normal_config, clear=False)
+    # Verbose is False unless explicitly set
+    assert ActionInputs.get_verbose() is False
 
 
-def test_skip_release_notes_labels_parsing(base_env_vars):
+def test_skip_release_notes_labels_parsing(base_env_vars, mocker):
     """
     Test parsing of skip-release-notes labels configuration.
     """
@@ -194,32 +198,32 @@ def test_skip_release_notes_labels_parsing(base_env_vars):
         "INPUT_SKIP_RELEASE_NOTES_LABELS": "skip-release-notes, ignore-in-release, wip"
     }
     
-    with mock.patch.dict(os.environ, multi_skip_config, clear=False):
-        skip_labels = ActionInputs.get_skip_release_notes_labels()
-        
-        assert len(skip_labels) == 3
-        assert "skip-release-notes" in skip_labels
-        assert "ignore-in-release" in skip_labels
-        assert "wip" in skip_labels
+    mocker.patch.dict(os.environ, multi_skip_config, clear=False)
+    skip_labels = ActionInputs.get_skip_release_notes_labels()
+    
+    assert len(skip_labels) == 3
+    assert "skip-release-notes" in skip_labels
+    assert "ignore-in-release" in skip_labels
+    assert "wip" in skip_labels
 
 
-def test_deterministic_chapter_order(base_env_vars):
+def test_deterministic_chapter_order(base_env_vars, mocker):
     """
     Test that chapter order is preserved from configuration.
     This ensures deterministic output ordering.
     """
-    with mock.patch.dict(os.environ, base_env_vars, clear=False):
-        chapters_config = ActionInputs.get_chapters()
-        custom_chapters = CustomChapters(print_empty_chapters=False).from_yaml_array(chapters_config)
-        
-        chapter_titles = list(custom_chapters.chapters.keys())
-        
-        # Order should match the input configuration (handle unicode)
-        assert "Features" in chapter_titles[0]
-        assert "Bug Fixes" in chapter_titles[1]
+    mocker.patch.dict(os.environ, base_env_vars, clear=False)
+    chapters_config = ActionInputs.get_chapters()
+    custom_chapters = CustomChapters(print_empty_chapters=False).from_yaml_array(chapters_config)
+    
+    chapter_titles = list(custom_chapters.chapters.keys())
+    
+    # Order should match the input configuration (handle unicode)
+    assert "Features" in chapter_titles[0]
+    assert "Bug Fixes" in chapter_titles[1]
 
 
-def test_coderabbit_configuration(base_env_vars):
+def test_coderabbit_configuration(base_env_vars, mocker):
     """
     Test CodeRabbit support configuration parsing.
     """
@@ -230,9 +234,9 @@ def test_coderabbit_configuration(base_env_vars):
         "INPUT_CODERABBIT_SUMMARY_IGNORE_GROUPS": "group1, group2"
     }
     
-    with mock.patch.dict(os.environ, coderabbit_config, clear=False):
-        assert ActionInputs.is_coderabbit_support_active() is True
-        assert ActionInputs.get_coderabbit_release_notes_title() == "AI Summary"
-        ignore_groups = ActionInputs.get_coderabbit_summary_ignore_groups()
-        assert "group1" in ignore_groups
-        assert "group2" in ignore_groups
+    mocker.patch.dict(os.environ, coderabbit_config, clear=False)
+    assert ActionInputs.is_coderabbit_support_active() is True
+    assert ActionInputs.get_coderabbit_release_notes_title() == "AI Summary"
+    ignore_groups = ActionInputs.get_coderabbit_summary_ignore_groups()
+    assert "group1" in ignore_groups
+    assert "group2" in ignore_groups
