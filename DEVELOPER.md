@@ -151,12 +151,14 @@ These tests:
 ### Smoke E2E Tests
 
 Smoke end-to-end tests verify the action works against a real GitHub repository. These tests:
-- Run automatically on push to `main` and same-repo PRs
+- Run automatically on same-repo PRs (NOT on forks for security)
 - Use the `GITHUB_TOKEN` secret to access the GitHub API
-- Do NOT run on PRs from forks (for security)
 - Verify the action can fetch real issues and generate release notes
+- Run with verbose/debug logging enabled to validate output
 
-The smoke E2E test runs automatically in CI. It is configured in `.github/workflows/test.yml` and uses the `AbsaOSS/generate-release-notes` repository as a test target.
+The smoke E2E test runs automatically in CI as a PR check. It is configured in `.github/workflows/test.yml` and uses the `AbsaOSS/generate-release-notes` repository as a test target. The test validates:
+1. The action exits with code 0 (success)
+2. The output contains "Release Notes" text
 
 To run similar tests locally (requires `GITHUB_TOKEN` environment variable):
 
@@ -167,7 +169,7 @@ export INPUT_GITHUB_TOKEN="your_github_token"
 export INPUT_CHAPTERS='[{"title": "Features", "label": "feature"}]'
 export INPUT_WARNINGS="true"
 export INPUT_PRINT_EMPTY_CHAPTERS="false"
-export INPUT_VERBOSE="false"
+export INPUT_VERBOSE="true"
 export INPUT_HIERARCHY="false"
 export INPUT_DUPLICITY_SCOPE="both"
 export INPUT_PUBLISHED_AT="false"
@@ -176,8 +178,6 @@ export PYTHONPATH="${PWD}"
 
 python main.py
 ```
-
-This will execute all tests located in the tests directory.
 
 ## Code Coverage
 

@@ -20,9 +20,6 @@ on:
     branches:
       - '**'
     types: [ opened, synchronize, reopened ]
-  push:
-    branches:
-      - main
 
 jobs:
   static-code-analysis:
@@ -170,8 +167,8 @@ jobs:
   smoke-e2e-test:
     name: Smoke E2E Test (Real API)
     runs-on: ubuntu-latest
-    # Only run on push to main or PRs from same repo (not forks)
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    # Only run on PRs from same repo (not forks)
+    if: github.event.pull_request.head.repo.full_name == github.repository
 
     defaults:
       run:
@@ -209,21 +206,31 @@ jobs:
             ]
           INPUT_WARNINGS: 'true'
           INPUT_PRINT_EMPTY_CHAPTERS: 'false'
-          INPUT_VERBOSE: 'false'
+          INPUT_VERBOSE: 'true'
           INPUT_HIERARCHY: 'false'
           INPUT_DUPLICITY_SCOPE: 'both'
           INPUT_PUBLISHED_AT: 'false'
           INPUT_SKIP_RELEASE_NOTES_LABELS: 'skip-release-notes'
         run: |
-          # Run the action and capture output
-          python main.py > output.txt 2>&1 || true
+          # Run the action with verbose/debug logging
+          python main.py > output.txt 2>&1
+          exit_code=$?
           
-          # Check exit code and output
-          if [ -s output.txt ]; then
-            echo "✅ Action produced output"
-            echo "Output preview:"
-            head -n 20 output.txt
+          # Display output for debugging
+          echo "=== Action Output ==="
+          cat output.txt
+          echo "=== End of Output ==="
+          
+          # Check exit code
+          if [ $exit_code -ne 0 ]; then
+            echo "❌ Action failed with exit code $exit_code"
+            exit 1
+          fi
+          
+          # Check for Release Notes in output (case-insensitive)
+          if grep -qi "release notes" output.txt; then
+            echo "✅ Action successfully generated release notes"
           else
-            echo "❌ Action produced no output"
+            echo "❌ No release notes found in output"
             exit 1
           fi
