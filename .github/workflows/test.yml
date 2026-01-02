@@ -275,8 +275,3 @@ jobs:
             echo "❌ No 'Generated release notes:' marker found"
             exit 1
           fi
-          
-          echo ""
-          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "✅ All smoke E2E validations passed!"
-          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

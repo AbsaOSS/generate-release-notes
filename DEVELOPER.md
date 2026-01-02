@@ -4,8 +4,11 @@
 - [Run Static Code Analysis](#running-static-code-analysis)
 - [Run Black Tool Locally](#run-black-tool-locally)
 - [Run mypy Tool Locally](#run-mypy-tool-locally)
-- [Run Unit Test](#running-unit-test)
+- [Running Unit Test](#running-unit-test)
+- [Running Integration Tests](#running-integration-tests)
+- [Code Coverage](#code-coverage)
 - [Run Action Locally](#run-action-locally)
+- [Branch Naming Convention (PID:H-1)](#branch-naming-convention-pidh-1)
 
 ## Get Started
 
@@ -158,13 +161,13 @@ The integration test runs the complete action flow against a real GitHub reposit
 - Configured in `.github/workflows/test.yml` as the `integration-test-real-api` job
 
 **What it validates:**
-1. ✅ Action exits with code 0 (success)
-2. ✅ Output contains expected markdown chapter headers (e.g., `### New Features 🎉`)
-3. ✅ Output contains issue/PR references (e.g., `#123`)
-4. ✅ Output contains developer mentions (e.g., `@username`)
-5. ✅ Logs include "completed successfully" message
-6. ✅ Verbose logging is working (DEBUG level found)
-7. ✅ Output contains "Generated release notes:" marker
+1. Action exits with code 0 (success)
+2. Output contains expected markdown chapter headers (e.g., `### New Features 🎉`)
+3. Output contains issue/PR references (e.g., `#123`)
+4. Output contains developer mentions (e.g., `@username`)
+5. Logs include "completed successfully" message
+6. Verbose logging is working (DEBUG level found)
+7. Output contains "Generated release notes:" marker
 
 **To run locally** (requires `GITHUB_TOKEN` environment variable):
 
