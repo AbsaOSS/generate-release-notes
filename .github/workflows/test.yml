@@ -224,58 +224,45 @@ jobs:
           echo "=== Action Output ==="
           cat output.txt
           echo "=== End of Output ==="
-          
+
+          problems=()
+
           # Validation 1: Check exit code
           if [ $exit_code -ne 0 ]; then
-            echo "❌ Action failed with exit code $exit_code"
-            exit 1
+            problems+=("action exit code was $exit_code")
           fi
-          echo "✅ Action completed with exit code 0"
-          
+
           # Validation 2: Check for markdown chapter headers
-          if grep -qE '^### (Breaking Changes 💥|New Features 🎉|Bugfixes 🛠)' output.txt; then
-            echo "✅ Found expected chapter headers in output"
-          else
-            echo "❌ No expected chapter headers found in output"
-            exit 1
+          if ! grep -qE '^### (Breaking Changes 💥|New Features 🎉|Bugfixes 🛠)' output.txt; then
+            problems+=("missing expected chapter headers")
           fi
-          
+
           # Validation 3: Check for issue/PR references (e.g., #123)
-          if grep -qE '#[0-9]+' output.txt; then
-            echo "✅ Found issue/PR references in output"
-          else
-            echo "❌ No issue/PR references found in output"
-            exit 1
+          if ! grep -qE '#[0-9]+' output.txt; then
+            problems+=("missing issue/PR references")
           fi
-          
+
           # Validation 4: Check for developer mentions (e.g., @username)
-          if grep -qE '@[a-zA-Z0-9_-]+' output.txt; then
-            echo "✅ Found developer mentions in output"
-          else
-            echo "❌ No developer mentions found in output"
-            exit 1
+          if ! grep -qE '@[a-zA-Z0-9_-]+' output.txt; then
+            problems+=("missing developer mentions")
           fi
-          
+
           # Validation 5: Check for completion message
-          if grep -q "completed successfully" output.txt; then
-            echo "✅ Found completion success message in logs"
-          else
-            echo "❌ No completion success message found in logs"
-            exit 1
+          if ! grep -q "completed successfully" output.txt; then
+            problems+=("missing completion success message")
           fi
-          
+
           # Validation 6: Check for DEBUG log level (verbose mode)
-          if grep -q "DEBUG" output.txt; then
-            echo "✅ Verbose logging is working (DEBUG level found)"
-          else
-            echo "❌ No DEBUG log messages found (verbose mode may not be working)"
-            exit 1
+          if ! grep -q "DEBUG" output.txt; then
+            problems+=("missing DEBUG logs (verbose mode may not be working)")
           fi
-          
+
           # Validation 7: Verify generated release notes block
-          if grep -q "Generated release notes:" output.txt; then
-            echo "✅ Found 'Generated release notes:' marker in output"
-          else
-            echo "❌ No 'Generated release notes:' marker found"
+          if ! grep -q "Generated release notes:" output.txt; then
+            problems+=("missing 'Generated release notes:' marker")
+          fi
+
+          if [ ${#problems[@]} -ne 0 ]; then
+            echo "❌ Integration test validation failed: ${problems[*]}"
             exit 1
           fi
