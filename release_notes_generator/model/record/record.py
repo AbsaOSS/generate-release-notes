@@ -196,17 +196,15 @@ class Record(metaclass=ABCMeta):
 
         Parameters:
             chapter_id (str): The unique identifier of the chapter.
-
-        Returns:
-            None
         """
         self._present_in_chapters.add(chapter_id)
 
     def present_in_chapters(self) -> int:
         """
         Gets the count of unique chapters in which the record is present.
+
         Returns:
-            int: The count of unique chapters in which the record is present.
+            int: The count of unique chapters containing this record.
         """
         return len(self._present_in_chapters)
 
