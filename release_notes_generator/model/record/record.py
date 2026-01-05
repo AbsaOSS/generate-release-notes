@@ -37,7 +37,7 @@ class Record(metaclass=ABCMeta):
     RELEASE_NOTE_LINE_MARKS: list[str] = ["-", "*", "+"]
 
     def __init__(self, labels: Optional[list[str]] = None, skip: bool = False):
-        self._present_in_chapters = 0
+        self._present_in_chapters: set[str] = set()
         self._skip = skip
         self._is_cross_repo: bool = False
         self._is_release_note_detected: Optional[bool] = None
@@ -52,7 +52,7 @@ class Record(metaclass=ABCMeta):
         Returns:
             bool: True if the record is present in at least one chapter, False otherwise.
         """
-        return self._present_in_chapters > 0
+        return len(self._present_in_chapters) > 0
 
     @property
     def is_cross_repo(self) -> bool:
@@ -190,21 +190,25 @@ class Record(metaclass=ABCMeta):
 
     # shared methods
 
-    def added_into_chapters(self) -> None:
+    def added_into_chapters(self, chapter_id: str) -> None:
         """
-        Increments the count of chapters in which the record is present.
-        Returns: None
+        Adds a chapter identifier to track which chapters contain this record.
+
+        Parameters:
+            chapter_id (str): The unique identifier of the chapter.
+
+        Returns:
+            None
         """
-        # TODO - fix in #191
-        self._present_in_chapters += 1
+        self._present_in_chapters.add(chapter_id)
 
     def present_in_chapters(self) -> int:
         """
-        Gets the count of chapters in which the record is present.
+        Gets the count of unique chapters in which the record is present.
         Returns:
-            int: The count of chapters in which the record is present.
+            int: The count of unique chapters in which the record is present.
         """
-        return self._present_in_chapters
+        return len(self._present_in_chapters)
 
     def contains_min_one_label(self, labels: list[str]) -> bool:
         """

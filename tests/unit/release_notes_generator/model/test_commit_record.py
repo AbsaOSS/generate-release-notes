@@ -34,7 +34,11 @@ def test_to_chapter_row_duplicate_with_icon(monkeypatch, mock_commit):
         lambda: "[D]",
     )
     rec = CommitRecord(mock_commit)
+    # Simulate adding to first chapter
+    rec.added_into_chapters("chapter1")
     first = rec.to_chapter_row(True)
+    # Simulate adding to second chapter
+    rec.added_into_chapters("chapter2")
     second = rec.to_chapter_row(True)
     assert not first.startswith("[D] ")
     assert second.startswith("[D] ")
