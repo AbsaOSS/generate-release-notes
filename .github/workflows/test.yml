@@ -227,37 +227,37 @@ jobs:
 
           problems=()
 
-          # Validation 1: Check exit code
+          # Check exit code
           if [ $exit_code -ne 0 ]; then
             problems+=("action exit code was $exit_code")
           fi
 
-          # Validation 2: Check for markdown chapter headers
+          # Check for markdown chapter headers
           if ! grep -qE '^### (Breaking Changes 💥|New Features 🎉|Bugfixes 🛠)' output.txt; then
             problems+=("missing expected chapter headers")
           fi
 
-          # Validation 3: Check for issue/PR references (e.g., #123)
+          # Check for issue/PR references (e.g., #123)
           if ! grep -qE '#[0-9]+' output.txt; then
             problems+=("missing issue/PR references")
           fi
 
-          # Validation 4: Check for developer mentions (e.g., @username)
+          # Check for developer mentions (e.g., @username)
           if ! grep -qE '@[a-zA-Z0-9_-]+' output.txt; then
             problems+=("missing developer mentions")
           fi
 
-          # Validation 5: Check for completion message
+          # Check for completion message
           if ! grep -q "completed successfully" output.txt; then
             problems+=("missing completion success message")
           fi
 
-          # Validation 6: Check for DEBUG log level (verbose mode)
+          # Check for DEBUG log level (verbose mode)
           if ! grep -q "DEBUG" output.txt; then
             problems+=("missing DEBUG logs (verbose mode may not be working)")
           fi
 
-          # Validation 7: Verify generated release notes block
+          # Check for generated release notes block
           if ! grep -q "Generated release notes:" output.txt; then
             problems+=("missing 'Generated release notes:' marker")
           fi
