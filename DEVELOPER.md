@@ -4,8 +4,11 @@
 - [Run Static Code Analysis](#running-static-code-analysis)
 - [Run Black Tool Locally](#run-black-tool-locally)
 - [Run mypy Tool Locally](#run-mypy-tool-locally)
-- [Run Unit Test](#running-unit-test)
+- [Running Unit Test](#running-unit-test)
+- [Running Integration Tests](#running-integration-tests)
+- [Code Coverage](#code-coverage)
 - [Run Action Locally](#run-action-locally)
+- [Branch Naming Convention (PID:H-1)](#branch-naming-convention-pidh-1)
 
 ## Get Started
 
@@ -128,7 +131,62 @@ Unit tests are written using pytest. To run the tests, use the following command
 pytest tests/unit
 ```
 
-This will execute all tests located in the tests directory.
+This will execute all tests located in the tests/unit directory.
+
+## Running Integration Tests
+
+Integration tests verify the complete action workflow from input to output using real GitHub API data.
+
+### Snapshot Tests (Mocked)
+
+Snapshot tests validate chapter population and markdown generation logic using mock data. They run on all PRs without requiring secrets.
+
+```shell
+pytest tests/integration/ -v
+```
+
+These tests:
+- Run on all PRs, including from forks
+- Are deterministic and fast (<1 second)
+- Test chapter population and backward compatibility
+- Do not require secrets or network access
+
+### Integration Test (Real GitHub API)
+
+The integration test runs the complete action flow against a real GitHub repository to validate end-to-end functionality.
+
+**When it runs:**
+- Automatically on same-repo PRs (NOT on forks for security)
+- Uses the `GITHUB_TOKEN` secret to access the GitHub API
+- Configured in `.github/workflows/test.yml` as the `integration-test-real-api` job
+
+**What it validates:**
+1. Action exits with code 0 (success)
+2. Output contains expected markdown chapter headers (e.g., `### New Features 🎉`)
+3. Output contains issue/PR references (e.g., `#123`)
+4. Output contains developer mentions (e.g., `@username`)
+5. Logs include "completed successfully" message
+6. Verbose logging is working (DEBUG level found)
+7. Output contains "Generated release notes:" marker
+
+**To run locally** (requires `GITHUB_TOKEN` environment variable):
+
+```shell
+export INPUT_TAG_NAME="v0.2.0"
+export INPUT_GITHUB_REPOSITORY="AbsaOSS/generate-release-notes"
+export INPUT_GITHUB_TOKEN="your_github_token"
+export INPUT_CHAPTERS='[{"title": "Features 🎉", "label": "feature"}, {"title": "Bugfixes 🛠", "label": "bug"}]'
+export INPUT_WARNINGS="true"
+export INPUT_PRINT_EMPTY_CHAPTERS="false"
+export INPUT_VERBOSE="true"
+export INPUT_HIERARCHY="false"
+export INPUT_DUPLICITY_SCOPE="both"
+export INPUT_PUBLISHED_AT="false"
+export INPUT_SKIP_RELEASE_NOTES_LABELS="skip-release-notes"
+export PYTHONPATH="${PWD}"
+
+python main.py
+```
 
 ## Code Coverage
 
