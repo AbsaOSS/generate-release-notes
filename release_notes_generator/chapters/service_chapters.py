@@ -54,7 +54,6 @@ class ServiceChapters(BaseChapters):
         self,
         sort_ascending: bool = True,
         print_empty_chapters: bool = True,
-        *,
         user_defined_labels: Optional[list[str]] = None,
         used_record_numbers: Optional[list[int | str]] = None,
         hidden_chapters: Optional[list[str]] = None,

@@ -54,6 +54,7 @@ failure_cases = [
     ("get_release_notes_title", "", "Release Notes title must be a non-empty string and have non-zero length."),
     ("get_coderabbit_release_notes_title", "", "CodeRabbit Release Notes title must be a non-empty string and have non-zero length."),
     ("get_coderabbit_summary_ignore_groups", [""], "CodeRabbit summary ignore groups must be a non-empty string and have non-zero length."),
+    ("get_hidden_service_chapters", [""], "Hidden service chapters must be a non-empty string and have non-zero length."),
     ("get_hierarchy", "not_bool", "Hierarchy must be a boolean."),
 ]
 
