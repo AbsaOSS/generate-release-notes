@@ -427,11 +427,6 @@ class ActionInputs:
         warnings = ActionInputs.get_warnings()
         ActionInputs.validate_input(warnings, bool, "Warnings must be a boolean.", errors)
 
-        hidden_service_chapters = ActionInputs.get_hidden_service_chapters()
-        for chapter_title in hidden_service_chapters:
-            if not isinstance(chapter_title, str) or len(chapter_title) == 0:
-                errors.append("Hidden service chapters must be a non-empty string and have non-zero length.")
-
         published_at = ActionInputs.get_published_at()
         ActionInputs.validate_input(published_at, bool, "Published at must be a boolean.", errors)
 
@@ -499,7 +494,7 @@ class ActionInputs:
         logger.debug("Skip release notes labels: %s", ActionInputs.get_skip_release_notes_labels())
         logger.debug("Verbose logging: %s", verbose)
         logger.debug("Warnings: %s", warnings)
-        logger.debug("Hidden service chapters: %s", hidden_service_chapters)
+        logger.debug("Hidden service chapters: %s", ActionInputs.get_hidden_service_chapters())
         logger.debug("Print empty chapters: %s", print_empty_chapters)
         logger.debug("Release notes title: %s", release_notes_title)
         logger.debug("CodeRabbit support active: %s", coderabbit_support_active)
