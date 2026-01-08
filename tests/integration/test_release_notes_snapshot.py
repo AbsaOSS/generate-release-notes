@@ -11,12 +11,16 @@ def build_mock_record(record_id: str, labels: list[str]):
             self.labels = _labels
             self.skip = False
             self.is_present_in_chapters = False
+            self._chapters = set()
 
         def contains_change_increment(self):  # matches code expectation in populate
             return True
 
         def to_chapter_row(self, _include_prs: bool):  # simplified row rendering
             return f"{self.id} row"
+
+        def add_to_chapter_presence(self, chapter_id: str):  # track chapter additions
+            self._chapters.add(chapter_id)
 
     return R(record_id, labels)
 

@@ -15,7 +15,7 @@
 #
 
 """
-This module contains the BaseChapters class, which is responsible for representing the base chapters.
+Defines the abstract base `Record` type used by the release notes generator.
 """
 
 import logging
@@ -37,7 +37,7 @@ class Record(metaclass=ABCMeta):
     RELEASE_NOTE_LINE_MARKS: list[str] = ["-", "*", "+"]
 
     def __init__(self, labels: Optional[list[str]] = None, skip: bool = False):
-        self._present_in_chapters = 0
+        self._chapters_present_in: set[str] = set()
         self._skip = skip
         self._is_cross_repo: bool = False
         self._is_release_note_detected: Optional[bool] = None
@@ -48,11 +48,12 @@ class Record(metaclass=ABCMeta):
     @property
     def is_present_in_chapters(self) -> bool:
         """
-        Checks if the record is present in any chapter.
+        Checks if the record is present in at least one chapter.
+
         Returns:
             bool: True if the record is present in at least one chapter, False otherwise.
         """
-        return self._present_in_chapters > 0
+        return len(self._chapters_present_in) > 0
 
     @property
     def is_cross_repo(self) -> bool:
@@ -190,21 +191,23 @@ class Record(metaclass=ABCMeta):
 
     # shared methods
 
-    def added_into_chapters(self) -> None:
+    def add_to_chapter_presence(self, chapter_id: str) -> None:
         """
-        Increments the count of chapters in which the record is present.
-        Returns: None
-        """
-        # TODO - fix in #191
-        self._present_in_chapters += 1
+        Marks this record as present in the given chapter.
 
-    def present_in_chapters(self) -> int:
+        Parameters:
+            chapter_id (str): The unique identifier of the chapter.
         """
-        Gets the count of chapters in which the record is present.
+        self._chapters_present_in.add(chapter_id)
+
+    def chapter_presence_count(self) -> int:
+        """
+        Gets the number of unique chapters in which the record is present.
+
         Returns:
-            int: The count of chapters in which the record is present.
+            int: The count of unique chapters containing this record.
         """
-        return self._present_in_chapters
+        return len(self._chapters_present_in)
 
     def contains_min_one_label(self, labels: list[str]) -> bool:
         """

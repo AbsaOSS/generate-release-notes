@@ -61,9 +61,7 @@ class CommitRecord(Record):
     # methods - override Record methods
 
     def to_chapter_row(self, add_into_chapters: bool = True) -> str:
-        if add_into_chapters:
-            self.added_into_chapters()
-        row_prefix = f"{ActionInputs.get_duplicity_icon()} " if self.present_in_chapters() > 1 else ""
+        row_prefix = f"{ActionInputs.get_duplicity_icon()} " if self.chapter_presence_count() > 1 else ""
 
         # collecting values for formatting
         commit_message = self._commit.commit.message.replace("\n", " ")

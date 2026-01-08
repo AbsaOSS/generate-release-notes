@@ -99,6 +99,7 @@ class CustomChapters(BaseChapters):
                 # Quick intersection check
                 if any(lbl in ch.labels for lbl in record_labels):
                     if record_id not in ch.rows:
+                        record.add_to_chapter_presence(ch.title)
                         ch.add_row(record_id, record.to_chapter_row(True))
                         # Track for backward compatibility (not used for gating anymore)
                         if record_id not in self.populated_record_numbers_list:

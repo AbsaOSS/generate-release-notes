@@ -34,11 +34,15 @@ def test_to_chapter_row_duplicate_with_icon(monkeypatch, mock_commit):
         lambda: "[D]",
     )
     rec = CommitRecord(mock_commit)
+    # Simulate adding to first chapter
+    rec.add_to_chapter_presence("chapter1")
     first = rec.to_chapter_row(True)
+    # Simulate adding to second chapter
+    rec.add_to_chapter_presence("chapter2")
     second = rec.to_chapter_row(True)
     assert not first.startswith("[D] ")
     assert second.startswith("[D] ")
-    assert rec.present_in_chapters() == 2
+    assert rec.chapter_presence_count() == 2
 
 def test_to_chapter_row_with_release_notes_injected(monkeypatch, mock_commit):
     # Force contains_release_notes to True and provide fake release notes
