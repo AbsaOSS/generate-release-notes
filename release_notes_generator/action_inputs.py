@@ -482,6 +482,7 @@ class ActionInputs:
         for chapter in hidden_service_chapters:
             if not isinstance(chapter, str) or not chapter:
                 errors.append("Hidden service chapters must be a non-empty string and have non-zero length.")
+                break
 
         # Log errors if any
         if errors:
