@@ -96,7 +96,11 @@ def custom_chapters_not_print_empty_chapters():
 # Fixtures for Service Chapters
 @pytest.fixture
 def service_chapters():
-    return ServiceChapters(sort_ascending=True, print_empty_chapters=True, user_defined_labels=["bug", "enhancement"])
+    return ServiceChapters(
+        sort_ascending=True,
+        print_empty_chapters=True,
+        user_defined_labels=["bug", "enhancement"],
+    )
 
 
 # Fixtures for GitHub Repository

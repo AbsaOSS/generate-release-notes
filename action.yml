@@ -52,6 +52,21 @@ inputs:
     description: 'Print service chapters if true.'
     required: false
     default: 'true'
+  hidden-service-chapters:
+    description: |
+      List of service chapter titles to hide from output (comma or newline separated).
+      Title matching is exact and case-sensitive.
+      Example: "Direct Commits ⚠️, Others - No Topic ⚠️"
+      Available service chapters:
+      - "Closed Issues without Pull Request ⚠️"
+      - "Closed Issues without User Defined Labels ⚠️"
+      - "Merged PRs without Issue and User Defined Labels ⚠️"
+      - "Closed PRs without Issue and User Defined Labels ⚠️"
+      - "Merged PRs Linked to 'Not Closed' Issue ⚠️"
+      - "Direct Commits ⚠️"
+      - "Others - No Topic ⚠️"
+    required: false
+    default: ''
   print-empty-chapters:
     description: 'Print chapters even if they are empty.'
     required: false
@@ -145,6 +160,7 @@ runs:
         INPUT_DUPLICITY_SCOPE: ${{ inputs.duplicity-scope }}
         INPUT_DUPLICITY_ICON: ${{ inputs.duplicity-icon }}
         INPUT_WARNINGS: ${{ inputs.warnings }}
+        INPUT_HIDDEN_SERVICE_CHAPTERS: ${{ inputs.hidden-service-chapters }}
         INPUT_PUBLISHED_AT: ${{ inputs.published-at }}
         INPUT_SKIP_RELEASE_NOTES_LABELS: ${{ inputs.skip-release-notes-labels }}
         INPUT_PRINT_EMPTY_CHAPTERS: ${{ inputs.print-empty-chapters }}

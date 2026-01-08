@@ -69,6 +69,7 @@ class ReleaseNotesBuilder:
                 print_empty_chapters=self.print_empty_chapters,
                 user_defined_labels=user_defined_labels,
                 used_record_numbers=self.custom_chapters.populated_record_numbers_list,
+                hidden_chapters=ActionInputs.get_hidden_service_chapters(),
             )
             service_chapters.populate(self.records)
 

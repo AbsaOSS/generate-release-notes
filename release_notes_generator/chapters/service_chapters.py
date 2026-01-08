@@ -54,14 +54,17 @@ class ServiceChapters(BaseChapters):
         self,
         sort_ascending: bool = True,
         print_empty_chapters: bool = True,
+        *,
         user_defined_labels: Optional[list[str]] = None,
         used_record_numbers: Optional[list[int | str]] = None,
+        hidden_chapters: Optional[list[str]] = None,
     ):
         super().__init__(sort_ascending, print_empty_chapters)
 
         self.user_defined_labels = user_defined_labels if user_defined_labels is not None else []
         self.sort_ascending = sort_ascending
         self.used_record_numbers: list[int | str] = used_record_numbers if used_record_numbers is not None else []
+        self.hidden_chapters: list[str] = hidden_chapters if hidden_chapters is not None else []
 
         self.chapters = {
             CLOSED_ISSUES_WITHOUT_PULL_REQUESTS: Chapter(
@@ -293,3 +296,25 @@ class ServiceChapters(BaseChapters):
         @return: True if duplicity is allowed, False otherwise.
         """
         return ActionInputs.get_duplicity_scope() in (DuplicityScopeEnum.SERVICE, DuplicityScopeEnum.BOTH)
+
+    def to_string(self) -> str:
+        """
+        Converts the chapters to a string, excluding hidden chapters.
+
+        @return: The chapters as a string.
+        """
+        result = ""
+        for chapter in self.chapters.values():
+            # Skip chapters that are in the hidden list
+            if chapter.title in self.hidden_chapters:
+                logger.debug("Skipping hidden service chapter: %s", chapter.title)
+                continue
+
+            chapter_string = chapter.to_string(
+                sort_ascending=self.sort_ascending, print_empty_chapters=self.print_empty_chapters
+            )
+            if chapter_string:
+                result += chapter_string + "\n\n"
+
+        # Note: strip is required to remove leading newline chars when empty chapters are not printed option
+        return result.strip()
