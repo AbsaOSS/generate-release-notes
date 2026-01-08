@@ -477,7 +477,6 @@ class ActionInputs:
         print_empty_chapters = ActionInputs.get_print_empty_chapters()
         ActionInputs.validate_input(print_empty_chapters, bool, "Print empty chapters must be a boolean.", errors)
 
-
         # Validate hidden service chapters: each must be a non-empty string
         hidden_service_chapters = ActionInputs.get_hidden_service_chapters()
         for chapter in hidden_service_chapters:
