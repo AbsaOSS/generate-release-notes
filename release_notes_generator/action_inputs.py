@@ -477,6 +477,13 @@ class ActionInputs:
         print_empty_chapters = ActionInputs.get_print_empty_chapters()
         ActionInputs.validate_input(print_empty_chapters, bool, "Print empty chapters must be a boolean.", errors)
 
+
+        # Validate hidden service chapters: each must be a non-empty string
+        hidden_service_chapters = ActionInputs.get_hidden_service_chapters()
+        for chapter in hidden_service_chapters:
+            if not isinstance(chapter, str) or not chapter:
+                errors.append("Hidden service chapters must be a non-empty string and have non-zero length.")
+
         # Log errors if any
         if errors:
             for error in errors:
@@ -494,7 +501,7 @@ class ActionInputs:
         logger.debug("Skip release notes labels: %s", ActionInputs.get_skip_release_notes_labels())
         logger.debug("Verbose logging: %s", verbose)
         logger.debug("Warnings: %s", warnings)
-        logger.debug("Hidden service chapters: %s", ActionInputs.get_hidden_service_chapters())
+        logger.debug("Hidden service chapters: %s", hidden_service_chapters)
         logger.debug("Print empty chapters: %s", print_empty_chapters)
         logger.debug("Release notes title: %s", release_notes_title)
         logger.debug("CodeRabbit support active: %s", coderabbit_support_active)
