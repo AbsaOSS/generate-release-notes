@@ -312,6 +312,14 @@ def test_get_hidden_service_chapters_int_input(mocker):
     mock_log_error.assert_called_once()
     assert "hidden-service-chapters' is not a valid string" in mock_log_error.call_args[0][0]
 
+def test_get_row_format_link_pr_true(mocker):
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="true")
+    assert ActionInputs.get_row_format_link_pr() is True
+
+def test_get_row_format_link_pr_false(mocker):
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="false")
+    assert ActionInputs.get_row_format_link_pr() is False
+
 # Mirrored test file for release_notes_generator/generator.py
 # Extracted from previous aggregated test_release_notes_generator.py
 
