@@ -122,7 +122,7 @@ class PullRequestRecord(Record):
         return self.labels
 
     def to_chapter_row(self, add_into_chapters: bool = True) -> str:
-        row_prefix = f"{ActionInputs.get_duplicity_icon()} " if self.present_in_chapters() > 1 else ""
+        row_prefix = f"{ActionInputs.get_duplicity_icon()} " if self.chapter_presence_count() > 1 else ""
         format_values: dict[str, Any] = {}
 
         # collecting values for formatting

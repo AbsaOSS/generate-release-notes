@@ -19,7 +19,7 @@ def build_mock_record(record_id: str, labels: list[str]):
         def to_chapter_row(self, _include_prs: bool):  # simplified row rendering
             return f"{self.id} row"
 
-        def added_into_chapters(self, chapter_id: str):  # track chapter additions
+        def add_to_chapter_presence(self, chapter_id: str):  # track chapter additions
             self._chapters.add(chapter_id)
 
     return R(record_id, labels)

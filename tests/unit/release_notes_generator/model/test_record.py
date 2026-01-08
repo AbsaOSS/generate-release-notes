@@ -70,7 +70,7 @@ class DummyRecord(Record):
 def test_is_present_in_chapters():
     rec = DummyRecord()
     assert not rec.is_present_in_chapters
-    rec.added_into_chapters("chapter1")
+    rec.add_to_chapter_presence("chapter1")
     assert rec.is_present_in_chapters
 
 def test_skip_property():
@@ -81,20 +81,20 @@ def test_skip_property():
 
 def test_present_in_chapters_count():
     rec = DummyRecord()
-    assert rec.present_in_chapters() == 0
-    rec.added_into_chapters("chapter1")
-    rec.added_into_chapters("chapter2")
-    assert rec.present_in_chapters() == 2
+    assert rec.chapter_presence_count() == 0
+    rec.add_to_chapter_presence("chapter1")
+    rec.add_to_chapter_presence("chapter2")
+    assert rec.chapter_presence_count() == 2
 
 def test_present_in_chapters_unique():
     """Test that adding the same chapter multiple times doesn't increase the count."""
     rec = DummyRecord()
-    assert rec.present_in_chapters() == 0
-    rec.added_into_chapters("chapter1")
-    rec.added_into_chapters("chapter1")  # Same chapter again
-    assert rec.present_in_chapters() == 1  # Should still be 1
-    rec.added_into_chapters("chapter2")
-    assert rec.present_in_chapters() == 2
+    assert rec.chapter_presence_count() == 0
+    rec.add_to_chapter_presence("chapter1")
+    rec.add_to_chapter_presence("chapter1")  # Same chapter again
+    assert rec.chapter_presence_count() == 1  # Should still be 1
+    rec.add_to_chapter_presence("chapter2")
+    assert rec.chapter_presence_count() == 2
 
 def test_contains_min_one_label():
     rec = DummyRecord(labels=["bug", "feature"])

@@ -135,7 +135,7 @@ class ServiceChapters(BaseChapters):
                         logger.debug("Skipping open HierarchyIssueRecord %s (pr_count=%d)", record_id, pr_count)
                     elif is_issue_like and pr_count > 0:
                         # Open issue/sub-issue with linked PRs → add to the specific chapter
-                        record.added_into_chapters(MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES)
+                        record.add_to_chapter_presence(MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES)
                         self.chapters[MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES].add_row(
                             record_id, record.to_chapter_row()
                         )
@@ -146,7 +146,7 @@ class ServiceChapters(BaseChapters):
                         pass
                 else:
                     if record_id not in self.used_record_numbers:
-                        record.added_into_chapters(OTHERS_NO_TOPIC)
+                        record.add_to_chapter_presence(OTHERS_NO_TOPIC)
                         self.chapters[OTHERS_NO_TOPIC].add_row(record_id, record.to_chapter_row())
                         self.used_record_numbers.append(record_id)
 
@@ -166,7 +166,7 @@ class ServiceChapters(BaseChapters):
         pulls_count = record.pull_requests_count()
 
         if pulls_count == 0:
-            record.added_into_chapters(CLOSED_ISSUES_WITHOUT_PULL_REQUESTS)
+            record.add_to_chapter_presence(CLOSED_ISSUES_WITHOUT_PULL_REQUESTS)
             self.chapters[CLOSED_ISSUES_WITHOUT_PULL_REQUESTS].add_row(record_id, record.to_chapter_row())
             self.used_record_numbers.append(record_id)
             populated = True
@@ -177,7 +177,7 @@ class ServiceChapters(BaseChapters):
             if self.__is_row_present(record_id) and not self.duplicity_allowed():
                 return
 
-            record.added_into_chapters(CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS)
+            record.add_to_chapter_presence(CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS)
             self.chapters[CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS].add_row(record_id, record.to_chapter_row())
             self.used_record_numbers.append(record_id)
             populated = True
@@ -193,7 +193,7 @@ class ServiceChapters(BaseChapters):
             if record_id in self.used_record_numbers:
                 return
 
-            record.added_into_chapters(OTHERS_NO_TOPIC)
+            record.add_to_chapter_presence(OTHERS_NO_TOPIC)
             self.chapters[OTHERS_NO_TOPIC].add_row(record_id, record.to_chapter_row())
             self.used_record_numbers.append(record_id)
 
@@ -214,7 +214,7 @@ class ServiceChapters(BaseChapters):
                 if self.__is_row_present(record_id) and not self.duplicity_allowed():
                     return
 
-                record.added_into_chapters(MERGED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS)
+                record.add_to_chapter_presence(MERGED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS)
                 self.chapters[MERGED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS].add_row(
                     record_id, record.to_chapter_row()
                 )
@@ -225,7 +225,7 @@ class ServiceChapters(BaseChapters):
                 if self.__is_row_present(record_id) and not self.duplicity_allowed():
                     return
 
-                record.added_into_chapters(MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES)
+                record.add_to_chapter_presence(MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES)
                 self.chapters[MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES].add_row(record_id, record.to_chapter_row())
                 self.used_record_numbers.append(record_id)
 
@@ -236,7 +236,7 @@ class ServiceChapters(BaseChapters):
                 if record_id in self.used_record_numbers:
                     return
 
-                record.added_into_chapters(OTHERS_NO_TOPIC)
+                record.add_to_chapter_presence(OTHERS_NO_TOPIC)
                 self.chapters[OTHERS_NO_TOPIC].add_row(record_id, record.to_chapter_row())
                 self.used_record_numbers.append(record_id)
 
@@ -249,7 +249,7 @@ class ServiceChapters(BaseChapters):
             if self.__is_row_present(record_id) and not self.duplicity_allowed():
                 return
 
-            record.added_into_chapters(CLOSED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS)
+            record.add_to_chapter_presence(CLOSED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS)
             self.chapters[CLOSED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS].add_row(record_id, record.to_chapter_row())
             self.used_record_numbers.append(record_id)
 
@@ -261,7 +261,7 @@ class ServiceChapters(BaseChapters):
                 return
 
             # not record.is_present_in_chapters:
-            record.added_into_chapters(OTHERS_NO_TOPIC)
+            record.add_to_chapter_presence(OTHERS_NO_TOPIC)
             self.chapters[OTHERS_NO_TOPIC].add_row(record_id, record.to_chapter_row())
             self.used_record_numbers.append(record_id)
 
@@ -272,7 +272,7 @@ class ServiceChapters(BaseChapters):
         @param record: The CommitRecord object representing the direct commit.
         @return: None
         """
-        record.added_into_chapters(DIRECT_COMMITS)
+        record.add_to_chapter_presence(DIRECT_COMMITS)
         self.chapters[DIRECT_COMMITS].add_row(record_id, record.to_chapter_row())
         self.used_record_numbers.append(record_id)
 
