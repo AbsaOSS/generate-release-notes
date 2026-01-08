@@ -13,6 +13,7 @@ This page lists all action inputs and outputs with defaults. Grouped for readabi
 | `published-at` | No | `false` | Use previous release `published_at` timestamp instead of `created_at`. |
 | `skip-release-notes-labels` | No | `skip-release-notes` | Comma‑separated labels that fully exclude issues/PRs. |
 | `warnings` | No | `true` | Toggle Service Chapters generation. |
+| `hidden-service-chapters` | No | "" | Comma or newline list of service chapter titles to hide from output. Title matching is exact and case-sensitive. Only effective when `warnings: true`. |
 | `print-empty-chapters` | No | `true` | Print chapter headings even when empty. |
 | `duplicity-scope` | No | `both` | Where duplicates are allowed: `none`, `custom`, `service`, `both`. Case-insensitive. |
 | `duplicity-icon` | No | `🔔` | One-character icon prefixed on duplicate rows. |
@@ -91,7 +92,8 @@ Controlled by `duplicity-scope` and `duplicity-icon` (see [Duplicity Handling](f
 | Basic release notes | `tag-name`, `chapters` |
 | Restrict time window manually | Add `from-tag-name` |
 | Prefer published timestamp | `published-at: true` |
-| Hide diagnostics | `warnings: false` |
+| Hide all service chapters | `warnings: false` |
+| Hide specific service chapters | `hidden-service-chapters: "Direct Commits ⚠️, Others - No Topic ⚠️"` |
 | Tight output (no empty headings) | `print-empty-chapters: false` |
 | Enforce no duplicates | `duplicity-scope: none` |
 | Enable hierarchy rollups | `hierarchy: true` |

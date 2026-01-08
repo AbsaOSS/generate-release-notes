@@ -34,10 +34,39 @@ Highlight quality gaps or inconsistencies in the release scope: missing PR for c
     chapters: |
       - {"title": "New Features 🎉", "label": "feature"}
       - {"title": "Bugfixes 🛠", "label": "bug"}
-    warnings: true              # enable service chapters (default)
-    print-empty-chapters: true  # show even when empty (default)
-    duplicity-scope: "both"     # allow duplicates across custom + service
+    warnings: true                     # enable service chapters (default)
+    hidden-service-chapters: ''        # hide specific service chapters (default: empty)
+    print-empty-chapters: true         # show even when empty (default)
+    duplicity-scope: "both"            # allow duplicates across custom + service
 ```
+
+### Granular Chapter Control
+Use `hidden-service-chapters` to selectively hide individual service chapters:
+
+```yaml
+- name: Generate Release Notes
+  with:
+    warnings: true
+    hidden-service-chapters: |
+      Direct Commits ⚠️
+      Others - No Topic ⚠️
+```
+
+Or use comma-separated format:
+```yaml
+    hidden-service-chapters: "Direct Commits ⚠️, Others - No Topic ⚠️"
+```
+
+**Available service chapter titles:**
+- `Closed Issues without Pull Request ⚠️`
+- `Closed Issues without User Defined Labels ⚠️`
+- `Merged PRs without Issue and User Defined Labels ⚠️`
+- `Closed PRs without Issue and User Defined Labels ⚠️`
+- `Merged PRs Linked to 'Not Closed' Issue ⚠️`
+- `Direct Commits ⚠️`
+- `Others - No Topic ⚠️`
+
+**Note:** Title matching is exact and case-sensitive. When `warnings: false`, all service chapters are hidden regardless of the `hidden-service-chapters` setting.
 
 ## Example Result
 ```markdown
