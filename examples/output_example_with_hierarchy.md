@@ -17,14 +17,6 @@ No entries detected.
     - Test release notes nr1
     - Test release notes nr2
 
-### Closed Issues without Pull Request ⚠️
-- #3 _FEAT: User Authentication_
-- #4 _FEAT: Book Browsing_
-- #6 _FEAT: Shopping Cart_
-- #37 _Example Issue without PR_
-- #38 _Example Issue without Release notes comment_
-- #88 _Test issue_
-
 ### Closed Issues without User Defined Labels ⚠️
 - #1 _Initial version of project_ in [#2](https://github.com/company/test-project/pull/2)
 - #7 _REQ: User Login Functionality_ in [#13](https://github.com/company/test-project/pull/13)
@@ -36,6 +28,14 @@ No entries detected.
 - #23 _REQ: View Reviews_ in [#27](https://github.com/company/test-project/pull/27)
 - #29 _Introduce workflow logic for Release notes_ in [#28](https://github.com/company/test-project/pull/28)
 - #30 _Introduce Release notes logic_ in [#32](https://github.com/company/test-project/pull/32)
+
+### Closed Issues without Pull Request ⚠️
+- #3 _FEAT: User Authentication_
+- #4 _FEAT: Book Browsing_
+- #6 _FEAT: Shopping Cart_
+- #37 _Example Issue without PR_
+- #38 _Example Issue without Release notes comment_
+- #88 _Test issue_
 
 ### Merged PRs without Issue and User Defined Labels ⚠️
 - PR: #5 _BugFix - correct Issue GH folder location_
