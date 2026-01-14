@@ -25,6 +25,7 @@ from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.chapters.custom_chapters import CustomChapters
 from release_notes_generator.chapters.service_chapters import ServiceChapters
 from release_notes_generator.model.record.record import Record
+from release_notes_generator.utils.constants import CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS
 
 logger = logging.getLogger(__name__)
 
@@ -73,14 +74,31 @@ class ReleaseNotesBuilder:
             )
             service_chapters.populate(self.records)
 
-            service_chapters_str = service_chapters.to_string()
-            if len(service_chapters_str) > 0:
-                release_notes = (
-                    f"""{user_defined_chapters_str}\n\n{service_chapters_str}\n\n"""
-                    f"""#### Full Changelog\n{self.changelog_url}\n"""
-                )
+            # Get the "Closed Issues without User Defined Labels" chapter separately
+            closed_issues_no_labels_str = service_chapters.get_chapter_string(CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS)
+
+            # Get all other service chapters, excluding the one we output separately
+            other_service_chapters_str = service_chapters.to_string(
+                exclude_chapters=[CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS]
+            )
+
+            # Build the release notes with the new ordering:
+            # 1. User-defined chapters
+            # 2. Closed Issues without User Defined Labels (if present)
+            # 3. Other service chapters
+            # 4. Full Changelog
+            parts = []
+            if user_defined_chapters_str:
+                parts.append(user_defined_chapters_str)
+            if closed_issues_no_labels_str:
+                parts.append(closed_issues_no_labels_str)
+            if other_service_chapters_str:
+                parts.append(other_service_chapters_str)
+
+            if parts:
+                release_notes = "\n\n".join(parts) + f"\n\n#### Full Changelog\n{self.changelog_url}\n"
             else:
-                release_notes = f"""{user_defined_chapters_str}\n\n#### Full Changelog\n{self.changelog_url}\n"""
+                release_notes = f"#### Full Changelog\n{self.changelog_url}\n"
         else:
             release_notes = f"""{user_defined_chapters_str}\n\n#### Full Changelog\n{self.changelog_url}\n"""
 

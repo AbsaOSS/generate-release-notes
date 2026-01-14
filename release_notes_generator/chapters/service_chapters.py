@@ -296,17 +296,38 @@ class ServiceChapters(BaseChapters):
         """
         return ActionInputs.get_duplicity_scope() in (DuplicityScopeEnum.SERVICE, DuplicityScopeEnum.BOTH)
 
-    def to_string(self) -> str:
+    def get_chapter_string(self, chapter_title: str) -> str:
         """
-        Converts the chapters to a string, excluding hidden chapters.
+        Converts a specific chapter to a string.
 
+        @param chapter_title: The title of the chapter to convert.
+        @return: The chapter as a string, or empty string if not found or hidden.
+        """
+        if chapter_title in self.hidden_chapters:
+            logger.debug("Skipping hidden service chapter: %s", chapter_title)
+            return ""
+
+        if chapter_title not in self.chapters:
+            return ""
+
+        chapter_string = self.chapters[chapter_title].to_string(
+            sort_ascending=self.sort_ascending, print_empty_chapters=self.print_empty_chapters
+        )
+        return chapter_string if chapter_string else ""
+
+    def to_string(self, exclude_chapters: Optional[list[str]] = None) -> str:
+        """
+        Converts the chapters to a string, excluding hidden chapters and optionally specified chapters.
+
+        @param exclude_chapters: Optional list of chapter titles to exclude from the output.
         @return: The chapters as a string.
         """
+        exclude_chapters = exclude_chapters if exclude_chapters is not None else []
         result = ""
         for chapter in self.chapters.values():
-            # Skip chapters that are in the hidden list
-            if chapter.title in self.hidden_chapters:
-                logger.debug("Skipping hidden service chapter: %s", chapter.title)
+            # Skip chapters that are in the hidden list or exclude list
+            if chapter.title in self.hidden_chapters or chapter.title in exclude_chapters:
+                logger.debug("Skipping service chapter: %s", chapter.title)
                 continue
 
             chapter_string = chapter.to_string(
