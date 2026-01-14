@@ -15,6 +15,7 @@
 #
 
 from release_notes_generator.model.chapter import Chapter
+from release_notes_generator.chapters.service_chapters import ServiceChapters
 from release_notes_generator.utils.constants import (
     MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES,
     CLOSED_ISSUES_WITHOUT_PULL_REQUESTS,
@@ -105,3 +106,63 @@ def test_populate_closed_issue_duplicity(service_chapters, record_with_issue_clo
 
     assert 0 == len(service_chapters.chapters[CLOSED_ISSUES_WITHOUT_PULL_REQUESTS].rows)
     assert 0 == len(service_chapters.chapters[CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS].rows)
+
+
+# to_string with hidden chapters
+
+
+def test_to_string_with_no_hidden_chapters(service_chapters, record_with_issue_closed_no_pull):
+    service_chapters.populate({1: record_with_issue_closed_no_pull})
+    result = service_chapters.to_string()
+
+    assert CLOSED_ISSUES_WITHOUT_PULL_REQUESTS in result
+    assert CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS in result
+
+
+def test_to_string_with_single_hidden_chapter(record_with_issue_closed_no_pull):
+    service_chapters = ServiceChapters(
+        sort_ascending=True,
+        print_empty_chapters=True,
+        user_defined_labels=["bug", "enhancement"],
+        hidden_chapters=[CLOSED_ISSUES_WITHOUT_PULL_REQUESTS],
+    )
+    service_chapters.populate({1: record_with_issue_closed_no_pull})
+    result = service_chapters.to_string()
+
+    assert CLOSED_ISSUES_WITHOUT_PULL_REQUESTS not in result
+    assert CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS in result
+
+
+def test_to_string_with_multiple_hidden_chapters(record_with_issue_closed_no_pull):
+    service_chapters = ServiceChapters(
+        sort_ascending=True,
+        print_empty_chapters=True,
+        user_defined_labels=["bug", "enhancement"],
+        hidden_chapters=[
+            CLOSED_ISSUES_WITHOUT_PULL_REQUESTS,
+            CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS,
+        ],
+    )
+    service_chapters.populate({1: record_with_issue_closed_no_pull})
+    result = service_chapters.to_string()
+
+    assert CLOSED_ISSUES_WITHOUT_PULL_REQUESTS not in result
+    assert CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS not in result
+    # Other empty chapters should still be shown since print_empty_chapters=True
+    assert MERGED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS in result
+
+
+def test_to_string_with_hidden_chapter_not_in_results(pull_request_record_merged):
+    service_chapters = ServiceChapters(
+        sort_ascending=True,
+        print_empty_chapters=True,
+        user_defined_labels=["bug", "enhancement"],
+        hidden_chapters=[CLOSED_ISSUES_WITHOUT_PULL_REQUESTS],  # This chapter won't be populated
+    )
+    service_chapters.populate({123: pull_request_record_merged})
+    result = service_chapters.to_string()
+
+    # CLOSED_ISSUES_WITHOUT_PULL_REQUESTS shouldn't appear anyway (not populated)
+    assert CLOSED_ISSUES_WITHOUT_PULL_REQUESTS not in result
+    # MERGED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS should appear
+    assert MERGED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS in result

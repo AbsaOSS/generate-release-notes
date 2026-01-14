@@ -54,6 +54,7 @@ failure_cases = [
     ("get_release_notes_title", "", "Release Notes title must be a non-empty string and have non-zero length."),
     ("get_coderabbit_release_notes_title", "", "CodeRabbit Release Notes title must be a non-empty string and have non-zero length."),
     ("get_coderabbit_summary_ignore_groups", [""], "CodeRabbit summary ignore groups must be a non-empty string and have non-zero length."),
+    ("get_row_format_link_pr", "not_bool", "'row-format-link-pr' value must be a boolean."),
     ("get_hierarchy", "not_bool", "Hierarchy must be a boolean."),
 ]
 
@@ -282,6 +283,42 @@ def test_coderabbit_summary_ignore_groups_empty_group_input(mocker):
     mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value=",")
     # Note: this is not valid input which is catched by the validation_inputs() method
     assert ActionInputs.get_coderabbit_summary_ignore_groups() == ['', '']
+
+def test_get_hidden_service_chapters_default(mocker):
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="")
+    assert ActionInputs.get_hidden_service_chapters() == []
+
+def test_get_hidden_service_chapters_single_comma_separated(mocker):
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="Direct Commits ⚠️")
+    assert ActionInputs.get_hidden_service_chapters() == ["Direct Commits ⚠️"]
+
+def test_get_hidden_service_chapters_multiple_comma_separated(mocker):
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="Direct Commits ⚠️, Others - No Topic ⚠️")
+    assert ActionInputs.get_hidden_service_chapters() == ["Direct Commits ⚠️", "Others - No Topic ⚠️"]
+
+def test_get_hidden_service_chapters_newline_separated(mocker):
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="Direct Commits ⚠️\nOthers - No Topic ⚠️")
+    assert ActionInputs.get_hidden_service_chapters() == ["Direct Commits ⚠️", "Others - No Topic ⚠️"]
+
+def test_get_hidden_service_chapters_with_extra_whitespace(mocker):
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="  Direct Commits ⚠️  ,  Others - No Topic ⚠️  ")
+    assert ActionInputs.get_hidden_service_chapters() == ["Direct Commits ⚠️", "Others - No Topic ⚠️"]
+
+def test_get_hidden_service_chapters_int_input(mocker):
+    mock_log_error = mocker.patch("release_notes_generator.action_inputs.logger.error")
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value=123)
+    assert ActionInputs.get_hidden_service_chapters() == []
+    mock_log_error.assert_called_once()
+    assert "hidden-service-chapters' is not a valid string" in mock_log_error.call_args[0][0]
+
+def test_get_row_format_link_pr_true(mocker):
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="true")
+    assert ActionInputs.get_row_format_link_pr() is True
+
+def test_get_row_format_link_pr_false(mocker):
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="false")
+    assert ActionInputs.get_row_format_link_pr() is False
+
 # Mirrored test file for release_notes_generator/generator.py
 # Extracted from previous aggregated test_release_notes_generator.py
 

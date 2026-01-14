@@ -33,6 +33,7 @@ from release_notes_generator.utils.constants import (
     PUBLISHED_AT,
     VERBOSE,
     WARNINGS,
+    HIDDEN_SERVICE_CHAPTERS,
     RUNNER_DEBUG,
     PRINT_EMPTY_CHAPTERS,
     DUPLICITY_SCOPE,
@@ -280,6 +281,26 @@ class ActionInputs:
         # mypy: string is returned as default
 
     @staticmethod
+    def get_hidden_service_chapters() -> list[str]:
+        """
+        Get the list of service chapter titles to hide from the action inputs.
+        Returns a list of chapter titles that should be hidden from output.
+        """
+        hidden_chapters: list[str] = []
+        raw = get_action_input(HIDDEN_SERVICE_CHAPTERS, "")
+        if not isinstance(raw, str):
+            logger.error("Error: 'hidden-service-chapters' is not a valid string.")
+            return hidden_chapters
+
+        titles = raw.strip()
+        if titles:
+            # Support both comma and newline separators
+            separator = "," if "," in titles else "\n"
+            hidden_chapters = [title.strip() for title in titles.split(separator) if title.strip()]
+
+        return hidden_chapters
+
+    @staticmethod
     def get_print_empty_chapters() -> bool:
         """
         Get the print empty chapters parameter value from the action inputs.
@@ -473,6 +494,7 @@ class ActionInputs:
         logger.debug("Skip release notes labels: %s", ActionInputs.get_skip_release_notes_labels())
         logger.debug("Verbose logging: %s", verbose)
         logger.debug("Warnings: %s", warnings)
+        logger.debug("Hidden service chapters: %s", ActionInputs.get_hidden_service_chapters())
         logger.debug("Print empty chapters: %s", print_empty_chapters)
         logger.debug("Release notes title: %s", release_notes_title)
         logger.debug("CodeRabbit support active: %s", coderabbit_support_active)

@@ -44,6 +44,7 @@ SUPPORTED_ROW_FORMAT_KEYS_PULL_REQUEST = ["number", "title", "author", "assignee
 
 # Features
 WARNINGS = "warnings"
+HIDDEN_SERVICE_CHAPTERS = "hidden-service-chapters"
 PRINT_EMPTY_CHAPTERS = "print-empty-chapters"
 
 # Release notes comment constants
