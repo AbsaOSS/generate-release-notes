@@ -93,6 +93,18 @@ class ServiceChapters(BaseChapters):
                 title=OTHERS_NO_TOPIC, empty_message="Previous filters caught all Issues or Pull Requests."
             ),
         }
+
+        # Define the order in which service chapters should appear in the output
+        self.chapter_order = [
+            CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS,
+            CLOSED_ISSUES_WITHOUT_PULL_REQUESTS,
+            MERGED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS,
+            CLOSED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS,
+            MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES,
+            DIRECT_COMMITS,
+            OTHERS_NO_TOPIC,
+        ]
+
         self.show_chapter_closed_issues_without_pull_requests = True
         self.show_chapter_closed_issues_without_user_defined_labels = True
         self.show_chapter_merged_pr_without_issue_and_labels = True
@@ -296,38 +308,22 @@ class ServiceChapters(BaseChapters):
         """
         return ActionInputs.get_duplicity_scope() in (DuplicityScopeEnum.SERVICE, DuplicityScopeEnum.BOTH)
 
-    def get_chapter_string(self, chapter_title: str) -> str:
+    def to_string(self) -> str:
         """
-        Converts a specific chapter to a string.
+        Converts the chapters to a string, excluding hidden chapters.
+        Chapters are rendered in the order defined by self.chapter_order.
 
-        @param chapter_title: The title of the chapter to convert.
-        @return: The chapter as a string, or empty string if not found or hidden.
-        """
-        if chapter_title in self.hidden_chapters:
-            logger.debug("Skipping hidden service chapter: %s", chapter_title)
-            return ""
-
-        if chapter_title not in self.chapters:
-            return ""
-
-        chapter_string = self.chapters[chapter_title].to_string(
-            sort_ascending=self.sort_ascending, print_empty_chapters=self.print_empty_chapters
-        )
-        return chapter_string if chapter_string else ""
-
-    def to_string(self, exclude_chapters: Optional[list[str]] = None) -> str:
-        """
-        Converts the chapters to a string, excluding hidden chapters and optionally specified chapters.
-
-        @param exclude_chapters: Optional list of chapter titles to exclude from the output.
         @return: The chapters as a string.
         """
-        exclude_chapters = exclude_chapters if exclude_chapters is not None else []
         result = ""
-        for chapter in self.chapters.values():
-            # Skip chapters that are in the hidden list or exclude list
-            if chapter.title in self.hidden_chapters or chapter.title in exclude_chapters:
-                logger.debug("Skipping service chapter: %s", chapter.title)
+        for chapter_title in self.chapter_order:
+            # Skip chapters that are in the hidden list
+            if chapter_title in self.hidden_chapters:
+                logger.debug("Skipping hidden service chapter: %s", chapter_title)
+                continue
+
+            chapter = self.chapters.get(chapter_title)
+            if chapter is None:
                 continue
 
             chapter_string = chapter.to_string(
