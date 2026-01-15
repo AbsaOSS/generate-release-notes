@@ -92,11 +92,11 @@ No entries detected.
 ### Bugfixes 🛠
 No entries detected.
 
-### Closed Issues without Pull Request ⚠️
-All closed issues linked to a Pull Request.
-
 ### Closed Issues without User Defined Labels ⚠️
 All closed issues contain at least one of user defined labels.
+
+### Closed Issues without Pull Request ⚠️
+All closed issues linked to a Pull Request.
 
 ### Merged PRs without Issue and User Defined Labels ⚠️
 All merged PRs are linked to issues.
@@ -151,12 +151,12 @@ RELEASE_NOTES_DATA_CUSTOM_CHAPTERS_ONE_LABEL = """### Chapter 1 🛠
 http://example.com/changelog
 """
 
-RELEASE_NOTES_DATA_HIERARCHY_NO_LABELS_NO_TYPE = """### Closed Issues without Pull Request ⚠️
-- N/A: #121 _Fix the bug_ developed by @user in 
+RELEASE_NOTES_DATA_HIERARCHY_NO_LABELS_NO_TYPE = """### Closed Issues without User Defined Labels ⚠️
+- 🔔 N/A: #121 _Fix the bug_ developed by @user in 
   - Solo issue release note
 
-### Closed Issues without User Defined Labels ⚠️
-- 🔔 N/A: #121 _Fix the bug_ developed by @user in 
+### Closed Issues without Pull Request ⚠️
+- N/A: #121 _Fix the bug_ developed by @user in 
   - Solo issue release note
 
 ### Merged PRs without Issue and User Defined Labels ⚠️
@@ -253,12 +253,12 @@ RELEASE_NOTES_DATA_HIERARCHY_WITH_LABELS_NO_TYPE = """### Epics
   + More nice code
     * Awesome architecture
 
+### Closed Issues without User Defined Labels ⚠️
+All closed issues contain at least one of user defined labels.
+
 ### Closed Issues without Pull Request ⚠️
 - N/A: #121 _Fix the bug_ developed by @user in 
   - Solo issue release note
-
-### Closed Issues without User Defined Labels ⚠️
-All closed issues contain at least one of user defined labels.
 
 ### Merged PRs without Issue and User Defined Labels ⚠️
 - PR: #124 _Fixed bug_ developed by @user
@@ -313,12 +313,12 @@ RELEASE_NOTES_DATA_HIERARCHY_NO_LABELS_WITH_TYPE = """### Epics
       + More nice code
         * Awesome architecture
 
+### Closed Issues without User Defined Labels ⚠️
+All closed issues contain at least one of user defined labels.
+
 ### Closed Issues without Pull Request ⚠️
 - Feature: #121 _Fix the bug_ developed by @user in 
   - Solo issue release note
-
-### Closed Issues without User Defined Labels ⚠️
-All closed issues contain at least one of user defined labels.
 
 ### Merged PRs without Issue and User Defined Labels ⚠️
 - PR: #124 _Fixed bug_ developed by @user
@@ -384,12 +384,12 @@ RELEASE_NOTES_DATA_HIERARCHY_WITH_LABELS_WITH_TYPE = """### Epics
   + More nice code
     * Awesome architecture
 
+### Closed Issues without User Defined Labels ⚠️
+All closed issues contain at least one of user defined labels.
+
 ### Closed Issues without Pull Request ⚠️
 - Bug: #121 _Fix the bug_ developed by @user in 
   - Solo issue release note
-
-### Closed Issues without User Defined Labels ⚠️
-All closed issues contain at least one of user defined labels.
 
 ### Merged PRs without Issue and User Defined Labels ⚠️
 - PR: #124 _Fixed bug_ developed by @user
@@ -413,13 +413,7 @@ http://example.com/changelog
 """
 
 
-RELEASE_NOTES_NO_DATA_HIERARCHY_NO_LABELS_NO_TYPE = """### Closed Issues without Pull Request ⚠️
-- N/A: #121 _Fix the bug_ in 
-  - Solo issue release note
-- #450 _SI450 closed_ in 
-  - Hierarchy level release note
-
-### Closed Issues without User Defined Labels ⚠️
+RELEASE_NOTES_NO_DATA_HIERARCHY_NO_LABELS_NO_TYPE = """### Closed Issues without User Defined Labels ⚠️
 - 🔔 N/A: #121 _Fix the bug_ in 
   - Solo issue release note
 - 🔔 Task: #450 _SI450 closed_ in 
@@ -442,6 +436,12 @@ RELEASE_NOTES_NO_DATA_HIERARCHY_NO_LABELS_NO_TYPE = """### Closed Issues without
   - Improved performance
   + More nice code
     * Awesome architecture
+
+### Closed Issues without Pull Request ⚠️
+- N/A: #121 _Fix the bug_ in 
+  - Solo issue release note
+- #450 _SI450 closed_ in 
+  - Hierarchy level release note
 
 ### Merged PRs without Issue and User Defined Labels ⚠️
 - PR: #124 _Fixed bug_
@@ -476,12 +476,6 @@ RELEASE_NOTES_NO_DATA_HIERARCHY_WITH_LABELS_NO_TYPE = """### Chapter 1 🛠
   + More nice code
     * Awesome architecture
 
-### Closed Issues without Pull Request ⚠️
-- #121 _Fix the bug_ in 
-  - Solo issue release note
-- #450 _SI450 closed_ in 
-  - Hierarchy level release note
-
 ### Closed Issues without User Defined Labels ⚠️
 - 🔔 #450 _SI450 closed_ in 
   - Hierarchy level release note
@@ -503,6 +497,12 @@ RELEASE_NOTES_NO_DATA_HIERARCHY_WITH_LABELS_NO_TYPE = """### Chapter 1 🛠
   - Improved performance
   + More nice code
     * Awesome architecture
+
+### Closed Issues without Pull Request ⚠️
+- #121 _Fix the bug_ in 
+  - Solo issue release note
+- #450 _SI450 closed_ in 
+  - Hierarchy level release note
 
 ### Merged PRs without Issue and User Defined Labels ⚠️
 - PR: #124 _Fixed bug_
@@ -526,13 +526,7 @@ http://example.com/changelog
 """
 
 
-RELEASE_NOTES_NO_DATA_HIERARCHY_NO_LABELS_WITH_TYPE = """### Closed Issues without Pull Request ⚠️
-- #121 _Fix the bug_ in 
-  - Solo issue release note
-- #450 _SI450 closed_ in 
-  - Hierarchy level release note
-
-### Closed Issues without User Defined Labels ⚠️
+RELEASE_NOTES_NO_DATA_HIERARCHY_NO_LABELS_WITH_TYPE = """### Closed Issues without User Defined Labels ⚠️
 - 🔔 #450 _SI450 closed_ in 
   - Hierarchy level release note
 - #451 _SI451 closed_ in #150
@@ -553,6 +547,12 @@ RELEASE_NOTES_NO_DATA_HIERARCHY_NO_LABELS_WITH_TYPE = """### Closed Issues witho
   - Improved performance
   + More nice code
     * Awesome architecture
+
+### Closed Issues without Pull Request ⚠️
+- #121 _Fix the bug_ in 
+  - Solo issue release note
+- #450 _SI450 closed_ in 
+  - Hierarchy level release note
 
 ### Merged PRs without Issue and User Defined Labels ⚠️
 - PR: #124 _Fixed bug_
@@ -587,12 +587,6 @@ RELEASE_NOTES_NO_DATA_HIERARCHY_WITH_LABELS_WITH_TYPE = """### Chapter 1 🛠
   + More nice code
     * Awesome architecture
 
-### Closed Issues without Pull Request ⚠️
-- #121 _Fix the bug_ in 
-  - Solo issue release note
-- #450 _SI450 closed_ in 
-  - Hierarchy level release note
-
 ### Closed Issues without User Defined Labels ⚠️
 - 🔔 #450 _SI450 closed_ in 
   - Hierarchy level release note
@@ -614,6 +608,12 @@ RELEASE_NOTES_NO_DATA_HIERARCHY_WITH_LABELS_WITH_TYPE = """### Chapter 1 🛠
   - Improved performance
   + More nice code
     * Awesome architecture
+
+### Closed Issues without Pull Request ⚠️
+- #121 _Fix the bug_ in 
+  - Solo issue release note
+- #450 _SI450 closed_ in 
+  - Hierarchy level release note
 
 ### Merged PRs without Issue and User Defined Labels ⚠️
 - PR: #124 _Fixed bug_
@@ -682,11 +682,11 @@ TODO - add bug chapter
 http://example.com/changelog
 """
 
-RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_ISSUE_NO_PR_NO_USER_LABELS = """### Closed Issues without Pull Request ⚠️
-- N/A: #121 _Fix the bug_ developed by @user in
-
-### Closed Issues without User Defined Labels ⚠️
+RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_ISSUE_NO_PR_NO_USER_LABELS = """### Closed Issues without User Defined Labels ⚠️
 - 🔔 N/A: #121 _Fix the bug_ developed by @user in
+
+### Closed Issues without Pull Request ⚠️
+- N/A: #121 _Fix the bug_ developed by @user in
 
 #### Full Changelog
 http://example.com/changelog

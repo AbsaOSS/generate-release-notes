@@ -93,6 +93,18 @@ class ServiceChapters(BaseChapters):
                 title=OTHERS_NO_TOPIC, empty_message="Previous filters caught all Issues or Pull Requests."
             ),
         }
+
+        # Define the order in which service chapters should appear in the output
+        self.chapter_order = [
+            CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS,
+            CLOSED_ISSUES_WITHOUT_PULL_REQUESTS,
+            MERGED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS,
+            CLOSED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS,
+            MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES,
+            DIRECT_COMMITS,
+            OTHERS_NO_TOPIC,
+        ]
+
         self.show_chapter_closed_issues_without_pull_requests = True
         self.show_chapter_closed_issues_without_user_defined_labels = True
         self.show_chapter_merged_pr_without_issue_and_labels = True
@@ -299,14 +311,20 @@ class ServiceChapters(BaseChapters):
     def to_string(self) -> str:
         """
         Converts the chapters to a string, excluding hidden chapters.
+        Chapters are rendered in the order defined by self.chapter_order.
 
         @return: The chapters as a string.
         """
         result = ""
-        for chapter in self.chapters.values():
+        for chapter_title in self.chapter_order:
             # Skip chapters that are in the hidden list
-            if chapter.title in self.hidden_chapters:
-                logger.debug("Skipping hidden service chapter: %s", chapter.title)
+            if chapter_title in self.hidden_chapters:
+                logger.debug("Skipping hidden service chapter: %s", chapter_title)
+                continue
+
+            chapter = self.chapters.get(chapter_title)
+            if chapter is None:
+                logger.error("Chapter %s not found in chapters dictionary.", chapter_title)
                 continue
 
             chapter_string = chapter.to_string(
