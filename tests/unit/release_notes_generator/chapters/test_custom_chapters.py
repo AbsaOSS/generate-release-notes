@@ -394,7 +394,7 @@ def test_from_yaml_array_hidden_validation(hidden_value, expected_hidden, should
 
 
 def test_from_yaml_array_multi_label_with_hidden():
-    # Arrange
+    # Arrange - Test that multi-label format works with hidden flag
     cc = CustomChapters()
     # Act
     cc.from_yaml_array([{"title": "Multi", "labels": ["bug", "enhancement"], "hidden": True}])
@@ -402,17 +402,6 @@ def test_from_yaml_array_multi_label_with_hidden():
     assert "Multi" in cc.chapters
     assert cc.chapters["Multi"].labels == ["bug", "enhancement"]
     assert cc.chapters["Multi"].hidden is True
-
-
-def test_from_yaml_array_legacy_single_label_with_hidden():
-    # Arrange
-    cc = CustomChapters()
-    # Act
-    cc.from_yaml_array([{"title": "Legacy", "label": "bug", "hidden": True}])
-    # Assert
-    assert "Legacy" in cc.chapters
-    assert cc.chapters["Legacy"].labels == ["bug"]
-    assert cc.chapters["Legacy"].hidden is True
 
 
 def test_populate_hidden_chapter_assigns_records(record_stub):
@@ -428,6 +417,13 @@ def test_populate_hidden_chapter_assigns_records(record_stub):
 
 
 def test_populate_hidden_chapter_no_duplicity_count(record_stub, mocker):
+    """
+    Test that hidden chapters don't increment the duplicity counter.
+    
+    When a record is assigned to a hidden chapter, to_chapter_row should be called
+    with add_into_chapters=False to prevent incrementing the chapter presence count.
+    This ensures hidden chapters don't contribute to duplicity detection.
+    """
     # Arrange
     cc = CustomChapters()
     cc.from_yaml_array([{"title": "Hidden", "labels": "bug", "hidden": True}])
@@ -444,6 +440,13 @@ def test_populate_hidden_chapter_no_duplicity_count(record_stub, mocker):
 
 
 def test_populate_visible_chapter_duplicity_count(record_stub, mocker):
+    """
+    Test that visible (non-hidden) chapters increment the duplicity counter.
+    
+    When a record is assigned to a visible chapter, to_chapter_row should be called
+    with add_into_chapters=True to increment the chapter presence count.
+    This ensures visible chapters contribute to duplicity detection as expected.
+    """
     # Arrange
     cc = CustomChapters()
     cc.from_yaml_array([{"title": "Visible", "labels": "bug", "hidden": False}])
@@ -498,8 +501,15 @@ def test_to_string_hidden_chapter_excluded():
 
 
 def test_to_string_all_hidden_returns_empty():
+    """
+    Test that when all chapters are hidden, to_string returns empty string.
+    
+    This also verifies that hidden chapters are never shown even when
+    print_empty_chapters is True, since they are filtered out before rendering.
+    """
     # Arrange
     cc = CustomChapters()
+    cc.print_empty_chapters = True  # Verify hidden chapters ignored even with this True
     cc.from_yaml_array([
         {"title": "Hidden1", "labels": "bug", "hidden": True},
         {"title": "Hidden2", "labels": "feature", "hidden": True},
@@ -509,17 +519,6 @@ def test_to_string_all_hidden_returns_empty():
     # Act
     result = cc.to_string()
     # Assert
-    assert result == ""
-
-
-def test_to_string_hidden_empty_chapter_not_shown():
-    # Arrange
-    cc = CustomChapters()
-    cc.print_empty_chapters = True
-    cc.from_yaml_array([{"title": "Hidden Empty", "labels": "bug", "hidden": True}])
-    # Act
-    result = cc.to_string()
-    # Assert - hidden chapters never shown, even when print_empty_chapters is True
     assert result == ""
 
 

@@ -136,6 +136,8 @@ jobs:
             - {"title": "Bugfixes 🛠", "labels": "error, bug"}
             - {"title": "Infrastructure 🚧", "label": "infrastructure"}
             - {"title": "Documentation 📚", "label": "documentation"}
+            - {"title": "Internal Notes 📝", "labels": "internal", "hidden": true}
+            - {"title": "Not Implemented ⏳", "labels": "wip", "hidden": true}
 
       - name: Create Draft Release
         uses: softprops/action-gh-release@v2
