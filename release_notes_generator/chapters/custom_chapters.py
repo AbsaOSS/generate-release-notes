@@ -99,11 +99,47 @@ class CustomChapters(BaseChapters):
                 # Quick intersection check
                 if any(lbl in ch.labels for lbl in record_labels):
                     if record_id not in ch.rows:
-                        record.add_to_chapter_presence(ch.title)
-                        ch.add_row(record_id, record.to_chapter_row(True))
+                        # Only count toward duplicity for visible (non-hidden) chapters
+                        is_hidden = ch.hidden
+                        if not is_hidden:
+                            record.add_to_chapter_presence(ch.title)
+                        # For hidden chapters: don't increment duplicity counter
+                        # For visible chapters: increment duplicity counter (existing behavior)
+                        ch.add_row(record_id, record.to_chapter_row(not is_hidden))
                         # Track for backward compatibility (not used for gating anymore)
                         if record_id not in self.populated_record_numbers_list:
                             self.populated_record_numbers_list.append(record_id)
+                        if is_hidden and ActionInputs.get_verbose():
+                            logger.debug(
+                                "Record %s assigned to hidden chapter '%s' (not counted for duplicity)",
+                                record_id,
+                                ch.title,
+                            )
+
+    def to_string(self) -> str:
+        """
+        Converts the custom chapters to a string, excluding hidden chapters.
+
+        Returns:
+            str: The chapters as a string with hidden chapters filtered out.
+        """
+        result = ""
+        for chapter in self.chapters.values():
+            # Skip hidden chapters from output
+            if chapter.hidden:
+                record_count = len(chapter.rows)
+                if ActionInputs.get_verbose():
+                    logger.debug("Skipping hidden chapter: %s (%d records tracked)", chapter.title, record_count)
+                continue
+
+            chapter_string = chapter.to_string(
+                sort_ascending=self.sort_ascending, print_empty_chapters=self.print_empty_chapters
+            )
+            if chapter_string:
+                result += chapter_string + "\n\n"
+
+        # Note: strip is required to remove leading newline chars when empty chapters are not printed option
+        return result.strip()
 
     def from_yaml_array(self, chapters: list[dict[str, Any]]) -> "CustomChapters":  # type: ignore[override]
         """
@@ -119,7 +155,7 @@ class CustomChapters(BaseChapters):
         Returns:
             The CustomChapters instance for chaining.
         """
-        allowed_keys = {"title", "label", "labels"}
+        allowed_keys = {"title", "label", "labels", "hidden"}
         for chapter in chapters:
             if not isinstance(chapter, dict):
                 logger.warning("Skipping chapter definition with invalid type %s: %s", type(chapter), chapter)
@@ -128,6 +164,28 @@ class CustomChapters(BaseChapters):
                 logger.warning("Skipping chapter without title key: %s", chapter)
                 continue
             title = chapter["title"]
+
+            # Parse and validate hidden flag
+            hidden = chapter.get("hidden", False)
+            if not isinstance(hidden, bool):
+                # Try to convert string "true"/"false" to boolean
+                if isinstance(hidden, str):
+                    if hidden.lower() == "true":
+                        hidden = True
+                    elif hidden.lower() == "false":
+                        hidden = False
+                    else:
+                        logger.warning(
+                            "Chapter '%s' has invalid 'hidden' value: %s. Defaulting to false.",
+                            title,
+                            hidden,
+                        )
+                        hidden = False
+                else:
+                    logger.warning(
+                        "Chapter '%s' has invalid 'hidden' value type: %s. Defaulting to false.", title, type(hidden)
+                    )
+                    hidden = False
 
             has_labels = "labels" in chapter
             has_label = "label" in chapter
@@ -167,11 +225,22 @@ class CustomChapters(BaseChapters):
 
             if title not in self.chapters:
                 self.chapters[title] = Chapter(title, normalized)
+                self.chapters[title].hidden = hidden
+                if hidden:
+                    logger.info(
+                        "Chapter '%s' marked as hidden, will not appear in output (but records will be tracked)", title
+                    )
             else:
                 # Merge while preserving order & avoiding duplicates
                 existing = self.chapters[title].labels
                 for lbl in normalized:
                     if lbl not in existing:
                         existing.append(lbl)
+                # Update hidden flag (last definition wins)
+                self.chapters[title].hidden = hidden
+                if hidden:
+                    logger.info(
+                        "Chapter '%s' marked as hidden, will not appear in output (but records will be tracked)", title
+                    )
 
         return self

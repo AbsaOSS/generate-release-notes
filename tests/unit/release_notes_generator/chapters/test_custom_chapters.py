@@ -331,3 +331,265 @@ def test_populate_skips_for_record_conditions(scenario, record_stub, mocker):
     cc.populate(records)
     # Assert
     assert not cc.chapters["Bugs"].rows
+
+
+# Tests for hidden flag functionality
+
+
+def test_from_yaml_array_hidden_true():
+    # Arrange
+    cc = CustomChapters()
+    # Act
+    cc.from_yaml_array([{"title": "Hidden Chapter", "labels": "bug", "hidden": True}])
+    # Assert
+    assert "Hidden Chapter" in cc.chapters
+    assert cc.chapters["Hidden Chapter"].hidden is True
+
+
+def test_from_yaml_array_hidden_false():
+    # Arrange
+    cc = CustomChapters()
+    # Act
+    cc.from_yaml_array([{"title": "Visible Chapter", "labels": "bug", "hidden": False}])
+    # Assert
+    assert "Visible Chapter" in cc.chapters
+    assert cc.chapters["Visible Chapter"].hidden is False
+
+
+def test_from_yaml_array_hidden_omitted():
+    # Arrange
+    cc = CustomChapters()
+    # Act
+    cc.from_yaml_array([{"title": "Default Chapter", "labels": "bug"}])
+    # Assert
+    assert "Default Chapter" in cc.chapters
+    assert cc.chapters["Default Chapter"].hidden is False
+
+
+@pytest.mark.parametrize(
+    "hidden_value, expected_hidden, should_warn",
+    [
+        pytest.param("true", True, False, id="string-true-lowercase"),
+        pytest.param("True", True, False, id="string-true-capitalized"),
+        pytest.param("false", False, False, id="string-false-lowercase"),
+        pytest.param("False", False, False, id="string-false-capitalized"),
+        pytest.param("invalid", False, True, id="invalid-string"),
+        pytest.param(123, False, True, id="integer-type"),
+        pytest.param([], False, True, id="list-type"),
+    ],
+)
+def test_from_yaml_array_hidden_validation(hidden_value, expected_hidden, should_warn, caplog):
+    # Arrange
+    caplog.set_level("WARNING", logger="release_notes_generator.chapters.custom_chapters")
+    cc = CustomChapters()
+    # Act
+    cc.from_yaml_array([{"title": "Test Chapter", "labels": "bug", "hidden": hidden_value}])
+    # Assert
+    assert "Test Chapter" in cc.chapters
+    assert cc.chapters["Test Chapter"].hidden is expected_hidden
+    if should_warn:
+        assert any("invalid 'hidden' value" in r.message.lower() for r in caplog.records)
+    else:
+        assert not any("invalid 'hidden' value" in r.message.lower() for r in caplog.records)
+
+
+def test_from_yaml_array_multi_label_with_hidden():
+    # Arrange
+    cc = CustomChapters()
+    # Act
+    cc.from_yaml_array([{"title": "Multi", "labels": ["bug", "enhancement"], "hidden": True}])
+    # Assert
+    assert "Multi" in cc.chapters
+    assert cc.chapters["Multi"].labels == ["bug", "enhancement"]
+    assert cc.chapters["Multi"].hidden is True
+
+
+def test_from_yaml_array_legacy_single_label_with_hidden():
+    # Arrange
+    cc = CustomChapters()
+    # Act
+    cc.from_yaml_array([{"title": "Legacy", "label": "bug", "hidden": True}])
+    # Assert
+    assert "Legacy" in cc.chapters
+    assert cc.chapters["Legacy"].labels == ["bug"]
+    assert cc.chapters["Legacy"].hidden is True
+
+
+def test_populate_hidden_chapter_assigns_records(record_stub):
+    # Arrange
+    cc = CustomChapters()
+    cc.from_yaml_array([{"title": "Hidden Bugs", "labels": "bug", "hidden": True}])
+    record = record_stub("org/repo#1", ["bug"])
+    records = {"org/repo#1": record}
+    # Act
+    cc.populate(records)
+    # Assert - record is assigned to hidden chapter
+    assert "org/repo#1" in cc.chapters["Hidden Bugs"].rows
+
+
+def test_populate_hidden_chapter_no_duplicity_count(record_stub, mocker):
+    # Arrange
+    cc = CustomChapters()
+    cc.from_yaml_array([{"title": "Hidden", "labels": "bug", "hidden": True}])
+    record = record_stub("org/repo#1", ["bug"])
+    records = {"org/repo#1": record}
+    # Mock to_chapter_row to track calls
+    original_to_chapter_row = record.to_chapter_row
+    mock_to_chapter_row = mocker.Mock(side_effect=original_to_chapter_row)
+    record.to_chapter_row = mock_to_chapter_row
+    # Act
+    cc.populate(records)
+    # Assert - to_chapter_row called with add_into_chapters=False for hidden chapter
+    mock_to_chapter_row.assert_called_once_with(False)
+
+
+def test_populate_visible_chapter_duplicity_count(record_stub, mocker):
+    # Arrange
+    cc = CustomChapters()
+    cc.from_yaml_array([{"title": "Visible", "labels": "bug", "hidden": False}])
+    record = record_stub("org/repo#1", ["bug"])
+    records = {"org/repo#1": record}
+    # Mock to_chapter_row to track calls
+    original_to_chapter_row = record.to_chapter_row
+    mock_to_chapter_row = mocker.Mock(side_effect=original_to_chapter_row)
+    record.to_chapter_row = mock_to_chapter_row
+    # Act
+    cc.populate(records)
+    # Assert - to_chapter_row called with add_into_chapters=True for visible chapter
+    mock_to_chapter_row.assert_called_once_with(True)
+
+
+def test_populate_mixed_visible_hidden_duplicity(record_stub):
+    # Arrange
+    cc = CustomChapters()
+    cc.from_yaml_array([
+        {"title": "Visible1", "labels": "bug", "hidden": False},
+        {"title": "Hidden1", "labels": "bug", "hidden": True},
+        {"title": "Visible2", "labels": "bug", "hidden": False},
+    ])
+    record = record_stub("org/repo#1", ["bug"])
+    records = {"org/repo#1": record}
+    # Act
+    cc.populate(records)
+    # Assert - record appears in all chapters but only counted in visible ones
+    assert "org/repo#1" in cc.chapters["Visible1"].rows
+    assert "org/repo#1" in cc.chapters["Hidden1"].rows
+    assert "org/repo#1" in cc.chapters["Visible2"].rows
+    # Record should be marked as present in 2 chapters (only visible ones)
+    assert record.chapter_presence_count() == 2
+
+
+def test_to_string_hidden_chapter_excluded():
+    # Arrange
+    cc = CustomChapters()
+    cc.from_yaml_array([
+        {"title": "Visible", "labels": "bug"},
+        {"title": "Hidden", "labels": "feature", "hidden": True},
+    ])
+    cc.chapters["Visible"].add_row(1, "Bug fix")
+    cc.chapters["Hidden"].add_row(2, "Hidden feature")
+    # Act
+    result = cc.to_string()
+    # Assert
+    assert "Visible" in result
+    assert "Bug fix" in result
+    assert "Hidden" not in result
+    assert "Hidden feature" not in result
+
+
+def test_to_string_all_hidden_returns_empty():
+    # Arrange
+    cc = CustomChapters()
+    cc.from_yaml_array([
+        {"title": "Hidden1", "labels": "bug", "hidden": True},
+        {"title": "Hidden2", "labels": "feature", "hidden": True},
+    ])
+    cc.chapters["Hidden1"].add_row(1, "Bug fix")
+    cc.chapters["Hidden2"].add_row(2, "Feature")
+    # Act
+    result = cc.to_string()
+    # Assert
+    assert result == ""
+
+
+def test_to_string_hidden_empty_chapter_not_shown():
+    # Arrange
+    cc = CustomChapters()
+    cc.print_empty_chapters = True
+    cc.from_yaml_array([{"title": "Hidden Empty", "labels": "bug", "hidden": True}])
+    # Act
+    result = cc.to_string()
+    # Assert - hidden chapters never shown, even when print_empty_chapters is True
+    assert result == ""
+
+
+def test_to_string_debug_logging_for_hidden(caplog):
+    # Arrange
+    caplog.set_level("DEBUG")
+    cc = CustomChapters()
+    cc.from_yaml_array([{"title": "Hidden", "labels": "bug", "hidden": True}])
+    cc.chapters["Hidden"].add_row(1, "Bug fix")
+    # Mock verbose mode
+    import release_notes_generator.action_inputs
+    original_get_verbose = release_notes_generator.action_inputs.ActionInputs.get_verbose
+    release_notes_generator.action_inputs.ActionInputs.get_verbose = staticmethod(lambda: True)
+    # Act
+    try:
+        cc.to_string()
+        # Assert
+        assert any("Skipping hidden chapter" in r.message for r in caplog.records)
+        assert any("Hidden" in r.message and "1 records tracked" in r.message for r in caplog.records)
+    finally:
+        # Restore
+        release_notes_generator.action_inputs.ActionInputs.get_verbose = original_get_verbose
+
+
+def test_populate_debug_logging_for_hidden_assignment(record_stub, caplog):
+    # Arrange
+    caplog.set_level("DEBUG")
+    cc = CustomChapters()
+    cc.from_yaml_array([{"title": "Hidden", "labels": "bug", "hidden": True}])
+    record = record_stub("org/repo#1", ["bug"])
+    records = {"org/repo#1": record}
+    # Mock verbose mode
+    import release_notes_generator.action_inputs
+    original_get_verbose = release_notes_generator.action_inputs.ActionInputs.get_verbose
+    release_notes_generator.action_inputs.ActionInputs.get_verbose = staticmethod(lambda: True)
+    # Act
+    try:
+        cc.populate(records)
+        # Assert
+        assert any("assigned to hidden chapter" in r.message.lower() for r in caplog.records)
+        assert any("not counted for duplicity" in r.message.lower() for r in caplog.records)
+    finally:
+        # Restore
+        release_notes_generator.action_inputs.ActionInputs.get_verbose = original_get_verbose
+
+
+def test_hidden_chapter_info_logging(caplog):
+    # Arrange
+    caplog.set_level("INFO")
+    cc = CustomChapters()
+    # Act
+    cc.from_yaml_array([{"title": "Hidden", "labels": "bug", "hidden": True}])
+    # Assert
+    assert any(
+        "marked as hidden" in r.message.lower() and "will not appear in output" in r.message.lower()
+        for r in caplog.records
+    )
+
+
+def test_backward_compatibility_no_hidden_field():
+    # Arrange - test that chapters without hidden field work as before
+    cc = CustomChapters()
+    # Act
+    cc.from_yaml_array([
+        {"title": "Breaking Changes 💥", "label": "breaking-change"},
+        {"title": "New Features 🎉", "labels": ["enhancement", "feature"]},
+    ])
+    # Assert
+    assert "Breaking Changes 💥" in cc.chapters
+    assert "New Features 🎉" in cc.chapters
+    assert cc.chapters["Breaking Changes 💥"].hidden is False
+    assert cc.chapters["New Features 🎉"].hidden is False
+
