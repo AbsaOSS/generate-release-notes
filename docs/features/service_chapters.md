@@ -93,7 +93,7 @@ All closed issues linked to a Pull Request.
 ### Direct commits ⚠️
 All direct commits are linked pull requests.
 ```
-(Excerpt; remaining chapters omitted for brevity. Note: "Closed Issues without User Defined Labels" now appears first among service chapters.)
+**Excerpt:** Remaining chapters omitted for brevity.
 
 ## Related Features
 - [Duplicity Handling](./duplicity_handling.md) – controls duplicate visibility and icons.

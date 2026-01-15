@@ -324,6 +324,7 @@ class ServiceChapters(BaseChapters):
 
             chapter = self.chapters.get(chapter_title)
             if chapter is None:
+                logger.error("Chapter %s not found in chapters dictionary.", chapter_title)
                 continue
 
             chapter_string = chapter.to_string(
