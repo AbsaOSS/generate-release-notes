@@ -67,8 +67,6 @@ Resulting chapter headings are unique by title; label sets aggregate across repe
   - Are excluded from final output rendering
   - Do NOT count toward duplicity detection (no 🔔 icon contribution)
   - Are always omitted regardless of `print-empty-chapters` setting
-  - Accept boolean or boolean-like string values ("true"/"false", case-insensitive)
-  - Invalid values log warning and default to `false`
 
 ### Issue ↔ PR Linking
 Link detection influences chapter population and Service Chapters:

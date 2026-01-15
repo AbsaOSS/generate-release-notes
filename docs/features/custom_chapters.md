@@ -14,9 +14,9 @@ Optionally, you can add:
 ```yaml
 with:
   chapters: |
-    - {"title": "New Features 🎉", "labels": "feature, enhancement"}    # multi-label form (comma separated)
-    - {"title": "Bugfixes 🛠️", "label": "bug"}                          # legacy single-label form
-    - {"title": "Platform 🧱", "labels": ["platform", "infra"]}         # multi-label form (YAML list)
+    - {"title": "New Features 🎉", "labels": "feature, enhancement"}        # multi-label form (comma separated)
+    - {"title": "Bugfixes 🛠️", "label": "bug"}                              # legacy single-label form
+    - {"title": "Platform 🧱", "labels": ["platform", "infra"]}             # multi-label form (YAML list)
     - {"title": "Internal Notes 📝", "labels": "internal", "hidden": true}  # hidden chapter
 ```
 
@@ -26,16 +26,15 @@ Hidden chapters allow you to define chapters that process records normally but a
 
 ### Purpose
 - Generate draft release notes without deleting chapter definitions
+- Adds the benefit of reducing post-editing effort
 - Hide work-in-progress or internal sections from stakeholders
-- Track records for validation without displaying them publicly
-- Maintain consistent YAML configuration across different release contexts
 
 ### Behavior
 When a chapter has `hidden: true`:
 - **Processing**: Records ARE assigned to the chapter during population
 - **Tracking**: Records in hidden chapters ARE tracked in internal lists
 - **Duplicity Detection**: Hidden chapters do NOT count toward duplicity (no 🔔 icon contribution)
-- **Output**: Hidden chapters are completely excluded from `to_string()` rendering
+- **Output**: Hidden chapters are completely excluded from output rendering
 - **Empty Chapter Setting**: `print-empty-chapters` has no effect on hidden chapters (always excluded)
 
 ### Examples
