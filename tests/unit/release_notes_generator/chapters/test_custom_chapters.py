@@ -523,28 +523,22 @@ def test_to_string_hidden_empty_chapter_not_shown():
     assert result == ""
 
 
-def test_to_string_debug_logging_for_hidden(caplog):
+def test_to_string_debug_logging_for_hidden(caplog, monkeypatch):
     # Arrange
     caplog.set_level("DEBUG")
     cc = CustomChapters()
     cc.from_yaml_array([{"title": "Hidden", "labels": "bug", "hidden": True}])
     cc.chapters["Hidden"].add_row(1, "Bug fix")
     # Mock verbose mode
-    import release_notes_generator.action_inputs
-    original_get_verbose = release_notes_generator.action_inputs.ActionInputs.get_verbose
-    release_notes_generator.action_inputs.ActionInputs.get_verbose = staticmethod(lambda: True)
+    monkeypatch.setattr(ActionInputs, "get_verbose", staticmethod(lambda: True))
     # Act
-    try:
-        cc.to_string()
-        # Assert
-        assert any("Skipping hidden chapter" in r.message for r in caplog.records)
-        assert any("Hidden" in r.message and "1 records tracked" in r.message for r in caplog.records)
-    finally:
-        # Restore
-        release_notes_generator.action_inputs.ActionInputs.get_verbose = original_get_verbose
+    cc.to_string()
+    # Assert
+    assert any("Skipping hidden chapter" in r.message for r in caplog.records)
+    assert any("Hidden" in r.message and "1 records tracked" in r.message for r in caplog.records)
 
 
-def test_populate_debug_logging_for_hidden_assignment(record_stub, caplog):
+def test_populate_debug_logging_for_hidden_assignment(record_stub, caplog, monkeypatch):
     # Arrange
     caplog.set_level("DEBUG")
     cc = CustomChapters()
@@ -552,18 +546,12 @@ def test_populate_debug_logging_for_hidden_assignment(record_stub, caplog):
     record = record_stub("org/repo#1", ["bug"])
     records = {"org/repo#1": record}
     # Mock verbose mode
-    import release_notes_generator.action_inputs
-    original_get_verbose = release_notes_generator.action_inputs.ActionInputs.get_verbose
-    release_notes_generator.action_inputs.ActionInputs.get_verbose = staticmethod(lambda: True)
+    monkeypatch.setattr(ActionInputs, "get_verbose", staticmethod(lambda: True))
     # Act
-    try:
-        cc.populate(records)
-        # Assert
-        assert any("assigned to hidden chapter" in r.message.lower() for r in caplog.records)
-        assert any("not counted for duplicity" in r.message.lower() for r in caplog.records)
-    finally:
-        # Restore
-        release_notes_generator.action_inputs.ActionInputs.get_verbose = original_get_verbose
+    cc.populate(records)
+    # Assert
+    assert any("assigned to hidden chapter" in r.message.lower() for r in caplog.records)
+    assert any("not counted for duplicity" in r.message.lower() for r in caplog.records)
 
 
 def test_hidden_chapter_info_logging(caplog):

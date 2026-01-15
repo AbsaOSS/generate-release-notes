@@ -100,16 +100,15 @@ class CustomChapters(BaseChapters):
                 if any(lbl in ch.labels for lbl in record_labels):
                     if record_id not in ch.rows:
                         # Only count toward duplicity for visible (non-hidden) chapters
-                        is_hidden = ch.hidden
-                        if not is_hidden:
+                        if not ch.hidden:
                             record.add_to_chapter_presence(ch.title)
                         # For hidden chapters: don't increment duplicity counter
                         # For visible chapters: increment duplicity counter (existing behavior)
-                        ch.add_row(record_id, record.to_chapter_row(not is_hidden))
+                        ch.add_row(record_id, record.to_chapter_row(not ch.hidden))
                         # Track for backward compatibility (not used for gating anymore)
                         if record_id not in self.populated_record_numbers_list:
                             self.populated_record_numbers_list.append(record_id)
-                        if is_hidden and ActionInputs.get_verbose():
+                        if ch.hidden and ActionInputs.get_verbose():
                             logger.debug(
                                 "Record %s assigned to hidden chapter '%s' (not counted for duplicity)",
                                 record_id,
