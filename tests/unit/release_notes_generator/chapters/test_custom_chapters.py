@@ -378,15 +378,19 @@ def test_from_yaml_array_hidden_omitted():
         pytest.param([], False, True, id="list-type"),
     ],
 )
-def test_from_yaml_array_hidden_validation(hidden_value, expected_hidden, should_warn, caplog):
+def test_from_yaml_array_hidden_validation(hidden_value, expected_hidden, should_warn, caplog, record_stub):
     # Arrange
     caplog.set_level("WARNING", logger="release_notes_generator.chapters.custom_chapters")
     cc = CustomChapters()
+    record = record_stub("org/repo#1", ["bug"])
+    records: dict[str, Record] = {"org/repo#1": record}
     # Act
     cc.from_yaml_array([{"title": "Test Chapter", "labels": "bug", "hidden": hidden_value}])
+    cc.populate(records)
     # Assert
     assert "Test Chapter" in cc.chapters
     assert cc.chapters["Test Chapter"].hidden is expected_hidden
+    assert "org/repo#1" in cc.chapters["Test Chapter"].rows
     if should_warn:
         assert any("invalid 'hidden' value" in r.message.lower() for r in caplog.records)
     else:
