@@ -13,6 +13,10 @@ from github.PullRequest import PullRequest
 from github.Repository import Repository
 
 from release_notes_generator.action_inputs import ActionInputs
+from release_notes_generator.utils.constants import (
+    SUPPORTED_ROW_FORMAT_KEYS_ISSUE,
+    SUPPORTED_ROW_FORMAT_KEYS_HIERARCHY_ISSUE,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -195,14 +199,15 @@ def format_row_with_suppression(template: str, values: dict[str, Any]) -> str:
     # Strategy: Parse the template and conditionally include segments based on placeholder values
 
     # Field name constants for suppression rules
-    # Note: These field names contain only alphanumeric chars and hyphens, which don't
-    # require escaping in regex patterns (hyphens are only special inside character classes).
+    # Note: These field names are defined in constants.py as part of SUPPORTED_ROW_FORMAT_KEYS_*
+    # They contain only alphanumeric chars and hyphens, which don't require escaping in regex
+    # patterns (hyphens are only special inside character classes).
     # The triple-brace syntax {{{var}}} in f-strings produces {{var}} which becomes
     # \{var\} in the final regex pattern, correctly matching literal braces.
-    FIELD_TYPE = "type"
-    FIELD_ASSIGNEES = "assignees"
-    FIELD_DEVELOPERS = "developers"
-    FIELD_PULL_REQUESTS = "pull-requests"
+    FIELD_TYPE = SUPPORTED_ROW_FORMAT_KEYS_ISSUE[0]  # "type"
+    FIELD_ASSIGNEES = SUPPORTED_ROW_FORMAT_KEYS_ISSUE[4]  # "assignees"
+    FIELD_DEVELOPERS = SUPPORTED_ROW_FORMAT_KEYS_ISSUE[5]  # "developers"
+    FIELD_PULL_REQUESTS = SUPPORTED_ROW_FORMAT_KEYS_ISSUE[6]  # "pull-requests"
 
     result = template
 
