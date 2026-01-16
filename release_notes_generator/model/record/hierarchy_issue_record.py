@@ -9,6 +9,7 @@ from github.Issue import Issue
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.record.issue_record import IssueRecord
 from release_notes_generator.model.record.sub_issue_record import SubIssueRecord
+from release_notes_generator.utils.record_utils import format_row_with_suppression
 
 logger = logging.getLogger(__name__)
 
@@ -128,7 +129,7 @@ class HierarchyIssueRecord(IssueRecord):
         if self.issue_type is not None:
             format_values["type"] = self.issue_type
         else:
-            format_values["type"] = "None"
+            format_values["type"] = ""
 
         list_pr_links = self.get_pr_links()
         if len(list_pr_links) > 0:
@@ -141,7 +142,9 @@ class HierarchyIssueRecord(IssueRecord):
             indent += "- "
 
         # create first issue row
-        row = f"{indent}{row_prefix}" + ActionInputs.get_row_format_hierarchy_issue().format(**format_values)
+        row = f"{indent}{row_prefix}" + format_row_with_suppression(
+            ActionInputs.get_row_format_hierarchy_issue(), format_values
+        )
 
         # add extra section with release notes if detected
         if self.contains_release_notes():

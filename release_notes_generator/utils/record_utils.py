@@ -155,3 +155,77 @@ def get_rls_notes_code_rabbit(body: str, line_marks: list[str], cr_detection_reg
                 break
 
     return "\n".join(release_notes_lines) + ("\n" if release_notes_lines else "")
+
+
+def format_row_with_suppression(template: str, values: dict[str, str]) -> str:
+    """
+    Format a row template with intelligent suppression of empty-field fragments.
+    
+    When a placeholder value is empty, this function removes not just the placeholder
+    but also the surrounding "fragment" (prefix/label text) to avoid dangling phrases like:
+    - "N/A:" when type is missing
+    - "assigned to " when assignees is empty
+    - "developed by  in " when developers and pull-requests are empty
+    
+    Parameters:
+        template: Format string with placeholders like "{type}: {number} _{title}_"
+        values: Dict mapping placeholder names to their values (may be empty strings)
+    
+    Returns:
+        Formatted string with empty-field fragments intelligently suppressed.
+    
+    Examples:
+        >>> format_row_with_suppression("{type}: {number}", {"type": "Task", "number": "#123"})
+        'Task: #123'
+        >>> format_row_with_suppression("{type}: {number}", {"type": "", "number": "#123"})
+        '#123'
+        >>> format_row_with_suppression("assigned to {assignees}", {"assignees": ""})
+        ''
+        >>> format_row_with_suppression("by {developers} in {pull-requests}", {"developers": "", "pull-requests": ""})
+        ''
+    """
+    # Strategy: Parse the template and conditionally include segments based on placeholder values
+    
+    result = template
+    
+    # First pass: handle compound patterns (both developers and pull-requests)
+    if not values.get("developers", "").strip() and not values.get("pull-requests", "").strip():
+        # Both are empty, remove the entire "developed by ... in ..." fragment
+        result = re.sub(
+            r"developed\s+by\s+\{developers\}\s+in\s+\{pull-requests\}",
+            "",
+            result,
+            flags=re.IGNORECASE
+        )
+    
+    # Second pass: handle individual patterns
+    # Remove "assigned to {assignees}" when assignees is empty
+    if not values.get("assignees", "").strip():
+        result = re.sub(
+            r"assigned\s+to\s+\{assignees\}",
+            "",
+            result,
+            flags=re.IGNORECASE
+        )
+    
+    # Remove "{type}:" or "{type} " prefix when type is empty
+    if not values.get("type", "").strip():
+        result = re.sub(
+            r"\{type\}:?\s*",
+            "",
+            result,
+            flags=re.IGNORECASE
+        )
+    
+    # Now format remaining placeholders with their values
+    # Use case-insensitive replacement for all placeholders
+    for key, value in values.items():
+        # Replace both {key} and case variations
+        pattern = re.compile(r"\{" + re.escape(key) + r"\}", re.IGNORECASE)
+        result = pattern.sub(value, result)
+    
+    # Clean up extra whitespace
+    result = re.sub(r"\s+", " ", result)  # Multiple spaces to single space
+    result = result.strip()
+    
+    return result

@@ -152,11 +152,11 @@ http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_HIERARCHY_NO_LABELS_NO_TYPE = """### Closed Issues without User Defined Labels ⚠️
-- 🔔 N/A: #121 _Fix the bug_ developed by @user in 
+- 🔔 #121 _Fix the bug_ developed by @user in
   - Solo issue release note
 
 ### Closed Issues without Pull Request ⚠️
-- N/A: #121 _Fix the bug_ developed by @user in 
+- #121 _Fix the bug_ developed by @user in
   - Solo issue release note
 
 ### Merged PRs without Issue and User Defined Labels ⚠️
@@ -172,31 +172,31 @@ RELEASE_NOTES_DATA_HIERARCHY_NO_LABELS_NO_TYPE = """### Closed Issues without Us
     * Awesome architecture
 
 ### Merged PRs Linked to 'Not Closed' Issue ⚠️
-- None: _HI302 open_ #302
+- _HI302 open_ #302
   - _Release Notes_:
     - Hierarchy level release note
-  - N/A: #451 _SI451 closed_ developed by @pr_author_101, @user in #150
+  - #451 _SI451 closed_ developed by @pr_author_101, @user in #150
     - Hierarchy level release note
     - Fixed bug
     - Improved performance
     + More nice code
       * Awesome architecture
-- None: _HI303 open_ #303
+- _HI303 open_ #303
   - _Release Notes_:
     - Hierarchy level release note
-  - N/A: #452 _SI452 closed_ developed by @author, @pr_author_101, @user in #151
+  - #452 _SI452 closed_ developed by @author, @pr_author_101, @user in #151
     - Hierarchy level release note
     - Fixed bug
     - Improved performance
     + More nice code
       * Awesome architecture
-- None: _HI304 open_ #304
+- _HI304 open_ #304
   - _Release Notes_:
     - Hierarchy level release note
-  - None: _HI350 open_ #350
+  - _HI350 open_ #350
     - _Release Notes_:
       - Sub-hierarchy level release note
-    - N/A: #453 _SI453 closed_ developed by @author, @pr_author_101, @user in #152
+    - #453 _SI453 closed_ developed by @author, @pr_author_101, @user in #152
       - Hierarchy level release note
       - Fixed bug
       - Improved performance
@@ -215,31 +215,31 @@ http://example.com/changelog
 
 
 RELEASE_NOTES_DATA_HIERARCHY_WITH_LABELS_NO_TYPE = """### Epics
-- None: _HI302 open_ #302
+- _HI302 open_ #302
   - _Release Notes_:
     - Hierarchy level release note
-  - N/A: #451 _SI451 closed_ developed by @pr_author_101, @user in #150
+  - #451 _SI451 closed_ developed by @pr_author_101, @user in #150
     - Hierarchy level release note
     - Fixed bug
     - Improved performance
     + More nice code
       * Awesome architecture
-- None: _HI303 open_ #303
+- _HI303 open_ #303
   - _Release Notes_:
     - Hierarchy level release note
-  - N/A: #452 _SI452 closed_ developed by @author, @pr_author_101, @user in #151
+  - #452 _SI452 closed_ developed by @author, @pr_author_101, @user in #151
     - Hierarchy level release note
     - Fixed bug
     - Improved performance
     + More nice code
       * Awesome architecture
-- None: _HI304 open_ #304
+- _HI304 open_ #304
   - _Release Notes_:
     - Hierarchy level release note
-  - None: _HI350 open_ #350
+  - _HI350 open_ #350
     - _Release Notes_:
       - Sub-hierarchy level release note
-    - N/A: #453 _SI453 closed_ developed by @author, @pr_author_101, @user in #152
+    - #453 _SI453 closed_ developed by @author, @pr_author_101, @user in #152
       - Hierarchy level release note
       - Fixed bug
       - Improved performance
@@ -257,7 +257,7 @@ RELEASE_NOTES_DATA_HIERARCHY_WITH_LABELS_NO_TYPE = """### Epics
 All closed issues contain at least one of user defined labels.
 
 ### Closed Issues without Pull Request ⚠️
-- N/A: #121 _Fix the bug_ developed by @user in 
+- #121 _Fix the bug_ developed by @user in
   - Solo issue release note
 
 ### Merged PRs without Issue and User Defined Labels ⚠️
