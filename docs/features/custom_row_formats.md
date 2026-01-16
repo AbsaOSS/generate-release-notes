@@ -10,6 +10,11 @@ Customize how individual issue, PR, and hierarchy issue lines are rendered in th
   - `row-format-pr`
   - `row-format-link-pr` (boolean controlling prefix `PR:` presence for standalone PR links)
 - Placeholders are case-insensitive; unknown placeholders are removed.
+- **Empty field suppression**: When a placeholder value is empty, the generator intelligently omits the surrounding text fragment:
+  - If `{type}` is empty → the entire `{type}:` or `{type} ` prefix is omitted (no "N/A" placeholder)
+  - If `{assignees}` is empty → the entire `assigned to {assignees}` phrase is omitted
+  - If `{pull-requests}` is empty → the `in {pull-requests}` suffix is omitted
+  - If both `{developers}` and `{pull-requests}` are empty → the entire `developed by {developers} in {pull-requests}` phrase is omitted
 - Available placeholders:
   - Hierarchy issue rows: `{type}`, `{number}`, `{title}`, `{author}`, `{assignees}`, `{developers}`
   - Issue rows: `{type}`, `{number}`, `{title}`, `{author}`, `{assignees}`, `{developers}`, `{pull-requests}`
@@ -38,10 +43,11 @@ Customize how individual issue, PR, and hierarchy issue lines are rendered in th
 ```markdown
 ### Features
 - Task: #500 _Add inline diff viewer_ developed by @alice in #501
-- PR: #505 _Add inline diff viewer_ developed by @kevin
+- #505 _Dependency Dashboard update_ author is @renovate[bot]
+- PR: #506 _Add inline diff viewer_ developed by @kevin
 ```
 
-(Formatting reflects the provided custom templates.)
+(Formatting reflects the provided custom templates. Note how issues without a type omit the type prefix, and issues without PRs omit the "in {pull-requests}" suffix.)
 
 ## Related Features
 - [Duplicity Handling](./duplicity_handling.md) – may add icon before formatted line.

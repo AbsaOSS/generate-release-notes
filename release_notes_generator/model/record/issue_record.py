@@ -150,9 +150,7 @@ class IssueRecord(Record):
         # contributors are not used in IssueRecord, so commented out for now
         # format_values["contributors"] = self.contributors if self.contributors is not None else ""
 
-        row = f"{row_prefix}" + format_row_with_suppression(
-            ActionInputs.get_row_format_issue(), format_values
-        )
+        row = f"{row_prefix}" + format_row_with_suppression(ActionInputs.get_row_format_issue(), format_values)
 
         if self.contains_release_notes():
             row = f"{row}\n{self.get_rls_notes()}"

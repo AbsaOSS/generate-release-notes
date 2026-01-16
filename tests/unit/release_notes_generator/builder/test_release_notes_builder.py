@@ -137,7 +137,7 @@ http://example.com/changelog
 RELEASE_NOTES_NO_DATA_NO_EMPTY_CHAPTERS = RELEASE_NOTES_NO_DATA_NO_WARNING_NO_EMPTY_CHAPTERS
 
 RELEASE_NOTES_DATA_CUSTOM_CHAPTERS_ONE_LABEL = """### Chapter 1 🛠
-- N/A: #122 _I1+bug_ developed by @pr_author_101, @pr_author_102, @user in #101, #102
+- #122 _I1+bug_ developed by @pr_author_101, @pr_author_102, @user in #101, #102
   - Fixed bug
   - Improved performance
   + More nice code
@@ -152,11 +152,11 @@ http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_HIERARCHY_NO_LABELS_NO_TYPE = """### Closed Issues without User Defined Labels ⚠️
-- 🔔 #121 _Fix the bug_ developed by @user in
+- 🔔 #121 _Fix the bug_ developed by @user
   - Solo issue release note
 
 ### Closed Issues without Pull Request ⚠️
-- #121 _Fix the bug_ developed by @user in
+- #121 _Fix the bug_ developed by @user
   - Solo issue release note
 
 ### Merged PRs without Issue and User Defined Labels ⚠️
@@ -257,7 +257,7 @@ RELEASE_NOTES_DATA_HIERARCHY_WITH_LABELS_NO_TYPE = """### Epics
 All closed issues contain at least one of user defined labels.
 
 ### Closed Issues without Pull Request ⚠️
-- #121 _Fix the bug_ developed by @user in
+- #121 _Fix the bug_ developed by @user
   - Solo issue release note
 
 ### Merged PRs without Issue and User Defined Labels ⚠️
@@ -317,7 +317,7 @@ RELEASE_NOTES_DATA_HIERARCHY_NO_LABELS_WITH_TYPE = """### Epics
 All closed issues contain at least one of user defined labels.
 
 ### Closed Issues without Pull Request ⚠️
-- Feature: #121 _Fix the bug_ developed by @user in 
+- Feature: #121 _Fix the bug_ developed by @user
   - Solo issue release note
 
 ### Merged PRs without Issue and User Defined Labels ⚠️
@@ -388,7 +388,7 @@ RELEASE_NOTES_DATA_HIERARCHY_WITH_LABELS_WITH_TYPE = """### Epics
 All closed issues contain at least one of user defined labels.
 
 ### Closed Issues without Pull Request ⚠️
-- Bug: #121 _Fix the bug_ developed by @user in 
+- Bug: #121 _Fix the bug_ developed by @user
   - Solo issue release note
 
 ### Merged PRs without Issue and User Defined Labels ⚠️
@@ -414,9 +414,9 @@ http://example.com/changelog
 
 
 RELEASE_NOTES_NO_DATA_HIERARCHY_NO_LABELS_NO_TYPE = """### Closed Issues without User Defined Labels ⚠️
-- 🔔 N/A: #121 _Fix the bug_ in 
+- 🔔 #121 _Fix the bug_
   - Solo issue release note
-- 🔔 Task: #450 _SI450 closed_ in 
+- 🔔 Task: #450 _SI450 closed_
   - Hierarchy level release note
 - #451 _SI451 closed_ in #150
   - Hierarchy level release note
@@ -438,9 +438,9 @@ RELEASE_NOTES_NO_DATA_HIERARCHY_NO_LABELS_NO_TYPE = """### Closed Issues without
     * Awesome architecture
 
 ### Closed Issues without Pull Request ⚠️
-- N/A: #121 _Fix the bug_ in 
+- #121 _Fix the bug_
   - Solo issue release note
-- #450 _SI450 closed_ in 
+- #450 _SI450 closed_
   - Hierarchy level release note
 
 ### Merged PRs without Issue and User Defined Labels ⚠️
@@ -477,7 +477,7 @@ RELEASE_NOTES_NO_DATA_HIERARCHY_WITH_LABELS_NO_TYPE = """### Chapter 1 🛠
     * Awesome architecture
 
 ### Closed Issues without User Defined Labels ⚠️
-- 🔔 #450 _SI450 closed_ in 
+- 🔔 #450 _SI450 closed_
   - Hierarchy level release note
 - #451 _SI451 closed_ in #150
   - Hierarchy level release note
@@ -499,9 +499,9 @@ RELEASE_NOTES_NO_DATA_HIERARCHY_WITH_LABELS_NO_TYPE = """### Chapter 1 🛠
     * Awesome architecture
 
 ### Closed Issues without Pull Request ⚠️
-- #121 _Fix the bug_ in 
+- #121 _Fix the bug_
   - Solo issue release note
-- #450 _SI450 closed_ in 
+- #450 _SI450 closed_
   - Hierarchy level release note
 
 ### Merged PRs without Issue and User Defined Labels ⚠️
@@ -527,7 +527,7 @@ http://example.com/changelog
 
 
 RELEASE_NOTES_NO_DATA_HIERARCHY_NO_LABELS_WITH_TYPE = """### Closed Issues without User Defined Labels ⚠️
-- 🔔 #450 _SI450 closed_ in 
+- 🔔 #450 _SI450 closed_
   - Hierarchy level release note
 - #451 _SI451 closed_ in #150
   - Hierarchy level release note
@@ -549,9 +549,9 @@ RELEASE_NOTES_NO_DATA_HIERARCHY_NO_LABELS_WITH_TYPE = """### Closed Issues witho
     * Awesome architecture
 
 ### Closed Issues without Pull Request ⚠️
-- #121 _Fix the bug_ in 
+- #121 _Fix the bug_
   - Solo issue release note
-- #450 _SI450 closed_ in 
+- #450 _SI450 closed_
   - Hierarchy level release note
 
 ### Merged PRs without Issue and User Defined Labels ⚠️
@@ -588,7 +588,7 @@ RELEASE_NOTES_NO_DATA_HIERARCHY_WITH_LABELS_WITH_TYPE = """### Chapter 1 🛠
     * Awesome architecture
 
 ### Closed Issues without User Defined Labels ⚠️
-- 🔔 #450 _SI450 closed_ in 
+- 🔔 #450 _SI450 closed_
   - Hierarchy level release note
 - #451 _SI451 closed_ in #150
   - Hierarchy level release note
@@ -610,9 +610,9 @@ RELEASE_NOTES_NO_DATA_HIERARCHY_WITH_LABELS_WITH_TYPE = """### Chapter 1 🛠
     * Awesome architecture
 
 ### Closed Issues without Pull Request ⚠️
-- #121 _Fix the bug_ in 
+- #121 _Fix the bug_
   - Solo issue release note
-- #450 _SI450 closed_ in 
+- #450 _SI450 closed_
   - Hierarchy level release note
 
 ### Merged PRs without Issue and User Defined Labels ⚠️
@@ -655,7 +655,7 @@ http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_CUSTOM_CHAPTERS_MORE_LABELS_DUPLICITY_REDUCTION_ON = """### Chapter 1 🛠
-- N/A: #122 _I1+bug-enhancement_ developed by @pr_author_101, @pr_author_102, @user in #101, #102
+- #122 _I1+bug-enhancement_ developed by @pr_author_101, @pr_author_102, @user in #101, #102
   - Fixed bug
   - Improved performance
   + More nice code
@@ -683,10 +683,10 @@ http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_ISSUE_NO_PR_NO_USER_LABELS = """### Closed Issues without User Defined Labels ⚠️
-- 🔔 N/A: #121 _Fix the bug_ developed by @user in
+- 🔔 #121 _Fix the bug_ developed by @user
 
 ### Closed Issues without Pull Request ⚠️
-- N/A: #121 _Fix the bug_ developed by @user in
+- #121 _Fix the bug_ developed by @user
 
 #### Full Changelog
 http://example.com/changelog
@@ -716,7 +716,7 @@ http://example.com/changelog
 RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_PR_NO_ISSUE_SKIP_USER_LABELS = RELEASE_NOTES_NO_DATA_NO_WARNING_NO_EMPTY_CHAPTERS
 
 RELEASE_NOTES_DATA_SERVICE_CHAPTERS_OPEN_ISSUE_AND_MERGED_PR_NO_USER_LABELS = """### Merged PRs Linked to 'Not Closed' Issue ⚠️
-- N/A: #122 _I1 open_ developed by @pr_author_101, @pr_author_102, @user in #101, #102
+- #122 _I1 open_ developed by @pr_author_101, @pr_author_102, @user in #101, #102
   - PR 101 1st release note
   - PR 101 2nd release note
   - PR 102 1st release note
@@ -738,14 +738,14 @@ http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_CLOSED_ISSUE_NO_PR_WITH_USER_LABELS = """### Closed Issues without Pull Request ⚠️
-- N/A: #121 _Fix the bug_ developed by @user in
+- #121 _Fix the bug_ developed by @user
 
 #### Full Changelog
 http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_PR_WITHOUT_USER_LABELS = """### Closed Issues without User Defined Labels ⚠️
-- N/A: #122 _I1_ developed by @pr_author_101, @pr_author_102, @user in #101, #102
+- #122 _I1_ developed by @pr_author_101, @pr_author_102, @user in #101, #102
   - Fixed bug
   - Improved performance
   + More nice code
@@ -778,10 +778,10 @@ http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_MERGED_PRS_WITH_OPEN_ISSUES = """### Merged PRs Linked to 'Not Closed' Issue ⚠️
-- N/A: #122 _I1 open_ developed by @pr_author_101, @user in #101
+- #122 _I1 open_ developed by @pr_author_101, @user in #101
   - PR 101 1st release note
   - PR 101 2nd release note
-- N/A: #123 _I2 open_ developed by @pr_author_102, @user in #102
+- #123 _I2 open_ developed by @pr_author_102, @user in #102
   - PR 102 1st release note
   - PR 102 2nd release note
 
@@ -790,7 +790,7 @@ http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_MERGED_PRS_WITHOUT_USER_LABELS = """### Closed Issues without User Defined Labels ⚠️
-- N/A: #121 _Fix the bug_ developed by @pr_author_101, @user in #123
+- #121 _Fix the bug_ developed by @pr_author_101, @user in #123
   - Fixed bug
   - Improved performance
   + More nice code
@@ -803,7 +803,7 @@ http://example.com/changelog
 RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_MERGED_PRS_WITH_USER_LABELS_WITH_SKIP_LABEL = RELEASE_NOTES_NO_DATA_NO_WARNING_NO_EMPTY_CHAPTERS
 
 RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_MERGED_PRS_WITH_USER_LABELS = """### Chapter 1 🛠
-- N/A: #122 _I1+bug_ developed by @pr_author_124, @user in #124
+- #122 _I1+bug_ developed by @pr_author_124, @user in #124
   - Fixed bug
   - Improved performance
   + More nice code
