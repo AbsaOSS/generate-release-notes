@@ -195,6 +195,10 @@ def format_row_with_suppression(template: str, values: dict[str, Any]) -> str:
     # Strategy: Parse the template and conditionally include segments based on placeholder values
 
     # Field name constants for suppression rules
+    # Note: These field names contain only alphanumeric chars and hyphens, which don't
+    # require escaping in regex patterns (hyphens are only special inside character classes).
+    # The triple-brace syntax {{{var}}} in f-strings produces {{var}} which becomes
+    # \{var\} in the final regex pattern, correctly matching literal braces.
     FIELD_TYPE = "type"
     FIELD_ASSIGNEES = "assignees"
     FIELD_DEVELOPERS = "developers"
