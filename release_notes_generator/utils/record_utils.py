@@ -5,7 +5,7 @@ Utilities for working with GitHub issue/PR/commit identifiers.
 import logging
 import re
 from functools import lru_cache
-from typing import cast
+from typing import cast, Any
 
 from github.Commit import Commit
 from github.Issue import Issue
@@ -157,7 +157,7 @@ def get_rls_notes_code_rabbit(body: str, line_marks: list[str], cr_detection_reg
     return "\n".join(release_notes_lines) + ("\n" if release_notes_lines else "")
 
 
-def format_row_with_suppression(template: str, values: dict[str, str]) -> str:
+def format_row_with_suppression(template: str, values: dict[str, Any]) -> str:
     """
     Format a row template with intelligent suppression of empty-field fragments.
 
@@ -166,6 +166,14 @@ def format_row_with_suppression(template: str, values: dict[str, str]) -> str:
     - "N/A:" when type is missing
     - "assigned to " when assignees is empty
     - "developed by  in " when developers and pull-requests are empty
+
+    NOTE: This function is designed to work with the default row format templates.
+    Custom templates using different phrase structures may not benefit from all
+    suppression rules. The following patterns are detected and suppressed:
+    - "{type}:" or "{type} " prefix
+    - "assigned to {assignees}" phrase
+    - "developed by {developers} in {pull-requests}" phrase
+    - " in {pull-requests}" suffix
 
     Parameters:
         template: Format string with placeholders like "{type}: {number} _{title}_"
@@ -186,31 +194,42 @@ def format_row_with_suppression(template: str, values: dict[str, str]) -> str:
     """
     # Strategy: Parse the template and conditionally include segments based on placeholder values
 
+    # Field name constants for suppression rules
+    FIELD_TYPE = "type"
+    FIELD_ASSIGNEES = "assignees"
+    FIELD_DEVELOPERS = "developers"
+    FIELD_PULL_REQUESTS = "pull-requests"
+
     result = template
 
     # First pass: handle compound patterns (both developers and pull-requests)
-    if not values.get("developers", "").strip() and not values.get("pull-requests", "").strip():
+    if not values.get(FIELD_DEVELOPERS, "").strip() and not values.get(FIELD_PULL_REQUESTS, "").strip():
         # Both are empty, remove the entire "developed by ... in ..." fragment
-        result = re.sub(r"developed\s+by\s+\{developers\}\s+in\s+\{pull-requests\}", "", result, flags=re.IGNORECASE)
-    elif not values.get("pull-requests", "").strip():
+        result = re.sub(
+            rf"developed\s+by\s+\{{{FIELD_DEVELOPERS}\}}\s+in\s+\{{{FIELD_PULL_REQUESTS}\}}",
+            "",
+            result,
+            flags=re.IGNORECASE,
+        )
+    elif not values.get(FIELD_PULL_REQUESTS, "").strip():
         # pull-requests is empty but developers is not, remove just " in {pull-requests}"
-        result = re.sub(r"\s+in\s+\{pull-requests\}", "", result, flags=re.IGNORECASE)
+        result = re.sub(rf"\s+in\s+\{{{FIELD_PULL_REQUESTS}\}}", "", result, flags=re.IGNORECASE)
 
     # Second pass: handle individual patterns
     # Remove "assigned to {assignees}" when assignees is empty
-    if not values.get("assignees", "").strip():
-        result = re.sub(r"assigned\s+to\s+\{assignees\}", "", result, flags=re.IGNORECASE)
+    if not values.get(FIELD_ASSIGNEES, "").strip():
+        result = re.sub(rf"assigned\s+to\s+\{{{FIELD_ASSIGNEES}\}}", "", result, flags=re.IGNORECASE)
 
     # Remove "{type}:" or "{type} " prefix when type is empty
-    if not values.get("type", "").strip():
-        result = re.sub(r"\{type\}:?\s*", "", result, flags=re.IGNORECASE)
+    if not values.get(FIELD_TYPE, "").strip():
+        result = re.sub(rf"\{{{FIELD_TYPE}\}}:?\s*", "", result, flags=re.IGNORECASE)
 
     # Now format remaining placeholders with their values
     # Use case-insensitive replacement for all placeholders
     for key, value in values.items():
         # Replace both {key} and case variations
         pattern = re.compile(r"\{" + re.escape(key) + r"\}", re.IGNORECASE)
-        result = pattern.sub(value, result)
+        result = pattern.sub(str(value), result)
 
     # Clean up extra whitespace
     result = re.sub(r"\s+", " ", result)  # Multiple spaces to single space
