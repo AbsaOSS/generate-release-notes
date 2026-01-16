@@ -32,6 +32,7 @@ class Chapter:
         self.labels: list[str] = labels if labels else []
         self.rows: dict[int | str, str] = {}
         self.empty_message = empty_message
+        self.hidden: bool = False
 
     def add_row(self, row_id: int | str, row: str) -> None:
         """

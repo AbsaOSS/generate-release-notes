@@ -8,7 +8,7 @@ This page lists all action inputs and outputs with defaults. Grouped for readabi
 |------|----------|---------|-------------|
 | `tag-name` | Yes | – | Target release tag (must already exist). |
 | `from-tag-name` | No | "" | Explicit previous release tag; if empty semantic latest published release is used. |
-| `chapters` | No | "" | YAML multi-line list of chapter entries (title + label or labels). Supports legacy `label` or multi `labels` definitions. |
+| `chapters` | No | "" | YAML multi-line list of chapter entries (title + label or labels + optional hidden flag). Supports legacy `label` or multi `labels` definitions. Optional `hidden: true` excludes chapter from output. |
 | `hierarchy` | No | `false` | Enable Issue Hierarchy Support. |
 | `published-at` | No | `false` | Use previous release `published_at` timestamp instead of `created_at`. |
 | `skip-release-notes-labels` | No | `skip-release-notes` | Comma‑separated labels that fully exclude issues/PRs. |
@@ -40,12 +40,13 @@ This page lists all action inputs and outputs with defaults. Grouped for readabi
 Placeholders are case-insensitive; unknown placeholders are removed silently.
 
 ### Chapters Configuration
-Provide chapters as a YAML multi-line string. Each entry must define a `title` and either `label` (legacy) or `labels` (multi-label).
+Provide chapters as a YAML multi-line string. Each entry must define a `title` and either `label` (legacy) or `labels` (multi-label). Optionally include `hidden: true` to exclude the chapter from output while still processing records.
 
 ```yaml
 with:
   chapters: |
     - {"title": "Breaking Changes 💥", "label": "breaking-change"}          # legacy single-label form
+    - {"title": "Internal Notes 📝", "labels": "internal", "hidden": true}  # hidden chapter
 ```
 
 Resulting chapter headings are unique by title; label sets aggregate across repeated titles (logical OR). Whitespace is trimmed; duplicates removed preserving first-seen order.
@@ -62,6 +63,10 @@ Resulting chapter headings are unique by title; label sets aggregate across repe
 - A record may appear in multiple chapters (cross-chapter duplication always allowed, independent of `duplicity-scope`). Intra-chapter duplicates are suppressed.
 - Ordering: Chapters rendered in order of first appearance of each unique title.
 - When verbose mode is enabled, normalized label sets are logged at DEBUG level.
+- **Hidden chapters**: Chapters with `hidden: true` are processed normally (records assigned and tracked) but:
+  - Are excluded from final output rendering
+  - Do NOT count toward duplicity detection (no 🔔 icon contribution)
+  - Are always omitted regardless of `print-empty-chapters` setting
 
 ### Issue ↔ PR Linking
 Link detection influences chapter population and Service Chapters:
