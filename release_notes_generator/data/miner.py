@@ -17,6 +17,7 @@
 """
 This module contains logic for mining data from GitHub, including issues, pull requests, commits, and releases.
 """
+
 import logging
 import sys
 import traceback

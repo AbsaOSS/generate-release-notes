@@ -17,6 +17,7 @@
 """
 This module contains the Chapter class which is responsible for representing a chapter in the release notes.
 """
+
 from typing import Optional
 
 

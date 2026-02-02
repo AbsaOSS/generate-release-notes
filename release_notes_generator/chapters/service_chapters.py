@@ -18,6 +18,7 @@
 This module contains the ServiceChapters class which is responsible for representing the service chapters in the release
  notes.
 """
+
 import logging
 from typing import Optional, cast
 

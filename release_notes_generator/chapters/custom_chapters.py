@@ -18,6 +18,7 @@
 This module contains the CustomChapters class which is responsible for representing the custom chapters in the release
 notes.
 """
+
 import logging
 from typing import Any, Iterable
 
