@@ -17,6 +17,7 @@
 """
 This module contains the RecordFactory base class used to generate records.
 """
+
 import abc
 import logging
 

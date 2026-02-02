@@ -17,6 +17,7 @@
 """
 This module contains the BaseChapters class which is responsible for representing the base chapters.
 """
+
 from abc import ABC, abstractmethod
 from typing import Optional
 from datetime import datetime

@@ -17,6 +17,7 @@
 """
 This module contains the ReleaseNotesBuilder class which is responsible for building of the release notes.
 """
+
 import logging
 
 from itertools import chain
