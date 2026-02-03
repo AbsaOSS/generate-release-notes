@@ -211,7 +211,7 @@ def format_row_with_suppression(template: str, values: dict[str, Any]) -> str:
 
     result = template
 
-    # First pass: handle compound patterns (both developers and pull-requests)
+    # handle compound patterns (both developers and pull-requests)
     if not values.get(FIELD_DEVELOPERS, "").strip() and not values.get(FIELD_PULL_REQUESTS, "").strip():
         # Both are empty, remove the entire "developed by ... in ..." fragment
         result = re.sub(
@@ -224,7 +224,7 @@ def format_row_with_suppression(template: str, values: dict[str, Any]) -> str:
         # pull-requests is empty but developers is not, remove just " in {pull-requests}"
         result = re.sub(rf"\s+in\s+\{{{FIELD_PULL_REQUESTS}\}}", "", result, flags=re.IGNORECASE)
 
-    # Second pass: handle individual patterns
+    # handle individual patterns
     # Remove "assigned to {assignees}" when assignees is empty
     if not values.get(FIELD_ASSIGNEES, "").strip():
         result = re.sub(rf"assigned\s+to\s+\{{{FIELD_ASSIGNEES}\}}", "", result, flags=re.IGNORECASE)
