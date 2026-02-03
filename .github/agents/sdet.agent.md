@@ -16,9 +16,14 @@ Outputs
 
 Responsibilities
 - Unit/integration tests with pytest-cov ≥ 80%; deterministic fixtures.
-- Mock external services (e.g., IBKR, GitHub) and environment variables; no real API calls in unit tests.
+- Mock external services (e.g., GitHub) and environment variables; no real API calls in unit tests.
 - Assert on stable error messages/logs; enforce logging over print.
 - Wire CI to run Black, Pylint, mypy, pytest-cov with thresholds.
+
+Test review efficiency
+- Add the smallest number of tests that prove the contract (prefer ≤ 3 focused tests per change)
+- Keep test diffs readable: avoid huge fixtures; reuse existing fixtures when possible
+- In summaries, list only: new tests added + what they assert
 
 Collaboration
 - Work with Senior Developer on TDD/test-first for complex logic.

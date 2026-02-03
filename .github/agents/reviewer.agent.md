@@ -8,6 +8,12 @@ Reviewer
 Mission
 - Guard correctness, security, performance, and contract stability in PRs.
 
+Review efficiency (strict)
+- Default to a short review: max 8 bullets total
+- Group feedback into: Must-fix (≤ 5) / Nice-to-have (≤ 3)
+- Don’t rewrite code inline unless it’s <10 lines; otherwise point to file+symbol and describe the change
+- Avoid repeating the project checklist; only call out which gate failed and how to fix it
+
 Inputs
 - PR diffs, CI results, specs, test/coverage reports, performance metrics.
 

@@ -1,25 +1,31 @@
-Copilot instructions for version-tag-check
+Copilot instructions for generate-release-notes
 
 Purpose
-This repo contains a Python 3.11 GitHub Action that validates semantic version tags like v1.2.3 against tags in a GitHub repository.
+This repo contains a Python GitHub Action that generates release notes from GitHub issues, PRs, and commits.
 
 Context
 - Composite action defined in action.yml
 - Entry script is main.py
-- Core code in version_tag_check (Version, NewVersionValidator, VersionTagCheckAction)
-- Inputs are read from env vars: INPUT_GITHUB_TOKEN, INPUT_VERSION_TAG, INPUT_GITHUB_REPOSITORY, INPUT_SHOULD_EXIST
+- Core code is in release_notes_generator/ (inputs, mining, chapter building, rendering)
+- Inputs are read from GitHub Actions env vars (via ActionInputs)
 
 Coding guidelines
 - Keep changes small and focused
 - Prefer clear, explicit code over clever tricks
-- Do not change existing error messages or log texts without a good reason, because tests check them
-- Keep behaviour of action inputs stable unless the contract is intentionally updated
+- Keep behaviour of action inputs and output formats stable unless the contract is intentionally updated
+
+Output discipline (reduce review time)
+- Default to concise responses (aim ≤ 10 lines in the final recap)
+- Do not restate large file contents, configs, or checklists; link to files and summarize deltas
+- Prefer actionable bullets over prose; avoid repeating unchanged plan sections
+- When making code changes, end with: What changed / Why / How to verify (commands/tests)
+- Only include deep rationale, alternatives, or long examples when explicitly requested
 
 Python and style
 - Target Python 3.11 or later
-- Follow the current patterns in version_tag_check
+- Follow the current patterns in release_notes_generator
 - Add type hints for new public functions and classes
-- Use logging, not print, and keep logging wired through version_tag_check.utils.logging_config
+- Use logging, not print, and keep logging wired through release_notes_generator.utils.logging_config
 - All Python imports must be placed at the top of the file, not inside methods or functions
 
 Docstrings and comments
@@ -35,11 +41,8 @@ Copyright headers
 Testing
 - Use pytest with tests located in tests/
 - Test behaviour: return values, raised errors, log messages, exit codes
-- When touching version parsing or increment rules, extend tests in:
-	tests/test_version.py
-	tests/test_version_validator.py
-	tests/test_version_tag_check_action.py
-- Mock GitHubRepository and environment variables; do not call the real GitHub API in unit tests
+- Prefer unit tests under tests/unit/; keep integration tests optional and isolated
+- Mock GitHub API interactions and environment variables; do not call the real GitHub API in unit tests
 
 Tooling
 - Format with Black using pyproject.toml
@@ -105,18 +108,20 @@ Use this for every PR:
 - Documentation updated
 
 Architecture notes
-- Action must work on a GitHub Actions runner with only requirements.txt dependencies
-- Keep Version and NewVersionValidator free of I/O and environment access
-- Route new behaviour that affects action inputs or outputs through VersionTagCheckAction
+ - Action must work on a GitHub Actions runner with only requirements.txt dependencies
+ - Keep pure logic free of environment access where practical; prefer routing env/input behaviour through ActionInputs
+ - Avoid adding network calls to unit tests
 
 File overview
 - main.py: sets up logging and runs the action
 - action.yml: composite action definition
-- version_tag_check/version.py: Version model and comparison
-- version_tag_check/version_validator.py: new version increment rules
-- version_tag_check/version_tag_check_action.py: orchestration and input validation
-- version_tag_check/github_repository.py: GitHub API wrapper
-- version_tag_check/utils/: helpers including gh_action and logging_config
+- release_notes_generator/action_inputs.py: action input handling
+- release_notes_generator/generator.py: orchestration
+- release_notes_generator/builder/: release notes builder
+- release_notes_generator/chapters/: chapter implementations
+- release_notes_generator/data/: mining/filtering
+- release_notes_generator/model/: data models and records
+- release_notes_generator/utils/: helpers including gh_action and logging_config
 
 Common commands
 - Create and activate venv, install deps:
@@ -133,5 +138,5 @@ Common commands
   - mypy .
 
 Learned rules
-- Keep error messages stable; tests assert on exact strings
+- Keep externally-visible output stable; tests assert on exact strings in several places
 - Do not change exit codes for existing failure scenarios

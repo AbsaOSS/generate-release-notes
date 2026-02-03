@@ -25,3 +25,7 @@ Collaboration
 
 Definition of Done
 - CI is consistently green, fast, and yields actionable logs.
+
+Output discipline
+- When proposing CI changes, provide only: goal, diff summary, and expected runtime impact (≤ 8 bullets)
+- Avoid long explanations of standard tooling; link to workflow files instead
