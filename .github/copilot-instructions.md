@@ -22,6 +22,16 @@ Python and style
 - Use logging, not print, and keep logging wired through version_tag_check.utils.logging_config
 - All Python imports must be placed at the top of the file, not inside methods or functions
 
+Docstrings and comments
+- Keep docstrings consistent with existing modules: a short summary line, then optional `Parameters:` / `Returns:` sections
+- Avoid long prose, tutorials, or doctest-style examples inside docstrings; keep them focused on behavior and contracts
+- Prefer self-explanatory code over comments; add comments only when they explain non-obvious intent or edge cases (the “why”)
+- Avoid multi-line comment blocks that restate what the code already expresses
+
+Copyright headers
+- Ensure the standard copyright/license header is present in every code file, including `__init__.py` modules
+- Use the repository/project's first-copyright year (the year of the first file that introduced this standard header), not the individual file creation year
+
 Testing
 - Use pytest with tests located in tests/
 - Test behaviour: return values, raised errors, log messages, exit codes
