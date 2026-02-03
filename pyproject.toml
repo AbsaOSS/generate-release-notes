@@ -1,6 +1,6 @@
 [tool.black]
 line-length = 120
-target-version = ['py311']
+target-version = ['py314']
 force-exclude = '''test'''
 
 [tool.coverage.run]

@@ -21,12 +21,28 @@ Output discipline (reduce review time)
 - When making code changes, end with: What changed / Why / How to verify (commands/tests)
 - Only include deep rationale, alternatives, or long examples when explicitly requested
 
+PR Body Management
+
+- PR body format: Write PR description as a changelog, appending new changes to the end.
+- Prohibited: Rewriting or replacing the entire PR body. Always append updates.
+- Structure:
+  - Keep original description at top
+  - Add new sections/updates chronologically below
+  - Use clear headings like "## Update [date/commit]" or "## Changes Added"
+  - Each update should reference the commit hash that made the changes
+- Purpose: Maintain full history of PR evolution for reviewers and future reference.
+
 Python and style
-- Target Python 3.11 or later
+- Target Python 3.14 or later
 - Follow the current patterns in release_notes_generator
 - Add type hints for new public functions and classes
 - Use logging, not print, and keep logging wired through release_notes_generator.utils.logging_config
 - All Python imports must be placed at the top of the file, not inside methods or functions
+
+String formatting
+- Prefer t-strings for non-logging string interpolation/templating
+- Avoid f-strings for user-facing text unless t-strings are not practical
+- Logging is an exception: always use lazy % formatting (e.g., `logger.info("value=%s", value)`), not f-strings or t-strings
 
 Docstrings and comments
 - Keep docstrings consistent with existing modules: a short summary line, then optional `Parameters:` / `Returns:` sections

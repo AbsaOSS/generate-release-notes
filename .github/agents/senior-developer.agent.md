@@ -23,7 +23,7 @@ Responsibilities
 - Implement small, explicit changes; avoid cleverness and nondeterminism.
 - Meet quality gates: Black formatting, Pylint ≥ 9.5, mypy clean, pytest-cov ≥ 80%.
 - Keep error messages/exit codes stable unless contract change is approved.
-- Use Python 3.11+, logging via existing logging utilities.
+- Use Python 3.14+, logging via existing logging utilities.
 
 Collaboration
 - Clarify acceptance criteria with Specification Master before coding.
