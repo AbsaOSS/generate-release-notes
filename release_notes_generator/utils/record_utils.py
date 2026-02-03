@@ -184,6 +184,7 @@ def format_row_with_suppression(template: str, values: dict[str, Any]) -> str:
     Returns:
         The formatted string.
     """
+
     def is_empty(key: str) -> bool:
         return not str(values.get(key, "")).strip()
 
