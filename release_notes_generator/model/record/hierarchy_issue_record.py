@@ -1,3 +1,19 @@
+#
+# Copyright 2023 ABSA Group Limited
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 """
 A module that defines the HierarchyIssueRecord class for hierarchical issue rendering.
 """
@@ -9,6 +25,7 @@ from github.Issue import Issue
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.record.issue_record import IssueRecord
 from release_notes_generator.model.record.sub_issue_record import SubIssueRecord
+from release_notes_generator.utils.record_utils import format_row_with_suppression
 
 logger = logging.getLogger(__name__)
 
@@ -128,7 +145,7 @@ class HierarchyIssueRecord(IssueRecord):
         if self.issue_type is not None:
             format_values["type"] = self.issue_type
         else:
-            format_values["type"] = "None"
+            format_values["type"] = ""
 
         list_pr_links = self.get_pr_links()
         if len(list_pr_links) > 0:
@@ -141,7 +158,9 @@ class HierarchyIssueRecord(IssueRecord):
             indent += "- "
 
         # create first issue row
-        row = f"{indent}{row_prefix}" + ActionInputs.get_row_format_hierarchy_issue().format(**format_values)
+        row = f"{indent}{row_prefix}" + format_row_with_suppression(
+            ActionInputs.get_row_format_hierarchy_issue(), format_values
+        )
 
         # add extra section with release notes if detected
         if self.contains_release_notes():

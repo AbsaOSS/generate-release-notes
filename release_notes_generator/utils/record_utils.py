@@ -1,3 +1,19 @@
+#
+# Copyright 2023 ABSA Group Limited
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 """
 Utilities for working with GitHub issue/PR/commit identifiers.
 """
@@ -5,7 +21,7 @@ Utilities for working with GitHub issue/PR/commit identifiers.
 import logging
 import re
 from functools import lru_cache
-from typing import cast
+from typing import Any, cast
 
 from github.Commit import Commit
 from github.Issue import Issue
@@ -155,3 +171,60 @@ def get_rls_notes_code_rabbit(body: str, line_marks: list[str], cr_detection_reg
                 break
 
     return "\n".join(release_notes_lines) + ("\n" if release_notes_lines else "")
+
+
+def format_row_with_suppression(template: str, values: dict[str, Any]) -> str:
+    """
+    Format a row template while suppressing fragments for empty values.
+
+    Parameters:
+        template: The format string with placeholders like "{type}: {number} _{title}_".
+        values: Mapping of placeholder keys to values (may be empty strings).
+
+    Returns:
+        The formatted string.
+    """
+
+    def is_empty(key: str) -> bool:
+        return not str(values.get(key, "")).strip()
+
+    def placeholder(key: str) -> str:
+        return r"\{" + re.escape(key) + r"\}"
+
+    result = template
+
+    if is_empty("developers") and is_empty("pull-requests"):
+        result = re.sub(
+            rf"developed\s+by\s+{placeholder('developers')}\s+in\s+{placeholder('pull-requests')}",
+            "",
+            result,
+            flags=re.IGNORECASE,
+        )
+    elif is_empty("pull-requests"):
+        result = re.sub(
+            rf"\s+in\s+{placeholder('pull-requests')}",
+            "",
+            result,
+            flags=re.IGNORECASE,
+        )
+
+    if is_empty("assignees"):
+        result = re.sub(
+            rf"assigned\s+to\s+{placeholder('assignees')}",
+            "",
+            result,
+            flags=re.IGNORECASE,
+        )
+
+    if is_empty("type"):
+        result = re.sub(
+            rf"^\s*{placeholder('type')}:?\s*",
+            "",
+            result,
+            flags=re.IGNORECASE,
+        )
+
+    for key, value in values.items():
+        result = re.sub(placeholder(key), str(value), result, flags=re.IGNORECASE)
+
+    return re.sub(r"\s+", " ", result).strip()

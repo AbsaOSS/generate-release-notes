@@ -1,3 +1,19 @@
+#
+# Copyright 2023 ABSA Group Limited
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 """
 A module that defines the IssueRecord class, which represents an issue record in the release notes.
 """
@@ -11,7 +27,11 @@ from github.PullRequest import PullRequest
 
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.record.record import Record
-from release_notes_generator.utils.record_utils import get_rls_notes_default, get_rls_notes_code_rabbit
+from release_notes_generator.utils.record_utils import (
+    get_rls_notes_default,
+    get_rls_notes_code_rabbit,
+    format_row_with_suppression,
+)
 
 
 class IssueRecord(Record):
@@ -132,7 +152,7 @@ class IssueRecord(Record):
         format_values: dict[str, Any] = {}
 
         # collect format values
-        format_values["type"] = f"{self._issue.type.name if self._issue.type else 'N/A'}"
+        format_values["type"] = f"{self._issue.type.name if self._issue.type else ''}"
         format_values["number"] = f"#{self._issue.number}"
         format_values["title"] = self._issue.title
         format_values["author"] = self.author
@@ -146,7 +166,7 @@ class IssueRecord(Record):
         # contributors are not used in IssueRecord, so commented out for now
         # format_values["contributors"] = self.contributors if self.contributors is not None else ""
 
-        row = f"{row_prefix}" + ActionInputs.get_row_format_issue().format(**format_values)
+        row = f"{row_prefix}" + format_row_with_suppression(ActionInputs.get_row_format_issue(), format_values)
 
         if self.contains_release_notes():
             row = f"{row}\n{self.get_rls_notes()}"

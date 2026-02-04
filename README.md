@@ -83,7 +83,7 @@ To run this action successfully, make sure your environment meets the following 
 | Requirement                | Description                                                                                                                     |
 |----------------------------|---------------------------------------------------------------------------------------------------------------------------------|
 | **GitHub Token**           | A GitHub token with permission to read issues, pull requests, and releases. Usually available as `${{ secrets.GITHUB_TOKEN }}`. |
-| **Python 3.11+**           | The action internally runs on Python 3.11 or higher. If you’re developing locally or testing, ensure this version is available. |
+| **Python 3.14+**           | The action internally runs on Python 3.14 or higher. If you’re developing locally or testing, ensure this version is available. |
 | **Repository Permissions** | The action needs at least `read` access to issues and pull requests, and `write` access to create or update release drafts.     |
 | **YAML Chapters Config**   | Each chapter must have a `title`, and a `label` or `labels`. Example: `{"title": "Bugfixes 🛠", "labels": "bug, fix"}`.         |
 
