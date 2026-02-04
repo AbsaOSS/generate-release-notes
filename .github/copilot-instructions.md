@@ -1,158 +1,126 @@
-Copilot instructions for generate-release-notes
+Copilot instructions
 
 Purpose
-This repo contains a Python GitHub Action that generates release notes from GitHub issues, PRs, and commits.
+- Must define a consistent style for .github/copilot-instructions.md.
+- Must keep externally-visible behavior stable unless intentionally changing the contract.
+
+Structure
+- Must keep sections in the same order across repos.
+- Prefer bullet lists over paragraphs.
+- Must use constraint words: Must / Must not / Prefer / Avoid.
+- Must keep one blank line at end of file.
 
 Context
-- Composite action defined in action.yml
-- Entry script is main.py
-- Core code is in release_notes_generator/ (inputs, mining, chapter building, rendering)
-- Inputs are read from GitHub Actions env vars (via ActionInputs)
+- Must support a GitHub Action / CI automation context.
+- Must treat environment and GitHub I/O as boundary concerns.
 
 Coding guidelines
-- Keep changes small and focused
-- Prefer clear, explicit code over clever tricks
-- Keep behaviour of action inputs and output formats stable unless the contract is intentionally updated
+- Must keep changes small and focused.
+- Prefer clear, explicit code over clever tricks.
+- Must keep pure logic free of environment access where practical.
+- Prefer routing env/I/O through a single boundary module.
+- Must keep externally-visible strings, formats, and exit codes stable unless intentional.
 
 Output discipline (reduce review time)
-- Default to concise responses (aim ≤ 10 lines in the final recap)
-- Do not restate large file contents, configs, or checklists; link to files and summarize deltas
-- Prefer actionable bullets over prose; avoid repeating unchanged plan sections
-- When making code changes, end with: What changed / Why / How to verify (commands/tests)
-- Only include deep rationale, alternatives, or long examples when explicitly requested
+- Must default to concise responses (aim ≤ 10 lines in the final recap).
+- Must not paste large file contents/configs/checklists; link and summarize deltas.
+- Prefer actionable bullets over prose.
+- When making code changes, must end with:
+  - What changed
+  - Why
+  - How to verify (commands/tests)
+- Avoid deep rationale unless explicitly requested.
 
 PR Body Management
+- Must treat PR description as a changelog.
+- Must not rewrite or replace the entire PR body.
+- Must append updates chronologically under a new heading.
+- Prefer headings: "## Update [YYYY-MM-DD]" or "## Changes Added".
+- Must reference the commit hash that introduced the change.
 
-- PR body format: Write PR description as a changelog, appending new changes to the end.
-- Prohibited: Rewriting or replacing the entire PR body. Always append updates.
-- Structure:
-  - Keep original description at top
-  - Add new sections/updates chronologically below
-  - Use clear headings like "## Update [date/commit]" or "## Changes Added"
-  - Each update should reference the commit hash that made the changes
-- Purpose: Maintain full history of PR evolution for reviewers and future reference.
+Inputs
+- Must read inputs via environment variables when running in CI.
+- Must centralize parsing and validation in one input layer.
+- Must not duplicate validation across modules.
+- Prefer documenting required vs optional inputs with defaults.
 
-Python and style
-- Target Python 3.14 or later
-- Follow the current patterns in release_notes_generator
-- Add type hints for new public functions and classes
-- Use logging, not print, and keep logging wired through release_notes_generator.utils.logging_config
-- All Python imports must be placed at the top of the file, not inside methods or functions
+Language and style
+- Must target Python 3.14+.
+- Must add type hints for new public functions and classes.
+- Must use logging, not print.
+- Must use lazy % formatting for logs.
+- Must keep imports at top of file.
+- Must include the standard copyright/license header in every code file, including __init__.py.
+- Must use the project first-copyright year.
 
 String formatting
-- Prefer t-strings for non-logging string interpolation/templating
-- Avoid f-strings for user-facing text unless t-strings are not practical
-- Logging is an exception: always use lazy % formatting (e.g., `logger.info("value=%s", value)`), not f-strings or t-strings
+- Prefer t-strings for non-logging templates.
+- Avoid f-strings for user-facing text unless needed for clarity.
+- Must not use f-strings or t-strings in logging calls.
 
 Docstrings and comments
-- Keep docstrings consistent with existing modules: a short summary line, then optional `Parameters:` / `Returns:` sections
-- Avoid long prose, tutorials, or doctest-style examples inside docstrings; keep them focused on behavior and contracts
-- Prefer self-explanatory code over comments; add comments only when they explain non-obvious intent or edge cases (the “why”)
-- Avoid multi-line comment blocks that restate what the code already expresses
+- Docstrings:
+  - Must start with a short summary line.
+  - Prefer structured sections (Parameters: / Returns: / Raises:).
+  - Avoid tutorials, long prose, and doctest examples.
+- Comments:
+  - Prefer self-explanatory code.
+  - Prefer comments for intent/edge cases (the “why”).
+  - Avoid blocks that restate the code.
 
-Copyright headers
-- Ensure the standard copyright/license header is present in every code file, including `__init__.py` modules
-- Use the repository/project's first-copyright year (the year of the first file that introduced this standard header), not the individual file creation year
+Patterns
+- Errors:
+  - Prefer raising exceptions in leaf modules.
+  - Prefer translating failures to action failure output / exit codes at the entry point.
+- Testability:
+  - Must keep boundaries mockable.
+  - Must not call real external APIs in unit tests.
 
 Testing
-- Use pytest with tests located in tests/
-- Test behaviour: return values, raised errors, log messages, exit codes
-- Prefer unit tests under tests/unit/; keep integration tests optional and isolated
-- Mock GitHub API interactions and environment variables; do not call the real GitHub API in unit tests
+- Must use pytest under tests/.
+- Must test return values, exceptions, log messages, and exit codes.
+- Prefer unit tests under tests/unit/.
+- Must mock GitHub API interactions and environment variables in unit tests.
 
 Tooling
-- Format with Black using pyproject.toml
-- Run Pylint on tracked Python files, excluding tests/, and aim for score 9.5 or higher
-- Run mypy and prefer fixing types instead of ignoring errors
-- Use pytest-cov and keep coverage at or above 80 percent
+- Must format with Black (pyproject.toml).
+- Must lint with Pylint (ignore tests/).
+- Must type-check with mypy.
+- Must keep coverage ≥ 80% when running pytest-cov.
 
-Pre-commit Quality Gates:
-Before submitting any PR or claiming work is complete, ALWAYS run these checks locally:
-
-1. Testing
-- Run unit tests: `pytest tests/unit/` (or relevant test directory)
-- Run integration/verification tests if they exist
-- Ensure exit code 0 for all tests
-- Fix any test failures before proceeding
-
-2. Code Quality
-- Format with Black: `black $(git ls-files '*.py')`
-- Run Pylint: `pylint $(git ls-files '*.py')`
-  - Target score: ≥ 9.5/10
-  - Fix warnings before submitting
-- Run mypy: `mypy .` or `mypy <changed_files>`
-  - Resolve type errors or use appropriate type ignore comments
-  - Document why type ignores are necessary
-
-3. Verification Workflow
-3.1. **After writing code**: Run tests immediately
-3.2. **After tests pass**: Run linters (Black, Pylint, mypy)
-3.3. **After linters pass**: Commit changes
-3.4. **Before pushing**: Run full quality gate again
-
-4. Early Detection
-- Run quality checks EARLY in development, not at the end
-- Fix issues incrementally as they appear
-- Don't accumulate technical debt
-
-Common Pitfalls to Avoid:
-
-Dependencies
-- Check library compatibility with target Python version BEFORE using
-- Test imports locally before committing
-- For untyped libraries: add `# type: ignore[import-untyped]` comments
-
-Logging
-- Always use lazy % formatting: `logger.info("msg %s", var)`
-- NEVER use f-strings in logging: ~~`logger.info(f"msg {var}")`~~
-- Reason: avoids string interpolation when logging is disabled
-
-Variable Cleanup
-- Remove unused variables promptly
-- Run linters to catch them early
-- Don't leave dead code
-
-Checklist Template
-Use this for every PR:
-- All tests pass locally (pytest)
-- Black formatting applied
-- Pylint score ≥ 9.5
-- Mypy passes (or documented type ignores)
-- No unused imports/variables
-- Logging uses lazy % formatting
-- Dependencies tested locally
-- Documentation updated
-
-Architecture notes
- - Action must work on a GitHub Actions runner with only requirements.txt dependencies
- - Keep pure logic free of environment access where practical; prefer routing env/input behaviour through ActionInputs
- - Avoid adding network calls to unit tests
-
-File overview
-- main.py: sets up logging and runs the action
-- action.yml: composite action definition
-- release_notes_generator/action_inputs.py: action input handling
-- release_notes_generator/generator.py: orchestration
-- release_notes_generator/builder/: release notes builder
-- release_notes_generator/chapters/: chapter implementations
-- release_notes_generator/data/: mining/filtering
-- release_notes_generator/model/: data models and records
-- release_notes_generator/utils/: helpers including gh_action and logging_config
-
-Common commands
-- Create and activate venv, install deps:
-  - python3 -m venv .venv
-  -	source .venv/bin/activate
-  - pip install -r requirements.txt
-- Run tests:
+Quality gates
+- Must run tests first, then format/lint/type-check.
+- Tests:
+  - pytest tests/unit/
   - pytest tests/
-- Run coverage:
+- Coverage:
   - pytest --ignore=tests/integration --cov=. tests/ --cov-fail-under=80 --cov-report=html
-- Format and lint:
-  - black
-  - pylint --ignore=tests $(git ls-files "*.py")
+- Format:
+  - black $(git ls-files '*.py')
+- Lint:
+  - pylint --ignore=tests $(git ls-files '*.py')
+- Types:
   - mypy .
 
+Common pitfalls to avoid
+- Dependencies: must verify compatibility with target runtime.
+- Untyped deps: avoid type: ignore unless required; document why.
+- Logging: must keep lazy % formatting.
+- Cleanup: must remove unused imports/variables.
+- Stability: avoid changing externally-visible strings/outputs.
+
 Learned rules
-- Keep externally-visible output stable; tests assert on exact strings in several places
-- Do not change exit codes for existing failure scenarios
+- Must not change exit codes for existing failure scenarios.
+- Must not change externally-visible output strings without updating the contract.
+
+Repo additions
+- Project name: generate-release-notes
+- Entry points: action.yml, main.py
+- Core package: release_notes_generator/
+- Input layer: ActionInputs (INPUT_* env vars)
+- Logging wiring: release_notes_generator.utils.logging_config
+- Contract-sensitive outputs: release notes text; action failure strings; exit codes
+- Commands:
+  - python3 -m venv .venv
+  - source .venv/bin/activate
+  - pip install -r requirements.txt
