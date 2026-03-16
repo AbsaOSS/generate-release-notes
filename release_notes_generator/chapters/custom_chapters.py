@@ -120,7 +120,7 @@ class CustomChapters(BaseChapters):
         """Return chapters sorted by explicit order then first-seen position.
 
         Chapters with explicit order are rendered first (ascending).
-        Chapters without order follow, preserving dict insertion order.        
+        Chapters without order follow, preserving dict insertion order.
         """
         indexed: list[tuple[int, Chapter]] = list(enumerate(self.chapters.values()))
         with_order = [(pos, ch) for pos, ch in indexed if ch.order is not None]
