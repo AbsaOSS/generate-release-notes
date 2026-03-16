@@ -123,10 +123,12 @@ class CustomChapters(BaseChapters):
         Chapters without order follow, preserving dict insertion order.
         """
         indexed: list[tuple[int, Chapter]] = list(enumerate(self.chapters.values()))
-        with_order = [(pos, ch) for pos, ch in indexed if ch.order is not None]
-        without_order = [(pos, ch) for pos, ch in indexed if ch.order is None]
-        with_order.sort(key=lambda t: (t[1].order, t[0]))  # type: ignore[arg-type]
-        return [ch for _, ch in with_order] + [ch for _, ch in without_order]
+        with_order: list[tuple[int, int, Chapter]] = [
+            (ch.order, pos, ch) for pos, ch in indexed if ch.order is not None
+        ]
+        without_order = [ch for _, ch in indexed if ch.order is None]
+        with_order.sort(key=lambda t: (t[0], t[1]))
+        return [ch for _, _, ch in with_order] + without_order
 
     def to_string(self) -> str:
         """
