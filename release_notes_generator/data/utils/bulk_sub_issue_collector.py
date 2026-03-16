@@ -129,7 +129,8 @@ class BulkSubIssueCollector:
                         alias_maps[alias] = (org, repo, parent_num)
                         after = cursors[(org, repo, parent_num)]
                         after_part = f', after: "{after}"' if after else ""
-                        issue_blocks.append(f"""{alias}: issue(number: {parent_num}) {{
+                        issue_blocks.append(
+                            f"""{alias}: issue(number: {parent_num}) {{
                                   number
                                   subIssues(first: {self._cfg.per_page}{after_part}) {{
                                     nodes {{
@@ -140,12 +141,15 @@ class BulkSubIssueCollector:
                                     }}
                                     pageInfo {{ hasNextPage endCursor }}
                                   }}
-                                }}""")
+                                }}"""
+                        )
                     if issue_blocks:
                         repo_alias = f"r{r_idx}"
-                        repo_blocks.append(f"""{repo_alias}: repository(owner: "{org}", name: "{repo}") {{
+                        repo_blocks.append(
+                            f"""{repo_alias}: repository(owner: "{org}", name: "{repo}") {{
                                    {' '.join(issue_blocks)}
-                                 }}""")
+                                 }}"""
+                        )
 
                 if not repo_blocks:
                     break

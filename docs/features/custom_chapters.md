@@ -10,14 +10,16 @@ Each chapter entry requires a `title` and either:
 
 Optionally, you can add:
 - `hidden`: (boolean) hide chapter from output while still tracking records (default: `false`)
+- `order`: (integer) explicit rendering order; lower values appear first (default: omitted)
 
 ```yaml
 with:
   chapters: |
-    - {"title": "New Features 🎉", "labels": "feature, enhancement"}        # multi-label form (comma separated)
-    - {"title": "Bugfixes 🛠️", "label": "bug"}                              # legacy single-label form
-    - {"title": "Platform 🧱", "labels": ["platform", "infra"]}             # multi-label form (YAML list)
-    - {"title": "Internal Notes 📝", "labels": "internal", "hidden": true}  # hidden chapter
+    - {"title": "New Features 🎉", "labels": "feature, enhancement", "order": 20}   # multi-label with order
+    - {"title": "Bugfixes 🛠️", "label": "bug", "order": 30}                         # legacy single-label with order
+    - {"title": "Breaking Changes 💥", "label": "breaking-change", "order": 10}     # rendered first
+    - {"title": "Platform 🧱", "labels": ["platform", "infra"]}                      # no order → after ordered chapters
+    - {"title": "Internal Notes 📝", "labels": "internal", "hidden": true}           # hidden chapter
 ```
 
 ## Hidden Chapters
@@ -83,7 +85,19 @@ With `verbose: true`, additional debug logging shows:
 A record is added to a chapter if its label set intersects the chapter’s normalized label set. Direct commits are ignored (they have no labels). A record can appear in multiple chapters; intra-chapter duplication is always suppressed.
 
 ## Deterministic Output
-Chapter rendering order = order of first appearance of each unique title in the YAML input.
+Chapter rendering order is determined as follows:
+1. Chapters with an explicit `order` value are rendered first, sorted ascending by `order`.
+2. Chapters without `order` follow, preserving the first-seen title order from the YAML input.
+3. If multiple chapters share the same `order` value, their relative order is the first-seen title order (tie-breaker).
+
+Without any `order` values, behavior is identical to previous versions (first appearance of each unique title).
+
+### Repeated Title + Order
+Repeated titles still represent one logical chapter. Their labels are merged.
+
+- If repeated entries specify the same `order`, that value is used.
+- If repeated entries specify conflicting `order` values, the first explicit value is kept and a warning is logged.
+- If some entries omit `order` and others provide it, the explicit value is adopted.
 
 ## Warnings
 - Missing `title`
@@ -92,6 +106,8 @@ Chapter rendering order = order of first appearance of each unique title in the 
 - Empty label set after normalization
 - Unknown extra keys (ignored)
 - Invalid `hidden` value type or string
+- Invalid `order` value (non-integer); ignored with warning
+- Conflicting `order` values for repeated titles; first explicit value kept
 
 All warnings include the chapter title (when available) for traceability.
 

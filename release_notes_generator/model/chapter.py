@@ -34,6 +34,7 @@ class Chapter:
         self.rows: dict[int | str, str] = {}
         self.empty_message = empty_message
         self.hidden: bool = False
+        self.order: Optional[int] = None
 
     def add_row(self, row_id: int | str, row: str) -> None:
         """

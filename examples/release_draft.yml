@@ -52,14 +52,14 @@ jobs:
         with:
           tag-name: ${{ github.event.inputs.tag-name }}
           chapters: |
-            - { title: No entry 🚫, label: duplicate }
-            - { title: Breaking Changes 💥, label: breaking-change }
-            - { title: New Features 🎉, label: enhancement }
+            - { title: No entry 🚫, label: duplicate, order: 10 }
+            - { title: Breaking Changes 💥, label: breaking-change, order: 20 }
+            - { title: New Features 🎉, label: enhancement, order: 30 }
             - { title: New Features 🎉, label: feature }
-            - { title: Bugfixes 🛠, label: bug }
-            - { title: Infrastructure ⚙️, label: infrastructure }
-            - { title: Silent-live 🤫, label: silent-live }
-            - { title: Documentation 📜, label: documentation }
+            - { title: Bugfixes 🛠, label: bug, order: 40 }
+            - { title: Infrastructure ⚙️, label: infrastructure, order: 50 }
+            - { title: Silent-live 🤫, label: silent-live, order: 60 }
+            - { title: Documentation 📜, label: documentation, order: 70 }
 
           skip-release-notes-label: 'no RN'
           verbose: true

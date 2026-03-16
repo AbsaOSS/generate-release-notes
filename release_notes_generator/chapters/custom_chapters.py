@@ -116,6 +116,18 @@ class CustomChapters(BaseChapters):
                                 ch.title,
                             )
 
+    def _sorted_chapters(self) -> list[Chapter]:
+        """Return chapters sorted by explicit order then first-seen position.
+
+        Chapters with explicit order are rendered first (ascending).
+        Chapters without order follow, preserving dict insertion order.        
+        """
+        indexed: list[tuple[int, Chapter]] = list(enumerate(self.chapters.values()))
+        with_order = [(pos, ch) for pos, ch in indexed if ch.order is not None]
+        without_order = [(pos, ch) for pos, ch in indexed if ch.order is None]
+        with_order.sort(key=lambda t: (t[1].order, t[0]))  # type: ignore[arg-type]
+        return [ch for _, ch in with_order] + [ch for _, ch in without_order]
+
     def to_string(self) -> str:
         """
         Converts the custom chapters to a string, excluding hidden chapters.
@@ -124,7 +136,7 @@ class CustomChapters(BaseChapters):
             str: The chapters as a string with hidden chapters filtered out.
         """
         result = ""
-        for chapter in self.chapters.values():
+        for chapter in self._sorted_chapters():
             # Skip hidden chapters from output
             if chapter.hidden:
                 record_count = len(chapter.rows)
@@ -155,7 +167,7 @@ class CustomChapters(BaseChapters):
         Returns:
             The CustomChapters instance for chaining.
         """
-        allowed_keys = {"title", "label", "labels", "hidden"}
+        allowed_keys = {"title", "label", "labels", "hidden", "order"}
         for chapter in chapters:
             if not isinstance(chapter, dict):
                 logger.warning("Skipping chapter definition with invalid type %s: %s", type(chapter), chapter)
@@ -223,9 +235,31 @@ class CustomChapters(BaseChapters):
             if ActionInputs.get_verbose():
                 logger.debug("Chapter '%s' normalized labels: %s", title, normalized)
 
+            # Parse and validate order
+            raw_order = chapter.get("order")
+            parsed_order: int | None = None
+            if raw_order is not None:
+                if isinstance(raw_order, bool):
+                    logger.warning("Chapter '%s' has invalid 'order' value type: %s. Ignoring.", title, type(raw_order))
+                elif isinstance(raw_order, int):
+                    parsed_order = raw_order
+                elif isinstance(raw_order, str):
+                    stripped = raw_order.strip()
+                    try:
+                        parsed_order = int(stripped)
+                    except ValueError:
+                        logger.warning(
+                            "Chapter '%s' has invalid 'order' value: %s. Must be an integer. Ignoring.",
+                            title,
+                            raw_order,
+                        )
+                else:
+                    logger.warning("Chapter '%s' has invalid 'order' value type: %s. Ignoring.", title, type(raw_order))
+
             if title not in self.chapters:
                 self.chapters[title] = Chapter(title, normalized)
                 self.chapters[title].hidden = hidden
+                self.chapters[title].order = parsed_order
                 if hidden:
                     logger.info(
                         "Chapter '%s' marked as hidden, will not appear in output (but records will be tracked)", title
@@ -242,5 +276,18 @@ class CustomChapters(BaseChapters):
                     logger.info(
                         "Chapter '%s' marked as hidden, will not appear in output (but records will be tracked)", title
                     )
+                # Handle order merging: keep first explicit value, warn on conflict
+                existing_order = self.chapters[title].order
+                if parsed_order is not None:
+                    if existing_order is None:
+                        self.chapters[title].order = parsed_order
+                    elif existing_order != parsed_order:
+                        logger.warning(
+                            "Chapter '%s' has conflicting order values: %d vs %d. Keeping first value %d.",
+                            title,
+                            existing_order,
+                            parsed_order,
+                            existing_order,
+                        )
 
         return self
