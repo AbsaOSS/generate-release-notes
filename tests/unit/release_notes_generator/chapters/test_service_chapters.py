@@ -23,6 +23,8 @@ from release_notes_generator.utils.constants import (
     MERGED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS,
     CLOSED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS,
     OTHERS_NO_TOPIC,
+    DIRECT_COMMITS,
+    DEFAULT_SERVICE_CHAPTER_ORDER,
 )
 from release_notes_generator.utils.enums import DuplicityScopeEnum
 
@@ -166,3 +168,63 @@ def test_to_string_with_hidden_chapter_not_in_results(pull_request_record_merged
     assert CLOSED_ISSUES_WITHOUT_PULL_REQUESTS not in result
     # MERGED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS should appear
     assert MERGED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS in result
+
+
+# to_string with custom chapter order
+
+
+def test_to_string_default_chapter_order(service_chapters, record_with_issue_closed_no_pull):
+    """Default order places CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS before CLOSED_ISSUES_WITHOUT_PULL_REQUESTS."""
+    service_chapters.populate({1: record_with_issue_closed_no_pull})
+    result = service_chapters.to_string()
+
+    pos_no_labels = result.index(CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS)
+    pos_no_pr = result.index(CLOSED_ISSUES_WITHOUT_PULL_REQUESTS)
+    assert pos_no_labels < pos_no_pr
+
+
+def test_to_string_custom_chapter_order(record_with_issue_closed_no_pull):
+    """Custom order reverses CLOSED_ISSUES_WITHOUT_PULL_REQUESTS before CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS."""
+    custom_order = [
+        CLOSED_ISSUES_WITHOUT_PULL_REQUESTS,
+        CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS,
+        MERGED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS,
+        CLOSED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS,
+        MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES,
+        DIRECT_COMMITS,
+        OTHERS_NO_TOPIC,
+    ]
+    sc = ServiceChapters(
+        sort_ascending=True,
+        print_empty_chapters=True,
+        user_defined_labels=["bug", "enhancement"],
+        chapter_order=custom_order,
+    )
+    sc.populate({1: record_with_issue_closed_no_pull})
+    result = sc.to_string()
+
+    pos_no_pr = result.index(CLOSED_ISSUES_WITHOUT_PULL_REQUESTS)
+    pos_no_labels = result.index(CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS)
+    assert pos_no_pr < pos_no_labels
+
+
+def test_to_string_partial_order_appends_defaults(record_with_issue_closed_no_pull):
+    """Partial order: only specify OTHERS_NO_TOPIC first; rest follow default order."""
+    sc = ServiceChapters(
+        sort_ascending=True,
+        print_empty_chapters=True,
+        user_defined_labels=["bug", "enhancement"],
+        chapter_order=[OTHERS_NO_TOPIC] + [t for t in DEFAULT_SERVICE_CHAPTER_ORDER if t != OTHERS_NO_TOPIC],
+    )
+    sc.populate({1: record_with_issue_closed_no_pull})
+    result = sc.to_string()
+
+    pos_others = result.index(OTHERS_NO_TOPIC)
+    pos_no_labels = result.index(CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS)
+    assert pos_others < pos_no_labels
+
+
+def test_chapter_order_none_uses_default():
+    """Passing chapter_order=None should use the default order."""
+    sc = ServiceChapters(chapter_order=None)
+    assert sc.chapter_order == DEFAULT_SERVICE_CHAPTER_ORDER

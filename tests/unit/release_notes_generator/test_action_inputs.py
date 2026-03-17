@@ -311,6 +311,82 @@ def test_get_hidden_service_chapters_int_input(mocker):
     mock_log_error.assert_called_once()
     assert "hidden-service-chapters' is not a valid string" in mock_log_error.call_args[0][0]
 
+
+# get_service_chapter_order
+
+
+def test_get_service_chapter_order_default(mocker):
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="")
+    from release_notes_generator.utils.constants import DEFAULT_SERVICE_CHAPTER_ORDER
+    assert ActionInputs.get_service_chapter_order() == DEFAULT_SERVICE_CHAPTER_ORDER
+
+
+def test_get_service_chapter_order_full_custom(mocker):
+    from release_notes_generator.utils.constants import (
+        OTHERS_NO_TOPIC, DIRECT_COMMITS, CLOSED_ISSUES_WITHOUT_PULL_REQUESTS,
+        CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS, MERGED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS,
+        CLOSED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS, MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES,
+    )
+    custom_order = f"{OTHERS_NO_TOPIC}, {DIRECT_COMMITS}, {CLOSED_ISSUES_WITHOUT_PULL_REQUESTS}, {CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS}, {MERGED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS}, {CLOSED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS}, {MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES}"
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value=custom_order)
+    result = ActionInputs.get_service_chapter_order()
+    assert result[0] == OTHERS_NO_TOPIC
+    assert result[1] == DIRECT_COMMITS
+    assert len(result) == 7
+
+
+def test_get_service_chapter_order_partial(mocker):
+    from release_notes_generator.utils.constants import (
+        OTHERS_NO_TOPIC, DEFAULT_SERVICE_CHAPTER_ORDER,
+    )
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value=OTHERS_NO_TOPIC)
+    result = ActionInputs.get_service_chapter_order()
+    assert result[0] == OTHERS_NO_TOPIC
+    assert len(result) == len(DEFAULT_SERVICE_CHAPTER_ORDER)
+    # Remaining chapters appended in default order (without OTHERS_NO_TOPIC)
+    remaining = [t for t in DEFAULT_SERVICE_CHAPTER_ORDER if t != OTHERS_NO_TOPIC]
+    assert result[1:] == remaining
+
+
+def test_get_service_chapter_order_newline_separated(mocker):
+    from release_notes_generator.utils.constants import OTHERS_NO_TOPIC, DIRECT_COMMITS
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value=f"{OTHERS_NO_TOPIC}\n{DIRECT_COMMITS}")
+    result = ActionInputs.get_service_chapter_order()
+    assert result[0] == OTHERS_NO_TOPIC
+    assert result[1] == DIRECT_COMMITS
+
+
+def test_get_service_chapter_order_invalid_title(mocker):
+    mock_log_error = mocker.patch("release_notes_generator.action_inputs.logger.error")
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="Invalid Title")
+    from release_notes_generator.utils.constants import DEFAULT_SERVICE_CHAPTER_ORDER
+    result = ActionInputs.get_service_chapter_order()
+    assert result == DEFAULT_SERVICE_CHAPTER_ORDER
+    mock_log_error.assert_called_once()
+    assert "Invalid service chapter title" in mock_log_error.call_args[0][0]
+
+
+def test_get_service_chapter_order_duplicate_title(mocker):
+    mock_log_error = mocker.patch("release_notes_generator.action_inputs.logger.error")
+    from release_notes_generator.utils.constants import OTHERS_NO_TOPIC
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value=f"{OTHERS_NO_TOPIC}, {OTHERS_NO_TOPIC}")
+    result = ActionInputs.get_service_chapter_order()
+    assert result[0] == OTHERS_NO_TOPIC
+    assert result.count(OTHERS_NO_TOPIC) == 1
+    mock_log_error.assert_called_once()
+    assert "Duplicate service chapter title" in mock_log_error.call_args[0][0]
+
+
+def test_get_service_chapter_order_int_input(mocker):
+    mock_log_error = mocker.patch("release_notes_generator.action_inputs.logger.error")
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value=123)
+    from release_notes_generator.utils.constants import DEFAULT_SERVICE_CHAPTER_ORDER
+    result = ActionInputs.get_service_chapter_order()
+    assert result == DEFAULT_SERVICE_CHAPTER_ORDER
+    mock_log_error.assert_called_once()
+    assert "service-chapter-order' is not a valid string" in mock_log_error.call_args[0][0]
+
+
 def test_get_row_format_link_pr_true(mocker):
     mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="true")
     assert ActionInputs.get_row_format_link_pr() is True

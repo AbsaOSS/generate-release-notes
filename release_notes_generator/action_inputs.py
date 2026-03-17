@@ -34,6 +34,7 @@ from release_notes_generator.utils.constants import (
     VERBOSE,
     WARNINGS,
     HIDDEN_SERVICE_CHAPTERS,
+    SERVICE_CHAPTER_ORDER,
     RUNNER_DEBUG,
     PRINT_EMPTY_CHAPTERS,
     DUPLICITY_SCOPE,
@@ -53,6 +54,7 @@ from release_notes_generator.utils.constants import (
     SUPPORTED_ROW_FORMAT_KEYS_ISSUE,
     SUPPORTED_ROW_FORMAT_KEYS_PULL_REQUEST,
     SUPPORTED_ROW_FORMAT_KEYS_HIERARCHY_ISSUE,
+    DEFAULT_SERVICE_CHAPTER_ORDER,
 )
 from release_notes_generator.utils.enums import DuplicityScopeEnum
 from release_notes_generator.utils.gh_action import get_action_input
@@ -301,6 +303,49 @@ class ActionInputs:
         return hidden_chapters
 
     @staticmethod
+    def get_service_chapter_order() -> list[str]:
+        """
+        Get the validated service chapter display order from the action inputs.
+
+        Returns:
+            Resolved chapter order list. Validated titles appear first in user-specified
+            order, then remaining default titles are appended in their canonical order.
+            If the input is omitted or empty, returns the full default order.
+        """
+        valid_titles = set(DEFAULT_SERVICE_CHAPTER_ORDER)
+
+        raw = get_action_input(SERVICE_CHAPTER_ORDER, "")
+        if not isinstance(raw, str):
+            logger.error("Error: 'service-chapter-order' is not a valid string. Using default order.")
+            return list(DEFAULT_SERVICE_CHAPTER_ORDER)
+
+        titles = raw.strip()
+        if not titles:
+            return list(DEFAULT_SERVICE_CHAPTER_ORDER)
+
+        separator = "," if "," in titles else "\n"
+        requested = [title.strip() for title in titles.split(separator) if title.strip()]
+
+        seen: set[str] = set()
+        ordered: list[str] = []
+        for title in requested:
+            if title not in valid_titles:
+                logger.error("Invalid service chapter title '%s' in 'service-chapter-order'. Skipping.", title)
+                continue
+            if title in seen:
+                logger.error("Duplicate service chapter title '%s' in 'service-chapter-order'. Skipping.", title)
+                continue
+            seen.add(title)
+            ordered.append(title)
+
+        # Append remaining default chapters not explicitly listed
+        for title in DEFAULT_SERVICE_CHAPTER_ORDER:
+            if title not in seen:
+                ordered.append(title)
+
+        return ordered
+
+    @staticmethod
     def get_print_empty_chapters() -> bool:
         """
         Get the print empty chapters parameter value from the action inputs.
@@ -494,12 +539,13 @@ class ActionInputs:
         logger.debug("Skip release notes labels: %s", ActionInputs.get_skip_release_notes_labels())
         logger.debug("Verbose logging: %s", verbose)
         logger.debug("Warnings: %s", warnings)
-        logger.debug("Hidden service chapters: %s", ActionInputs.get_hidden_service_chapters())
         logger.debug("Print empty chapters: %s", print_empty_chapters)
         logger.debug("Release notes title: %s", release_notes_title)
         logger.debug("CodeRabbit support active: %s", coderabbit_support_active)
         logger.debug("CodeRabbit release notes title: %s", coderabbit_release_notes_title)
         logger.debug("CodeRabbit summary ignore groups: %s", coderabbit_summary_ignore_groups)
+        logger.debug("Hidden service chapters: %s", ActionInputs.get_hidden_service_chapters())
+        logger.debug("Service chapter order: %s", ActionInputs.get_service_chapter_order())
 
     @staticmethod
     def _detect_row_format_invalid_keywords(row_format: str, row_type: str = "Issue", clean: bool = False) -> str:

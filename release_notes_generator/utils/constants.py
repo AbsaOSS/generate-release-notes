@@ -45,6 +45,7 @@ SUPPORTED_ROW_FORMAT_KEYS_PULL_REQUEST = ["number", "title", "author", "assignee
 # Features
 WARNINGS = "warnings"
 HIDDEN_SERVICE_CHAPTERS = "hidden-service-chapters"
+SERVICE_CHAPTER_ORDER = "service-chapter-order"
 PRINT_EMPTY_CHAPTERS = "print-empty-chapters"
 
 # Release notes comment constants
@@ -63,6 +64,16 @@ MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES: str = "Merged PRs Linked to 'Not Closed'
 DIRECT_COMMITS: str = "Direct commits ⚠️"
 
 OTHERS_NO_TOPIC: str = "Others - No Topic ⚠️"
+
+DEFAULT_SERVICE_CHAPTER_ORDER: list[str] = [
+    CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS,
+    CLOSED_ISSUES_WITHOUT_PULL_REQUESTS,
+    MERGED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS,
+    CLOSED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS,
+    MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES,
+    DIRECT_COMMITS,
+    OTHERS_NO_TOPIC,
+]
 
 LINKED_ISSUES_MAX = 10
 ISSUES_FOR_PRS: str = """

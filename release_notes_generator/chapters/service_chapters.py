@@ -39,6 +39,7 @@ from release_notes_generator.utils.constants import (
     MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES,
     OTHERS_NO_TOPIC,
     DIRECT_COMMITS,
+    DEFAULT_SERVICE_CHAPTER_ORDER,
 )
 from release_notes_generator.utils.enums import DuplicityScopeEnum
 
@@ -58,6 +59,7 @@ class ServiceChapters(BaseChapters):
         user_defined_labels: Optional[list[str]] = None,
         used_record_numbers: Optional[list[int | str]] = None,
         hidden_chapters: Optional[list[str]] = None,
+        chapter_order: Optional[list[str]] = None,
     ):
         super().__init__(sort_ascending, print_empty_chapters)
 
@@ -96,15 +98,7 @@ class ServiceChapters(BaseChapters):
         }
 
         # Define the order in which service chapters should appear in the output
-        self.chapter_order = [
-            CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS,
-            CLOSED_ISSUES_WITHOUT_PULL_REQUESTS,
-            MERGED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS,
-            CLOSED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS,
-            MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES,
-            DIRECT_COMMITS,
-            OTHERS_NO_TOPIC,
-        ]
+        self.chapter_order = chapter_order if chapter_order is not None else list(DEFAULT_SERVICE_CHAPTER_ORDER)
 
         self.show_chapter_closed_issues_without_pull_requests = True
         self.show_chapter_closed_issues_without_user_defined_labels = True
