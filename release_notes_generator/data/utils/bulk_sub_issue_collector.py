@@ -146,7 +146,7 @@ class BulkSubIssueCollector:
                     if issue_blocks:
                         repo_alias = f"r{r_idx}"
                         repo_blocks.append(
-                            f"{repo_alias}: repository(owner: \"{org}\", name: \"{repo}\") {{\n"
+                            f'{repo_alias}: repository(owner: "{org}", name: "{repo}") {{\n'
                             f"   {' '.join(issue_blocks)}\n"
                             " }"
                         )
