@@ -130,25 +130,25 @@ class BulkSubIssueCollector:
                         after = cursors[(org, repo, parent_num)]
                         after_part = f', after: "{after}"' if after else ""
                         issue_blocks.append(
-                            f"""{alias}: issue(number: {parent_num}) {{
-                                  number
-                                  subIssues(first: {self._cfg.per_page}{after_part}) {{
-                                    nodes {{
-                                      number
-                                      repository {{ owner {{ login }} name }}
-                                      # only count to decide if child is also a parent
-                                      subIssues(first: 0) {{ totalCount }}
-                                    }}
-                                    pageInfo {{ hasNextPage endCursor }}
-                                  }}
-                                }}"""
+                            f"{alias}: issue(number: {parent_num}) {{\n"
+                            "  number\n"
+                            f"  subIssues(first: {self._cfg.per_page}{after_part}) {{\n"
+                            "    nodes {\n"
+                            "      number\n"
+                            "      repository { owner { login } name }\n"
+                            "      # only count to decide if child is also a parent\n"
+                            "      subIssues(first: 0) { totalCount }\n"
+                            "    }\n"
+                            "    pageInfo { hasNextPage endCursor }\n"
+                            "  }\n"
+                            "}"
                         )
                     if issue_blocks:
                         repo_alias = f"r{r_idx}"
                         repo_blocks.append(
-                            f"""{repo_alias}: repository(owner: "{org}", name: "{repo}") {{
-                                   {' '.join(issue_blocks)}
-                                 }}"""
+                            f"{repo_alias}: repository(owner: \"{org}\", name: \"{repo}\") {{\n"
+                            f"   {' '.join(issue_blocks)}\n"
+                            " }"
                         )
 
                 if not repo_blocks:
