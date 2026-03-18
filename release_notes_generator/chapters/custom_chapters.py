@@ -242,7 +242,7 @@ class CustomChapters(BaseChapters):
             parsed_order: int | None = None
             if raw_order is not None:
                 if isinstance(raw_order, bool):
-                    logger.warning("Chapter '%s' has invalid 'order' value type: %s. Ignoring.", title, type(raw_order))
+                    logger.warning("Chapter '%s' has invalid 'order' value type: %s. Ignoring custom ordering input.", title, type(raw_order))
                 elif isinstance(raw_order, int):
                     parsed_order = raw_order
                 elif isinstance(raw_order, str):
@@ -251,12 +251,12 @@ class CustomChapters(BaseChapters):
                         parsed_order = int(stripped)
                     except ValueError:
                         logger.warning(
-                            "Chapter '%s' has invalid 'order' value: %s. Must be an integer. Ignoring.",
+                            "Chapter '%s' has invalid 'order' value: %s. Must be an integer. Ignoring custom ordering input.",
                             title,
                             raw_order,
                         )
                 else:
-                    logger.warning("Chapter '%s' has invalid 'order' value type: %s. Ignoring.", title, type(raw_order))
+                    logger.warning("Chapter '%s' has invalid 'order' value type: %s. Ignoring custom ordering input.", title, type(raw_order))
 
             if title not in self.chapters:
                 self.chapters[title] = Chapter(title, normalized)
