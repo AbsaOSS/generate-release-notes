@@ -132,13 +132,13 @@ jobs:
         with:
           tag-name: ${{ github.event.inputs.tag-name }}
           chapters: |
-            - {"title": "New Features 🎉", "labels": "enhancement, feature"}
-            - {"title": "Bugfixes 🛠", "labels": "error, bug"}
-            - {"title": "Infrastructure 🚧", "label": "infrastructure"}
+            - {"title": "New Features 🎉", "labels": "enhancement, feature", "order": 10}
+            - {"title": "Bugfixes 🛠", "labels": "error, bug", "order": 20}
+            - {"title": "Infrastructure 🚧", "label": "infrastructure", "order": 30}
             - {"title": "Documentation 📚", "label": "documentation"}
             - {"title": "Internal Notes 📝", "labels": "internal", "hidden": true}
             - {"title": "Not Implemented ⏳", "labels": "wip", "hidden": true}
-
+            
       - name: Create Draft Release
         uses: softprops/action-gh-release@v2
         with:
