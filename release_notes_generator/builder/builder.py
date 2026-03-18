@@ -71,6 +71,7 @@ class ReleaseNotesBuilder:
                 user_defined_labels=user_defined_labels,
                 used_record_numbers=self.custom_chapters.populated_record_numbers_list,
                 hidden_chapters=ActionInputs.get_hidden_service_chapters(),
+                chapter_order=ActionInputs.get_service_chapter_order(),
             )
             service_chapters.populate(self.records)
 

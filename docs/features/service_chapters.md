@@ -47,6 +47,7 @@ The service chapters appear in the following order in the generated release note
       - {"title": "Bugfixes 🛠", "label": "bug"}
     warnings: true                     # enable service chapters (default)
     hidden-service-chapters: ''        # hide specific service chapters (default: empty)
+    service-chapter-order: ''          # custom display order (default: empty = default order)
     print-empty-chapters: true         # show even when empty (default)
     duplicity-scope: "both"            # allow duplicates across custom + service
 ```
@@ -78,6 +79,42 @@ Or use comma-separated format:
 - `Others - No Topic ⚠️`
 
 **Note:** Title matching is exact and case-sensitive. When `warnings: false`, all service chapters are hidden regardless of the `hidden-service-chapters` setting.
+
+### Custom Display Order
+Use `service-chapter-order` to control the order in which service chapters appear:
+
+```yaml
+- name: Generate Release Notes
+  with:
+    warnings: true
+    service-chapter-order: |
+      Others - No Topic ⚠️
+      Direct commits ⚠️
+      Closed Issues without Pull Request ⚠️
+```
+
+Or use comma-separated format:
+```yaml
+    service-chapter-order: "Others - No Topic ⚠️, Direct commits ⚠️"
+```
+
+**Behavior:**
+- Listed chapters are rendered first in the given order.
+- Any service chapters not listed are appended afterward in the default order.
+- If omitted, the default order is preserved.
+- Unknown titles are logged as errors and skipped.
+- Duplicate titles are logged as errors and skipped.
+
+**Available service chapter titles (default order):**
+1. `Closed Issues without User Defined Labels ⚠️`
+2. `Closed Issues without Pull Request ⚠️`
+3. `Merged PRs without Issue and User Defined Labels ⚠️`
+4. `Closed PRs without Issue and User Defined Labels ⚠️`
+5. `Merged PRs Linked to 'Not Closed' Issue ⚠️`
+6. `Direct commits ⚠️`
+7. `Others - No Topic ⚠️`
+
+**Note:** Title matching is exact and case-sensitive. The `service-chapter-order` input is independent of `hidden-service-chapters`; hidden chapters are still hidden even if listed in the order.
 
 ## Example Result
 ```markdown

@@ -67,6 +67,23 @@ inputs:
       - "Others - No Topic ⚠️"
     required: false
     default: ''
+  service-chapter-order:
+    description: |
+      Custom display order for service chapters (comma or newline separated).
+      Title matching is exact and case-sensitive.
+      Listed chapters are rendered first in the given order; unlisted chapters
+      are appended afterward in the default order.
+      If omitted, the default order is used.
+      Available service chapter titles:
+      - "Closed Issues without User Defined Labels ⚠️"
+      - "Closed Issues without Pull Request ⚠️"
+      - "Merged PRs without Issue and User Defined Labels ⚠️"
+      - "Closed PRs without Issue and User Defined Labels ⚠️"
+      - "Merged PRs Linked to 'Not Closed' Issue ⚠️"
+      - "Direct commits ⚠️"
+      - "Others - No Topic ⚠️"
+    required: false
+    default: ''
   print-empty-chapters:
     description: 'Print chapters even if they are empty.'
     required: false
@@ -161,6 +178,7 @@ runs:
         INPUT_DUPLICITY_ICON: ${{ inputs.duplicity-icon }}
         INPUT_WARNINGS: ${{ inputs.warnings }}
         INPUT_HIDDEN_SERVICE_CHAPTERS: ${{ inputs.hidden-service-chapters }}
+        INPUT_SERVICE_CHAPTER_ORDER: ${{ inputs.service-chapter-order }}
         INPUT_PUBLISHED_AT: ${{ inputs.published-at }}
         INPUT_SKIP_RELEASE_NOTES_LABELS: ${{ inputs.skip-release-notes-labels }}
         INPUT_PRINT_EMPTY_CHAPTERS: ${{ inputs.print-empty-chapters }}
