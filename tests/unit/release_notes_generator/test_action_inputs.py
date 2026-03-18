@@ -17,6 +17,16 @@
 import logging
 import pytest
 from release_notes_generator.action_inputs import ActionInputs
+from release_notes_generator.utils.constants import (
+    DEFAULT_SERVICE_CHAPTER_ORDER,
+    OTHERS_NO_TOPIC,
+    DIRECT_COMMITS,
+    CLOSED_ISSUES_WITHOUT_PULL_REQUESTS,
+    CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS,
+    MERGED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS,
+    CLOSED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS,
+    MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES,
+)
 
 success_case = {
     "get_github_repository": "owner/repo_name",
@@ -317,16 +327,10 @@ def test_get_hidden_service_chapters_int_input(mocker):
 
 def test_get_service_chapter_order_default(mocker):
     mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="")
-    from release_notes_generator.utils.constants import DEFAULT_SERVICE_CHAPTER_ORDER
     assert ActionInputs.get_service_chapter_order() == DEFAULT_SERVICE_CHAPTER_ORDER
 
 
 def test_get_service_chapter_order_full_custom(mocker):
-    from release_notes_generator.utils.constants import (
-        OTHERS_NO_TOPIC, DIRECT_COMMITS, CLOSED_ISSUES_WITHOUT_PULL_REQUESTS,
-        CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS, MERGED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS,
-        CLOSED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS, MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES,
-    )
     custom_order = f"{OTHERS_NO_TOPIC}, {DIRECT_COMMITS}, {CLOSED_ISSUES_WITHOUT_PULL_REQUESTS}, {CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS}, {MERGED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS}, {CLOSED_PRS_WITHOUT_ISSUE_AND_USER_DEFINED_LABELS}, {MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES}"
     mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value=custom_order)
     result = ActionInputs.get_service_chapter_order()
@@ -336,9 +340,6 @@ def test_get_service_chapter_order_full_custom(mocker):
 
 
 def test_get_service_chapter_order_partial(mocker):
-    from release_notes_generator.utils.constants import (
-        OTHERS_NO_TOPIC, DEFAULT_SERVICE_CHAPTER_ORDER,
-    )
     mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value=OTHERS_NO_TOPIC)
     result = ActionInputs.get_service_chapter_order()
     assert result[0] == OTHERS_NO_TOPIC
@@ -349,7 +350,6 @@ def test_get_service_chapter_order_partial(mocker):
 
 
 def test_get_service_chapter_order_newline_separated(mocker):
-    from release_notes_generator.utils.constants import OTHERS_NO_TOPIC, DIRECT_COMMITS
     mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value=f"{OTHERS_NO_TOPIC}\n{DIRECT_COMMITS}")
     result = ActionInputs.get_service_chapter_order()
     assert result[0] == OTHERS_NO_TOPIC
@@ -359,7 +359,6 @@ def test_get_service_chapter_order_newline_separated(mocker):
 def test_get_service_chapter_order_invalid_title(mocker):
     mock_log_error = mocker.patch("release_notes_generator.action_inputs.logger.error")
     mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="Invalid Title")
-    from release_notes_generator.utils.constants import DEFAULT_SERVICE_CHAPTER_ORDER
     result = ActionInputs.get_service_chapter_order()
     assert result == DEFAULT_SERVICE_CHAPTER_ORDER
     mock_log_error.assert_called_once()
@@ -368,7 +367,6 @@ def test_get_service_chapter_order_invalid_title(mocker):
 
 def test_get_service_chapter_order_duplicate_title(mocker):
     mock_log_error = mocker.patch("release_notes_generator.action_inputs.logger.error")
-    from release_notes_generator.utils.constants import OTHERS_NO_TOPIC
     mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value=f"{OTHERS_NO_TOPIC}, {OTHERS_NO_TOPIC}")
     result = ActionInputs.get_service_chapter_order()
     assert result[0] == OTHERS_NO_TOPIC
@@ -380,7 +378,6 @@ def test_get_service_chapter_order_duplicate_title(mocker):
 def test_get_service_chapter_order_int_input(mocker):
     mock_log_error = mocker.patch("release_notes_generator.action_inputs.logger.error")
     mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value=123)
-    from release_notes_generator.utils.constants import DEFAULT_SERVICE_CHAPTER_ORDER
     result = ActionInputs.get_service_chapter_order()
     assert result == DEFAULT_SERVICE_CHAPTER_ORDER
     mock_log_error.assert_called_once()
