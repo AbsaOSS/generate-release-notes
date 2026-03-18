@@ -584,3 +584,210 @@ def test_backward_compatibility_no_hidden_field():
     assert cc.chapters["Breaking Changes 💥"].hidden is False
     assert cc.chapters["New Features 🎉"].hidden is False
 
+
+def test_from_yaml_array_order_parsed():
+    # Arrange
+    cc = CustomChapters()
+    # Act
+    cc.from_yaml_array([
+        {"title": "Bugfixes 🛠", "labels": "bug", "order": 20},
+        {"title": "Breaking Changes 💥", "label": "breaking-change", "order": 10},
+        {"title": "Features 🎉", "labels": "feature"},
+    ])
+    # Assert
+    assert cc.chapters["Bugfixes 🛠"].order == 20
+    assert cc.chapters["Breaking Changes 💥"].order == 10
+    assert cc.chapters["Features 🎉"].order is None
+
+
+def test_from_yaml_array_order_string_integer():
+    # Arrange
+    cc = CustomChapters()
+    # Act
+    cc.from_yaml_array([{"title": "Ch", "labels": "bug", "order": "5"}])
+    # Assert
+    assert cc.chapters["Ch"].order == 5
+
+
+@pytest.mark.parametrize(
+    "order_value, expected_order, should_warn",
+    [
+        pytest.param(10, 10, False, id="valid-int"),
+        pytest.param(0, 0, False, id="zero"),
+        pytest.param(-5, -5, False, id="negative-int"),
+        pytest.param("42", 42, False, id="string-int"),
+        pytest.param("abc", None, True, id="invalid-string"),
+        pytest.param(True, None, True, id="bool-true"),
+        pytest.param(False, None, True, id="bool-false"),
+        pytest.param([], None, True, id="list-type"),
+        pytest.param(3.14, None, True, id="float-type"),
+    ],
+)
+def test_from_yaml_array_order_validation(order_value, expected_order, should_warn, caplog):
+    # Arrange
+    caplog.set_level("WARNING", logger="release_notes_generator.chapters.custom_chapters")
+    cc = CustomChapters()
+    # Act
+    cc.from_yaml_array([{"title": "Test", "labels": "bug", "order": order_value}])
+    # Assert
+    assert cc.chapters["Test"].order == expected_order
+    if should_warn:
+        assert any("order" in r.message.lower() for r in caplog.records)
+    else:
+        assert not any("order" in r.message.lower() for r in caplog.records)
+
+
+def test_from_yaml_array_order_omitted():
+    # Arrange
+    cc = CustomChapters()
+    # Act
+    cc.from_yaml_array([{"title": "NoOrder", "labels": "bug"}])
+    # Assert
+    assert cc.chapters["NoOrder"].order is None
+
+
+def test_from_yaml_array_repeated_title_same_order():
+    # Arrange
+    cc = CustomChapters()
+    # Act
+    cc.from_yaml_array([
+        {"title": "Bugfixes 🛠", "label": "bug", "order": 20},
+        {"title": "Bugfixes 🛠", "label": "error", "order": 20},
+    ])
+    # Assert
+    assert cc.chapters["Bugfixes 🛠"].labels == ["bug", "error"]
+    assert cc.chapters["Bugfixes 🛠"].order == 20
+
+
+def test_from_yaml_array_repeated_title_conflicting_order(caplog):
+    # Arrange
+    caplog.set_level("WARNING", logger="release_notes_generator.chapters.custom_chapters")
+    cc = CustomChapters()
+    # Act
+    cc.from_yaml_array([
+        {"title": "Bugfixes 🛠", "label": "bug", "order": 20},
+        {"title": "Bugfixes 🛠", "label": "error", "order": 10},
+    ])
+    # Assert - keeps first explicit value
+    assert cc.chapters["Bugfixes 🛠"].order == 20
+    assert cc.chapters["Bugfixes 🛠"].labels == ["bug", "error"]
+    assert any("conflicting order" in r.message.lower() for r in caplog.records)
+
+
+def test_from_yaml_array_repeated_title_order_then_no_order():
+    # Arrange
+    cc = CustomChapters()
+    # Act
+    cc.from_yaml_array([
+        {"title": "Ch", "label": "bug", "order": 10},
+        {"title": "Ch", "label": "error"},
+    ])
+    # Assert - first explicit order kept
+    assert cc.chapters["Ch"].order == 10
+
+
+def test_from_yaml_array_repeated_title_no_order_then_order():
+    # Arrange
+    cc = CustomChapters()
+    # Act
+    cc.from_yaml_array([
+        {"title": "Ch", "label": "bug"},
+        {"title": "Ch", "label": "error", "order": 15},
+    ])
+    # Assert - second provides order, adopted
+    assert cc.chapters["Ch"].order == 15
+
+
+def test_to_string_order_sorting():
+    # Arrange
+    cc = CustomChapters()
+    cc.from_yaml_array([
+        {"title": "Bugfixes 🛠", "labels": "bug", "order": 20},
+        {"title": "Breaking Changes 💥", "label": "breaking-change", "order": 10},
+        {"title": "Features 🎉", "labels": "feature"},
+    ])
+    cc.chapters["Bugfixes 🛠"].add_row(1, "Fix 1")
+    cc.chapters["Breaking Changes 💥"].add_row(2, "Break 1")
+    cc.chapters["Features 🎉"].add_row(3, "Feat 1")
+    # Act
+    result = cc.to_string()
+    # Assert - ordered chapters first ascending, then non-ordered
+    breaking_pos = result.index("Breaking Changes 💥")
+    bugfix_pos = result.index("Bugfixes 🛠")
+    features_pos = result.index("Features 🎉")
+    assert breaking_pos < bugfix_pos < features_pos
+
+
+def test_to_string_order_tie_preserves_first_seen():
+    # Arrange
+    cc = CustomChapters()
+    cc.from_yaml_array([
+        {"title": "Alpha", "labels": "a", "order": 10},
+        {"title": "Beta", "labels": "b", "order": 10},
+        {"title": "Gamma", "labels": "c", "order": 10},
+    ])
+    cc.chapters["Alpha"].add_row(1, "A row")
+    cc.chapters["Beta"].add_row(2, "B row")
+    cc.chapters["Gamma"].add_row(3, "C row")
+    # Act
+    result = cc.to_string()
+    # Assert - same order → first-seen order preserved
+    alpha_pos = result.index("Alpha")
+    beta_pos = result.index("Beta")
+    gamma_pos = result.index("Gamma")
+    assert alpha_pos < beta_pos < gamma_pos
+
+
+def test_to_string_no_order_preserves_first_seen():
+    # Arrange
+    cc = CustomChapters()
+    cc.from_yaml_array([
+        {"title": "Bugfixes 🛠", "labels": "bug"},
+        {"title": "Features 🎉", "labels": "feature"},
+        {"title": "Breaking Changes 💥", "label": "breaking-change"},
+    ])
+    cc.chapters["Bugfixes 🛠"].add_row(1, "Fix 1")
+    cc.chapters["Features 🎉"].add_row(2, "Feat 1")
+    cc.chapters["Breaking Changes 💥"].add_row(3, "Break 1")
+    # Act
+    result = cc.to_string()
+    # Assert - without order, first-seen order preserved (backward compat)
+    bugfix_pos = result.index("Bugfixes 🛠")
+    features_pos = result.index("Features 🎉")
+    breaking_pos = result.index("Breaking Changes 💥")
+    assert bugfix_pos < features_pos < breaking_pos
+
+
+def test_to_string_mixed_ordered_and_unordered():
+    # Arrange
+    cc = CustomChapters()
+    cc.from_yaml_array([
+        {"title": "Unordered1", "labels": "a"},
+        {"title": "Ordered30", "labels": "b", "order": 30},
+        {"title": "Unordered2", "labels": "c"},
+        {"title": "Ordered10", "labels": "d", "order": 10},
+    ])
+    for title in cc.chapters:
+        cc.chapters[title].add_row(1, "row")
+    # Act
+    result = cc.to_string()
+    # Assert - ordered first (10, 30), then unordered (Unordered1, Unordered2)
+    pos = {title: result.index(title) for title in cc.chapters}
+    assert pos["Ordered10"] < pos["Ordered30"] < pos["Unordered1"] < pos["Unordered2"]
+
+
+def test_sorted_chapters_hidden_with_order():
+    # Arrange - hidden chapters with order are still sorted (but filtered in to_string)
+    cc = CustomChapters()
+    cc.from_yaml_array([
+        {"title": "Visible", "labels": "a", "order": 20},
+        {"title": "Hidden", "labels": "b", "order": 10, "hidden": True},
+        {"title": "Visible2", "labels": "c"},
+    ])
+    # Act
+    sorted_chs = cc._sorted_chapters()
+    # Assert
+    assert sorted_chs[0].title == "Hidden"
+    assert sorted_chs[1].title == "Visible"
+    assert sorted_chs[2].title == "Visible2"
+
