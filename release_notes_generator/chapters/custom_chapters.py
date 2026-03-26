@@ -281,9 +281,7 @@ class CustomChapters(BaseChapters):
                 return False
             logger.warning("Chapter '%s' has invalid '%s' value: %s. Defaulting to false.", title, key, raw)
             return False
-        logger.warning(
-            "Chapter '%s' has invalid '%s' value type: %s. Defaulting to false.", title, key, type(raw)
-        )
+        logger.warning("Chapter '%s' has invalid '%s' value type: %s. Defaulting to false.", title, key, type(raw))
         return False
 
     @staticmethod
@@ -327,9 +325,7 @@ class CustomChapters(BaseChapters):
         return None
 
     @staticmethod
-    def _parse_labels_definition(
-        title: str, chapter: dict[str, Any], catch_open_hierarchy: bool
-    ) -> list[str] | None:
+    def _parse_labels_definition(title: str, chapter: dict[str, Any], catch_open_hierarchy: bool) -> list[str] | None:
         """Parse and validate the labels definition for a chapter config entry.
 
         Parameters:
