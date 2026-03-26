@@ -152,6 +152,8 @@ class CustomChapters(BaseChapters):
                 continue
 
             for ch in self.chapters.values():
+                if ch.catch_open_hierarchy:
+                    continue  # COH chapter is only populated via the hierarchy-state gate
                 if any(lbl in ch.labels for lbl in record_labels):
                     self._add_record_to_chapter(record_id, record, ch)
 
@@ -355,7 +357,10 @@ class CustomChapters(BaseChapters):
             return None
 
         if raw_labels is None:
-            return []  # catch-open-hierarchy chapter with explicit null labels
+            if catch_open_hierarchy:
+                return []  # COH chapter with explicit null labels — treat as no-label filter
+            logger.warning("Chapter '%s' has null labels value; skipping", title)
+            return None
 
         if not isinstance(raw_labels, (str, list)):
             logger.warning(

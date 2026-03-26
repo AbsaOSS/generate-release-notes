@@ -1119,3 +1119,36 @@ def test_catch_open_hierarchy_skipped_chapter_does_not_consume_coh_slot(caplog, 
     # Skipped-labels warning should be present
     assert any("empty after normalization" in r.message for r in caplog.records)
 
+
+def test_labels_null_non_coh_chapter_warns_and_skips(caplog):
+    """labels: null on a non-COH chapter must warn and skip — not silently create an unroutable chapter."""
+    caplog.set_level("WARNING", logger="release_notes_generator.chapters.custom_chapters")
+    cc = CustomChapters()
+    cc.from_yaml_array([{"title": "Bad Chapter", "labels": None}])
+    assert "Bad Chapter" not in cc.chapters
+    assert any("null labels" in r.message for r in caplog.records)
+
+
+def test_coh_chapter_not_populated_via_label_routing(hierarchy_record_stub, monkeypatch):
+    """A COH chapter with labels must NOT receive closed hierarchy parents or non-hierarchy records
+    via normal label routing — only open hierarchy parents route through the COH gate."""
+    monkeypatch.setattr(ActionInputs, "get_hierarchy", staticmethod(lambda: True))
+    monkeypatch.setattr(ActionInputs, "get_verbose", staticmethod(lambda: False))
+    cc = CustomChapters()
+    cc.from_yaml_array([
+        {"title": "Silent Live 🤫", "catch-open-hierarchy": True, "labels": "feature"},
+        {"title": "New Features 🎉", "labels": "feature"},
+    ])
+
+    # Closed hierarchy parent with matching label → must go to normal chapter, not COH
+    closed_parent = hierarchy_record_stub("org/repo#C1", ["feature"], state="closed")
+    # Open hierarchy parent with matching label → must go to COH chapter
+    open_parent = hierarchy_record_stub("org/repo#O1", ["feature"], state="open")
+
+    cc.populate({"org/repo#C1": closed_parent, "org/repo#O1": open_parent})
+
+    assert "org/repo#C1" not in cc.chapters["Silent Live 🤫"].rows
+    assert "org/repo#C1" in cc.chapters["New Features 🎉"].rows
+    assert "org/repo#O1" in cc.chapters["Silent Live 🤫"].rows
+    assert "org/repo#O1" not in cc.chapters["New Features 🎉"].rows
+
