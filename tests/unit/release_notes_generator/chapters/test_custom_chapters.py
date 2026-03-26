@@ -1120,6 +1120,21 @@ def test_catch_open_hierarchy_skipped_chapter_does_not_consume_coh_slot(caplog, 
     assert any("empty after normalization" in r.message for r in caplog.records)
 
 
+def test_catch_open_hierarchy_same_title_repeat_no_warning(caplog):
+    """Repeating catch-open-hierarchy: true on the same title must not warn and
+    must produce one chapter with the flag set and all labels merged."""
+    caplog.set_level("WARNING", logger="release_notes_generator.chapters.custom_chapters")
+    cc = CustomChapters()
+    cc.from_yaml_array([
+        {"title": "Silent Live 🤫", "catch-open-hierarchy": True, "labels": "feature"},
+        {"title": "Silent Live 🤫", "catch-open-hierarchy": True, "labels": "epic"},
+    ])
+    assert "Silent Live 🤫" in cc.chapters
+    assert cc.chapters["Silent Live 🤫"].catch_open_hierarchy is True
+    assert cc.chapters["Silent Live 🤫"].labels == ["feature", "epic"]
+    assert not any("ignoring duplicate" in r.message.lower() for r in caplog.records)
+
+
 def test_labels_null_non_coh_chapter_warns_and_skips(caplog):
     """labels: null on a non-COH chapter must warn and skip — not silently create an unroutable chapter."""
     caplog.set_level("WARNING", logger="release_notes_generator.chapters.custom_chapters")

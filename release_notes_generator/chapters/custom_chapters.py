@@ -229,17 +229,19 @@ class CustomChapters(BaseChapters):
                 title, chapter.get("catch-open-hierarchy", False), "catch-open-hierarchy"
             )
 
-            # Enforce single catch-open-hierarchy chapter constraint
+            # Enforce single catch-open-hierarchy chapter constraint.
+            # Same-title repeats are treated as a merge and allowed through.
             if catch_open_hierarchy:
-                if coh_chapter_title is not None:
+                if coh_chapter_title is not None and coh_chapter_title != title:
                     logger.warning(
                         "Chapter '%s' has catch-open-hierarchy: true but '%s' already uses it; ignoring duplicate",
                         title,
                         coh_chapter_title,
                     )
                     catch_open_hierarchy = False
-                else:
+                elif coh_chapter_title is None:
                     coh_chapter_title = title
+                # else: same title repeating COH — silent merge pass-through
 
             unknown = set(chapter.keys()) - allowed_keys
             if unknown:
