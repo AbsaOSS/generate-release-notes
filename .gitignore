@@ -164,3 +164,4 @@ cython_debug/
 
 default_output.txt
 run_locally.sh
+specs/feature/002-conditional-silent-live-chapters/SPEC.md

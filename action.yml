@@ -21,7 +21,14 @@ inputs:
     description: 'The tag name of the release to generate notes for.'
     required: true
   chapters:
-    description: 'A string representation of a YAML array defining chapters and corresponding labels for categorization. (Created by used "|".)'
+    description: |
+      A string representation of a YAML array defining chapters and corresponding labels for categorization.
+      Each chapter entry requires a `title` and either `label` or `labels`.
+      Optional keys: `hidden` (bool), `order` (int), `catch-open-hierarchy` (bool).
+      When `catch-open-hierarchy: true`, the chapter intercepts all open HierarchyIssueRecord parents
+      before label-based routing. Requires `hierarchy: true` to have any effect.
+      At most one chapter may set `catch-open-hierarchy: true`; duplicates are ignored with a warning.
+      An optional `labels` filter on a catch-open-hierarchy chapter restricts interception to matching labels.
     required: false
     default: ''
   duplicity-scope:

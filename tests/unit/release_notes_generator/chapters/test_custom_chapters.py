@@ -17,6 +17,7 @@ import pytest
 
 from release_notes_generator.chapters.custom_chapters import CustomChapters, _normalize_labels
 from release_notes_generator.model.record.issue_record import IssueRecord
+from release_notes_generator.model.record.hierarchy_issue_record import HierarchyIssueRecord
 from release_notes_generator.model.record.commit_record import CommitRecord
 from release_notes_generator.model.record.record import Record
 from release_notes_generator.utils.enums import DuplicityScopeEnum
@@ -790,4 +791,331 @@ def test_sorted_chapters_hidden_with_order():
     assert sorted_chs[0].title == "Hidden"
     assert sorted_chs[1].title == "Visible"
     assert sorted_chs[2].title == "Visible2"
+
+
+# ------- Tests for catch-open-hierarchy (Feature 1) -------
+
+
+@pytest.fixture
+def hierarchy_record_stub():
+    """Create a minimal HierarchyIssueRecord-like stub for catch-open-hierarchy tests."""
+
+    class HierarchyRecordStub(HierarchyIssueRecord):
+        """Stub that avoids calling real GitHub Issue methods."""
+
+        # noinspection PyMissingConstructor
+        def __init__(self, rid, labels, state, contains_change):
+            # Bypass real __init__ to avoid GitHub API objects
+            Record.__init__(self, labels=labels, skip=False)
+            self._rid = rid
+            self._state = state
+            self._contains = contains_change
+            self._level = 0
+            self._sub_issues = {}
+            self._sub_hierarchy_issues = {}
+            self._issue = None
+            self._pull_requests = {}
+            self._commits = {}
+            self._issue_type = None
+
+        @property
+        def record_id(self):
+            return self._rid
+
+        @property
+        def is_closed(self):
+            return self._state == "closed"
+
+        @property
+        def is_open(self):
+            return self._state == "open"
+
+        @property
+        def author(self):
+            return "author"
+
+        @property
+        def assignees(self):
+            return []
+
+        @property
+        def developers(self):
+            return []
+
+        def to_chapter_row(self, add_into_chapters=True):
+            return f"{self._rid} row"
+
+        def contains_change_increment(self):
+            return self._contains
+
+        def get_labels(self):
+            return self.labels
+
+        def get_rls_notes(self, _line_marks=None):
+            return ""
+
+    def _make(rid="org/repo#H1", labels=None, state="open", contains_change=True):
+        return HierarchyRecordStub(rid, labels or [], state, contains_change)
+
+    return _make
+
+
+def test_catch_open_hierarchy_no_label_filter(hierarchy_record_stub, monkeypatch):
+    """AC-1: Open hierarchy parent without label filter → routed to conditional chapter only."""
+    # Arrange
+    monkeypatch.setattr(ActionInputs, "get_hierarchy", staticmethod(lambda: True))
+    monkeypatch.setattr(ActionInputs, "get_verbose", staticmethod(lambda: False))
+    cc = CustomChapters()
+    cc.from_yaml_array([
+        {"title": "New Features 🎉", "labels": "feature"},
+        {"title": "Silent Live 🤫", "catch-open-hierarchy": True},
+    ])
+    record = hierarchy_record_stub("org/repo#H1", ["feature"], state="open")
+    records = {"org/repo#H1": record}
+    # Act
+    cc.populate(records)
+    # Assert
+    assert "org/repo#H1" in cc.chapters["Silent Live 🤫"].rows
+    assert "org/repo#H1" not in cc.chapters["New Features 🎉"].rows
+
+
+def test_catch_open_hierarchy_with_label_filter_match(hierarchy_record_stub, monkeypatch):
+    """AC-2: Open hierarchy parent with matching label filter → intercepted."""
+    monkeypatch.setattr(ActionInputs, "get_hierarchy", staticmethod(lambda: True))
+    monkeypatch.setattr(ActionInputs, "get_verbose", staticmethod(lambda: False))
+    cc = CustomChapters()
+    cc.from_yaml_array([
+        {"title": "New Features 🎉", "labels": "feature"},
+        {"title": "Silent Live 🤫", "catch-open-hierarchy": True, "labels": "feature"},
+    ])
+    record = hierarchy_record_stub("org/repo#H2", ["feature"], state="open")
+    records = {"org/repo#H2": record}
+    cc.populate(records)
+    assert "org/repo#H2" in cc.chapters["Silent Live 🤫"].rows
+    assert "org/repo#H2" not in cc.chapters["New Features 🎉"].rows
+
+
+def test_catch_open_hierarchy_with_label_filter_no_match(hierarchy_record_stub, monkeypatch):
+    """AC-3: Open hierarchy parent with non-matching label filter → normal routing."""
+    monkeypatch.setattr(ActionInputs, "get_hierarchy", staticmethod(lambda: True))
+    monkeypatch.setattr(ActionInputs, "get_verbose", staticmethod(lambda: False))
+    cc = CustomChapters()
+    cc.from_yaml_array([
+        {"title": "New Features 🎉", "labels": "feature"},
+        {"title": "Silent Live 🤫", "catch-open-hierarchy": True, "labels": "epic"},
+    ])
+    record = hierarchy_record_stub("org/repo#H3", ["feature"], state="open")
+    records = {"org/repo#H3": record}
+    cc.populate(records)
+    assert "org/repo#H3" not in cc.chapters["Silent Live 🤫"].rows
+    assert "org/repo#H3" in cc.chapters["New Features 🎉"].rows
+
+
+def test_catch_open_hierarchy_closed_parent_not_intercepted(hierarchy_record_stub, monkeypatch):
+    """AC-4: Closed hierarchy parent → not intercepted; uses normal label routing."""
+    monkeypatch.setattr(ActionInputs, "get_hierarchy", staticmethod(lambda: True))
+    monkeypatch.setattr(ActionInputs, "get_verbose", staticmethod(lambda: False))
+    cc = CustomChapters()
+    cc.from_yaml_array([
+        {"title": "New Features 🎉", "labels": "feature"},
+        {"title": "Silent Live 🤫", "catch-open-hierarchy": True},
+    ])
+    record = hierarchy_record_stub("org/repo#H4", ["feature"], state="closed")
+    records = {"org/repo#H4": record}
+    cc.populate(records)
+    assert "org/repo#H4" not in cc.chapters["Silent Live 🤫"].rows
+    assert "org/repo#H4" in cc.chapters["New Features 🎉"].rows
+
+
+def test_catch_open_hierarchy_disabled_hierarchy_noop(hierarchy_record_stub, monkeypatch, caplog):
+    """AC-5: hierarchy=false → gate skipped, warning logged."""
+    monkeypatch.setattr(ActionInputs, "get_hierarchy", staticmethod(lambda: False))
+    monkeypatch.setattr(ActionInputs, "get_verbose", staticmethod(lambda: False))
+    caplog.set_level("WARNING")
+    cc = CustomChapters()
+    cc.from_yaml_array([
+        {"title": "New Features 🎉", "labels": "feature"},
+        {"title": "Silent Live 🤫", "catch-open-hierarchy": True},
+    ])
+    record = hierarchy_record_stub("org/repo#H5", ["feature"], state="open")
+    records = {"org/repo#H5": record}
+    cc.populate(records)
+    # Record falls through to normal label routing since hierarchy is disabled
+    assert "org/repo#H5" not in cc.chapters["Silent Live 🤫"].rows
+    assert "org/repo#H5" in cc.chapters["New Features 🎉"].rows
+    assert any("catch-open-hierarchy has no effect" in r.message for r in caplog.records)
+
+
+def test_catch_open_hierarchy_duplicate_warning(caplog):
+    """AC-6: Two catch-open-hierarchy chapters → only first used, warning logged."""
+    caplog.set_level("WARNING", logger="release_notes_generator.chapters.custom_chapters")
+    cc = CustomChapters()
+    cc.from_yaml_array([
+        {"title": "Silent Live 🤫", "catch-open-hierarchy": True},
+        {"title": "Also Silent 🤫", "catch-open-hierarchy": True, "labels": "bug"},
+    ])
+    # First chapter has it
+    assert cc.chapters["Silent Live 🤫"].catch_open_hierarchy is True
+    # Second chapter has it disabled due to duplicate
+    assert cc.chapters["Also Silent 🤫"].catch_open_hierarchy is False
+    assert any("ignoring duplicate" in r.message.lower() for r in caplog.records)
+
+
+def test_catch_open_hierarchy_no_labels_chapter_created():
+    """catch-open-hierarchy chapter without labels is created with empty label list."""
+    cc = CustomChapters()
+    cc.from_yaml_array([
+        {"title": "Silent Live 🤫", "catch-open-hierarchy": True},
+    ])
+    assert "Silent Live 🤫" in cc.chapters
+    assert cc.chapters["Silent Live 🤫"].labels == []
+    assert cc.chapters["Silent Live 🤫"].catch_open_hierarchy is True
+
+
+def test_catch_open_hierarchy_with_hidden(hierarchy_record_stub, monkeypatch):
+    """catch-open-hierarchy combined with hidden: records tracked but not visible."""
+    monkeypatch.setattr(ActionInputs, "get_hierarchy", staticmethod(lambda: True))
+    monkeypatch.setattr(ActionInputs, "get_verbose", staticmethod(lambda: False))
+    cc = CustomChapters()
+    cc.from_yaml_array([
+        {"title": "New Features 🎉", "labels": "feature"},
+        {"title": "Silent Live 🤫", "catch-open-hierarchy": True, "hidden": True},
+    ])
+    record = hierarchy_record_stub("org/repo#H6", ["feature"], state="open")
+    records = {"org/repo#H6": record}
+    cc.populate(records)
+    # Record intercepted by hidden conditional chapter
+    assert "org/repo#H6" in cc.chapters["Silent Live 🤫"].rows
+    assert "org/repo#H6" not in cc.chapters["New Features 🎉"].rows
+    # Hidden chapter should not appear in output
+    result = cc.to_string()
+    assert "Silent Live" not in result
+
+
+def test_catch_open_hierarchy_non_hierarchy_record_not_intercepted(record_stub, monkeypatch):
+    """Non-hierarchy records are never intercepted by catch-open-hierarchy."""
+    monkeypatch.setattr(ActionInputs, "get_hierarchy", staticmethod(lambda: True))
+    monkeypatch.setattr(ActionInputs, "get_verbose", staticmethod(lambda: False))
+    cc = CustomChapters()
+    cc.from_yaml_array([
+        {"title": "New Features 🎉", "labels": "feature"},
+        {"title": "Silent Live 🤫", "catch-open-hierarchy": True},
+    ])
+    record = record_stub("org/repo#R1", ["feature"])
+    records = {"org/repo#R1": record}
+    cc.populate(records)
+    assert "org/repo#R1" not in cc.chapters["Silent Live 🤫"].rows
+    assert "org/repo#R1" in cc.chapters["New Features 🎉"].rows
+
+
+def test_from_yaml_array_catch_open_hierarchy_default_false():
+    """catch-open-hierarchy defaults to False when omitted."""
+    cc = CustomChapters()
+    cc.from_yaml_array([{"title": "Features", "labels": "feature"}])
+    assert cc.chapters["Features"].catch_open_hierarchy is False
+
+
+@pytest.mark.parametrize(
+    "coh_value, expected, should_warn",
+    [
+        pytest.param(True, True, False, id="bool-true"),
+        pytest.param(False, False, False, id="bool-false"),
+        pytest.param("true", True, False, id="string-true"),
+        pytest.param("false", False, False, id="string-false"),
+        pytest.param("invalid", False, True, id="invalid-string"),
+        pytest.param(123, False, True, id="integer-type"),
+    ],
+)
+def test_from_yaml_array_catch_open_hierarchy_validation(coh_value, expected, should_warn, caplog):
+    """Validation of catch-open-hierarchy values."""
+    caplog.set_level("WARNING", logger="release_notes_generator.chapters.custom_chapters")
+    cc = CustomChapters()
+    cc.from_yaml_array([{"title": "Test", "labels": "bug", "catch-open-hierarchy": coh_value}])
+    assert cc.chapters["Test"].catch_open_hierarchy is expected
+    if should_warn:
+        assert any("catch-open-hierarchy" in r.message for r in caplog.records)
+    else:
+        assert not any("catch-open-hierarchy" in r.message.lower() and "invalid" in r.message.lower() for r in caplog.records)
+
+
+def test_catch_open_hierarchy_merge_path_adopts_flag(hierarchy_record_stub, monkeypatch):
+    """If a title is defined twice and the second entry adds catch-open-hierarchy,
+    the flag must be set on the merged chapter (merge-path update)."""
+    monkeypatch.setattr(ActionInputs, "get_hierarchy", staticmethod(lambda: True))
+    monkeypatch.setattr(ActionInputs, "get_verbose", staticmethod(lambda: False))
+    cc = CustomChapters()
+    cc.from_yaml_array([
+        {"title": "Silent Live 🤫", "labels": "bug"},                       # first: no COH
+        {"title": "Silent Live 🤫", "catch-open-hierarchy": True},           # second: adds COH
+    ])
+    assert cc.chapters["Silent Live 🤫"].catch_open_hierarchy is True
+
+    record = hierarchy_record_stub("org/repo#M1", ["bug"], state="open")
+    cc.populate({"org/repo#M1": record})
+    assert "org/repo#M1" in cc.chapters["Silent Live 🤫"].rows
+
+
+def test_catch_open_hierarchy_no_labels_record_captured(hierarchy_record_stub, monkeypatch):
+    """An open HierarchyIssueRecord with no labels must still be routed to a
+    no-filter COH chapter (COH gate precedes the empty-labels early-exit)."""
+    monkeypatch.setattr(ActionInputs, "get_hierarchy", staticmethod(lambda: True))
+    monkeypatch.setattr(ActionInputs, "get_verbose", staticmethod(lambda: False))
+    cc = CustomChapters()
+    cc.from_yaml_array([
+        {"title": "New Features 🎉", "labels": "feature"},
+        {"title": "Silent Live 🤫", "catch-open-hierarchy": True},   # no label filter
+    ])
+    record = hierarchy_record_stub("org/repo#N1", [], state="open")  # deliberately no labels
+    cc.populate({"org/repo#N1": record})
+    assert "org/repo#N1" in cc.chapters["Silent Live 🤫"].rows
+    assert "org/repo#N1" not in cc.chapters["New Features 🎉"].rows
+
+
+def test_catch_open_hierarchy_visible_increments_chapter_presence(hierarchy_record_stub, monkeypatch):
+    """A visible COH chapter must increment chapter_presence_count, just like normal visible chapters."""
+    monkeypatch.setattr(ActionInputs, "get_hierarchy", staticmethod(lambda: True))
+    monkeypatch.setattr(ActionInputs, "get_verbose", staticmethod(lambda: False))
+    cc = CustomChapters()
+    cc.from_yaml_array([
+        {"title": "Silent Live 🤫", "catch-open-hierarchy": True},
+    ])
+    record = hierarchy_record_stub("org/repo#P1", ["feature"], state="open")
+    cc.populate({"org/repo#P1": record})
+    assert record.chapter_presence_count() == 1
+
+
+def test_catch_open_hierarchy_hidden_does_not_increment_chapter_presence(hierarchy_record_stub, monkeypatch):
+    """A hidden COH chapter must NOT increment chapter_presence_count (same rule as normal hidden chapters)."""
+    monkeypatch.setattr(ActionInputs, "get_hierarchy", staticmethod(lambda: True))
+    monkeypatch.setattr(ActionInputs, "get_verbose", staticmethod(lambda: False))
+    cc = CustomChapters()
+    cc.from_yaml_array([
+        {"title": "Silent Live 🤫", "catch-open-hierarchy": True, "hidden": True},
+    ])
+    record = hierarchy_record_stub("org/repo#P2", ["feature"], state="open")
+    cc.populate({"org/repo#P2": record})
+    assert "org/repo#P2" in cc.chapters["Silent Live 🤫"].rows
+    assert record.chapter_presence_count() == 0
+
+
+def test_catch_open_hierarchy_skipped_chapter_does_not_consume_coh_slot(caplog, hierarchy_record_stub, monkeypatch):
+    """A COH chapter that is skipped (empty labels after normalization) must not consume the
+    single-COH slot, so a subsequent valid COH chapter is still accepted."""
+    caplog.set_level("WARNING", logger="release_notes_generator.chapters.custom_chapters")
+    monkeypatch.setattr(ActionInputs, "get_hierarchy", staticmethod(lambda: True))
+    monkeypatch.setattr(ActionInputs, "get_verbose", staticmethod(lambda: False))
+    cc = CustomChapters()
+    cc.from_yaml_array([
+        {"title": "Broken COH", "catch-open-hierarchy": True, "labels": "   "},  # empty → skipped
+        {"title": "Real Silent Live", "catch-open-hierarchy": True},              # should succeed
+    ])
+    # Skipped chapter not created
+    assert "Broken COH" not in cc.chapters
+    # Valid second COH chapter created normally
+    assert "Real Silent Live" in cc.chapters
+    assert cc.chapters["Real Silent Live"].catch_open_hierarchy is True
+    # No false duplicate warning should be present
+    assert not any("ignoring duplicate" in r.message.lower() for r in caplog.records)
+    # Skipped-labels warning should be present
+    assert any("empty after normalization" in r.message for r in caplog.records)
 
