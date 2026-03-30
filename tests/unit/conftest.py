@@ -1227,9 +1227,7 @@ def make_minimal_pr(mocker: pytest.MonkeyPatch, number: int) -> PullRequest:
 def make_closed_sub_issue_record_with_pr(mocker: pytest.MonkeyPatch, number: int) -> SubIssueRecord:
     """Return a closed SubIssueRecord with one PR (no commits)."""
     sub_record = SubIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number))
-    pr = make_minimal_pr(mocker, number=number + 1000)
-    sub_record._pull_requests[pr.number] = pr
-    sub_record._commits[pr.number] = {}
+    sub_record.register_pull_request(make_minimal_pr(mocker, number=number + 1000))
     return sub_record
 
 
@@ -1251,18 +1249,14 @@ def make_open_sub_hierarchy_record_no_pr(mocker: pytest.MonkeyPatch, number: int
 def make_open_sub_hierarchy_record_with_pr(mocker: pytest.MonkeyPatch, number: int) -> HierarchyIssueRecord:
     """Return an open HierarchyIssueRecord with one PR (no commits)."""
     rec = HierarchyIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_OPEN, number))
-    pr = make_minimal_pr(mocker, number=number + 1000)
-    rec._pull_requests[pr.number] = pr
-    rec._commits[pr.number] = {}
+    rec.register_pull_request(make_minimal_pr(mocker, number=number + 1000))
     return rec
 
 
 def make_closed_sub_hierarchy_record_with_pr(mocker: pytest.MonkeyPatch, number: int) -> HierarchyIssueRecord:
     """Return a closed HierarchyIssueRecord with one PR (no commits)."""
     rec = HierarchyIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number))
-    pr = make_minimal_pr(mocker, number=number + 1000)
-    rec._pull_requests[pr.number] = pr
-    rec._commits[pr.number] = {}
+    rec.register_pull_request(make_minimal_pr(mocker, number=number + 1000))
     return rec
 
 

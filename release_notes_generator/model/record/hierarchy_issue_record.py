@@ -171,7 +171,7 @@ class HierarchyIssueRecord(IssueRecord):
 
         # add sub-hierarchy issues
         for sub_hierarchy_issue in self._sub_hierarchy_issues.values():
-            logger.debug("Rendering hierarchy issue row for sub-issue #%s", sub_hierarchy_issue.issue.number)
+            logger.debug("Rendering sub-hierarchy issue row for #%s", sub_hierarchy_issue.issue.number)
             if self.is_open:
                 if not sub_hierarchy_issue.contains_change_increment():
                     continue
@@ -191,7 +191,7 @@ class HierarchyIssueRecord(IssueRecord):
                         continue  # skip sub-issues without change increment
                 # Closed parent: render all sub-issues regardless of state or change increment
 
-                logger.debug("Sub-issue #%s contains change increment", sub_issue.issue.number)
+                logger.debug("Rendering sub-issue #%s", sub_issue.issue.number)
                 sub_issue_block = "- " + sub_issue.to_chapter_row()
                 ind_child_block = "\n".join(
                     f"{sub_indent}{line}" if line else "" for line in sub_issue_block.splitlines()
