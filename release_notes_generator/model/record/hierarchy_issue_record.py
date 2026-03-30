@@ -75,6 +75,23 @@ class HierarchyIssueRecord(IssueRecord):
         return self._sub_hierarchy_issues
 
     @property
+    def progress(self) -> str:
+        """
+        The sub-issue completion count for this hierarchy node as 'X/Y done'.
+
+        Returns:
+            '' when this node has no direct sub-issues; otherwise 'X/Y done'
+            counting direct children only (sub-issues + sub-hierarchy-issues, no recursion).
+            Note: adjacent delimiter characters are not stripped when empty.
+        """
+        total = len(self._sub_issues) + len(self._sub_hierarchy_issues)
+        if total == 0:
+            return ""
+        closed = sum(1 for s in self._sub_issues.values() if s.is_closed)
+        closed += sum(1 for s in self._sub_hierarchy_issues.values() if s.is_closed)
+        return f"{closed}/{total} done"
+
+    @property
     def developers(self) -> list[str]:
         issue = self._issue
         if not issue:
@@ -146,6 +163,7 @@ class HierarchyIssueRecord(IssueRecord):
             format_values["type"] = self.issue_type
         else:
             format_values["type"] = ""
+        format_values["progress"] = self.progress
 
         list_pr_links = self.get_pr_links()
         if len(list_pr_links) > 0:

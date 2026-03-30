@@ -26,15 +26,33 @@ Represent issue → sub-issue relationships directly in release notes, aggregati
 ## Example Result
 ```markdown
 ### New Features 🎉
-- Epic: _Make Login Service releasable under new Maven central repository_ #140
+- Epic: _Make Login Service releasable under new Maven central repository_ #140 1/2 done
   - Updated `sbt.version` to `1.11.5` for release.
   - Updated Developers
   - Updated `sbt-ci-release` to `1.11.2`
   - Updated `scala213 = "2.13.13"`
-  - Feature: _Add user MFA enrollment flow_ #123 developed by @alice in #124
+  - Feature: _Add user MFA enrollment flow_ #123 developed by @alice in #124 1/1 done
     - Add user MFA enrollment flow
+  - Feature: _Add OAuth2 login_ #125 developed by @bob in #126 0/1 done
 ```
-(1st four indented bullets under Epic line represent the extracted release notes from the parent hierarchy issue's body.)
+(1st four indented bullets under Epic line represent the extracted release notes from the parent hierarchy issue's body. `{progress}` counts direct children only — each level independently reports its own sub-issue completion.)
+
+## `{progress}` Format Token
+
+The `{progress}` token is available in `row-format-hierarchy-issue`. It renders the sub-issue completion count for each hierarchy node as `"X/Y done"`, where X and Y count **direct children only** — no recursive aggregation.
+
+- Counts both `SubIssueRecord` and nested `HierarchyIssueRecord` direct children.
+- Each hierarchy level computes its own count independently when `to_chapter_row()` recurses.
+- Leaf nodes (zero direct sub-issues) return an empty string; the token is suppressed, producing no extra whitespace.
+
+### Example
+
+Format: `row-format-hierarchy-issue: "{type}: _{title}_ {number} {progress}"`
+
+```markdown
+- Epic: _Make Login Service releasable_ #140 2/3 done
+  - Feature: _Add user MFA enrollment flow_ #123 1/1 done
+```
 
 ## Related Features
 - [Custom Row Formats](./custom_row_formats.md) – controls hierarchy line rendering.
