@@ -17,6 +17,7 @@ from copy import deepcopy
 from datetime import datetime, timedelta
 
 import pytest
+from pytest_mock import MockerFixture
 
 from github import Github, IssueType, NamedUser
 from github.Commit import Commit
@@ -1198,7 +1199,7 @@ _HIERARCHY_ROW_FMT = "_{title}_ {number}"
 _ISSUE_ROW_FMT_MINIMAL = "{number} _{title}_"
 
 
-def make_minimal_issue(mocker: pytest.MonkeyPatch, state: str, number: int) -> Issue:
+def make_minimal_issue(mocker: MockerFixture, state: str, number: int) -> Issue:
     """Return a minimal Issue mock."""
     issue = mocker.Mock(spec=Issue)
     issue.state = state
@@ -1212,7 +1213,7 @@ def make_minimal_issue(mocker: pytest.MonkeyPatch, state: str, number: int) -> I
     return issue
 
 
-def make_minimal_pr(mocker: pytest.MonkeyPatch, number: int) -> PullRequest:
+def make_minimal_pr(mocker: MockerFixture, number: int) -> PullRequest:
     """Return a minimal PullRequest mock."""
     pr = mocker.Mock(spec=PullRequest)
     pr.number = number
@@ -1224,43 +1225,43 @@ def make_minimal_pr(mocker: pytest.MonkeyPatch, number: int) -> PullRequest:
     return pr
 
 
-def make_closed_sub_issue_record_with_pr(mocker: pytest.MonkeyPatch, number: int) -> SubIssueRecord:
+def make_closed_sub_issue_record_with_pr(mocker: MockerFixture, number: int) -> SubIssueRecord:
     """Return a closed SubIssueRecord with one PR (no commits)."""
     sub_record = SubIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number))
     sub_record.register_pull_request(make_minimal_pr(mocker, number=number + 1000))
     return sub_record
 
 
-def make_open_sub_issue_record_no_pr(mocker: pytest.MonkeyPatch, number: int) -> SubIssueRecord:
+def make_open_sub_issue_record_no_pr(mocker: MockerFixture, number: int) -> SubIssueRecord:
     """Return an open SubIssueRecord with no PRs."""
     return SubIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_OPEN, number))
 
 
-def make_closed_sub_issue_record_no_pr(mocker: pytest.MonkeyPatch, number: int) -> SubIssueRecord:
+def make_closed_sub_issue_record_no_pr(mocker: MockerFixture, number: int) -> SubIssueRecord:
     """Return a closed SubIssueRecord with no PRs (no change increment)."""
     return SubIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number))
 
 
-def make_open_sub_hierarchy_record_no_pr(mocker: pytest.MonkeyPatch, number: int) -> HierarchyIssueRecord:
+def make_open_sub_hierarchy_record_no_pr(mocker: MockerFixture, number: int) -> HierarchyIssueRecord:
     """Return an open HierarchyIssueRecord with no PRs."""
     return HierarchyIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_OPEN, number))
 
 
-def make_open_sub_hierarchy_record_with_pr(mocker: pytest.MonkeyPatch, number: int) -> HierarchyIssueRecord:
+def make_open_sub_hierarchy_record_with_pr(mocker: MockerFixture, number: int) -> HierarchyIssueRecord:
     """Return an open HierarchyIssueRecord with one PR (no commits)."""
     rec = HierarchyIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_OPEN, number))
     rec.register_pull_request(make_minimal_pr(mocker, number=number + 1000))
     return rec
 
 
-def make_closed_sub_hierarchy_record_with_pr(mocker: pytest.MonkeyPatch, number: int) -> HierarchyIssueRecord:
+def make_closed_sub_hierarchy_record_with_pr(mocker: MockerFixture, number: int) -> HierarchyIssueRecord:
     """Return a closed HierarchyIssueRecord with one PR (no commits)."""
     rec = HierarchyIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number))
     rec.register_pull_request(make_minimal_pr(mocker, number=number + 1000))
     return rec
 
 
-def make_closed_sub_hierarchy_record_no_pr(mocker: pytest.MonkeyPatch, number: int) -> HierarchyIssueRecord:
+def make_closed_sub_hierarchy_record_no_pr(mocker: MockerFixture, number: int) -> HierarchyIssueRecord:
     """Return a closed HierarchyIssueRecord with no PRs (no change increment)."""
     return HierarchyIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number))
 
