@@ -8,7 +8,7 @@ This page lists all action inputs and outputs with defaults. Grouped for readabi
 |------|----------|---------|-------------|
 | `tag-name` | Yes | – | Target release tag (must already exist). |
 | `from-tag-name` | No | "" | Explicit previous release tag; if empty semantic latest published release is used. |
-| `chapters` | No | "" | YAML multi-line list of chapter entries (title + label or labels + optional hidden flag). Supports legacy `label` or multi `labels` definitions. Optional `hidden: true` excludes chapter from output. |
+| `chapters` | No | "" | YAML multi-line list of chapter entries (title + label or labels). Optional flags: `hidden: true` excludes chapter from output; `catch-open-hierarchy: true` marks the chapter as a Conditional Custom Chapter that intercepts all open hierarchy parent issues before label routing (requires `hierarchy: true`). Supports legacy `label` or multi `labels` definitions. |
 | `hierarchy` | No | `false` | Enable Issue Hierarchy Support. |
 | `published-at` | No | `false` | Use previous release `published_at` timestamp instead of `created_at`. |
 | `skip-release-notes-labels` | No | `skip-release-notes` | Comma‑separated labels that fully exclude issues/PRs. |
@@ -41,13 +41,14 @@ This page lists all action inputs and outputs with defaults. Grouped for readabi
 Placeholders are case-insensitive; unknown placeholders are removed silently.
 
 ### Chapters Configuration
-Provide chapters as a YAML multi-line string. Each entry must define a `title` and either `label` (legacy) or `labels` (multi-label). Optionally include `hidden: true` to exclude the chapter from output while still processing records.
+Provide chapters as a YAML multi-line string. Each entry must define a `title` and either `label` (legacy) or `labels` (multi-label). Optionally include `hidden: true` to exclude the chapter from output while still processing records. Set `catch-open-hierarchy: true` to create a Conditional Custom Chapter that captures open hierarchy parents before label routing.
 
 ```yaml
 with:
   chapters: |
     - {"title": "Breaking Changes 💥", "label": "breaking-change"}          # legacy single-label form
     - {"title": "Internal Notes 📝", "labels": "internal", "hidden": true}  # hidden chapter
+    - {"title": "Silent Live 🤫", "catch-open-hierarchy": true}              # Conditional Custom Chapter
 ```
 
 Resulting chapter headings are unique by title; label sets aggregate across repeated titles (logical OR). Whitespace is trimmed; duplicates removed preserving first-seen order.
@@ -68,6 +69,31 @@ Resulting chapter headings are unique by title; label sets aggregate across repe
   - Are excluded from final output rendering
   - Do NOT count toward duplicity detection (no 🔔 icon contribution)
   - Are always omitted regardless of `print-empty-chapters` setting
+
+### Conditional Custom Chapters (`catch-open-hierarchy`)
+A chapter with `catch-open-hierarchy: true` intercepts **open** `HierarchyIssueRecord` parents before any label-based routing, sending them to a dedicated section (e.g. "Silent Live"). When the parent eventually closes it falls back to normal label-based routing.
+
+- Requires `hierarchy: true`. When hierarchy is disabled, the key is accepted but has no effect and a warning is logged.
+- At most **one** chapter may set `catch-open-hierarchy: true`; extras are ignored with a warning.
+- **Optional label filter**: add `labels` alongside `catch-open-hierarchy` to restrict interception to matching labels only. Open hierarchy parents that carry none of those labels fall through to normal routing.
+- Can be combined with `hidden: true` to silently track in-progress hierarchy work without printing it.
+
+```yaml
+chapters: |
+  - title: "New Features 🎉"
+    labels: "feature, epic"
+  - title: "Silent Live 🤫"
+    catch-open-hierarchy: true      # capture all open hierarchy parents
+  - title: "Bugfixes 🛠️"
+    labels: "bug"
+```
+
+With an optional label filter:
+```yaml
+  - title: "Silent Live 🤫"
+    catch-open-hierarchy: true
+    labels: "feature, epic"         # only intercept open parents carrying these labels
+```
 
 ### Issue ↔ PR Linking
 Link detection influences chapter population and Service Chapters:
@@ -104,6 +130,7 @@ Controlled by `duplicity-scope` and `duplicity-icon` (see [Duplicity Handling](f
 | Tight output (no empty headings) | `print-empty-chapters: false` |
 | Enforce no duplicates | `duplicity-scope: none` |
 | Enable hierarchy rollups | `hierarchy: true` |
+| Track in-progress hierarchy work | `hierarchy: true` + add `catch-open-hierarchy: true` chapter |
 | Use AI fallback | `coderabbit-support-active: true` |
 
 ## Related Pages

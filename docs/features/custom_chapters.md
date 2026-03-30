@@ -11,6 +11,7 @@ Each chapter entry requires a `title` and either:
 Optionally, you can add:
 - `hidden`: (boolean) hide chapter from output while still tracking records (default: `false`)
 - `order`: (integer) explicit rendering order; lower values appear first (default: omitted)
+- `catch-open-hierarchy`: (boolean) mark as a Conditional Custom Chapter that intercepts open hierarchy parents before label routing; requires `hierarchy: true` (default: `false`)
 
 ```yaml
 with:
@@ -20,6 +21,7 @@ with:
     - {"title": "Breaking Changes 💥", "label": "breaking-change", "order": 10}     # rendered first
     - {"title": "Platform 🧱", "labels": ["platform", "infra"]}                      # no order → after ordered chapters
     - {"title": "Internal Notes 📝", "labels": "internal", "hidden": true}           # hidden chapter
+    - {"title": "Silent Live 🤫", "catch-open-hierarchy": true}                      # Conditional Custom Chapter
 ```
 
 ## Hidden Chapters
@@ -84,6 +86,8 @@ With `verbose: true`, additional debug logging shows:
 ## Inclusion Logic
 A record is added to a chapter if its label set intersects the chapter’s normalized label set. Direct commits are ignored (they have no labels). A record can appear in multiple chapters; intra-chapter duplication is always suppressed.
 
+**Exception — Conditional Custom Chapters:** when `hierarchy: true` and a `catch-open-hierarchy` chapter is defined, all open `HierarchyIssueRecord` parents are routed directly to that chapter _before_ label matching is attempted (subject to the optional label filter on the COH chapter). Label intersection does not apply for that routing decision.
+
 ## Deterministic Output
 Chapter rendering order is determined as follows:
 1. Chapters with an explicit `order` value are rendered first, sorted ascending by `order`.
@@ -108,6 +112,9 @@ Repeated titles still represent one logical chapter. Their labels are merged.
 - Invalid `hidden` value type or string
 - Invalid `order` value (non-integer); ignored with warning
 - Conflicting `order` values for repeated titles; first explicit value kept
+- Invalid `catch-open-hierarchy` value type or string; defaults to `false`
+- Duplicate `catch-open-hierarchy: true` chapters; only first is used
+- `catch-open-hierarchy: true` with `hierarchy: false` at runtime; emitted once per `populate()` call
 
 All warnings include the chapter title (when available) for traceability.
 
@@ -133,6 +140,9 @@ A: No. Hidden chapters process records but don't increment the chapter presence 
 **Q: Can I use hidden chapters for draft releases?**  
 A: Yes! Mark chapters as `hidden: true` to track changes without showing them in published notes. Switch to `hidden: false` when ready to publish.
 
+**Q: Can an open hierarchy parent appear in both a Conditional Custom Chapter and a normal label chapter?**  
+A: No. When a record is intercepted by the `catch-open-hierarchy` gate it is exclusively routed to the Conditional Custom Chapter; normal label matching is skipped entirely for that record. Only closed hierarchy parents and non-hierarchy records go through normal label routing.
+
 ## Example Output
 ```markdown
 ### New Features 🎉
@@ -143,6 +153,67 @@ A: Yes! Mark chapters as `hidden: true` to track changes without showing them in
 ```
 
 Use this feature to keep release notes concise and logically organized while supporting broader label groupings.
+
+## Conditional Custom Chapter (`catch-open-hierarchy`)
+
+A **Conditional Custom Chapter** intercepts hierarchy issue parents that are still **open**, routing them to a dedicated section (e.g. "Silent Live") instead of the normal label-based chapters. This is useful when a parent Feature spans multiple releases: in-progress work appears under "Silent Live" while the Feature is open, and once it closes it falls back to normal label routing (e.g. "New Features").
+
+### Requirements
+- `hierarchy: true` must be enabled. When hierarchy is disabled, `catch-open-hierarchy` is parsed and validated but has no routing effect (a warning is logged).
+- At most **one** chapter may set `catch-open-hierarchy: true`. If a second is encountered, a warning is logged and it is ignored.
+
+### Configuration
+
+**Basic — catch all open hierarchy parents:**
+```yaml
+chapters: |
+  - title: "New Features 🎉"
+    labels: "feature, epic"
+  - title: "Silent Live 🤫"
+    catch-open-hierarchy: true
+  - title: "Bugfixes 🛠️"
+    labels: "bug"
+```
+
+**With optional label filter — only intercept open hierarchy parents carrying matching labels:**
+```yaml
+chapters: |
+  - title: "Silent Live 🤫"
+    catch-open-hierarchy: true
+    labels: "feature, epic"
+```
+
+Without `labels`, all open hierarchy parents are captured regardless of their labels.
+
+### Routing Logic
+1. For each record, if hierarchy is enabled and a Conditional Custom Chapter exists:
+   - If the record is a `HierarchyIssueRecord` **and** the parent issue is **open**:
+     - If the chapter has no labels, or the record carries at least one of the chapter's labels → route to the Conditional Custom Chapter and skip normal label routing.
+     - Otherwise → fall through to normal label routing.
+2. Closed hierarchy parents are never intercepted; they use normal label-based routing.
+3. Non-hierarchy records are never affected.
+
+```
+For each record:
+  ├─ Hierarchy disabled?               → skip gate, use normal label routing
+  ├─ Not a HierarchyIssueRecord?       → skip gate, use normal label routing
+  ├─ Parent is closed?                 → skip gate, use normal label routing
+  └─ Parent is open + COH chapter exists:
+       ├─ Chapter has no labels?       → route to COH chapter (exclusive)
+       ├─ Record matches a label?      → route to COH chapter (exclusive)
+       └─ No label match?             → fall through to normal label routing
+```
+
+A record routed to the Conditional Custom Chapter is **never** duplicated into a label chapter — routing is exclusive.
+
+### Combining with `hidden`
+A `catch-open-hierarchy` chapter can also be `hidden: true` to silently track open hierarchy parents without printing them.
+
+### Validation
+- `catch-open-hierarchy` accepts boolean values (`true`/`false`) and boolean-like strings.
+- Invalid values log a warning and default to `false`.
+- Duplicate `catch-open-hierarchy: true` chapters are reduced to the first; a warning is logged for the rest.
+- When `hierarchy: false`, a warning is logged once at populate time: `"catch-open-hierarchy has no effect when hierarchy is disabled"`.
 
 ## Related Features
 - [Duplicity Handling](./duplicity_handling.md) – governs multi-chapter visibility.
