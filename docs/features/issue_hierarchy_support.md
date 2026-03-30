@@ -26,16 +26,15 @@ Represent issue → sub-issue relationships directly in release notes, aggregati
 ## Example Result
 ```markdown
 ### New Features 🎉
-- Epic: _Make Login Service releasable under new Maven central repository_ #140 1/2 done
+- Epic: _Make Login Service releasable under new Maven central repository_ #140
   - Updated `sbt.version` to `1.11.5` for release.
   - Updated Developers
   - Updated `sbt-ci-release` to `1.11.2`
   - Updated `scala213 = "2.13.13"`
-  - Feature: _Add user MFA enrollment flow_ #123 developed by @alice in #124 1/1 done
+  - Feature: _Add user MFA enrollment flow_ #123 developed by @alice in #124
     - Add user MFA enrollment flow
-  - Feature: _Add OAuth2 login_ #125 developed by @bob in #126 0/1 done
 ```
-(1st four indented bullets under Epic line represent the extracted release notes from the parent hierarchy issue's body. `{progress}` counts direct children only — each level independently reports its own sub-issue completion.)
+(1st four indented bullets under Epic line represent the extracted release notes from the parent hierarchy issue's body.)
 
 ## `{progress}` Format Token
 
@@ -47,11 +46,17 @@ The `{progress}` token is available in `row-format-hierarchy-issue`. It renders 
 
 ### Example
 
-Format: `row-format-hierarchy-issue: "{type}: _{title}_ {number} {progress}"`
+Configuration required to enable `{progress}` in hierarchy rows:
+```yaml
+row-format-hierarchy-issue: "{type}: _{title}_ {number} {progress}"
+```
 
+Resulting output (hierarchy issues only — sub-issue rows use `row-format-issue` and do not carry `{progress}`):
 ```markdown
-- Epic: _Make Login Service releasable_ #140 2/3 done
+- Epic: _Make Login Service releasable_ #140 1/2 done
   - Feature: _Add user MFA enrollment flow_ #123 1/1 done
+    - Add user MFA enrollment flow
+  - Feature: _Add OAuth2 login_ #125 0/1 done
 ```
 
 ## Related Features
