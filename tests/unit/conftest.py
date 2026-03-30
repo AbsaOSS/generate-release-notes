@@ -1204,7 +1204,7 @@ def make_minimal_issue(mocker: MockerFixture, state: str, number: int) -> Issue:
     issue = mocker.Mock(spec=Issue)
     issue.state = state
     issue.number = number
-    issue.title = f"Issue #{number}"
+    issue.title = "Minimal test issue"
     issue.body = None
     issue.type = None
     issue.user = None

@@ -89,7 +89,7 @@ def test_to_chapter_row_open_parent_suppresses_closed_sub_hierarchy_issue_from_p
     parent = make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_OPEN, number=300)
     record = HierarchyIssueRecord(parent)
 
-    record._sub_hierarchy_issues["350"] = make_closed_sub_hierarchy_record_no_pr(mocker, number=350)
+    record.sub_hierarchy_issues["350"] = make_closed_sub_hierarchy_record_no_pr(mocker, number=350)
 
     row = record.to_chapter_row()
 
@@ -104,8 +104,8 @@ def test_to_chapter_row_closed_parent_renders_closed_and_open_sub_hierarchy_issu
     parent = make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=300)
     record = HierarchyIssueRecord(parent)
 
-    record._sub_hierarchy_issues["350"] = make_closed_sub_hierarchy_record_with_pr(mocker, number=350)
-    record._sub_hierarchy_issues["360"] = make_open_sub_hierarchy_record_no_pr(mocker, number=360)
+    record.sub_hierarchy_issues["350"] = make_closed_sub_hierarchy_record_with_pr(mocker, number=350)
+    record.sub_hierarchy_issues["360"] = make_open_sub_hierarchy_record_no_pr(mocker, number=360)
 
     row = record.to_chapter_row()
 
@@ -123,8 +123,8 @@ def test_to_chapter_row_open_parent_only_renders_sub_hierarchy_issues_with_chang
     parent = make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_OPEN, number=300)
     record = HierarchyIssueRecord(parent)
 
-    record._sub_hierarchy_issues["350"] = make_closed_sub_hierarchy_record_with_pr(mocker, number=350)
-    record._sub_hierarchy_issues["360"] = make_open_sub_hierarchy_record_no_pr(mocker, number=360)
+    record.sub_hierarchy_issues["350"] = make_closed_sub_hierarchy_record_with_pr(mocker, number=350)
+    record.sub_hierarchy_issues["360"] = make_open_sub_hierarchy_record_no_pr(mocker, number=360)
 
     row = record.to_chapter_row()
 
@@ -141,7 +141,7 @@ def test_to_chapter_row_open_parent_renders_open_sub_hierarchy_issue_with_change
     parent = make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_OPEN, number=300)
     record = HierarchyIssueRecord(parent)
 
-    record._sub_hierarchy_issues["360"] = make_open_sub_hierarchy_record_with_pr(mocker, number=360)
+    record.sub_hierarchy_issues["360"] = make_open_sub_hierarchy_record_with_pr(mocker, number=360)
 
     row = record.to_chapter_row()
 
