@@ -83,6 +83,7 @@ Testing
 - Must mock GitHub API interactions and environment variables in unit tests.
 - Must not access private members (names starting with `_`) of the class under test directly in tests.
 - Must place shared test helper functions and factory fixtures in the nearest `conftest.py` and reuse them across tests.
+- Must annotate pytest fixture parameters with `MockerFixture` (from `pytest_mock`) and return types with `Callable[..., T]` (from `collections.abc`) when the fixture returns a factory function.
 
 Tooling
 - Must format with Black (pyproject.toml).

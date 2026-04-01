@@ -17,9 +17,11 @@
 Shared fixtures for model unit tests.
 """
 
+from collections.abc import Callable
 from datetime import datetime
 
 import pytest
+from pytest_mock import MockerFixture
 from github.Issue import Issue
 
 from release_notes_generator.model.record.issue_record import IssueRecord
@@ -27,7 +29,7 @@ from release_notes_generator.model.record.sub_issue_record import SubIssueRecord
 
 
 @pytest.fixture
-def make_hierarchy_issue(mocker):
+def make_hierarchy_issue(mocker: MockerFixture) -> Callable[[int, str], Issue]:
     """Factory fixture that creates a mocked hierarchy Issue."""
     def _factory(number: int, state: str) -> Issue:
         issue = mocker.Mock(spec=Issue)
@@ -50,7 +52,7 @@ def make_hierarchy_issue(mocker):
 
 
 @pytest.fixture
-def make_sub_issue(mocker):
+def make_sub_issue(mocker: MockerFixture) -> Callable[[int, str], SubIssueRecord]:
     """Factory fixture that creates a mocked SubIssueRecord."""
     def _factory(number: int, state: str) -> SubIssueRecord:
         issue = mocker.Mock(spec=Issue)
