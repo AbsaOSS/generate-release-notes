@@ -132,6 +132,33 @@ class HierarchyIssueRecord(IssueRecord):
 
         return count
 
+    def contains_change_increment(self) -> bool:
+        """
+        Returns True only when this hierarchy sub-tree has at least one closed descendant with a change.
+
+        A closed descendant with a PR (or a cross-repo placeholder) is the only evidence of finished
+        work that belongs in release notes.  Open sub-issues whose PRs have not yet been merged must
+        not cause the parent to appear in the output.
+        """
+        if self.is_cross_repo:
+            return True
+
+        # Direct PRs attached to this hierarchy issue itself (IssueRecord level, no sub-tree)
+        if super().pull_requests_count() > 0:
+            return True
+
+        # Only closed leaf sub-issues contribute
+        for sub_issue in self._sub_issues.values():
+            if not sub_issue.is_open and sub_issue.contains_change_increment():
+                return True
+
+        # Sub-hierarchy-issues are checked recursively; the same rule applies at every level
+        for sub_hierarchy_issue in self._sub_hierarchy_issues.values():
+            if sub_hierarchy_issue.contains_change_increment():
+                return True
+
+        return False
+
     def get_labels(self) -> list[str]:
         labels: set[str] = set()
         labels.update(label.name for label in self._issue.get_labels())

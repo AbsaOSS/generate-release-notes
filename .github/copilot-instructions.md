@@ -81,6 +81,8 @@ Testing
 - Must test return values, exceptions, log messages, and exit codes.
 - Prefer unit tests under tests/unit/.
 - Must mock GitHub API interactions and environment variables in unit tests.
+- Must not access private members (names starting with `_`) of the class under test directly in tests.
+- Must place shared test helper functions and factory fixtures in the nearest `conftest.py` and reuse them across tests.
 
 Tooling
 - Must format with Black (pyproject.toml).
