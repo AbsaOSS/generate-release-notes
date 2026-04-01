@@ -1328,3 +1328,7 @@ def patch_hierarchy_action_inputs(mocker):
         "release_notes_generator.model.record.record.ActionInputs.is_coderabbit_support_active",
         return_value=False,
     )
+    mocker.patch(
+        "release_notes_generator.model.record.hierarchy_issue_record.ActionInputs.get_open_hierarchy_sub_issue_icon",
+        return_value="🟡",
+    )

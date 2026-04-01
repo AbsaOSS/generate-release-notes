@@ -39,6 +39,7 @@ from release_notes_generator.utils.constants import (
     PRINT_EMPTY_CHAPTERS,
     DUPLICITY_SCOPE,
     DUPLICITY_ICON,
+    OPEN_HIERARCHY_SUB_ISSUE_ICON,
     ROW_FORMAT_LINK_PR,
     ROW_FORMAT_ISSUE,
     ROW_FORMAT_PR,
@@ -199,6 +200,13 @@ class ActionInputs:
         Get the duplicity icon from the action inputs.
         """
         return get_action_input(DUPLICITY_ICON, "🔔")  # type: ignore[return-value]  # string is returned as default
+
+    @staticmethod
+    def get_open_hierarchy_sub_issue_icon() -> str:
+        """
+        Get the icon prepended to open sub-issues rendered under a closed hierarchy parent.
+        """
+        return get_action_input(OPEN_HIERARCHY_SUB_ISSUE_ICON, "🟡")  # type: ignore[return-value]  # string is returned as default
 
     @staticmethod
     def get_published_at() -> bool:
