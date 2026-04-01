@@ -147,12 +147,12 @@ class HierarchyIssueRecord(IssueRecord):
         if super().pull_requests_count() > 0:
             return True
 
-        # Only closed leaf sub-issues contribute
+        # Only closed leaf sub-issues contribute; recurse to check their own PRs/cross-repo flag
         for sub_issue in self._sub_issues.values():
-            if not sub_issue.is_open and sub_issue.contains_change_increment():
+            if sub_issue.is_closed and sub_issue.contains_change_increment():
                 return True
 
-        # Sub-hierarchy-issues are checked recursively; the same rule applies at every level
+        # Recurse into sub-hierarchy-issues; the same closed-descendant rule applies at every level
         for sub_hierarchy_issue in self._sub_hierarchy_issues.values():
             if sub_hierarchy_issue.contains_change_increment():
                 return True

@@ -21,7 +21,6 @@ from release_notes_generator.model.record.hierarchy_issue_record import Hierarch
 from release_notes_generator.model.record.issue_record import IssueRecord
 
 
-
 def test_progress_leaf_node_returns_empty_string(make_hierarchy_issue):
     """HierarchyIssueRecord with no direct sub-issues returns '' for progress."""
     issue = make_hierarchy_issue(100, IssueRecord.ISSUE_STATE_OPEN)
@@ -31,7 +30,7 @@ def test_progress_leaf_node_returns_empty_string(make_hierarchy_issue):
 
 
 def test_progress_leaf_node_suppressed_in_row(mocker, make_hierarchy_issue):
-    """"_{title}_ {number} {progress}" token in format template produces no extra whitespace when leaf."""
+    """ "_{title}_ {number} {progress}" token in format template produces no extra whitespace when leaf."""
     mocker.patch(
         "release_notes_generator.model.record.hierarchy_issue_record.ActionInputs.get_row_format_hierarchy_issue",
         return_value="_{title}_ {number} {progress}",
@@ -55,11 +54,13 @@ def test_progress_rendered_in_row(mocker, make_hierarchy_issue, make_sub_issue):
 
     issue = make_hierarchy_issue(200, IssueRecord.ISSUE_STATE_OPEN)
     record = HierarchyIssueRecord(issue)
-    record.sub_issues.update({
-        "org/repo#401": make_sub_issue(401, IssueRecord.ISSUE_STATE_CLOSED),
-        "org/repo#402": make_sub_issue(402, IssueRecord.ISSUE_STATE_CLOSED),
-        "org/repo#403": make_sub_issue(403, IssueRecord.ISSUE_STATE_OPEN),
-    })
+    record.sub_issues.update(
+        {
+            "org/repo#401": make_sub_issue(401, IssueRecord.ISSUE_STATE_CLOSED),
+            "org/repo#402": make_sub_issue(402, IssueRecord.ISSUE_STATE_CLOSED),
+            "org/repo#403": make_sub_issue(403, IssueRecord.ISSUE_STATE_OPEN),
+        }
+    )
     row = record.to_chapter_row(add_into_chapters=False)
 
     assert "2/3 done" in row, f"Expected '2/3 done' in row, got: {row!r}"
@@ -79,17 +80,18 @@ def test_progress_empty_leaves_adjacent_delimiters(mocker, make_hierarchy_issue)
     assert "()" in row, f"Expected '()' in row when progress is empty, got: {row!r}"
 
 
-
 def test_progress_partial_completion(make_hierarchy_issue, make_sub_issue):
     """3 direct sub-issues (2 closed, 1 open) → '2/3 done'."""
     issue = make_hierarchy_issue(200, IssueRecord.ISSUE_STATE_OPEN)
     record = HierarchyIssueRecord(issue)
 
-    record.sub_issues.update({
-        "org/repo#401": make_sub_issue(401, IssueRecord.ISSUE_STATE_CLOSED),
-        "org/repo#402": make_sub_issue(402, IssueRecord.ISSUE_STATE_CLOSED),
-        "org/repo#403": make_sub_issue(403, IssueRecord.ISSUE_STATE_OPEN),
-    })
+    record.sub_issues.update(
+        {
+            "org/repo#401": make_sub_issue(401, IssueRecord.ISSUE_STATE_CLOSED),
+            "org/repo#402": make_sub_issue(402, IssueRecord.ISSUE_STATE_CLOSED),
+            "org/repo#403": make_sub_issue(403, IssueRecord.ISSUE_STATE_OPEN),
+        }
+    )
 
     assert record.progress == "2/3 done"
 
@@ -99,10 +101,12 @@ def test_progress_all_closed(make_hierarchy_issue, make_sub_issue):
     issue = make_hierarchy_issue(201, IssueRecord.ISSUE_STATE_OPEN)
     record = HierarchyIssueRecord(issue)
 
-    record.sub_issues.update({
-        "org/repo#501": make_sub_issue(501, IssueRecord.ISSUE_STATE_CLOSED),
-        "org/repo#502": make_sub_issue(502, IssueRecord.ISSUE_STATE_CLOSED),
-    })
+    record.sub_issues.update(
+        {
+            "org/repo#501": make_sub_issue(501, IssueRecord.ISSUE_STATE_CLOSED),
+            "org/repo#502": make_sub_issue(502, IssueRecord.ISSUE_STATE_CLOSED),
+        }
+    )
 
     assert record.progress == "2/2 done"
 
@@ -112,10 +116,12 @@ def test_progress_all_open(make_hierarchy_issue, make_sub_issue):
     issue = make_hierarchy_issue(202, IssueRecord.ISSUE_STATE_OPEN)
     record = HierarchyIssueRecord(issue)
 
-    record.sub_issues.update({
-        "org/repo#601": make_sub_issue(601, IssueRecord.ISSUE_STATE_OPEN),
-        "org/repo#602": make_sub_issue(602, IssueRecord.ISSUE_STATE_OPEN),
-    })
+    record.sub_issues.update(
+        {
+            "org/repo#601": make_sub_issue(601, IssueRecord.ISSUE_STATE_OPEN),
+            "org/repo#602": make_sub_issue(602, IssueRecord.ISSUE_STATE_OPEN),
+        }
+    )
 
     assert record.progress == "0/2 done"
 
@@ -126,21 +132,24 @@ def test_progress_mixed_sub_issues_and_sub_hierarchy_issues(make_hierarchy_issue
     record = HierarchyIssueRecord(parent_issue)
 
     # 1 closed sub-issue
-    record.sub_issues.update({
-        "org/repo#701": make_sub_issue(701, IssueRecord.ISSUE_STATE_CLOSED),
-    })
+    record.sub_issues.update(
+        {
+            "org/repo#701": make_sub_issue(701, IssueRecord.ISSUE_STATE_CLOSED),
+        }
+    )
 
     # 1 open sub-hierarchy-issue, 1 closed sub-hierarchy-issue
     child_open_issue = make_hierarchy_issue(801, IssueRecord.ISSUE_STATE_OPEN)
     child_closed_issue = make_hierarchy_issue(802, IssueRecord.ISSUE_STATE_CLOSED)
-    record.sub_hierarchy_issues.update({
-        "org/repo#801": HierarchyIssueRecord(child_open_issue),
-        "org/repo#802": HierarchyIssueRecord(child_closed_issue),
-    })
+    record.sub_hierarchy_issues.update(
+        {
+            "org/repo#801": HierarchyIssueRecord(child_open_issue),
+            "org/repo#802": HierarchyIssueRecord(child_closed_issue),
+        }
+    )
 
     # total=3 (1 sub_issue + 2 sub_hierarchy_issues), closed=2 (sub_issue + child_closed)
     assert record.progress == "2/3 done"
-
 
 
 def test_progress_per_level_independence(make_hierarchy_issue, make_sub_issue):
@@ -163,26 +172,32 @@ def test_progress_per_level_independence(make_hierarchy_issue, make_sub_issue):
 
     child_a_issue = make_hierarchy_issue(901, IssueRecord.ISSUE_STATE_CLOSED)
     child_a = HierarchyIssueRecord(child_a_issue)
-    child_a.sub_issues.update({
-        "org/repo#911": make_sub_issue(911, IssueRecord.ISSUE_STATE_CLOSED),
-    })
+    child_a.sub_issues.update(
+        {
+            "org/repo#911": make_sub_issue(911, IssueRecord.ISSUE_STATE_CLOSED),
+        }
+    )
 
     child_b_issue = make_hierarchy_issue(902, IssueRecord.ISSUE_STATE_CLOSED)
     child_b = HierarchyIssueRecord(child_b_issue)
-    child_b.sub_issues.update({
-        "org/repo#921": make_sub_issue(921, IssueRecord.ISSUE_STATE_CLOSED),
-        "org/repo#922": make_sub_issue(922, IssueRecord.ISSUE_STATE_CLOSED),
-        "org/repo#923": make_sub_issue(923, IssueRecord.ISSUE_STATE_OPEN),
-    })
+    child_b.sub_issues.update(
+        {
+            "org/repo#921": make_sub_issue(921, IssueRecord.ISSUE_STATE_CLOSED),
+            "org/repo#922": make_sub_issue(922, IssueRecord.ISSUE_STATE_CLOSED),
+            "org/repo#923": make_sub_issue(923, IssueRecord.ISSUE_STATE_OPEN),
+        }
+    )
 
     child_c_issue = make_hierarchy_issue(903, IssueRecord.ISSUE_STATE_OPEN)
     child_c = HierarchyIssueRecord(child_c_issue)
 
-    root.sub_hierarchy_issues.update({
-        "org/repo#901": child_a,
-        "org/repo#902": child_b,
-        "org/repo#903": child_c,
-    })
+    root.sub_hierarchy_issues.update(
+        {
+            "org/repo#901": child_a,
+            "org/repo#902": child_b,
+            "org/repo#903": child_c,
+        }
+    )
 
     assert root.progress == "2/3 done", f"root: {root.progress!r}"
     assert child_a.progress == "1/1 done", f"child_a: {child_a.progress!r}"
@@ -193,6 +208,7 @@ def test_progress_per_level_independence(make_hierarchy_issue, make_sub_issue):
 def _make_mock_pull(mocker, number: int):
     """Create a minimal mock PullRequest with the given number."""
     from github.PullRequest import PullRequest as GHPullRequest
+
     pull = mocker.Mock(spec=GHPullRequest)
     pull.number = number
     pull.get_labels.return_value = []

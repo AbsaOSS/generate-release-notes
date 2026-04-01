@@ -24,14 +24,17 @@ def test_basic_properties(mock_commit):
     assert rec.is_open is False
     assert rec.skip is False
 
+
 def test_authors_with_author(mock_commit):
     rec = CommitRecord(mock_commit)
     assert rec.author == "author"
+
 
 def test_authors_no_author(mock_commit):
     mock_commit.author = None
     rec = CommitRecord(mock_commit)
     assert rec.author == ""
+
 
 def test_to_chapter_row_single_occurrence(monkeypatch, mock_commit):
     monkeypatch.setattr(
@@ -43,6 +46,7 @@ def test_to_chapter_row_single_occurrence(monkeypatch, mock_commit):
     # Newline in message replaced by space, no prefix on first addition
     assert row.startswith("Commit: merge_c... - Fixed bug")
     assert "🔁" not in row
+
 
 def test_to_chapter_row_duplicate_with_icon(monkeypatch, mock_commit):
     monkeypatch.setattr(
@@ -60,6 +64,7 @@ def test_to_chapter_row_duplicate_with_icon(monkeypatch, mock_commit):
     assert second.startswith("[D] ")
     assert rec.chapter_presence_count() == 2
 
+
 def test_to_chapter_row_with_release_notes_injected(monkeypatch, mock_commit):
     # Force contains_release_notes to True and provide fake release notes
     monkeypatch.setattr(
@@ -71,6 +76,7 @@ def test_to_chapter_row_with_release_notes_injected(monkeypatch, mock_commit):
     monkeypatch.setattr(rec, "get_rls_notes", lambda _line_marks=None: "Extra release notes.")
     row = rec.to_chapter_row()
     assert "\nExtra release notes." in row
+
 
 def test_get_rls_notes_empty(mock_commit):
     rec = CommitRecord(mock_commit)

@@ -16,7 +16,6 @@
 
 from release_notes_generator.model.chapter import Chapter
 
-
 # __init__
 
 
