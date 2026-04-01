@@ -40,21 +40,25 @@ from release_notes_generator.model.record.sub_issue_record import SubIssueRecord
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
 from release_notes_generator.utils.record_utils import get_id
 
-
 # Test classes
+
 
 class MockLabel:
     def __init__(self, name):
         self.name = name
 
+
 class FakeRepo:
-    def __init__(self, full_name): self.full_name = full_name
+    def __init__(self, full_name):
+        self.full_name = full_name
+
 
 def mock_safe_call_decorator(_rate_limiter):
     def wrapper(fn):
         if fn.__name__ == "get_issues_for_pr":
             return mock_get_issues_for_pr
         return fn
+
     return wrapper
 
 
@@ -302,7 +306,7 @@ def mock_open_sub_issue(mocker, mock_user):
     issue.get_labels.return_value = []
     issue.get_sub_issues.return_value = []
 
-    return (issue)
+    return issue
 
 
 @pytest.fixture
@@ -353,6 +357,7 @@ def mock_open_hierarchy_issue(mocker, mock_user):
     issue.get_sub_issues.return_value = []
 
     return issue
+
 
 @pytest.fixture
 def mock_open_hierarchy_issue_epic(mocker, mock_user):
@@ -738,7 +743,7 @@ def mined_data_simple(mock_repo, mock_issue_closed):
     data = MinedData(mock_repo)
 
     # single issue record (closed)
-    solo_closed_issue = deepcopy(mock_issue_closed)        # 121
+    solo_closed_issue = deepcopy(mock_issue_closed)  # 121
     solo_closed_issue.body += "\nRelease Notes:\n- Solo issue release note"
     solo_closed_issue.get_labels.return_value = []
 
@@ -751,8 +756,14 @@ def mined_data_simple(mock_repo, mock_issue_closed):
 
 @pytest.fixture
 def mined_data_isolated_record_types_no_labels_no_type_defined(
-        mock_repo, mock_issue_closed, mock_pull_closed, mock_pull_merged, mock_commit,
-        mock_open_hierarchy_issue, mock_open_sub_issue, mock_closed_sub_issue
+    mock_repo,
+    mock_issue_closed,
+    mock_pull_closed,
+    mock_pull_merged,
+    mock_commit,
+    mock_open_hierarchy_issue,
+    mock_open_sub_issue,
+    mock_closed_sub_issue,
 ):
     #   - single issue record (closed)
     #   - single hierarchy issue record - two sub-issues without PRs
@@ -764,7 +775,7 @@ def mined_data_isolated_record_types_no_labels_no_type_defined(
     data = MinedData(mock_repo)
 
     # single issue record (closed)
-    solo_closed_issue = deepcopy(mock_issue_closed)        # 121
+    solo_closed_issue = deepcopy(mock_issue_closed)  # 121
     solo_closed_issue.body += "\nRelease Notes:\n- Solo issue release note"
     solo_closed_issue.get_labels.return_value = []
     data.parents_sub_issues[get_id(solo_closed_issue, mock_repo)] = []
@@ -833,7 +844,9 @@ def mined_data_isolated_record_types_no_labels_no_type_defined(
     hi_one_sub_hierarchy_two_sub_issues_with_prs_with_commit = deepcopy(mock_open_hierarchy_issue)
     hi_one_sub_hierarchy_two_sub_issues_with_prs_with_commit.number = 304
     hi_one_sub_hierarchy_two_sub_issues_with_prs_with_commit.title = "HI304 open"
-    hi_one_sub_hierarchy_two_sub_issues_with_prs_with_commit.body = "I304 open\nRelease Notes:\n- Hierarchy level release note"
+    hi_one_sub_hierarchy_two_sub_issues_with_prs_with_commit.body = (
+        "I304 open\nRelease Notes:\n- Hierarchy level release note"
+    )
     sub_hierarchy_issue = deepcopy(mock_open_hierarchy_issue)
     sub_hierarchy_issue.number = 350
     sub_hierarchy_issue.title = "HI350 open"
@@ -861,9 +874,9 @@ def mined_data_isolated_record_types_no_labels_no_type_defined(
     data.parents_sub_issues[get_id(hi_one_sub_hierarchy_two_sub_issues_with_prs_with_commit, mock_repo)] = [shi]
 
     # single pull request record (closed, merged)
-    mock_pr_closed_1 = deepcopy(mock_pull_closed)      # 123
+    mock_pr_closed_1 = deepcopy(mock_pull_closed)  # 123
     mock_pr_closed_1.get_labels.return_value = []
-    mock_pr_merged_1 = deepcopy(mock_pull_merged)      # 124
+    mock_pr_merged_1 = deepcopy(mock_pull_merged)  # 124
     mock_pr_merged_1.get_labels.return_value = []
 
     # single direct commit record
@@ -871,26 +884,38 @@ def mined_data_isolated_record_types_no_labels_no_type_defined(
     mock_commit_3.sha = "merge_commit_sha_direct"
     mock_commit_3.commit.message = "Direct commit example"
 
-    data.issues = {solo_closed_issue: mock_repo,
-                   hi_two_sub_issues_no_prs: mock_repo,
-                   hi_two_sub_issues_with_prs: mock_repo,
-                   hi_two_sub_issues_with_prs_with_commit: mock_repo,
-                   hi_one_sub_hierarchy_two_sub_issues_with_prs_with_commit: mock_repo,    # index 4
-                   sub_issue_1: mock_repo, sub_issue_2: mock_repo,                         # index 5,6
-                   sub_issue_3: mock_repo, sub_issue_4: mock_repo,                         # index 7,8
-                   sub_issue_5: mock_repo, sub_issue_6: mock_repo,                         # index 9,10
-                   sub_issue_7: mock_repo, sub_issue_8: mock_repo,                         # index 11,12
-                   sub_hierarchy_issue: mock_repo}                                         # index 13
-    data.pull_requests = {mock_pr_closed_1: mock_repo, mock_pr_merged_1: mock_repo,
-                          mock_pr_closed_2: mock_repo, mock_pr_closed_3: mock_repo,
-                          mock_pr_closed_4: mock_repo}
+    data.issues = {
+        solo_closed_issue: mock_repo,
+        hi_two_sub_issues_no_prs: mock_repo,
+        hi_two_sub_issues_with_prs: mock_repo,
+        hi_two_sub_issues_with_prs_with_commit: mock_repo,
+        hi_one_sub_hierarchy_two_sub_issues_with_prs_with_commit: mock_repo,  # index 4
+        sub_issue_1: mock_repo,
+        sub_issue_2: mock_repo,  # index 5,6
+        sub_issue_3: mock_repo,
+        sub_issue_4: mock_repo,  # index 7,8
+        sub_issue_5: mock_repo,
+        sub_issue_6: mock_repo,  # index 9,10
+        sub_issue_7: mock_repo,
+        sub_issue_8: mock_repo,  # index 11,12
+        sub_hierarchy_issue: mock_repo,
+    }  # index 13
+    data.pull_requests = {
+        mock_pr_closed_1: mock_repo,
+        mock_pr_merged_1: mock_repo,
+        mock_pr_closed_2: mock_repo,
+        mock_pr_closed_3: mock_repo,
+        mock_pr_closed_4: mock_repo,
+    }
     data.commits = {mock_commit_1: mock_repo, mock_commit_2: mock_repo, mock_commit_3: mock_repo}
 
     return data
 
 
 @pytest.fixture
-def mined_data_isolated_record_types_with_labels_no_type_defined(mocker, mined_data_isolated_record_types_no_labels_no_type_defined):
+def mined_data_isolated_record_types_with_labels_no_type_defined(
+    mocker, mined_data_isolated_record_types_no_labels_no_type_defined
+):
     data = mined_data_isolated_record_types_no_labels_no_type_defined
 
     l_enh = mocker.Mock(spec=MockLabel)
@@ -907,12 +932,12 @@ def mined_data_isolated_record_types_with_labels_no_type_defined(mocker, mined_d
     iks = list(data.issues.keys())
     iks[0].get_labels.return_value = [l_enh]
 
-    iks[1].get_labels.return_value = [l_epic]       # 301
-    iks[2].get_labels.return_value = [l_epic]       # 302
-    iks[3].get_labels.return_value = [l_epic]       # 303
-    iks[4].get_labels.return_value = [l_epic]       # 304
+    iks[1].get_labels.return_value = [l_epic]  # 301
+    iks[2].get_labels.return_value = [l_epic]  # 302
+    iks[3].get_labels.return_value = [l_epic]  # 303
+    iks[4].get_labels.return_value = [l_epic]  # 304
 
-    iks[13].get_labels.return_value = [l_feature]   # 350
+    iks[13].get_labels.return_value = [l_feature]  # 350
 
     iks[5].get_labels.return_value = [l_api]
     iks[6].get_labels.return_value = [l_api]
@@ -931,7 +956,9 @@ def mined_data_isolated_record_types_with_labels_no_type_defined(mocker, mined_d
 
 
 @pytest.fixture
-def mined_data_isolated_record_types_no_labels_with_type_defined(mocker, mined_data_isolated_record_types_no_labels_no_type_defined):
+def mined_data_isolated_record_types_no_labels_with_type_defined(
+    mocker, mined_data_isolated_record_types_no_labels_no_type_defined
+):
     data = mined_data_isolated_record_types_no_labels_no_type_defined
 
     t_epic = mocker.Mock(spec=IssueType)
@@ -954,16 +981,16 @@ def mined_data_isolated_record_types_no_labels_with_type_defined(mocker, mined_d
     iks[0].type = t_feature
     iks[0].get_labels.return_value = [l_feature]
 
-    iks[1].type = t_epic       # 301
+    iks[1].type = t_epic  # 301
     iks[1].get_labels.return_value = [l_epic]
-    iks[2].type = t_epic       # 302
+    iks[2].type = t_epic  # 302
     iks[2].get_labels.return_value = [l_epic]
-    iks[3].type = t_epic       # 303
+    iks[3].type = t_epic  # 303
     iks[3].get_labels.return_value = [l_epic]
-    iks[4].type = t_epic       # 304
+    iks[4].type = t_epic  # 304
     iks[4].get_labels.return_value = [l_epic]
 
-    iks[13].type = t_feature   # 350
+    iks[13].type = t_feature  # 350
     iks[13].get_labels.return_value = [l_feature]
 
     iks[5].type = t_task
@@ -987,7 +1014,9 @@ def mined_data_isolated_record_types_no_labels_with_type_defined(mocker, mined_d
 
 
 @pytest.fixture
-def mined_data_isolated_record_types_with_labels_with_type_defined(mocker, mined_data_isolated_record_types_with_labels_no_type_defined):
+def mined_data_isolated_record_types_with_labels_with_type_defined(
+    mocker, mined_data_isolated_record_types_with_labels_no_type_defined
+):
     data = mined_data_isolated_record_types_with_labels_no_type_defined
 
     t_epic = mocker.Mock(spec=IssueType)
@@ -1002,12 +1031,12 @@ def mined_data_isolated_record_types_with_labels_with_type_defined(mocker, mined
     iks = list(data.issues.keys())
     iks[0].type = t_bug
 
-    iks[1].type = t_epic       # 301
-    iks[2].type = t_epic       # 302
-    iks[3].type = t_epic       # 303
-    iks[4].type = t_epic       # 304
+    iks[1].type = t_epic  # 301
+    iks[2].type = t_epic  # 302
+    iks[3].type = t_epic  # 303
+    iks[4].type = t_epic  # 304
 
-    iks[13].type = t_feature   # 350
+    iks[13].type = t_feature  # 350
 
     iks[5].type = t_task
     iks[6].type = t_task
@@ -1026,17 +1055,21 @@ def mined_data_isolated_record_types_with_labels_with_type_defined(mocker, mined
 def record_with_issue_open_no_pull(request):
     return IssueRecord(issue=request.getfixturevalue("mock_issue_open"))
 
+
 @pytest.fixture
 def record_with_issue_closed_no_pull(request):
     return IssueRecord(issue=request.getfixturevalue("mock_issue_closed"))
+
 
 @pytest.fixture
 def record_with_pr_only(request):
     return PullRequestRecord(pull=request.getfixturevalue("mock_pull_merged_with_rls_notes_101"))
 
+
 @pytest.fixture
 def record_with_direct_commit(request):
     return CommitRecord(commit=request.getfixturevalue("mock_commit"))
+
 
 @pytest.fixture
 def record_with_issue_closed_one_pull(request):
@@ -1061,37 +1094,39 @@ def record_with_issue_closed_one_pull_merged_skip(request):
 
 @pytest.fixture
 def record_with_issue_closed_two_pulls(request):
-    rec = IssueRecord(issue=request.getfixturevalue("mock_issue_closed_i1_bug"))        # TODO - renamed from mock_issue_closed_i2_bug
+    rec = IssueRecord(
+        issue=request.getfixturevalue("mock_issue_closed_i1_bug")
+    )  # TODO - renamed from mock_issue_closed_i2_bug
     rec.register_pull_request(request.getfixturevalue("mock_pull_closed_with_rls_notes_101"))
     rec.register_pull_request(request.getfixturevalue("mock_pull_closed_with_rls_notes_102"))
     return rec
 
+
 @pytest.fixture
 def record_with_hierarchy_issues(request):
     rec_epic_issue = HierarchyIssueRecord(
-        issue=request.getfixturevalue("mock_open_hierarchy_issue_epic"),
-        issue_labels=["epic"]
+        issue=request.getfixturevalue("mock_open_hierarchy_issue_epic"), issue_labels=["epic"]
     )  # nr:200
 
-    rec_feature_issue = HierarchyIssueRecord(request.getfixturevalue("mock_open_hierarchy_issue_feature"))    # nr:201
+    rec_feature_issue = HierarchyIssueRecord(request.getfixturevalue("mock_open_hierarchy_issue_feature"))  # nr:201
     rec_feature_issue.level = 1
     rec_epic_issue.sub_hierarchy_issues[rec_feature_issue.issue.number] = rec_feature_issue
 
-    rec_task_issue = SubIssueRecord(request.getfixturevalue("mock_closed_issue_type_task")) # nr:202
+    rec_task_issue = SubIssueRecord(request.getfixturevalue("mock_closed_issue_type_task"))  # nr:202
     rec_feature_issue.sub_issues[rec_task_issue.issue.number] = rec_task_issue
 
     # add sub_issue
-    rec_sub_issue_no_type = SubIssueRecord(request.getfixturevalue("mock_closed_issue_type_none")) # nr:204
+    rec_sub_issue_no_type = SubIssueRecord(request.getfixturevalue("mock_closed_issue_type_none"))  # nr:204
     rec_feature_issue.sub_issues[rec_sub_issue_no_type.issue.number] = rec_sub_issue_no_type
 
     # add pr to sub_issue
     sub_issue_merged_pr = request.getfixturevalue("mock_pull_merged_with_rls_notes_102")  # nr:205
-    sub_issue_merged_pr.number = 205   # simulate PR closing sub-issue nr:204
+    sub_issue_merged_pr.number = 205  # simulate PR closing sub-issue nr:204
     sub_issue_merged_pr.body = "Closes #204\n\nRelease Notes:\n- Sub issue 204 closed by merged PR"
     sub_issue_merged_pr.title = "Sub issue 204 closed by merged PR"
     rec_sub_issue_no_type.register_pull_request(sub_issue_merged_pr)
 
-    rec_bug_issue = SubIssueRecord(request.getfixturevalue("mock_closed_issue_type_bug"))   # nr:203
+    rec_bug_issue = SubIssueRecord(request.getfixturevalue("mock_closed_issue_type_bug"))  # nr:203
     rec_feature_issue.sub_issues[rec_bug_issue.issue.number] = rec_bug_issue
 
     # not description keyword used - registration simulate API way (relation)

@@ -16,7 +16,6 @@
 
 from release_notes_generator.utils.gh_action import get_action_input, set_action_output, set_action_failed
 
-
 # get_input
 
 

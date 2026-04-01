@@ -19,7 +19,9 @@ from release_notes_generator.model.record.record import Record
 
 
 class DummyRecord(Record):
-    def __init__(self, skip=False, labels=None, authors=None, closed=True, record_id=1, rls_notes: Optional[str]="notes"):
+    def __init__(
+        self, skip=False, labels=None, authors=None, closed=True, record_id=1, rls_notes: Optional[str] = "notes"
+    ):
         super().__init__(labels, skip)
         self._labels = labels or ["bug", "feature"]
         self._authors = authors or ["alice", "bob"]
@@ -67,11 +69,13 @@ class DummyRecord(Record):
     def contains_change_increment(self) -> bool:
         return True
 
+
 def test_is_present_in_chapters():
     rec = DummyRecord()
     assert not rec.is_present_in_chapters
     rec.add_to_chapter_presence("chapter1")
     assert rec.is_present_in_chapters
+
 
 def test_skip_property():
     rec = DummyRecord(skip=True)
@@ -79,12 +83,14 @@ def test_skip_property():
     rec2 = DummyRecord(skip=False)
     assert rec2.skip is False
 
+
 def test_present_in_chapters_count():
     rec = DummyRecord()
     assert rec.chapter_presence_count() == 0
     rec.add_to_chapter_presence("chapter1")
     rec.add_to_chapter_presence("chapter2")
     assert rec.chapter_presence_count() == 2
+
 
 def test_present_in_chapters_unique():
     """Test that adding the same chapter multiple times doesn't increase the count."""
@@ -96,10 +102,12 @@ def test_present_in_chapters_unique():
     rec.add_to_chapter_presence("chapter2")
     assert rec.chapter_presence_count() == 2
 
+
 def test_contains_min_one_label():
     rec = DummyRecord(labels=["bug", "feature"])
     assert rec.contains_min_one_label(["bug"])
     assert not rec.contains_min_one_label(["enhancement"])
+
 
 def test_contain_all_labels():
     rec = DummyRecord(labels=["bug", "feature"])
@@ -107,11 +115,13 @@ def test_contain_all_labels():
     assert not rec.contain_all_labels(["bug", "other"])
     assert rec.contain_all_labels(["bug"])
 
+
 def test_contains_release_notes_true():
     rec = DummyRecord(rls_notes="Some notes")
     assert rec.contains_release_notes() is True
     assert rec.contains_release_notes(re_check=True) is True
     assert rec.contains_release_notes() is True
+
 
 def test_contains_release_notes_false():
     rec = DummyRecord(rls_notes=None)

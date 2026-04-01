@@ -79,14 +79,20 @@ def test_issue_record_init_with_type_value(mocker):
 
 
 def test_code_rabbit_empty_body(issue_record, mocker):
-    mocker.patch("release_notes_generator.model.record.issue_record.ActionInputs.get_coderabbit_summary_ignore_groups", return_value=[])
+    mocker.patch(
+        "release_notes_generator.model.record.issue_record.ActionInputs.get_coderabbit_summary_ignore_groups",
+        return_value=[],
+    )
     pr = make_pr(mocker, None)
     out = get_rls_notes_code_rabbit(pr.body, LINE_MARKS, CR_REGEX)
     assert out == ""
 
 
 def test_code_rabbit_extract_basic(issue_record, mocker):
-    mocker.patch("release_notes_generator.model.record.issue_record.ActionInputs.get_coderabbit_summary_ignore_groups", return_value=[])
+    mocker.patch(
+        "release_notes_generator.model.record.issue_record.ActionInputs.get_coderabbit_summary_ignore_groups",
+        return_value=[],
+    )
     body = """Intro line
 Summary by CodeRabbit
   - Added feature A
@@ -101,7 +107,7 @@ Other trailing text not part
 def test_code_rabbit_ignored_group_then_kept_group(issue_record, mocker):
     mocker.patch(
         "release_notes_generator.model.record.issue_record.ActionInputs.get_coderabbit_summary_ignore_groups",
-        return_value=["Chore"]
+        return_value=["Chore"],
     )
     body = """Header
 Summary by CodeRabbit
@@ -118,7 +124,10 @@ Summary by CodeRabbit
 
 
 def test_code_rabbit_non_bullet_terminates(issue_record, mocker):
-    mocker.patch("release_notes_generator.model.record.issue_record.ActionInputs.get_coderabbit_summary_ignore_groups", return_value=[])
+    mocker.patch(
+        "release_notes_generator.model.record.issue_record.ActionInputs.get_coderabbit_summary_ignore_groups",
+        return_value=[],
+    )
     body = """Preamble
 Summary by CodeRabbit
   - First line

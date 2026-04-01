@@ -24,9 +24,7 @@ from release_notes_generator.data.utils.bulk_sub_issue_collector import Collecto
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-pytestmark = pytest.mark.skipif(
-    not os.getenv("GITHUB_TOKEN"), reason="GITHUB_TOKEN not set for integration test"
-)
+pytestmark = pytest.mark.skipif(not os.getenv("GITHUB_TOKEN"), reason="GITHUB_TOKEN not set for integration test")
 
 
 def test_bulk_sub_issue_collector_smoke():
@@ -41,4 +39,3 @@ def test_bulk_sub_issue_collector_smoke():
         iterations += 1
     # Collector internal state should be dict-like even if empty
     assert hasattr(collector, "parents_sub_issues")
-

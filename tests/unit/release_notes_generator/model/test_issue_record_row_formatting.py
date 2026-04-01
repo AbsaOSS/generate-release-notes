@@ -51,12 +51,8 @@ def test_missing_type_no_assignees_no_prs(mocker, mock_issue_closed):
     # Should NOT contain any of these fragments when fields are empty
     assert "N/A" not in row, f"Row should not contain 'N/A', got: {row}"
     assert "assigned to" not in row, f"Row should not contain 'assigned to', got: {row}"
-    assert (
-        "developed by" not in row
-    ), f"Row should not contain 'developed by', got: {row}"
-    assert (
-        " in " not in row.lower() or " in #" in row.lower()
-    ), f"Row should not contain dangling 'in', got: {row}"
+    assert "developed by" not in row, f"Row should not contain 'developed by', got: {row}"
+    assert " in " not in row.lower() or " in #" in row.lower(), f"Row should not contain dangling 'in', got: {row}"
 
     # Should contain these
     assert "#231" in row
@@ -133,9 +129,7 @@ def test_has_type_missing_assignees_has_prs(mocker, mock_issue_closed, mock_pull
     assert "Task:" in row or "Task" in row, f"Row should contain type, got: {row}"
     assert "#200" in row
     assert "Add feature" in row
-    assert (
-        "assigned to" not in row
-    ), f"Row should not contain 'assigned to', got: {row}"
+    assert "assigned to" not in row, f"Row should not contain 'assigned to', got: {row}"
     assert "developed by" in row  # Should show because there are developers
     assert "#201" in row
 

@@ -28,7 +28,6 @@ from release_notes_generator.utils.constants import (
 )
 from release_notes_generator.utils.enums import DuplicityScopeEnum
 
-
 # __init__
 
 

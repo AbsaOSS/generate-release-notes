@@ -59,12 +59,7 @@ def test_legacy_single_label_snapshot():
     custom.populate(records)
     output = custom.to_string()
 
-    expected = (
-        "### Bugfixes 🛠️\n"
-        "- org/repo#1 row\n\n"
-        "### Enhancements 🎉\n"
-        "- org/repo#2 row"
-    )
+    expected = "### Bugfixes 🛠️\n" "- org/repo#1 row\n\n" "### Enhancements 🎉\n" "- org/repo#2 row"
 
     assert output == expected, f"Legacy snapshot changed.\nExpected:\n{expected}\nActual:\n{output}"
 
@@ -79,10 +74,12 @@ def test_multi_label_integration_snapshot():  # T019
     custom.from_yaml_array(chapters_yaml)
 
     records = {
-        "org/repo#10": build_mock_record("org/repo#10", ["bug", "enhancement"]),  # appears once in Changes, once in Mixed
+        "org/repo#10": build_mock_record(
+            "org/repo#10", ["bug", "enhancement"]
+        ),  # appears once in Changes, once in Mixed
         "org/repo#11": build_mock_record("org/repo#11", ["platform"]),  # appears in Platform only
         "org/repo#12": build_mock_record("org/repo#12", ["infra", "platform"]),  # Platform only once
-        "org/repo#13": build_mock_record("org/repo#13", ["feature"])  # Mixed only
+        "org/repo#13": build_mock_record("org/repo#13", ["feature"]),  # Mixed only
     }
     custom.populate(records)
     out = custom.to_string()

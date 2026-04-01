@@ -38,6 +38,7 @@ class ChildBulkSubIssueCollector(BulkSubIssueCollector):
     Inherit from the real class so isinstance checks still pass.
     We AVOID calling super().__init__ to skip any network work.
     """
+
     def __init__(self, patch_parent_sub_issues: Optional[dict[str, list[str]]] = None):
         super().__init__("FAKE")
         self.patch_parent_sub_issues: Optional[dict[str, list[str]]] = patch_parent_sub_issues
@@ -51,8 +52,10 @@ class ChildBulkSubIssueCollector(BulkSubIssueCollector):
 
         return []
 
+
 def _identity(fn):
     return fn
+
 
 def fake_fetch_repository(full_name: str):
     # you can branch based on input
@@ -63,13 +66,15 @@ def fake_fetch_repository(full_name: str):
     elif full_name == "org_3/another_repo":
         return FakeRepo("org_3/another_repo")
     else:
-        return None   # simulate “not found”
+        return None  # simulate “not found”
+
 
 def decorator_mock(func):
     """
     Mock for the decorator to return the function itself.
     """
     return func
+
 
 class MinedDataMock(MinedData):
     """
@@ -93,6 +98,7 @@ class MinedDataMock(MinedData):
         }
         self.since = datetime.now()
 
+
 def test_get_latest_release_from_tag_name_not_defined_2_releases_type_error(mocker, mock_repo, mock_git_releases):
     mocker.patch("release_notes_generator.action_inputs.ActionInputs.is_from_tag_name_defined", return_value=False)
     mock_log_info = mocker.patch("release_notes_generator.data.miner.logger.info")
@@ -115,10 +121,15 @@ def test_get_latest_release_from_tag_name_not_defined_2_releases_type_error(mock
     latest_release = release_notes_miner.get_latest_release(data.home_repository)
 
     assert latest_release is None
-    assert ('Getting latest release by semantic ordering (could not be the last one by time).',) == mock_log_info.call_args_list[0][0]
-    assert ('Latest release not found for %s. 1st release for repository!', 'org/repo') == mock_log_info.call_args_list[1][0]
-    assert ('Skipping invalid type of version tag: %s | Error: %s', 'v1.0.0', '') == mock_log_error.call_args_list[0][0]
-    assert ('Skipping invalid type of version tag: %s | Error: %s', 'v2.0.0', '') == mock_log_error.call_args_list[2][0]
+    assert (
+        "Getting latest release by semantic ordering (could not be the last one by time).",
+    ) == mock_log_info.call_args_list[0][0]
+    assert ("Latest release not found for %s. 1st release for repository!", "org/repo") == mock_log_info.call_args_list[
+        1
+    ][0]
+    assert ("Skipping invalid type of version tag: %s | Error: %s", "v1.0.0", "") == mock_log_error.call_args_list[0][0]
+    assert ("Skipping invalid type of version tag: %s | Error: %s", "v2.0.0", "") == mock_log_error.call_args_list[2][0]
+
 
 def test_get_latest_release_from_tag_name_not_defined_2_releases_value_error(mocker, mock_repo, mock_git_releases):
     mocker.patch("release_notes_generator.action_inputs.ActionInputs.is_from_tag_name_defined", return_value=False)
@@ -144,10 +155,15 @@ def test_get_latest_release_from_tag_name_not_defined_2_releases_value_error(moc
     latest_release = release_notes_miner.get_latest_release(data.home_repository)
 
     assert latest_release is None
-    assert ('Getting latest release by semantic ordering (could not be the last one by time).',) == mock_log_info.call_args_list[0][0]
-    assert ('Latest release not found for %s. 1st release for repository!', 'org/repo') == mock_log_info.call_args_list[1][0]
-    assert ('Skipping invalid value of version tag: %s', 'v1.0.0') == mock_log_error.call_args_list[0][0]
-    assert ('Skipping invalid value of version tag: %s', 'v2.0.0') == mock_log_error.call_args_list[1][0]
+    assert (
+        "Getting latest release by semantic ordering (could not be the last one by time).",
+    ) == mock_log_info.call_args_list[0][0]
+    assert ("Latest release not found for %s. 1st release for repository!", "org/repo") == mock_log_info.call_args_list[
+        1
+    ][0]
+    assert ("Skipping invalid value of version tag: %s", "v1.0.0") == mock_log_error.call_args_list[0][0]
+    assert ("Skipping invalid value of version tag: %s", "v2.0.0") == mock_log_error.call_args_list[1][0]
+
 
 def test_get_latest_release_from_tag_name_not_defined_2_releases(mocker, mock_repo, mock_git_releases):
     mocker.patch("release_notes_generator.action_inputs.ActionInputs.is_from_tag_name_defined", return_value=False)
@@ -169,7 +185,10 @@ def test_get_latest_release_from_tag_name_not_defined_2_releases(mocker, mock_re
     latest_release = release_notes_miner.get_latest_release(data.home_repository)
 
     assert latest_release is not None
-    assert ('Getting latest release by semantic ordering (could not be the last one by time).',) == mock_log_info.call_args_list[0][0]
+    assert (
+        "Getting latest release by semantic ordering (could not be the last one by time).",
+    ) == mock_log_info.call_args_list[0][0]
+
 
 def test_get_latest_release_from_tag_name_not_defined_no_release(mocker, mock_repo):
     mocker.patch("release_notes_generator.action_inputs.ActionInputs.is_from_tag_name_defined", return_value=False)
@@ -192,8 +211,13 @@ def test_get_latest_release_from_tag_name_not_defined_no_release(mocker, mock_re
 
     assert latest_release is None
     assert 2 == len(mock_log_info.call_args_list)
-    assert ('Getting latest release by semantic ordering (could not be the last one by time).',) == mock_log_info.call_args_list[0][0]
-    assert ('Latest release not found for %s. 1st release for repository!', 'org/repo') == mock_log_info.call_args_list[1][0]
+    assert (
+        "Getting latest release by semantic ordering (could not be the last one by time).",
+    ) == mock_log_info.call_args_list[0][0]
+    assert ("Latest release not found for %s. 1st release for repository!", "org/repo") == mock_log_info.call_args_list[
+        1
+    ][0]
+
 
 def test_get_latest_release_from_tag_name_defined_release_exists(mocker, mock_repo):
     mocker.patch("release_notes_generator.action_inputs.ActionInputs.is_from_tag_name_defined", return_value=True)
@@ -219,7 +243,8 @@ def test_get_latest_release_from_tag_name_defined_release_exists(mocker, mock_re
     assert rls_mock == latest_release
     mock_exit.assert_not_called()
     assert 1 == len(mock_log_info.call_args_list)
-    assert ('Getting latest release by from-tag name %s', "") == mock_log_info.call_args_list[0][0]
+    assert ("Getting latest release by from-tag name %s", "") == mock_log_info.call_args_list[0][0]
+
 
 # get_latest_release tests
 def test_get_latest_release_from_tag_name_defined_no_release(mocker, mock_repo):
@@ -247,8 +272,8 @@ def test_get_latest_release_from_tag_name_defined_no_release(mocker, mock_repo):
     mock_exit.assert_called_once_with(1)
     assert 1 == len(mock_log_info.call_args_list)
     assert 1 == len(mock_log_error.call_args_list)
-    assert ('Getting latest release by from-tag name %s', "") == mock_log_info.call_args_list[0][0]
-    assert ('Latest release not found for received from-tag %s. Ending!', '') == mock_log_error.call_args_list[0][0]
+    assert ("Getting latest release by from-tag name %s", "") == mock_log_info.call_args_list[0][0]
+    assert ("Latest release not found for received from-tag %s. Ending!", "") == mock_log_error.call_args_list[0][0]
 
 
 def test_mine_data_repo_none_raises(mocker):
@@ -262,10 +287,7 @@ def test_mine_data_repo_none_raises(mocker):
     miner._safe_call = _identity
 
     # ActionInputs.get_github_repository is consulted inside mine_data
-    mocker.patch(
-        "release_notes_generator.data.miner.ActionInputs.get_github_repository",
-        return_value="owner/repo"
-    )
+    mocker.patch("release_notes_generator.data.miner.ActionInputs.get_github_repository", return_value="owner/repo")
 
     with pytest.raises(ValueError, match="Repository not found"):
         miner.mine_data()
@@ -303,6 +325,7 @@ def test_mine_data_commits_without_since(mocker, mock_repo):
 
 # mine_missing_sub_issues
 
+
 def test_scan_sub_issues_for_parents(mocker, mock_repo, mined_data_simple):
     gh = mocker.Mock()
     gh.get_repo.return_value = mock_repo
@@ -337,7 +360,9 @@ def test_fetch_all_repositories_in_cache(mocker, mock_repo, mined_data_simple):
     patch_parents_sub_issues: dict[str, list[str]] = {}
     patch_parents_sub_issues["org_1/another_repo#122"] = ["org_2/another_repo#122", "org_3/another_repo#122", "o/r#1"]
 
-    mocker.patch.object(miner, "_make_bulk_sub_issue_collector", return_value=ChildBulkSubIssueCollector(patch_parents_sub_issues))
+    mocker.patch.object(
+        miner, "_make_bulk_sub_issue_collector", return_value=ChildBulkSubIssueCollector(patch_parents_sub_issues)
+    )
     mocker.patch.object(miner, "_fetch_missing_issues", return_value={})
     mocker.patch.object(miner, "_fetch_prs_for_fetched_cross_issues", return_value={})
 
@@ -382,7 +407,16 @@ def test_fetch_missing_issues(mocker, mock_repo, mined_data_simple, mock_issue_c
     miner._safe_call = lambda f: f
 
     patch_parents_sub_issues: dict[str, list[str]] = {}
-    patch_parents_sub_issues["org/repo#1"] = ["org/repo#2", "org/repo#3", "org*repo#4", "org/repoX#5", "org/repo#6", "org/repo#7", "org/repo#8", "org/repo#9"]
+    patch_parents_sub_issues["org/repo#1"] = [
+        "org/repo#2",
+        "org/repo#3",
+        "org*repo#4",
+        "org/repoX#5",
+        "org/repo#6",
+        "org/repo#7",
+        "org/repo#8",
+        "org/repo#9",
+    ]
     for i in range(2, 10):
         if i == 4:
             patch_parents_sub_issues[f"org*repo#{i}"] = []
@@ -391,7 +425,9 @@ def test_fetch_missing_issues(mocker, mock_repo, mined_data_simple, mock_issue_c
         else:
             patch_parents_sub_issues[f"org/repo#{i}"] = []
 
-    mocker.patch.object(miner, "_make_bulk_sub_issue_collector", return_value=ChildBulkSubIssueCollector(patch_parents_sub_issues))
+    mocker.patch.object(
+        miner, "_make_bulk_sub_issue_collector", return_value=ChildBulkSubIssueCollector(patch_parents_sub_issues)
+    )
     mocker.patch.object(miner, "_fetch_all_repositories_in_cache", return_value={})
     mocker.patch.object(miner, "_fetch_prs_for_fetched_cross_issues", return_value={})
 
@@ -422,7 +458,9 @@ def test_fetch_missing_issues_no_fetch(mocker, mock_repo, mined_data_simple, moc
 
     patch_parents_sub_issues: dict[str, list[str]] = {}
 
-    mocker.patch.object(miner, "_make_bulk_sub_issue_collector", return_value=ChildBulkSubIssueCollector(patch_parents_sub_issues))
+    mocker.patch.object(
+        miner, "_make_bulk_sub_issue_collector", return_value=ChildBulkSubIssueCollector(patch_parents_sub_issues)
+    )
     mocker.patch.object(miner, "_fetch_all_repositories_in_cache", return_value={})
     mocker.patch.object(miner, "_fetch_prs_for_fetched_cross_issues", return_value={})
 
@@ -482,4 +520,3 @@ def test_fetch_prs_for_fetched_cross_issues(mocker, mock_repo):
     assert key_ok in result and result[key_ok] == [pr_obj]
     assert key_err in result and result[key_err] == []
     warn_mock.assert_called_once()
-
