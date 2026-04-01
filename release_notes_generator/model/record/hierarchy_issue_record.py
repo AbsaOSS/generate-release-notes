@@ -75,6 +75,23 @@ class HierarchyIssueRecord(IssueRecord):
         return self._sub_hierarchy_issues
 
     @property
+    def progress(self) -> str:
+        """
+        The sub-issue completion count for this hierarchy node as 'X/Y done'.
+
+        Returns:
+            '' when this node has no direct sub-issues; otherwise 'X/Y done'
+            counting direct children only (sub-issues + sub-hierarchy-issues, no recursion).
+            Note: adjacent delimiter characters are not stripped when empty.
+        """
+        total = len(self._sub_issues) + len(self._sub_hierarchy_issues)
+        if total == 0:
+            return ""
+        closed = sum(1 for s in self._sub_issues.values() if s.is_closed)
+        closed += sum(1 for s in self._sub_hierarchy_issues.values() if s.is_closed)
+        return f"{closed}/{total} done"
+
+    @property
     def developers(self) -> list[str]:
         issue = self._issue
         if not issue:
@@ -115,6 +132,33 @@ class HierarchyIssueRecord(IssueRecord):
 
         return count
 
+    def contains_change_increment(self) -> bool:
+        """
+        Returns True only when this hierarchy sub-tree has at least one closed descendant with a change.
+
+        A closed descendant with a PR (or a cross-repo placeholder) is the only evidence of finished
+        work that belongs in release notes.  Open sub-issues whose PRs have not yet been merged must
+        not cause the parent to appear in the output.
+        """
+        if self.is_cross_repo:
+            return True
+
+        # Direct PRs attached to this hierarchy issue itself (IssueRecord level, no sub-tree)
+        if super().pull_requests_count() > 0:
+            return True
+
+        # Only closed leaf sub-issues contribute; recurse to check their own PRs/cross-repo flag
+        for sub_issue in self._sub_issues.values():
+            if sub_issue.is_closed and sub_issue.contains_change_increment():
+                return True
+
+        # Recurse into sub-hierarchy-issues; the same closed-descendant rule applies at every level
+        for sub_hierarchy_issue in self._sub_hierarchy_issues.values():
+            if sub_hierarchy_issue.contains_change_increment():
+                return True
+
+        return False
+
     def get_labels(self) -> list[str]:
         labels: set[str] = set()
         labels.update(label.name for label in self._issue.get_labels())
@@ -146,6 +190,7 @@ class HierarchyIssueRecord(IssueRecord):
             format_values["type"] = self.issue_type
         else:
             format_values["type"] = ""
+        format_values["progress"] = self.progress
 
         list_pr_links = self.get_pr_links()
         if len(list_pr_links) > 0:

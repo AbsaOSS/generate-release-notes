@@ -38,7 +38,7 @@ ROW_FORMAT_HIERARCHY_ISSUE = "row-format-hierarchy-issue"
 ROW_FORMAT_ISSUE = "row-format-issue"
 ROW_FORMAT_PR = "row-format-pr"
 ROW_FORMAT_LINK_PR = "row-format-link-pr"
-SUPPORTED_ROW_FORMAT_KEYS_HIERARCHY_ISSUE = ["type", "number", "title", "author", "assignees", "developers"]
+SUPPORTED_ROW_FORMAT_KEYS_HIERARCHY_ISSUE = ["type", "number", "title", "author", "assignees", "developers", "progress"]
 SUPPORTED_ROW_FORMAT_KEYS_ISSUE = ["type", "number", "title", "author", "assignees", "developers", "pull-requests"]
 SUPPORTED_ROW_FORMAT_KEYS_PULL_REQUEST = ["number", "title", "author", "assignees", "developers"]
 

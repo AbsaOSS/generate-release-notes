@@ -158,12 +158,33 @@ def test_custom_chapters_from_yaml_array():
     "chapter_def, expected, warning_substring",
     [
         pytest.param({"title": "Multi", "labels": "bug"}, ["bug"], None, id="single-string-labels"),
-        pytest.param({"title": "Multi", "labels": "bug, enhancement"}, ["bug", "enhancement"], None, id="comma-separated"),
-        pytest.param({"title": "Multi", "labels": "bug\nenhancement"}, ["bug", "enhancement"], None, id="newline-separated"),
-        pytest.param({"title": "Multi", "labels": ["bug", "enhancement"]}, ["bug", "enhancement"], None, id="yaml-list"),
-        pytest.param({"title": "Mixed", "labels": " bug, enhancement,bug\nfeature , enhancement"}, ["bug", "enhancement", "feature"], None, id="mixed-separators-dedup-trim"),
-        pytest.param({"title": "Precedence", "label": "legacy", "labels": "new1, new2"}, ["new1", "new2"], "precedence", id="labels-key-precedence"),
-        pytest.param({"title": "UnicodeSpace", "labels": "\u2003bug\u00A0,\u2009enhancement"}, ["bug", "enhancement"], None, id="unicode-whitespace-trim"),
+        pytest.param(
+            {"title": "Multi", "labels": "bug, enhancement"}, ["bug", "enhancement"], None, id="comma-separated"
+        ),
+        pytest.param(
+            {"title": "Multi", "labels": "bug\nenhancement"}, ["bug", "enhancement"], None, id="newline-separated"
+        ),
+        pytest.param(
+            {"title": "Multi", "labels": ["bug", "enhancement"]}, ["bug", "enhancement"], None, id="yaml-list"
+        ),
+        pytest.param(
+            {"title": "Mixed", "labels": " bug, enhancement,bug\nfeature , enhancement"},
+            ["bug", "enhancement", "feature"],
+            None,
+            id="mixed-separators-dedup-trim",
+        ),
+        pytest.param(
+            {"title": "Precedence", "label": "legacy", "labels": "new1, new2"},
+            ["new1", "new2"],
+            "precedence",
+            id="labels-key-precedence",
+        ),
+        pytest.param(
+            {"title": "UnicodeSpace", "labels": "\u2003bug\u00a0,\u2009enhancement"},
+            ["bug", "enhancement"],
+            None,
+            id="unicode-whitespace-trim",
+        ),
     ],
 )
 def test_from_yaml_array_normalization_variants(chapter_def, expected, warning_substring, caplog):
@@ -198,10 +219,12 @@ def test_duplicate_suppression_with_multi_label_record(record_stub):
 def test_overlapping_chapters_record_in_both(record_stub):
     # Arrange
     cc = CustomChapters()
-    cc.from_yaml_array([
-        {"title": "Bugs", "labels": "bug"},
-        {"title": "Features", "labels": "feature, bug"},
-    ])
+    cc.from_yaml_array(
+        [
+            {"title": "Bugs", "labels": "bug"},
+            {"title": "Features", "labels": "feature, bug"},
+        ]
+    )
     record = record_stub("org/repo#99", ["bug"])  # qualifies for both
     records: dict[str, Record] = {"org/repo#99": record}
     # Act
@@ -424,7 +447,7 @@ def test_populate_hidden_chapter_assigns_records(record_stub):
 def test_populate_hidden_chapter_no_duplicity_count(record_stub, mocker):
     """
     Test that hidden chapters don't increment the duplicity counter.
-    
+
     When a record is assigned to a hidden chapter, to_chapter_row should be called
     with add_into_chapters=False to prevent incrementing the chapter presence count.
     This ensures hidden chapters don't contribute to duplicity detection.
@@ -447,7 +470,7 @@ def test_populate_hidden_chapter_no_duplicity_count(record_stub, mocker):
 def test_populate_visible_chapter_duplicity_count(record_stub, mocker):
     """
     Test that visible (non-hidden) chapters increment the duplicity counter.
-    
+
     When a record is assigned to a visible chapter, to_chapter_row should be called
     with add_into_chapters=True to increment the chapter presence count.
     This ensures visible chapters contribute to duplicity detection as expected.
@@ -470,11 +493,13 @@ def test_populate_visible_chapter_duplicity_count(record_stub, mocker):
 def test_populate_mixed_visible_hidden_duplicity(record_stub):
     # Arrange
     cc = CustomChapters()
-    cc.from_yaml_array([
-        {"title": "Visible1", "labels": "bug", "hidden": False},
-        {"title": "Hidden1", "labels": "bug", "hidden": True},
-        {"title": "Visible2", "labels": "bug", "hidden": False},
-    ])
+    cc.from_yaml_array(
+        [
+            {"title": "Visible1", "labels": "bug", "hidden": False},
+            {"title": "Hidden1", "labels": "bug", "hidden": True},
+            {"title": "Visible2", "labels": "bug", "hidden": False},
+        ]
+    )
     record = record_stub("org/repo#1", ["bug"])
     records = {"org/repo#1": record}
     # Act
@@ -490,10 +515,12 @@ def test_populate_mixed_visible_hidden_duplicity(record_stub):
 def test_to_string_hidden_chapter_excluded():
     # Arrange
     cc = CustomChapters()
-    cc.from_yaml_array([
-        {"title": "Visible", "labels": "bug"},
-        {"title": "Hidden", "labels": "feature", "hidden": True},
-    ])
+    cc.from_yaml_array(
+        [
+            {"title": "Visible", "labels": "bug"},
+            {"title": "Hidden", "labels": "feature", "hidden": True},
+        ]
+    )
     cc.chapters["Visible"].add_row(1, "Bug fix")
     cc.chapters["Hidden"].add_row(2, "Hidden feature")
     # Act
@@ -508,17 +535,19 @@ def test_to_string_hidden_chapter_excluded():
 def test_to_string_all_hidden_returns_empty():
     """
     Test that when all chapters are hidden, to_string returns empty string.
-    
+
     This also verifies that hidden chapters are never shown even when
     print_empty_chapters is True, since they are filtered out before rendering.
     """
     # Arrange
     cc = CustomChapters()
     cc.print_empty_chapters = True  # Verify hidden chapters ignored even with this True
-    cc.from_yaml_array([
-        {"title": "Hidden1", "labels": "bug", "hidden": True},
-        {"title": "Hidden2", "labels": "feature", "hidden": True},
-    ])
+    cc.from_yaml_array(
+        [
+            {"title": "Hidden1", "labels": "bug", "hidden": True},
+            {"title": "Hidden2", "labels": "feature", "hidden": True},
+        ]
+    )
     cc.chapters["Hidden1"].add_row(1, "Bug fix")
     cc.chapters["Hidden2"].add_row(2, "Feature")
     # Act
@@ -575,10 +604,12 @@ def test_backward_compatibility_no_hidden_field():
     # Arrange - test that chapters without hidden field work as before
     cc = CustomChapters()
     # Act
-    cc.from_yaml_array([
-        {"title": "Breaking Changes 💥", "label": "breaking-change"},
-        {"title": "New Features 🎉", "labels": ["enhancement", "feature"]},
-    ])
+    cc.from_yaml_array(
+        [
+            {"title": "Breaking Changes 💥", "label": "breaking-change"},
+            {"title": "New Features 🎉", "labels": ["enhancement", "feature"]},
+        ]
+    )
     # Assert
     assert "Breaking Changes 💥" in cc.chapters
     assert "New Features 🎉" in cc.chapters
@@ -590,11 +621,13 @@ def test_from_yaml_array_order_parsed():
     # Arrange
     cc = CustomChapters()
     # Act
-    cc.from_yaml_array([
-        {"title": "Bugfixes 🛠", "labels": "bug", "order": 20},
-        {"title": "Breaking Changes 💥", "label": "breaking-change", "order": 10},
-        {"title": "Features 🎉", "labels": "feature"},
-    ])
+    cc.from_yaml_array(
+        [
+            {"title": "Bugfixes 🛠", "labels": "bug", "order": 20},
+            {"title": "Breaking Changes 💥", "label": "breaking-change", "order": 10},
+            {"title": "Features 🎉", "labels": "feature"},
+        ]
+    )
     # Assert
     assert cc.chapters["Bugfixes 🛠"].order == 20
     assert cc.chapters["Breaking Changes 💥"].order == 10
@@ -651,10 +684,12 @@ def test_from_yaml_array_repeated_title_same_order():
     # Arrange
     cc = CustomChapters()
     # Act
-    cc.from_yaml_array([
-        {"title": "Bugfixes 🛠", "label": "bug", "order": 20},
-        {"title": "Bugfixes 🛠", "label": "error", "order": 20},
-    ])
+    cc.from_yaml_array(
+        [
+            {"title": "Bugfixes 🛠", "label": "bug", "order": 20},
+            {"title": "Bugfixes 🛠", "label": "error", "order": 20},
+        ]
+    )
     # Assert
     assert cc.chapters["Bugfixes 🛠"].labels == ["bug", "error"]
     assert cc.chapters["Bugfixes 🛠"].order == 20
@@ -665,10 +700,12 @@ def test_from_yaml_array_repeated_title_conflicting_order(caplog):
     caplog.set_level("WARNING", logger="release_notes_generator.chapters.custom_chapters")
     cc = CustomChapters()
     # Act
-    cc.from_yaml_array([
-        {"title": "Bugfixes 🛠", "label": "bug", "order": 20},
-        {"title": "Bugfixes 🛠", "label": "error", "order": 10},
-    ])
+    cc.from_yaml_array(
+        [
+            {"title": "Bugfixes 🛠", "label": "bug", "order": 20},
+            {"title": "Bugfixes 🛠", "label": "error", "order": 10},
+        ]
+    )
     # Assert - keeps first explicit value
     assert cc.chapters["Bugfixes 🛠"].order == 20
     assert cc.chapters["Bugfixes 🛠"].labels == ["bug", "error"]
@@ -679,10 +716,12 @@ def test_from_yaml_array_repeated_title_order_then_no_order():
     # Arrange
     cc = CustomChapters()
     # Act
-    cc.from_yaml_array([
-        {"title": "Ch", "label": "bug", "order": 10},
-        {"title": "Ch", "label": "error"},
-    ])
+    cc.from_yaml_array(
+        [
+            {"title": "Ch", "label": "bug", "order": 10},
+            {"title": "Ch", "label": "error"},
+        ]
+    )
     # Assert - first explicit order kept
     assert cc.chapters["Ch"].order == 10
 
@@ -691,10 +730,12 @@ def test_from_yaml_array_repeated_title_no_order_then_order():
     # Arrange
     cc = CustomChapters()
     # Act
-    cc.from_yaml_array([
-        {"title": "Ch", "label": "bug"},
-        {"title": "Ch", "label": "error", "order": 15},
-    ])
+    cc.from_yaml_array(
+        [
+            {"title": "Ch", "label": "bug"},
+            {"title": "Ch", "label": "error", "order": 15},
+        ]
+    )
     # Assert - second provides order, adopted
     assert cc.chapters["Ch"].order == 15
 
@@ -702,11 +743,13 @@ def test_from_yaml_array_repeated_title_no_order_then_order():
 def test_to_string_order_sorting():
     # Arrange
     cc = CustomChapters()
-    cc.from_yaml_array([
-        {"title": "Bugfixes 🛠", "labels": "bug", "order": 20},
-        {"title": "Breaking Changes 💥", "label": "breaking-change", "order": 10},
-        {"title": "Features 🎉", "labels": "feature"},
-    ])
+    cc.from_yaml_array(
+        [
+            {"title": "Bugfixes 🛠", "labels": "bug", "order": 20},
+            {"title": "Breaking Changes 💥", "label": "breaking-change", "order": 10},
+            {"title": "Features 🎉", "labels": "feature"},
+        ]
+    )
     cc.chapters["Bugfixes 🛠"].add_row(1, "Fix 1")
     cc.chapters["Breaking Changes 💥"].add_row(2, "Break 1")
     cc.chapters["Features 🎉"].add_row(3, "Feat 1")
@@ -722,11 +765,13 @@ def test_to_string_order_sorting():
 def test_to_string_order_tie_preserves_first_seen():
     # Arrange
     cc = CustomChapters()
-    cc.from_yaml_array([
-        {"title": "Alpha", "labels": "a", "order": 10},
-        {"title": "Beta", "labels": "b", "order": 10},
-        {"title": "Gamma", "labels": "c", "order": 10},
-    ])
+    cc.from_yaml_array(
+        [
+            {"title": "Alpha", "labels": "a", "order": 10},
+            {"title": "Beta", "labels": "b", "order": 10},
+            {"title": "Gamma", "labels": "c", "order": 10},
+        ]
+    )
     cc.chapters["Alpha"].add_row(1, "A row")
     cc.chapters["Beta"].add_row(2, "B row")
     cc.chapters["Gamma"].add_row(3, "C row")
@@ -742,11 +787,13 @@ def test_to_string_order_tie_preserves_first_seen():
 def test_to_string_no_order_preserves_first_seen():
     # Arrange
     cc = CustomChapters()
-    cc.from_yaml_array([
-        {"title": "Bugfixes 🛠", "labels": "bug"},
-        {"title": "Features 🎉", "labels": "feature"},
-        {"title": "Breaking Changes 💥", "label": "breaking-change"},
-    ])
+    cc.from_yaml_array(
+        [
+            {"title": "Bugfixes 🛠", "labels": "bug"},
+            {"title": "Features 🎉", "labels": "feature"},
+            {"title": "Breaking Changes 💥", "label": "breaking-change"},
+        ]
+    )
     cc.chapters["Bugfixes 🛠"].add_row(1, "Fix 1")
     cc.chapters["Features 🎉"].add_row(2, "Feat 1")
     cc.chapters["Breaking Changes 💥"].add_row(3, "Break 1")
@@ -762,12 +809,14 @@ def test_to_string_no_order_preserves_first_seen():
 def test_to_string_mixed_ordered_and_unordered():
     # Arrange
     cc = CustomChapters()
-    cc.from_yaml_array([
-        {"title": "Unordered1", "labels": "a"},
-        {"title": "Ordered30", "labels": "b", "order": 30},
-        {"title": "Unordered2", "labels": "c"},
-        {"title": "Ordered10", "labels": "d", "order": 10},
-    ])
+    cc.from_yaml_array(
+        [
+            {"title": "Unordered1", "labels": "a"},
+            {"title": "Ordered30", "labels": "b", "order": 30},
+            {"title": "Unordered2", "labels": "c"},
+            {"title": "Ordered10", "labels": "d", "order": 10},
+        ]
+    )
     for title in cc.chapters:
         cc.chapters[title].add_row(1, "row")
     # Act
@@ -780,11 +829,13 @@ def test_to_string_mixed_ordered_and_unordered():
 def test_sorted_chapters_hidden_with_order():
     # Arrange - hidden chapters with order are still sorted (but filtered in to_string)
     cc = CustomChapters()
-    cc.from_yaml_array([
-        {"title": "Visible", "labels": "a", "order": 20},
-        {"title": "Hidden", "labels": "b", "order": 10, "hidden": True},
-        {"title": "Visible2", "labels": "c"},
-    ])
+    cc.from_yaml_array(
+        [
+            {"title": "Visible", "labels": "a", "order": 20},
+            {"title": "Hidden", "labels": "b", "order": 10, "hidden": True},
+            {"title": "Visible2", "labels": "c"},
+        ]
+    )
     # Act
     sorted_chs = cc._sorted_chapters()
     # Assert
@@ -866,10 +917,12 @@ def test_catch_open_hierarchy_no_label_filter(hierarchy_record_stub, monkeypatch
     monkeypatch.setattr(ActionInputs, "get_hierarchy", staticmethod(lambda: True))
     monkeypatch.setattr(ActionInputs, "get_verbose", staticmethod(lambda: False))
     cc = CustomChapters()
-    cc.from_yaml_array([
-        {"title": "New Features 🎉", "labels": "feature"},
-        {"title": "Silent Live 🤫", "catch-open-hierarchy": True},
-    ])
+    cc.from_yaml_array(
+        [
+            {"title": "New Features 🎉", "labels": "feature"},
+            {"title": "Silent Live 🤫", "catch-open-hierarchy": True},
+        ]
+    )
     record = hierarchy_record_stub("org/repo#H1", ["feature"], state="open")
     records = {"org/repo#H1": record}
     # Act
@@ -884,10 +937,12 @@ def test_catch_open_hierarchy_with_label_filter_match(hierarchy_record_stub, mon
     monkeypatch.setattr(ActionInputs, "get_hierarchy", staticmethod(lambda: True))
     monkeypatch.setattr(ActionInputs, "get_verbose", staticmethod(lambda: False))
     cc = CustomChapters()
-    cc.from_yaml_array([
-        {"title": "New Features 🎉", "labels": "feature"},
-        {"title": "Silent Live 🤫", "catch-open-hierarchy": True, "labels": "feature"},
-    ])
+    cc.from_yaml_array(
+        [
+            {"title": "New Features 🎉", "labels": "feature"},
+            {"title": "Silent Live 🤫", "catch-open-hierarchy": True, "labels": "feature"},
+        ]
+    )
     record = hierarchy_record_stub("org/repo#H2", ["feature"], state="open")
     records = {"org/repo#H2": record}
     cc.populate(records)
@@ -900,10 +955,12 @@ def test_catch_open_hierarchy_with_label_filter_no_match(hierarchy_record_stub, 
     monkeypatch.setattr(ActionInputs, "get_hierarchy", staticmethod(lambda: True))
     monkeypatch.setattr(ActionInputs, "get_verbose", staticmethod(lambda: False))
     cc = CustomChapters()
-    cc.from_yaml_array([
-        {"title": "New Features 🎉", "labels": "feature"},
-        {"title": "Silent Live 🤫", "catch-open-hierarchy": True, "labels": "epic"},
-    ])
+    cc.from_yaml_array(
+        [
+            {"title": "New Features 🎉", "labels": "feature"},
+            {"title": "Silent Live 🤫", "catch-open-hierarchy": True, "labels": "epic"},
+        ]
+    )
     record = hierarchy_record_stub("org/repo#H3", ["feature"], state="open")
     records = {"org/repo#H3": record}
     cc.populate(records)
@@ -916,10 +973,12 @@ def test_catch_open_hierarchy_closed_parent_not_intercepted(hierarchy_record_stu
     monkeypatch.setattr(ActionInputs, "get_hierarchy", staticmethod(lambda: True))
     monkeypatch.setattr(ActionInputs, "get_verbose", staticmethod(lambda: False))
     cc = CustomChapters()
-    cc.from_yaml_array([
-        {"title": "New Features 🎉", "labels": "feature"},
-        {"title": "Silent Live 🤫", "catch-open-hierarchy": True},
-    ])
+    cc.from_yaml_array(
+        [
+            {"title": "New Features 🎉", "labels": "feature"},
+            {"title": "Silent Live 🤫", "catch-open-hierarchy": True},
+        ]
+    )
     record = hierarchy_record_stub("org/repo#H4", ["feature"], state="closed")
     records = {"org/repo#H4": record}
     cc.populate(records)
@@ -933,10 +992,12 @@ def test_catch_open_hierarchy_disabled_hierarchy_noop(hierarchy_record_stub, mon
     monkeypatch.setattr(ActionInputs, "get_verbose", staticmethod(lambda: False))
     caplog.set_level("WARNING")
     cc = CustomChapters()
-    cc.from_yaml_array([
-        {"title": "New Features 🎉", "labels": "feature"},
-        {"title": "Silent Live 🤫", "catch-open-hierarchy": True},
-    ])
+    cc.from_yaml_array(
+        [
+            {"title": "New Features 🎉", "labels": "feature"},
+            {"title": "Silent Live 🤫", "catch-open-hierarchy": True},
+        ]
+    )
     record = hierarchy_record_stub("org/repo#H5", ["feature"], state="open")
     records = {"org/repo#H5": record}
     cc.populate(records)
@@ -950,10 +1011,12 @@ def test_catch_open_hierarchy_duplicate_warning(caplog):
     """AC-6: Two catch-open-hierarchy chapters → only first used, warning logged."""
     caplog.set_level("WARNING", logger="release_notes_generator.chapters.custom_chapters")
     cc = CustomChapters()
-    cc.from_yaml_array([
-        {"title": "Silent Live 🤫", "catch-open-hierarchy": True},
-        {"title": "Also Silent 🤫", "catch-open-hierarchy": True, "labels": "bug"},
-    ])
+    cc.from_yaml_array(
+        [
+            {"title": "Silent Live 🤫", "catch-open-hierarchy": True},
+            {"title": "Also Silent 🤫", "catch-open-hierarchy": True, "labels": "bug"},
+        ]
+    )
     # First chapter has it
     assert cc.chapters["Silent Live 🤫"].catch_open_hierarchy is True
     # Second chapter has it disabled due to duplicate
@@ -964,9 +1027,11 @@ def test_catch_open_hierarchy_duplicate_warning(caplog):
 def test_catch_open_hierarchy_no_labels_chapter_created():
     """catch-open-hierarchy chapter without labels is created with empty label list."""
     cc = CustomChapters()
-    cc.from_yaml_array([
-        {"title": "Silent Live 🤫", "catch-open-hierarchy": True},
-    ])
+    cc.from_yaml_array(
+        [
+            {"title": "Silent Live 🤫", "catch-open-hierarchy": True},
+        ]
+    )
     assert "Silent Live 🤫" in cc.chapters
     assert cc.chapters["Silent Live 🤫"].labels == []
     assert cc.chapters["Silent Live 🤫"].catch_open_hierarchy is True
@@ -977,10 +1042,12 @@ def test_catch_open_hierarchy_with_hidden(hierarchy_record_stub, monkeypatch):
     monkeypatch.setattr(ActionInputs, "get_hierarchy", staticmethod(lambda: True))
     monkeypatch.setattr(ActionInputs, "get_verbose", staticmethod(lambda: False))
     cc = CustomChapters()
-    cc.from_yaml_array([
-        {"title": "New Features 🎉", "labels": "feature"},
-        {"title": "Silent Live 🤫", "catch-open-hierarchy": True, "hidden": True},
-    ])
+    cc.from_yaml_array(
+        [
+            {"title": "New Features 🎉", "labels": "feature"},
+            {"title": "Silent Live 🤫", "catch-open-hierarchy": True, "hidden": True},
+        ]
+    )
     record = hierarchy_record_stub("org/repo#H6", ["feature"], state="open")
     records = {"org/repo#H6": record}
     cc.populate(records)
@@ -997,10 +1064,12 @@ def test_catch_open_hierarchy_non_hierarchy_record_not_intercepted(record_stub, 
     monkeypatch.setattr(ActionInputs, "get_hierarchy", staticmethod(lambda: True))
     monkeypatch.setattr(ActionInputs, "get_verbose", staticmethod(lambda: False))
     cc = CustomChapters()
-    cc.from_yaml_array([
-        {"title": "New Features 🎉", "labels": "feature"},
-        {"title": "Silent Live 🤫", "catch-open-hierarchy": True},
-    ])
+    cc.from_yaml_array(
+        [
+            {"title": "New Features 🎉", "labels": "feature"},
+            {"title": "Silent Live 🤫", "catch-open-hierarchy": True},
+        ]
+    )
     record = record_stub("org/repo#R1", ["feature"])
     records = {"org/repo#R1": record}
     cc.populate(records)
@@ -1035,7 +1104,9 @@ def test_from_yaml_array_catch_open_hierarchy_validation(coh_value, expected, sh
     if should_warn:
         assert any("catch-open-hierarchy" in r.message for r in caplog.records)
     else:
-        assert not any("catch-open-hierarchy" in r.message.lower() and "invalid" in r.message.lower() for r in caplog.records)
+        assert not any(
+            "catch-open-hierarchy" in r.message.lower() and "invalid" in r.message.lower() for r in caplog.records
+        )
 
 
 def test_catch_open_hierarchy_merge_path_adopts_flag(hierarchy_record_stub, monkeypatch):
@@ -1044,10 +1115,12 @@ def test_catch_open_hierarchy_merge_path_adopts_flag(hierarchy_record_stub, monk
     monkeypatch.setattr(ActionInputs, "get_hierarchy", staticmethod(lambda: True))
     monkeypatch.setattr(ActionInputs, "get_verbose", staticmethod(lambda: False))
     cc = CustomChapters()
-    cc.from_yaml_array([
-        {"title": "Silent Live 🤫", "labels": "bug"},                       # first: no COH
-        {"title": "Silent Live 🤫", "catch-open-hierarchy": True},           # second: adds COH
-    ])
+    cc.from_yaml_array(
+        [
+            {"title": "Silent Live 🤫", "labels": "bug"},  # first: no COH
+            {"title": "Silent Live 🤫", "catch-open-hierarchy": True},  # second: adds COH
+        ]
+    )
     assert cc.chapters["Silent Live 🤫"].catch_open_hierarchy is True
 
     record = hierarchy_record_stub("org/repo#M1", ["bug"], state="open")
@@ -1061,10 +1134,12 @@ def test_catch_open_hierarchy_no_labels_record_captured(hierarchy_record_stub, m
     monkeypatch.setattr(ActionInputs, "get_hierarchy", staticmethod(lambda: True))
     monkeypatch.setattr(ActionInputs, "get_verbose", staticmethod(lambda: False))
     cc = CustomChapters()
-    cc.from_yaml_array([
-        {"title": "New Features 🎉", "labels": "feature"},
-        {"title": "Silent Live 🤫", "catch-open-hierarchy": True},   # no label filter
-    ])
+    cc.from_yaml_array(
+        [
+            {"title": "New Features 🎉", "labels": "feature"},
+            {"title": "Silent Live 🤫", "catch-open-hierarchy": True},  # no label filter
+        ]
+    )
     record = hierarchy_record_stub("org/repo#N1", [], state="open")  # deliberately no labels
     cc.populate({"org/repo#N1": record})
     assert "org/repo#N1" in cc.chapters["Silent Live 🤫"].rows
@@ -1076,9 +1151,11 @@ def test_catch_open_hierarchy_visible_increments_chapter_presence(hierarchy_reco
     monkeypatch.setattr(ActionInputs, "get_hierarchy", staticmethod(lambda: True))
     monkeypatch.setattr(ActionInputs, "get_verbose", staticmethod(lambda: False))
     cc = CustomChapters()
-    cc.from_yaml_array([
-        {"title": "Silent Live 🤫", "catch-open-hierarchy": True},
-    ])
+    cc.from_yaml_array(
+        [
+            {"title": "Silent Live 🤫", "catch-open-hierarchy": True},
+        ]
+    )
     record = hierarchy_record_stub("org/repo#P1", ["feature"], state="open")
     cc.populate({"org/repo#P1": record})
     assert record.chapter_presence_count() == 1
@@ -1089,9 +1166,11 @@ def test_catch_open_hierarchy_hidden_does_not_increment_chapter_presence(hierarc
     monkeypatch.setattr(ActionInputs, "get_hierarchy", staticmethod(lambda: True))
     monkeypatch.setattr(ActionInputs, "get_verbose", staticmethod(lambda: False))
     cc = CustomChapters()
-    cc.from_yaml_array([
-        {"title": "Silent Live 🤫", "catch-open-hierarchy": True, "hidden": True},
-    ])
+    cc.from_yaml_array(
+        [
+            {"title": "Silent Live 🤫", "catch-open-hierarchy": True, "hidden": True},
+        ]
+    )
     record = hierarchy_record_stub("org/repo#P2", ["feature"], state="open")
     cc.populate({"org/repo#P2": record})
     assert "org/repo#P2" in cc.chapters["Silent Live 🤫"].rows
@@ -1105,10 +1184,12 @@ def test_catch_open_hierarchy_skipped_chapter_does_not_consume_coh_slot(caplog, 
     monkeypatch.setattr(ActionInputs, "get_hierarchy", staticmethod(lambda: True))
     monkeypatch.setattr(ActionInputs, "get_verbose", staticmethod(lambda: False))
     cc = CustomChapters()
-    cc.from_yaml_array([
-        {"title": "Broken COH", "catch-open-hierarchy": True, "labels": "   "},  # empty → skipped
-        {"title": "Real Silent Live", "catch-open-hierarchy": True},              # should succeed
-    ])
+    cc.from_yaml_array(
+        [
+            {"title": "Broken COH", "catch-open-hierarchy": True, "labels": "   "},  # empty → skipped
+            {"title": "Real Silent Live", "catch-open-hierarchy": True},  # should succeed
+        ]
+    )
     # Skipped chapter not created
     assert "Broken COH" not in cc.chapters
     # Valid second COH chapter created normally
@@ -1125,10 +1206,12 @@ def test_catch_open_hierarchy_same_title_repeat_no_warning(caplog):
     must produce one chapter with the flag set and all labels merged."""
     caplog.set_level("WARNING", logger="release_notes_generator.chapters.custom_chapters")
     cc = CustomChapters()
-    cc.from_yaml_array([
-        {"title": "Silent Live 🤫", "catch-open-hierarchy": True, "labels": "feature"},
-        {"title": "Silent Live 🤫", "catch-open-hierarchy": True, "labels": "epic"},
-    ])
+    cc.from_yaml_array(
+        [
+            {"title": "Silent Live 🤫", "catch-open-hierarchy": True, "labels": "feature"},
+            {"title": "Silent Live 🤫", "catch-open-hierarchy": True, "labels": "epic"},
+        ]
+    )
     assert "Silent Live 🤫" in cc.chapters
     assert cc.chapters["Silent Live 🤫"].catch_open_hierarchy is True
     assert cc.chapters["Silent Live 🤫"].labels == ["feature", "epic"]
@@ -1150,10 +1233,12 @@ def test_coh_chapter_not_populated_via_label_routing(hierarchy_record_stub, monk
     monkeypatch.setattr(ActionInputs, "get_hierarchy", staticmethod(lambda: True))
     monkeypatch.setattr(ActionInputs, "get_verbose", staticmethod(lambda: False))
     cc = CustomChapters()
-    cc.from_yaml_array([
-        {"title": "Silent Live 🤫", "catch-open-hierarchy": True, "labels": "feature"},
-        {"title": "New Features 🎉", "labels": "feature"},
-    ])
+    cc.from_yaml_array(
+        [
+            {"title": "Silent Live 🤫", "catch-open-hierarchy": True, "labels": "feature"},
+            {"title": "New Features 🎉", "labels": "feature"},
+        ]
+    )
 
     # Closed hierarchy parent with matching label → must go to normal chapter, not COH
     closed_parent = hierarchy_record_stub("org/repo#C1", ["feature"], state="closed")
@@ -1166,4 +1251,3 @@ def test_coh_chapter_not_populated_via_label_routing(hierarchy_record_stub, monk
     assert "org/repo#C1" in cc.chapters["New Features 🎉"].rows
     assert "org/repo#O1" in cc.chapters["Silent Live 🤫"].rows
     assert "org/repo#O1" not in cc.chapters["New Features 🎉"].rows
-

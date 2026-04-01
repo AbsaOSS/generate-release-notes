@@ -31,7 +31,6 @@ from release_notes_generator.model.record.pull_request_record import PullRequest
 from release_notes_generator.record.factory.default_record_factory import DefaultRecordFactory
 from tests.unit.conftest import mock_safe_call_decorator
 
-
 # generate - non hierarchy issue records
 
 
@@ -166,15 +165,20 @@ def setup_issues_pulls_commits(mocker, mock_repo):
 
     return mock_git_issue1, mock_git_issue2, mock_git_pr1, mock_git_pr2, mock_git_commit1, mock_git_commit2
 
+
 def mock_get_issues_for_pr(pull_number: int) -> list[str]:
     if pull_number == 101:
-        return ['org/repo#1']
+        return ["org/repo#1"]
     elif pull_number == 102:
-        return ['org/repo#2']
+        return ["org/repo#2"]
     return []
 
+
 def test_generate_with_issues_and_pulls_and_commits(mocker, mock_repo):
-    mocker.patch("release_notes_generator.record.factory.default_record_factory.safe_call_decorator", side_effect=mock_safe_call_decorator)
+    mocker.patch(
+        "release_notes_generator.record.factory.default_record_factory.safe_call_decorator",
+        side_effect=mock_safe_call_decorator,
+    )
     mock_github_client = mocker.Mock(spec=Github)
     issue1, _issue2, pr1, _pr2, commit1, commit2 = setup_issues_pulls_commits(mocker, mock_repo)
 
@@ -196,23 +200,30 @@ def test_generate_with_issues_and_pulls_and_commits(mocker, mock_repo):
     # Check if records for issues and PRs were created
     assert len(records) == 3
 
-    assert 'org/repo#1' in records
-    assert not records['org/repo#1'].skip
+    assert "org/repo#1" in records
+    assert not records["org/repo#1"].skip
 
     # Verify the record creation
-    assert records['org/repo#1'].__class__ is IssueRecord
-    rec_i1 = cast(IssueRecord, records['org/repo#1'])
+    assert records["org/repo#1"].__class__ is IssueRecord
+    rec_i1 = cast(IssueRecord, records["org/repo#1"])
 
     # Verify that PRs are registered
     assert 1 == rec_i1.pull_requests_count()
     assert pr1 == rec_i1.get_pull_request(101)
 
     # Verify that commits are registered
-    assert commit1 == rec_i1.get_commit(101, 'abc123')
+    assert commit1 == rec_i1.get_commit(101, "abc123")
+
 
 def test_generate_with_issues_and_pulls_and_commits_with_skip_labels(mocker, mock_repo):
-    mocker.patch("release_notes_generator.record.factory.default_record_factory.ActionInputs.get_skip_release_notes_labels", return_value=["skip-release-notes"])
-    mocker.patch("release_notes_generator.record.factory.default_record_factory.safe_call_decorator", side_effect=mock_safe_call_decorator)
+    mocker.patch(
+        "release_notes_generator.record.factory.default_record_factory.ActionInputs.get_skip_release_notes_labels",
+        return_value=["skip-release-notes"],
+    )
+    mocker.patch(
+        "release_notes_generator.record.factory.default_record_factory.safe_call_decorator",
+        side_effect=mock_safe_call_decorator,
+    )
     mock_github_client = mocker.Mock(spec=Github)
     issue1, issue2, pr1, pr2, commit1, commit2 = setup_issues_pulls_commits(mocker, mock_repo)
 
@@ -236,20 +247,22 @@ def test_generate_with_issues_and_pulls_and_commits_with_skip_labels(mocker, moc
     # Check if records for issues and PRs were created
     assert len(records) == 3
 
-    assert 'org/repo#1' in records
-    assert 'org/repo#2' in records
-    assert 'ghi789' in records
+    assert "org/repo#1" in records
+    assert "org/repo#2" in records
+    assert "ghi789" in records
 
     # Verify the record creation
-    assert isinstance(records['org/repo#1'], IssueRecord)
-    assert isinstance(records['org/repo#2'], IssueRecord)
-    assert isinstance(records['ghi789'], CommitRecord)
+    assert isinstance(records["org/repo#1"], IssueRecord)
+    assert isinstance(records["org/repo#2"], IssueRecord)
+    assert isinstance(records["ghi789"], CommitRecord)
 
-    assert records['org/repo#1'].skip      # skip label applied to issue as the record was created from issue
-    assert not records['org/repo#2'].skip  # skip label is present only on inner PR but record create from issues (leading)
+    assert records["org/repo#1"].skip  # skip label applied to issue as the record was created from issue
+    assert not records[
+        "org/repo#2"
+    ].skip  # skip label is present only on inner PR but record create from issues (leading)
 
-    rec_i1 = cast(IssueRecord, records['org/repo#1'])
-    rec_i2 = cast(IssueRecord, records['org/repo#2'])
+    rec_i1 = cast(IssueRecord, records["org/repo#1"])
+    rec_i2 = cast(IssueRecord, records["org/repo#2"])
 
     # Verify that PRs are registered
     assert 1 == rec_i1.pull_requests_count()
@@ -259,9 +272,9 @@ def test_generate_with_issues_and_pulls_and_commits_with_skip_labels(mocker, moc
     assert pr2 == rec_i2.get_pull_request(102)
 
     # Verify that commits are registered
-    assert commit1 == rec_i1.get_commit(101, 'abc123')
-    assert commit2 == rec_i2.get_commit(102, 'def456')
-    assert commit3 == cast(CommitRecord, records['ghi789']).commit
+    assert commit1 == rec_i1.get_commit(101, "abc123")
+    assert commit2 == rec_i2.get_commit(102, "def456")
+    assert commit3 == cast(CommitRecord, records["ghi789"]).commit
 
 
 def test_generate_with_no_commits(mocker, mock_repo):
@@ -279,23 +292,26 @@ def test_generate_with_no_commits(mocker, mock_repo):
     mock_repo.get_issue.return_value = issue2
 
     data.commits = {}  # No commits
-    mocker.patch("release_notes_generator.record.factory.default_record_factory.get_issues_for_pr", return_value={'org/repo#2'})
+    mocker.patch(
+        "release_notes_generator.record.factory.default_record_factory.get_issues_for_pr", return_value={"org/repo#2"}
+    )
     records = DefaultRecordFactory(mock_github_client, mock_repo).generate(data)
 
     assert 2 == len(records)
 
     # Verify the record creation
-    assert isinstance(records['org/repo#1'], IssueRecord)
-    assert isinstance(records['org/repo#2'], IssueRecord)
+    assert isinstance(records["org/repo#1"], IssueRecord)
+    assert isinstance(records["org/repo#2"], IssueRecord)
 
-    rec_issue1 = cast(IssueRecord,records['org/repo#1'])
-    rec_issue2 = cast(IssueRecord,records['org/repo#2'])
+    rec_issue1 = cast(IssueRecord, records["org/repo#1"])
+    rec_issue2 = cast(IssueRecord, records["org/repo#2"])
 
     # Verify that PRs are registered
     assert 1 == rec_issue1.pull_requests_count()
     assert 1 == rec_issue2.pull_requests_count()
 
     assert pr1 == rec_issue2.get_pull_request(101)
+
 
 def test_generate_with_no_commits_with_wrong_issue_number_in_pull_body_mention(mocker, mock_repo):
     mock_github_client = mocker.Mock(spec=Github)
@@ -313,17 +329,19 @@ def test_generate_with_no_commits_with_wrong_issue_number_in_pull_body_mention(m
     mock_repo.get_issue.return_value = issue2
 
     data.commits = {}  # No commits
-    mocker.patch("release_notes_generator.record.factory.default_record_factory.get_issues_for_pr", return_value={'org/repo#2'})
+    mocker.patch(
+        "release_notes_generator.record.factory.default_record_factory.get_issues_for_pr", return_value={"org/repo#2"}
+    )
     records = DefaultRecordFactory(mock_github_client, mock_repo).generate(data)
 
     assert 2 == len(records)
 
     # Verify the record creation
-    assert isinstance(records['org/repo#1'], IssueRecord)
-    assert isinstance(records['org/repo#2'], IssueRecord)
+    assert isinstance(records["org/repo#1"], IssueRecord)
+    assert isinstance(records["org/repo#2"], IssueRecord)
 
-    rec_issue1 = cast(IssueRecord, records['org/repo#1'])
-    rec_issue2 = cast(IssueRecord, records['org/repo#2'])
+    rec_issue1 = cast(IssueRecord, records["org/repo#1"])
+    rec_issue2 = cast(IssueRecord, records["org/repo#2"])
 
     # Verify that PRs are registered
     assert 0 == rec_issue1.pull_requests_count()
@@ -331,19 +349,25 @@ def test_generate_with_no_commits_with_wrong_issue_number_in_pull_body_mention(m
 
     assert pr1 == rec_issue2.get_pull_request(101)
 
+
 def mock_safe_call_decorator_no_issues(_rate_limiter):
     def wrapper(fn):
         if getattr(fn, "__name__", None) == "get_issues_for_pr":
             return mock_get_issues_for_pr_no_issues
         return fn
+
     return wrapper
+
 
 def mock_get_issues_for_pr_no_issues(pull_number: int, requester: Requester) -> list[str]:
     return []
 
 
 def test_generate_with_no_issues(mocker, mock_repo, request):
-    mocker.patch("release_notes_generator.record.factory.default_record_factory.safe_call_decorator", side_effect=mock_safe_call_decorator_no_issues)
+    mocker.patch(
+        "release_notes_generator.record.factory.default_record_factory.safe_call_decorator",
+        side_effect=mock_safe_call_decorator_no_issues,
+    )
     mock_github_client = mocker.Mock(spec=Github)
     data = MinedData(mock_repo)
     pr1, pr2, commit1, commit2 = setup_no_issues_pulls_commits(mocker)
@@ -356,11 +380,11 @@ def test_generate_with_no_issues(mocker, mock_repo, request):
     # Verify the record creation
     assert 2 == len(records)
 
-    assert isinstance(records['org/repo#101'], PullRequestRecord)
-    assert isinstance(records['org/repo#102'], PullRequestRecord)
+    assert isinstance(records["org/repo#101"], PullRequestRecord)
+    assert isinstance(records["org/repo#102"], PullRequestRecord)
 
-    rec_pr1 = cast(PullRequestRecord, records['org/repo#101'])
-    rec_pr2 = cast(PullRequestRecord, records['org/repo#102'])
+    rec_pr1 = cast(PullRequestRecord, records["org/repo#101"])
+    rec_pr2 = cast(PullRequestRecord, records["org/repo#102"])
 
     # Verify that PRs are registered
     assert pr1 == rec_pr1.pull_request
@@ -369,12 +393,19 @@ def test_generate_with_no_issues(mocker, mock_repo, request):
     # Verify that commits are registered
     assert 1 == rec_pr1.commits_count()
     assert 1 == rec_pr2.commits_count()
-    assert commit1 == rec_pr1.get_commit('abc123')
-    assert commit2 == rec_pr2.get_commit('def456')
+    assert commit1 == rec_pr1.get_commit("abc123")
+    assert commit2 == rec_pr2.get_commit("def456")
+
 
 def test_generate_with_no_issues_skip_labels(mocker, mock_repo, request):
-    mocker.patch("release_notes_generator.record.factory.default_record_factory.ActionInputs.get_skip_release_notes_labels", return_value=["skip-release-notes", "another-skip-label"])
-    mocker.patch("release_notes_generator.record.factory.default_record_factory.safe_call_decorator", side_effect=mock_safe_call_decorator_no_issues)
+    mocker.patch(
+        "release_notes_generator.record.factory.default_record_factory.ActionInputs.get_skip_release_notes_labels",
+        return_value=["skip-release-notes", "another-skip-label"],
+    )
+    mocker.patch(
+        "release_notes_generator.record.factory.default_record_factory.safe_call_decorator",
+        side_effect=mock_safe_call_decorator_no_issues,
+    )
     mock_github_client = mocker.Mock(spec=Github)
     data = MinedData(mock_repo)
     pr1, pr2, commit1, commit2 = setup_no_issues_pulls_commits(mocker)
@@ -397,21 +428,21 @@ def test_generate_with_no_issues_skip_labels(mocker, mock_repo, request):
     # Verify the record creation
     assert 2 == len(records)
 
-    assert isinstance(records['org/repo#101'], PullRequestRecord)
-    assert isinstance(records['org/repo#102'], PullRequestRecord)
+    assert isinstance(records["org/repo#101"], PullRequestRecord)
+    assert isinstance(records["org/repo#102"], PullRequestRecord)
 
-    assert records['org/repo#101'].skip
-    assert records['org/repo#102'].skip
+    assert records["org/repo#101"].skip
+    assert records["org/repo#102"].skip
 
-    rec_pr1 = cast(PullRequestRecord, records['org/repo#101'])
-    rec_pr2 = cast(PullRequestRecord, records['org/repo#102'])
+    rec_pr1 = cast(PullRequestRecord, records["org/repo#101"])
+    rec_pr2 = cast(PullRequestRecord, records["org/repo#102"])
 
     # Verify that PRs are registered
     assert 1 == rec_pr1.commits_count()
     assert 1 == rec_pr2.commits_count()
 
-    assert commit1 == rec_pr1.get_commit('abc123')
-    assert commit2 == rec_pr2.get_commit('def456')
+    assert commit1 == rec_pr1.get_commit("abc123")
+    assert commit2 == rec_pr2.get_commit("def456")
 
 
 def test_generate_with_no_pulls(mocker, mock_repo):
@@ -425,12 +456,12 @@ def test_generate_with_no_pulls(mocker, mock_repo):
 
     # Verify the record creation
     assert 2 == len(records)
-    assert isinstance(records['org/repo#1'], IssueRecord)
-    assert isinstance(records['org/repo#2'], IssueRecord)
+    assert isinstance(records["org/repo#1"], IssueRecord)
+    assert isinstance(records["org/repo#2"], IssueRecord)
 
     # Verify that PRs are registered
-    assert 0 == cast(IssueRecord, records['org/repo#1']).pull_requests_count()
-    assert 0 == cast(IssueRecord, records['org/repo#2']).pull_requests_count()
+    assert 0 == cast(IssueRecord, records["org/repo#1"]).pull_requests_count()
+    assert 0 == cast(IssueRecord, records["org/repo#2"]).pull_requests_count()
 
 
 def mock_get_issues_for_pr_with_wrong_issue_number(pull_number: int) -> list[int]:
@@ -453,6 +484,7 @@ def test_generate_no_input_data(mocker, mock_repo):
 
     assert 0 == len(result.values())
 
+
 #   - single issue record (closed)
 #   - single hierarchy issue record - two sub-issues without PRs
 #   - single hierarchy issue record - two sub-issues with PRs - no commits
@@ -460,9 +492,13 @@ def test_generate_no_input_data(mocker, mock_repo):
 #   - single hierarchy issue record - one sub hierarchy issues - two sub-issues with PRs - with commits
 #   - single pull request record (closed, merged)
 #   - single direct commit record
-def test_generate_isolated_record_types_no_labels_no_type_defined(mocker, mock_repo,
-                                                                  mined_data_isolated_record_types_no_labels_no_type_defined):
-    mocker.patch("release_notes_generator.record.factory.default_record_factory.safe_call_decorator", side_effect=mock_safe_call_decorator)
+def test_generate_isolated_record_types_no_labels_no_type_defined(
+    mocker, mock_repo, mined_data_isolated_record_types_no_labels_no_type_defined
+):
+    mocker.patch(
+        "release_notes_generator.record.factory.default_record_factory.safe_call_decorator",
+        side_effect=mock_safe_call_decorator,
+    )
     mock_github_client = mocker.Mock(spec=Github)
 
     mock_rate_limit = mocker.Mock()
@@ -475,52 +511,70 @@ def test_generate_isolated_record_types_no_labels_no_type_defined(mocker, mock_r
     result = factory.generate(mined_data_isolated_record_types_no_labels_no_type_defined)
 
     assert 8 == len(result)
-    assert {'org/repo#121', 'org/repo#301', 'org/repo#302', 'org/repo#303', 'org/repo#304', 'org/repo#123', 'org/repo#124', "merge_commit_sha_direct"}.issubset(result.keys())
+    assert {
+        "org/repo#121",
+        "org/repo#301",
+        "org/repo#302",
+        "org/repo#303",
+        "org/repo#304",
+        "org/repo#123",
+        "org/repo#124",
+        "merge_commit_sha_direct",
+    }.issubset(result.keys())
 
-    assert isinstance(result['org/repo#121'], IssueRecord)
-    assert isinstance(result['org/repo#301'], HierarchyIssueRecord)
-    assert isinstance(result['org/repo#302'], HierarchyIssueRecord)
-    assert isinstance(result['org/repo#303'], HierarchyIssueRecord)
-    assert isinstance(result['org/repo#304'], HierarchyIssueRecord)
-    assert isinstance(result['org/repo#123'], PullRequestRecord)
-    assert isinstance(result['org/repo#124'], PullRequestRecord)
+    assert isinstance(result["org/repo#121"], IssueRecord)
+    assert isinstance(result["org/repo#301"], HierarchyIssueRecord)
+    assert isinstance(result["org/repo#302"], HierarchyIssueRecord)
+    assert isinstance(result["org/repo#303"], HierarchyIssueRecord)
+    assert isinstance(result["org/repo#304"], HierarchyIssueRecord)
+    assert isinstance(result["org/repo#123"], PullRequestRecord)
+    assert isinstance(result["org/repo#124"], PullRequestRecord)
     assert isinstance(result["merge_commit_sha_direct"], CommitRecord)
 
-    rec_i = cast(IssueRecord, result['org/repo#121'])
+    rec_i = cast(IssueRecord, result["org/repo#121"])
     assert 0 == rec_i.pull_requests_count()
 
-    rec_hi_1 = cast(HierarchyIssueRecord, result['org/repo#301'])
+    rec_hi_1 = cast(HierarchyIssueRecord, result["org/repo#301"])
     assert 0 == rec_hi_1.pull_requests_count()
     assert 0 == len(rec_hi_1.sub_hierarchy_issues.values())
     assert 2 == len(rec_hi_1.sub_issues.values())
-    assert 0 == rec_hi_1.sub_issues['org/repo#450'].pull_requests_count()
+    assert 0 == rec_hi_1.sub_issues["org/repo#450"].pull_requests_count()
     assert 0 == rec_hi_1.level
 
-    rec_hi_2 = cast(HierarchyIssueRecord, result['org/repo#302'])
+    rec_hi_2 = cast(HierarchyIssueRecord, result["org/repo#302"])
     assert 1 == rec_hi_2.pull_requests_count()
     assert 0 == len(rec_hi_2.sub_hierarchy_issues.values())
     assert 2 == len(rec_hi_2.sub_issues.values())
-    assert 1 == rec_hi_2.sub_issues['org/repo#451'].pull_requests_count()
+    assert 1 == rec_hi_2.sub_issues["org/repo#451"].pull_requests_count()
     assert 0 == rec_hi_2.level
 
-    rec_hi_3 = cast(HierarchyIssueRecord, result['org/repo#303'])
+    rec_hi_3 = cast(HierarchyIssueRecord, result["org/repo#303"])
     assert 1 == rec_hi_3.pull_requests_count()
     assert 0 == len(rec_hi_3.sub_hierarchy_issues.values())
     assert 2 == len(rec_hi_3.sub_issues.values())
-    assert 1 == rec_hi_3.sub_issues['org/repo#452'].pull_requests_count()
-    assert "Fixed bug in PR 151" == rec_hi_3.sub_issues['org/repo#452'].get_commit(151, "merge_commit_sha_151").commit.message
+    assert 1 == rec_hi_3.sub_issues["org/repo#452"].pull_requests_count()
+    assert (
+        "Fixed bug in PR 151"
+        == rec_hi_3.sub_issues["org/repo#452"].get_commit(151, "merge_commit_sha_151").commit.message
+    )
     assert 0 == rec_hi_3.level
 
-    rec_hi_4 = cast(HierarchyIssueRecord, result['org/repo#304'])
+    rec_hi_4 = cast(HierarchyIssueRecord, result["org/repo#304"])
     assert 1 == rec_hi_4.pull_requests_count()
     assert 1 == len(rec_hi_4.sub_hierarchy_issues.values())
     assert 0 == len(rec_hi_4.sub_issues.values())
     assert 1 == rec_hi_4.pull_requests_count()
-    assert "Fixed bug in PR 152" == rec_hi_4.sub_hierarchy_issues['org/repo#350'].sub_issues['org/repo#453'].get_commit(152, "merge_commit_sha_152").commit.message
+    assert (
+        "Fixed bug in PR 152"
+        == rec_hi_4.sub_hierarchy_issues["org/repo#350"]
+        .sub_issues["org/repo#453"]
+        .get_commit(152, "merge_commit_sha_152")
+        .commit.message
+    )
     assert 0 == rec_hi_4.level
 
-    rec_hi_5 = cast(HierarchyIssueRecord, result['org/repo#304'])
-    assert 1 == rec_hi_5.sub_hierarchy_issues['org/repo#350'].level
+    rec_hi_5 = cast(HierarchyIssueRecord, result["org/repo#304"])
+    assert 1 == rec_hi_5.sub_hierarchy_issues["org/repo#350"].level
 
 
 #   - single issue record (closed)
@@ -530,9 +584,13 @@ def test_generate_isolated_record_types_no_labels_no_type_defined(mocker, mock_r
 #   - single hierarchy issue record - one sub hierarchy issues - two sub-issues with PRs - with commits
 #   - single pull request record (closed, merged)
 #   - single direct commit record
-def test_generate_isolated_record_types_with_labels_no_type_defined(mocker, mock_repo,
-                                                                    mined_data_isolated_record_types_with_labels_no_type_defined):
-    mocker.patch("release_notes_generator.record.factory.default_record_factory.safe_call_decorator", side_effect=mock_safe_call_decorator)
+def test_generate_isolated_record_types_with_labels_no_type_defined(
+    mocker, mock_repo, mined_data_isolated_record_types_with_labels_no_type_defined
+):
+    mocker.patch(
+        "release_notes_generator.record.factory.default_record_factory.safe_call_decorator",
+        side_effect=mock_safe_call_decorator,
+    )
     mock_github_client = mocker.Mock(spec=Github)
 
     mock_rate_limit = mocker.Mock()
@@ -545,45 +603,63 @@ def test_generate_isolated_record_types_with_labels_no_type_defined(mocker, mock
     result = factory.generate(mined_data_isolated_record_types_with_labels_no_type_defined)
 
     assert 8 == len(result)
-    assert {'org/repo#121', 'org/repo#301', 'org/repo#302', 'org/repo#303', 'org/repo#304', 'org/repo#123', 'org/repo#124', "merge_commit_sha_direct"}.issubset(result.keys())
+    assert {
+        "org/repo#121",
+        "org/repo#301",
+        "org/repo#302",
+        "org/repo#303",
+        "org/repo#304",
+        "org/repo#123",
+        "org/repo#124",
+        "merge_commit_sha_direct",
+    }.issubset(result.keys())
 
-    assert isinstance(result['org/repo#121'], IssueRecord)
-    assert isinstance(result['org/repo#301'], HierarchyIssueRecord)
-    assert isinstance(result['org/repo#302'], HierarchyIssueRecord)
-    assert isinstance(result['org/repo#303'], HierarchyIssueRecord)
-    assert isinstance(result['org/repo#304'], HierarchyIssueRecord)
-    assert isinstance(result['org/repo#123'], PullRequestRecord)
-    assert isinstance(result['org/repo#124'], PullRequestRecord)
+    assert isinstance(result["org/repo#121"], IssueRecord)
+    assert isinstance(result["org/repo#301"], HierarchyIssueRecord)
+    assert isinstance(result["org/repo#302"], HierarchyIssueRecord)
+    assert isinstance(result["org/repo#303"], HierarchyIssueRecord)
+    assert isinstance(result["org/repo#304"], HierarchyIssueRecord)
+    assert isinstance(result["org/repo#123"], PullRequestRecord)
+    assert isinstance(result["org/repo#124"], PullRequestRecord)
     assert isinstance(result["merge_commit_sha_direct"], CommitRecord)
 
-    rec_i = cast(IssueRecord, result['org/repo#121'])
+    rec_i = cast(IssueRecord, result["org/repo#121"])
     assert 0 == rec_i.pull_requests_count()
 
-    rec_hi_1 = cast(HierarchyIssueRecord, result['org/repo#301'])
+    rec_hi_1 = cast(HierarchyIssueRecord, result["org/repo#301"])
     assert 0 == rec_hi_1.pull_requests_count()
     assert 0 == len(rec_hi_1.sub_hierarchy_issues.values())
     assert 2 == len(rec_hi_1.sub_issues.values())
-    assert 0 == rec_hi_1.sub_issues['org/repo#450'].pull_requests_count()
+    assert 0 == rec_hi_1.sub_issues["org/repo#450"].pull_requests_count()
 
-    rec_hi_2 = cast(HierarchyIssueRecord, result['org/repo#302'])
+    rec_hi_2 = cast(HierarchyIssueRecord, result["org/repo#302"])
     assert 1 == rec_hi_2.pull_requests_count()
     assert 0 == len(rec_hi_2.sub_hierarchy_issues.values())
     assert 2 == len(rec_hi_2.sub_issues.values())
-    assert 1 == rec_hi_2.sub_issues['org/repo#451'].pull_requests_count()
+    assert 1 == rec_hi_2.sub_issues["org/repo#451"].pull_requests_count()
 
-    rec_hi_3 = cast(HierarchyIssueRecord, result['org/repo#303'])
+    rec_hi_3 = cast(HierarchyIssueRecord, result["org/repo#303"])
     assert 1 == rec_hi_3.pull_requests_count()
     assert 0 == len(rec_hi_3.sub_hierarchy_issues.values())
     assert 2 == len(rec_hi_3.sub_issues.values())
-    assert 1 == rec_hi_3.sub_issues['org/repo#452'].pull_requests_count()
-    assert "Fixed bug in PR 151" == rec_hi_3.sub_issues['org/repo#452'].get_commit(151, "merge_commit_sha_151").commit.message
+    assert 1 == rec_hi_3.sub_issues["org/repo#452"].pull_requests_count()
+    assert (
+        "Fixed bug in PR 151"
+        == rec_hi_3.sub_issues["org/repo#452"].get_commit(151, "merge_commit_sha_151").commit.message
+    )
 
-    rec_hi_4 = cast(HierarchyIssueRecord, result['org/repo#304'])
+    rec_hi_4 = cast(HierarchyIssueRecord, result["org/repo#304"])
     assert 1 == rec_hi_4.pull_requests_count()
     assert 1 == len(rec_hi_4.sub_hierarchy_issues.values())
     assert 0 == len(rec_hi_4.sub_issues.values())
     assert 1 == rec_hi_4.pull_requests_count()
-    assert "Fixed bug in PR 152" == rec_hi_4.sub_hierarchy_issues['org/repo#350'].sub_issues['org/repo#453'].get_commit(152, "merge_commit_sha_152").commit.message
+    assert (
+        "Fixed bug in PR 152"
+        == rec_hi_4.sub_hierarchy_issues["org/repo#350"]
+        .sub_issues["org/repo#453"]
+        .get_commit(152, "merge_commit_sha_152")
+        .commit.message
+    )
 
 
 #   - single issue record (closed)
@@ -593,9 +669,13 @@ def test_generate_isolated_record_types_with_labels_no_type_defined(mocker, mock
 #   - single hierarchy issue record - one sub hierarchy issues - two sub-issues with PRs - with commits
 #   - single pull request record (closed, merged)
 #   - single direct commit record
-def test_generate_isolated_record_types_no_labels_with_type_defined(mocker, mock_repo,
-                                                                    mined_data_isolated_record_types_no_labels_with_type_defined):
-    mocker.patch("release_notes_generator.record.factory.default_record_factory.safe_call_decorator", side_effect=mock_safe_call_decorator)
+def test_generate_isolated_record_types_no_labels_with_type_defined(
+    mocker, mock_repo, mined_data_isolated_record_types_no_labels_with_type_defined
+):
+    mocker.patch(
+        "release_notes_generator.record.factory.default_record_factory.safe_call_decorator",
+        side_effect=mock_safe_call_decorator,
+    )
     mock_github_client = mocker.Mock(spec=Github)
 
     mock_rate_limit = mocker.Mock()
@@ -608,45 +688,63 @@ def test_generate_isolated_record_types_no_labels_with_type_defined(mocker, mock
     result = factory.generate(mined_data_isolated_record_types_no_labels_with_type_defined)
 
     assert 8 == len(result)
-    assert {'org/repo#121', 'org/repo#301', 'org/repo#302', 'org/repo#303', 'org/repo#304', 'org/repo#123', 'org/repo#124', "merge_commit_sha_direct"}.issubset(result.keys())
+    assert {
+        "org/repo#121",
+        "org/repo#301",
+        "org/repo#302",
+        "org/repo#303",
+        "org/repo#304",
+        "org/repo#123",
+        "org/repo#124",
+        "merge_commit_sha_direct",
+    }.issubset(result.keys())
 
-    assert isinstance(result['org/repo#121'], IssueRecord)
-    assert isinstance(result['org/repo#301'], HierarchyIssueRecord)
-    assert isinstance(result['org/repo#302'], HierarchyIssueRecord)
-    assert isinstance(result['org/repo#303'], HierarchyIssueRecord)
-    assert isinstance(result['org/repo#304'], HierarchyIssueRecord)
-    assert isinstance(result['org/repo#123'], PullRequestRecord)
-    assert isinstance(result['org/repo#124'], PullRequestRecord)
+    assert isinstance(result["org/repo#121"], IssueRecord)
+    assert isinstance(result["org/repo#301"], HierarchyIssueRecord)
+    assert isinstance(result["org/repo#302"], HierarchyIssueRecord)
+    assert isinstance(result["org/repo#303"], HierarchyIssueRecord)
+    assert isinstance(result["org/repo#304"], HierarchyIssueRecord)
+    assert isinstance(result["org/repo#123"], PullRequestRecord)
+    assert isinstance(result["org/repo#124"], PullRequestRecord)
     assert isinstance(result["merge_commit_sha_direct"], CommitRecord)
 
-    rec_i = cast(IssueRecord, result['org/repo#121'])
+    rec_i = cast(IssueRecord, result["org/repo#121"])
     assert 0 == rec_i.pull_requests_count()
 
-    rec_hi_1 = cast(HierarchyIssueRecord, result['org/repo#301'])
+    rec_hi_1 = cast(HierarchyIssueRecord, result["org/repo#301"])
     assert 0 == rec_hi_1.pull_requests_count()
     assert 0 == len(rec_hi_1.sub_hierarchy_issues.values())
     assert 2 == len(rec_hi_1.sub_issues.values())
-    assert 0 == rec_hi_1.sub_issues['org/repo#450'].pull_requests_count()
+    assert 0 == rec_hi_1.sub_issues["org/repo#450"].pull_requests_count()
 
-    rec_hi_2 = cast(HierarchyIssueRecord, result['org/repo#302'])
+    rec_hi_2 = cast(HierarchyIssueRecord, result["org/repo#302"])
     assert 1 == rec_hi_2.pull_requests_count()
     assert 0 == len(rec_hi_2.sub_hierarchy_issues.values())
     assert 2 == len(rec_hi_2.sub_issues.values())
-    assert 1 == rec_hi_2.sub_issues['org/repo#451'].pull_requests_count()
+    assert 1 == rec_hi_2.sub_issues["org/repo#451"].pull_requests_count()
 
-    rec_hi_3 = cast(HierarchyIssueRecord, result['org/repo#303'])
+    rec_hi_3 = cast(HierarchyIssueRecord, result["org/repo#303"])
     assert 1 == rec_hi_3.pull_requests_count()
     assert 0 == len(rec_hi_3.sub_hierarchy_issues.values())
     assert 2 == len(rec_hi_3.sub_issues.values())
-    assert 1 == rec_hi_3.sub_issues['org/repo#452'].pull_requests_count()
-    assert "Fixed bug in PR 151" == rec_hi_3.sub_issues['org/repo#452'].get_commit(151, "merge_commit_sha_151").commit.message
+    assert 1 == rec_hi_3.sub_issues["org/repo#452"].pull_requests_count()
+    assert (
+        "Fixed bug in PR 151"
+        == rec_hi_3.sub_issues["org/repo#452"].get_commit(151, "merge_commit_sha_151").commit.message
+    )
 
-    rec_hi_4 = cast(HierarchyIssueRecord, result['org/repo#304'])
+    rec_hi_4 = cast(HierarchyIssueRecord, result["org/repo#304"])
     assert 1 == rec_hi_4.pull_requests_count()
     assert 1 == len(rec_hi_4.sub_hierarchy_issues.values())
     assert 0 == len(rec_hi_4.sub_issues.values())
     assert 1 == rec_hi_4.pull_requests_count()
-    assert "Fixed bug in PR 152" == rec_hi_4.sub_hierarchy_issues['org/repo#350'].sub_issues['org/repo#453'].get_commit(152, "merge_commit_sha_152").commit.message
+    assert (
+        "Fixed bug in PR 152"
+        == rec_hi_4.sub_hierarchy_issues["org/repo#350"]
+        .sub_issues["org/repo#453"]
+        .get_commit(152, "merge_commit_sha_152")
+        .commit.message
+    )
 
 
 #   - single issue record (closed)
@@ -656,9 +754,13 @@ def test_generate_isolated_record_types_no_labels_with_type_defined(mocker, mock
 #   - single hierarchy issue record - one sub hierarchy issues - two sub-issues with PRs - with commits
 #   - single pull request record (closed, merged)
 #   - single direct commit record
-def test_generate_isolated_record_types_with_labels_with_type_defined(mocker, mock_repo,
-                                                                      mined_data_isolated_record_types_with_labels_with_type_defined):
-    mocker.patch("release_notes_generator.record.factory.default_record_factory.safe_call_decorator", side_effect=mock_safe_call_decorator)
+def test_generate_isolated_record_types_with_labels_with_type_defined(
+    mocker, mock_repo, mined_data_isolated_record_types_with_labels_with_type_defined
+):
+    mocker.patch(
+        "release_notes_generator.record.factory.default_record_factory.safe_call_decorator",
+        side_effect=mock_safe_call_decorator,
+    )
     mock_github_client = mocker.Mock(spec=Github)
 
     mock_rate_limit = mocker.Mock()
@@ -671,42 +773,60 @@ def test_generate_isolated_record_types_with_labels_with_type_defined(mocker, mo
     result = factory.generate(mined_data_isolated_record_types_with_labels_with_type_defined)
 
     assert 8 == len(result)
-    assert {'org/repo#121', 'org/repo#301', 'org/repo#302', 'org/repo#303', 'org/repo#304', 'org/repo#123', 'org/repo#124', "merge_commit_sha_direct"}.issubset(result.keys())
+    assert {
+        "org/repo#121",
+        "org/repo#301",
+        "org/repo#302",
+        "org/repo#303",
+        "org/repo#304",
+        "org/repo#123",
+        "org/repo#124",
+        "merge_commit_sha_direct",
+    }.issubset(result.keys())
 
-    assert isinstance(result['org/repo#121'], IssueRecord)
-    assert isinstance(result['org/repo#301'], HierarchyIssueRecord)
-    assert isinstance(result['org/repo#302'], HierarchyIssueRecord)
-    assert isinstance(result['org/repo#303'], HierarchyIssueRecord)
-    assert isinstance(result['org/repo#304'], HierarchyIssueRecord)
-    assert isinstance(result['org/repo#123'], PullRequestRecord)
-    assert isinstance(result['org/repo#124'], PullRequestRecord)
+    assert isinstance(result["org/repo#121"], IssueRecord)
+    assert isinstance(result["org/repo#301"], HierarchyIssueRecord)
+    assert isinstance(result["org/repo#302"], HierarchyIssueRecord)
+    assert isinstance(result["org/repo#303"], HierarchyIssueRecord)
+    assert isinstance(result["org/repo#304"], HierarchyIssueRecord)
+    assert isinstance(result["org/repo#123"], PullRequestRecord)
+    assert isinstance(result["org/repo#124"], PullRequestRecord)
     assert isinstance(result["merge_commit_sha_direct"], CommitRecord)
 
-    rec_i = cast(IssueRecord, result['org/repo#121'])
+    rec_i = cast(IssueRecord, result["org/repo#121"])
     assert 0 == rec_i.pull_requests_count()
 
-    rec_hi_1 = cast(HierarchyIssueRecord, result['org/repo#301'])
+    rec_hi_1 = cast(HierarchyIssueRecord, result["org/repo#301"])
     assert 0 == rec_hi_1.pull_requests_count()
     assert 0 == len(rec_hi_1.sub_hierarchy_issues.values())
     assert 2 == len(rec_hi_1.sub_issues.values())
-    assert 0 == rec_hi_1.sub_issues['org/repo#450'].pull_requests_count()
+    assert 0 == rec_hi_1.sub_issues["org/repo#450"].pull_requests_count()
 
-    rec_hi_2 = cast(HierarchyIssueRecord, result['org/repo#302'])
+    rec_hi_2 = cast(HierarchyIssueRecord, result["org/repo#302"])
     assert 1 == rec_hi_2.pull_requests_count()
     assert 0 == len(rec_hi_2.sub_hierarchy_issues.values())
     assert 2 == len(rec_hi_2.sub_issues.values())
-    assert 1 == rec_hi_2.sub_issues['org/repo#451'].pull_requests_count()
+    assert 1 == rec_hi_2.sub_issues["org/repo#451"].pull_requests_count()
 
-    rec_hi_3 = cast(HierarchyIssueRecord, result['org/repo#303'])
+    rec_hi_3 = cast(HierarchyIssueRecord, result["org/repo#303"])
     assert 1 == rec_hi_3.pull_requests_count()
     assert 0 == len(rec_hi_3.sub_hierarchy_issues.values())
     assert 2 == len(rec_hi_3.sub_issues.values())
-    assert 1 == rec_hi_3.sub_issues['org/repo#452'].pull_requests_count()
-    assert "Fixed bug in PR 151" == rec_hi_3.sub_issues['org/repo#452'].get_commit(151, "merge_commit_sha_151").commit.message
+    assert 1 == rec_hi_3.sub_issues["org/repo#452"].pull_requests_count()
+    assert (
+        "Fixed bug in PR 151"
+        == rec_hi_3.sub_issues["org/repo#452"].get_commit(151, "merge_commit_sha_151").commit.message
+    )
 
-    rec_hi_4 = cast(HierarchyIssueRecord, result['org/repo#304'])
+    rec_hi_4 = cast(HierarchyIssueRecord, result["org/repo#304"])
     assert 1 == rec_hi_4.pull_requests_count()
     assert 1 == len(rec_hi_4.sub_hierarchy_issues.values())
     assert 0 == len(rec_hi_4.sub_issues.values())
     assert 1 == rec_hi_4.pull_requests_count()
-    assert "Fixed bug in PR 152" == rec_hi_4.sub_hierarchy_issues['org/repo#350'].sub_issues['org/repo#453'].get_commit(152, "merge_commit_sha_152").commit.message
+    assert (
+        "Fixed bug in PR 152"
+        == rec_hi_4.sub_hierarchy_issues["org/repo#350"]
+        .sub_issues["org/repo#453"]
+        .get_commit(152, "merge_commit_sha_152")
+        .commit.message
+    )

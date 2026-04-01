@@ -1,4 +1,3 @@
-
 # Copyright 2023 ABSA Group Limited
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -84,7 +83,9 @@ def test_filter_with_release(mocker):
     assert next(iter(filtered_data.issues.keys())).closed_at == datetime(2023, 1, 2)
     assert next(iter(filtered_data.pull_requests.keys())).merged_at == datetime(2023, 2, 3)
     assert next(iter(filtered_data.commits.keys())).commit.author.date == datetime(2024, 1, 4)
-    assert ('Starting issue, prs and commit reduction by the latest release since time.',) == mock_log_info.call_args_list[0][0]
-    assert ('Count of issues reduced from %d to %d', 2, 1) == mock_log_debug.call_args_list[1][0]
-    assert ('Count of pulls reduced from %d to %d', 2, 1) == mock_log_debug.call_args_list[2][0]
-    assert ('Count of commits reduced from %d to %d', 2, 1) == mock_log_debug.call_args_list[3][0]
+    assert (
+        "Starting issue, prs and commit reduction by the latest release since time.",
+    ) == mock_log_info.call_args_list[0][0]
+    assert ("Count of issues reduced from %d to %d", 2, 1) == mock_log_debug.call_args_list[1][0]
+    assert ("Count of pulls reduced from %d to %d", 2, 1) == mock_log_debug.call_args_list[2][0]
+    assert ("Count of commits reduced from %d to %d", 2, 1) == mock_log_debug.call_args_list[3][0]

@@ -22,6 +22,7 @@ from release_notes_generator.data.utils.bulk_sub_issue_collector import (
     CollectorConfig,
 )
 
+
 class DummyResponse:
     def __init__(self, data, status=200):
         self._data = data
@@ -227,6 +228,7 @@ def test_graphql_errors_raise_runtime_error():
     col, _ = make_collector([DummyResponse(error_resp)], max_retries=0)
     with pytest.raises(RuntimeError):
         col.scan_sub_issues_for_parents(["org/repo#1"])
+
 
 def test_issue_node_missing_marks_parent_complete():
     # Response has repo alias but NO issue alias 'i0_0'

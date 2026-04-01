@@ -77,11 +77,11 @@ from tests.unit.conftest import mock_safe_call_decorator, MockLabel
 
 DEFAULT_CHANGELOG_URL = "http://example.com/changelog"
 default_chapters = [
-        {"title": "Breaking Changes 💥", "label": "breaking-change"},
-        {"title": "New Features 🎉", "label": "feature"},
-        {"title": "New Features 🎉", "label": "enhancement"},
-        {"title": "Bugfixes 🛠", "label": "bug"},
-    ]
+    {"title": "Breaking Changes 💥", "label": "breaking-change"},
+    {"title": "New Features 🎉", "label": "feature"},
+    {"title": "New Features 🎉", "label": "enhancement"},
+    {"title": "Bugfixes 🛠", "label": "bug"},
+]
 
 RELEASE_NOTES_NO_DATA = """### Breaking Changes 💥
 No entries detected.
@@ -713,7 +713,9 @@ RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_PR_NO_ISSUE_NO_USER_LABELS = """### C
 http://example.com/changelog
 """
 
-RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_PR_NO_ISSUE_SKIP_USER_LABELS = RELEASE_NOTES_NO_DATA_NO_WARNING_NO_EMPTY_CHAPTERS
+RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_PR_NO_ISSUE_SKIP_USER_LABELS = (
+    RELEASE_NOTES_NO_DATA_NO_WARNING_NO_EMPTY_CHAPTERS
+)
 
 RELEASE_NOTES_DATA_SERVICE_CHAPTERS_OPEN_ISSUE_AND_MERGED_PR_NO_USER_LABELS = """### Merged PRs Linked to 'Not Closed' Issue ⚠️
 - #122 _I1 open_ developed by @pr_author_101, @pr_author_102, @user in #101, #102
@@ -800,7 +802,9 @@ RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_MERGED_PRS_WITHOUT_USER_LABELS = """### Clo
 http://example.com/changelog
 """
 
-RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_MERGED_PRS_WITH_USER_LABELS_WITH_SKIP_LABEL = RELEASE_NOTES_NO_DATA_NO_WARNING_NO_EMPTY_CHAPTERS
+RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_MERGED_PRS_WITH_USER_LABELS_WITH_SKIP_LABEL = (
+    RELEASE_NOTES_NO_DATA_NO_WARNING_NO_EMPTY_CHAPTERS
+)
 
 RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_MERGED_PRS_WITH_USER_LABELS = """### Chapter 1 🛠
 - #122 _I1+bug_ developed by @pr_author_124, @user in #124
@@ -1174,7 +1178,9 @@ def test_build_open_issue_with_merged_pr_service_chapter_linked_to_not_closed_is
 
 
 @pytest.mark.parametrize("hierarchy_value", [True, False])
-def test_build_open_issue(custom_chapters_not_print_empty_chapters, record_with_issue_open_no_pull, mocker, hierarchy_value):
+def test_build_open_issue(
+    custom_chapters_not_print_empty_chapters, record_with_issue_open_no_pull, mocker, hierarchy_value
+):
     expected_release_notes = RELEASE_NOTES_NO_DATA_NO_WARNING_NO_EMPTY_CHAPTERS
     rec = record_with_issue_open_no_pull
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=False)
@@ -1192,7 +1198,9 @@ def test_build_open_issue(custom_chapters_not_print_empty_chapters, record_with_
 
 
 @pytest.mark.parametrize("hierarchy_value", [True, False])
-def test_build_closed_issue(custom_chapters_not_print_empty_chapters, record_with_issue_closed_no_pull, mocker, hierarchy_value):
+def test_build_closed_issue(
+    custom_chapters_not_print_empty_chapters, record_with_issue_closed_no_pull, mocker, hierarchy_value
+):
     expected_release_notes = RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_ISSUE_NO_PR_NO_USER_LABELS
     rec = record_with_issue_closed_no_pull
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=False)
@@ -1210,7 +1218,9 @@ def test_build_closed_issue(custom_chapters_not_print_empty_chapters, record_wit
 
 
 @pytest.mark.parametrize("hierarchy_value", [True, False])
-def test_build_reopened_issue(custom_chapters_not_print_empty_chapters, record_with_issue_open_no_pull, mocker, hierarchy_value):
+def test_build_reopened_issue(
+    custom_chapters_not_print_empty_chapters, record_with_issue_open_no_pull, mocker, hierarchy_value
+):
     expected_release_notes = RELEASE_NOTES_NO_DATA_NO_WARNING_NO_EMPTY_CHAPTERS
     rec = record_with_issue_open_no_pull
     rec.issue.state_reason = "reopened"
@@ -1375,6 +1385,7 @@ def test_build_closed_pr_without_issue_non_draft(
 
 # TODO - research situation when PR is not merged and is in draft state
 
+
 @pytest.mark.parametrize("hierarchy_value", [True, False])
 def test_merged_pr_without_issue_with_more_user_labels_duplicity_reduction_on(
     custom_chapters_not_print_empty_chapters, pull_request_record_merged, mocker, hierarchy_value
@@ -1478,7 +1489,7 @@ def test_merged_pr_with_closed_issue_mention_with_user_labels_with_skip_label_on
 
 @pytest.mark.parametrize("hierarchy_value", [True, False])
 def test_build_closed_pr_service_chapter_without_issue_with_skip_label_on_pr(
-        custom_chapters_not_print_empty_chapters, pull_request_record_closed_with_skip_label, mocker, hierarchy_value
+    custom_chapters_not_print_empty_chapters, pull_request_record_closed_with_skip_label, mocker, hierarchy_value
 ):
     expected_release_notes = RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_PR_NO_ISSUE_SKIP_USER_LABELS
     rec = pull_request_record_closed_with_skip_label
@@ -1497,16 +1508,23 @@ def test_build_closed_pr_service_chapter_without_issue_with_skip_label_on_pr(
 
 
 def test_build_hierarchy_rls_notes_no_labels_no_type(
-        mocker, mock_repo,
-        custom_chapters_not_print_empty_chapters,
-        mined_data_isolated_record_types_no_labels_no_type_defined
+    mocker,
+    mock_repo,
+    custom_chapters_not_print_empty_chapters,
+    mined_data_isolated_record_types_no_labels_no_type_defined,
 ):
     expected_release_notes = RELEASE_NOTES_DATA_HIERARCHY_NO_LABELS_NO_TYPE
 
-    mocker.patch("release_notes_generator.record.factory.default_record_factory.safe_call_decorator", side_effect=mock_safe_call_decorator)
+    mocker.patch(
+        "release_notes_generator.record.factory.default_record_factory.safe_call_decorator",
+        side_effect=mock_safe_call_decorator,
+    )
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=True)
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_hierarchy", return_value=True)
-    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_row_format_hierarchy_issue", return_value="{type}: _{title}_ {number}")
+    mocker.patch(
+        "release_notes_generator.builder.builder.ActionInputs.get_row_format_hierarchy_issue",
+        return_value="{type}: _{title}_ {number}",
+    )
 
     mock_github_client = mocker.Mock(spec=Github)
 
@@ -1530,15 +1548,23 @@ def test_build_hierarchy_rls_notes_no_labels_no_type(
 
 
 def test_build_hierarchy_rls_notes_with_labels_no_type(
-        mocker, mock_repo,
-        custom_chapters_not_print_empty_chapters, mined_data_isolated_record_types_with_labels_no_type_defined
+    mocker,
+    mock_repo,
+    custom_chapters_not_print_empty_chapters,
+    mined_data_isolated_record_types_with_labels_no_type_defined,
 ):
     expected_release_notes = RELEASE_NOTES_DATA_HIERARCHY_WITH_LABELS_NO_TYPE
 
-    mocker.patch("release_notes_generator.record.factory.default_record_factory.safe_call_decorator", side_effect=mock_safe_call_decorator)
+    mocker.patch(
+        "release_notes_generator.record.factory.default_record_factory.safe_call_decorator",
+        side_effect=mock_safe_call_decorator,
+    )
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=True)
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_hierarchy", return_value=True)
-    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_row_format_hierarchy_issue", return_value="{type}: _{title}_ {number}")
+    mocker.patch(
+        "release_notes_generator.builder.builder.ActionInputs.get_row_format_hierarchy_issue",
+        return_value="{type}: _{title}_ {number}",
+    )
 
     mock_github_client = mocker.Mock(spec=Github)
 
@@ -1562,15 +1588,23 @@ def test_build_hierarchy_rls_notes_with_labels_no_type(
 
 
 def test_build_hierarchy_rls_notes_no_labels_with_type(
-        mocker, mock_repo,
-        custom_chapters_not_print_empty_chapters, mined_data_isolated_record_types_no_labels_with_type_defined
+    mocker,
+    mock_repo,
+    custom_chapters_not_print_empty_chapters,
+    mined_data_isolated_record_types_no_labels_with_type_defined,
 ):
     expected_release_notes = RELEASE_NOTES_DATA_HIERARCHY_NO_LABELS_WITH_TYPE
 
-    mocker.patch("release_notes_generator.record.factory.default_record_factory.safe_call_decorator", side_effect=mock_safe_call_decorator)
+    mocker.patch(
+        "release_notes_generator.record.factory.default_record_factory.safe_call_decorator",
+        side_effect=mock_safe_call_decorator,
+    )
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=True)
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_hierarchy", return_value=True)
-    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_row_format_hierarchy_issue", return_value="{type}: _{title}_ {number}")
+    mocker.patch(
+        "release_notes_generator.builder.builder.ActionInputs.get_row_format_hierarchy_issue",
+        return_value="{type}: _{title}_ {number}",
+    )
 
     mock_github_client = mocker.Mock(spec=Github)
 
@@ -1592,16 +1626,25 @@ def test_build_hierarchy_rls_notes_no_labels_with_type(
 
     assert expected_release_notes == actual_release_notes
 
+
 def test_build_hierarchy_rls_notes_with_labels_with_type(
-        mocker, mock_repo,
-        custom_chapters_not_print_empty_chapters, mined_data_isolated_record_types_with_labels_with_type_defined
+    mocker,
+    mock_repo,
+    custom_chapters_not_print_empty_chapters,
+    mined_data_isolated_record_types_with_labels_with_type_defined,
 ):
     expected_release_notes = RELEASE_NOTES_DATA_HIERARCHY_WITH_LABELS_WITH_TYPE
 
-    mocker.patch("release_notes_generator.record.factory.default_record_factory.safe_call_decorator", side_effect=mock_safe_call_decorator)
+    mocker.patch(
+        "release_notes_generator.record.factory.default_record_factory.safe_call_decorator",
+        side_effect=mock_safe_call_decorator,
+    )
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_print_empty_chapters", return_value=True)
     mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_hierarchy", return_value=True)
-    mocker.patch("release_notes_generator.builder.builder.ActionInputs.get_row_format_hierarchy_issue", return_value="{type}: _{title}_ {number}")
+    mocker.patch(
+        "release_notes_generator.builder.builder.ActionInputs.get_row_format_hierarchy_issue",
+        return_value="{type}: _{title}_ {number}",
+    )
 
     mock_github_client = mocker.Mock(spec=Github)
 

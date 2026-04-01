@@ -16,7 +16,6 @@
 
 from release_notes_generator.utils.utils import get_change_url
 
-
 # get_change_url
 
 

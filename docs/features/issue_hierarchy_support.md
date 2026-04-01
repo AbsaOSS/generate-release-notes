@@ -36,6 +36,29 @@ Represent issue → sub-issue relationships directly in release notes, aggregati
 ```
 (1st four indented bullets under Epic line represent the extracted release notes from the parent hierarchy issue's body.)
 
+## `{progress}` Format Token
+
+The `{progress}` token is available in `row-format-hierarchy-issue`. It renders the sub-issue completion count for each hierarchy node as `"X/Y done"`, where X and Y count **direct children only** — no recursive aggregation.
+
+- Counts both `SubIssueRecord` and nested `HierarchyIssueRecord` direct children.
+- Each hierarchy level computes its own count independently when `to_chapter_row()` recurses.
+- Leaf nodes (zero direct sub-issues) return an empty string; the token is suppressed, producing no extra whitespace.
+
+### Example
+
+Configuration required to enable `{progress}` in hierarchy rows:
+```yaml
+row-format-hierarchy-issue: "{type}: _{title}_ {number} {progress}"
+```
+
+Resulting output (hierarchy issues only — sub-issue rows use `row-format-issue` and do not carry `{progress}`):
+```markdown
+- Epic: _Make Login Service releasable_ #140 1/2 done
+  - Feature: _Add user MFA enrollment flow_ #123 1/1 done
+    - Add user MFA enrollment flow
+  - Feature: _Add OAuth2 login_ #125 0/1 done
+```
+
 ## Related Features
 - [Custom Row Formats](./custom_row_formats.md) – controls hierarchy line rendering.
 - [Service Chapters](./service_chapters.md) – flags missing change increments if hierarchy parents lack qualifying sub-issues.
