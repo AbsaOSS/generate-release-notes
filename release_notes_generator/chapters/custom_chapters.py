@@ -275,9 +275,10 @@ class CustomChapters(BaseChapters):
         # Fallback: records not claimed by any super chapter
         unclaimed_ids: set[str] = set()
         for chapter in self._sorted_chapters():
-            for rid in chapter.rows:
-                if str(rid) not in claimed_ids and rid not in claimed_ids:
-                    unclaimed_ids.add(str(rid))
+            for row_id in chapter.rows:
+                row_id_str = str(row_id)
+                if row_id_str not in claimed_ids:
+                    unclaimed_ids.add(row_id_str)
 
         if unclaimed_ids:
             uc_block = ""
@@ -387,9 +388,8 @@ class CustomChapters(BaseChapters):
             if raw_labels is None:
                 logger.warning("Super-chapter '%s' has no 'label' or 'labels' key; skipping", title)
                 continue
-            if isinstance(raw_labels, str):
-                raw_labels = [raw_labels]
-            normalized = _normalize_labels(raw_labels)
+            labels_input: str | list[str] = [raw_labels] if isinstance(raw_labels, str) else raw_labels
+            normalized = _normalize_labels(labels_input)
             if not normalized:
                 logger.warning("Super-chapter '%s' labels definition empty after normalization; skipping", title)
                 continue
