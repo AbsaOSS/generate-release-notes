@@ -9,7 +9,9 @@ Represent issue → sub-issue relationships directly in release notes, aggregati
 - When the parent hierarchy issue is **open**:
   - Leaf sub-issues: only closed ones with a change increment are rendered; open ones and those closed or delivered in a previous release are ignored.
   - Nested sub-hierarchy children: filtered by change increment only — an open child that aggregates PRs from deeper levels is still rendered.
-- When the parent hierarchy issue is **closed**: all children (sub-issues and nested sub-hierarchy children) are rendered. Open children are prefixed with the `open-hierarchy-sub-issue-icon` (default `🟡`) to signal incomplete work.
+- When the parent hierarchy issue is **closed**:
+  - All children (sub-issues and nested sub-hierarchy children) are rendered. Open children are prefixed with the `open-hierarchy-sub-issue-icon` (default `🟡`) to signal incomplete work.
+  - Set `open-hierarchy-sub-issue-icon` to an empty string to disable the highlighting.
 - Each hierarchy issue line can expand with its own extracted release notes block if present (prefixed with `_Release Notes_:` heading within the item block).
 
 ## Configuration

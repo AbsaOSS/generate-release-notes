@@ -157,8 +157,7 @@ class ActionInputs:
         Get list of the chapters from the action inputs. Each chapter is a dict.
         """
         # Get the 'chapters' input from environment variables
-        chapters_input: str = get_action_input(CHAPTERS, default="")  # type: ignore[assignment]
-        # mypy: string is returned as default
+        chapters_input: str = get_action_input(CHAPTERS, default="")
 
         # Parse the received string back to YAML array input.
         try:
@@ -185,8 +184,7 @@ class ActionInputs:
         """
         Get the duplicity scope parameter value from the action inputs.
         """
-        duplicity_scope = get_action_input(DUPLICITY_SCOPE, "both").upper()  # type: ignore[union-attr]
-        # mypy: string is returned as default
+        duplicity_scope = get_action_input(DUPLICITY_SCOPE, "both").upper()
 
         try:
             return DuplicityScopeEnum(duplicity_scope)
@@ -199,22 +197,21 @@ class ActionInputs:
         """
         Get the duplicity icon from the action inputs.
         """
-        return get_action_input(DUPLICITY_ICON, "🔔")  # type: ignore[return-value]  # string is returned as default
+        return get_action_input(DUPLICITY_ICON, "🔔")
 
     @staticmethod
     def get_open_hierarchy_sub_issue_icon() -> str:
         """
         Get the icon prepended to open sub-issues rendered under a closed hierarchy parent.
         """
-        return get_action_input(OPEN_HIERARCHY_SUB_ISSUE_ICON, "🟡")  # type: ignore[return-value]  # string is returned as default
+        return get_action_input(OPEN_HIERARCHY_SUB_ISSUE_ICON, "🟡")
 
     @staticmethod
     def get_published_at() -> bool:
         """
         Get the published at parameter value from the action inputs.
         """
-        return get_action_input(PUBLISHED_AT, "false").lower() == "true"  # type: ignore[union-attr]
-        # mypy: string is returned as default
+        return get_action_input(PUBLISHED_AT, "false").lower() == "true"
 
     @staticmethod
     def get_skip_release_notes_labels() -> list[str]:
@@ -233,26 +230,24 @@ class ActionInputs:
         Get the verbose parameter value from the action inputs.
         Safe for non-GitHub test contexts where the input may be unset (returns False by default).
         """
-        raw = get_action_input(VERBOSE, "false")  # type: ignore[assignment]
+        raw = get_action_input(VERBOSE, "false")
         # Some test contexts (unit/integration) do not populate GitHub inputs; fall back to default.
         raw_normalized = (raw or "false").strip().lower()
         return os.getenv(RUNNER_DEBUG, "0") == "1" or raw_normalized == "true"
-        # mypy: string is returned as default
 
     @staticmethod
     def get_release_notes_title() -> str:
         """
         Get the release notes title from the action inputs.
         """
-        return get_action_input(RELEASE_NOTES_TITLE, RELEASE_NOTE_TITLE_DEFAULT)  # type: ignore[return-value]
-        # mypy: string is returned as default
+        return get_action_input(RELEASE_NOTES_TITLE, RELEASE_NOTE_TITLE_DEFAULT)
 
     @staticmethod
     def is_coderabbit_support_active() -> bool:
         """
         Get the CodeRabbit support active parameter value from the action inputs.
         """
-        return get_action_input(CODERABBIT_SUPPORT_ACTIVE, "false").lower() == "true"  # type: ignore[union-attr]
+        return get_action_input(CODERABBIT_SUPPORT_ACTIVE, "false").lower() == "true"
 
     @staticmethod
     def get_coderabbit_release_notes_title() -> str:
@@ -261,7 +256,7 @@ class ActionInputs:
         """
         return get_action_input(
             CODERABBIT_RELEASE_NOTES_TITLE, CODERABBIT_RELEASE_NOTE_TITLE_DEFAULT
-        )  # type: ignore[return-value]
+        )
 
     @staticmethod
     def get_coderabbit_summary_ignore_groups() -> list[str]:
@@ -287,7 +282,7 @@ class ActionInputs:
         """
         Get the warnings parameter value from the action inputs.
         """
-        return get_action_input(WARNINGS, "true").lower() == "true"  # type: ignore[union-attr]
+        return get_action_input(WARNINGS, "true").lower() == "true"
         # mypy: string is returned as default
 
     @staticmethod
@@ -387,7 +382,7 @@ class ActionInputs:
             ActionInputs._row_format_hierarchy_issue = ActionInputs._detect_row_format_invalid_keywords(
                 get_action_input(
                     ROW_FORMAT_HIERARCHY_ISSUE, "{type}: _{title}_ {number}"
-                ).strip(),  # type: ignore[union-attr]
+                ).strip(),
                 row_type=ActionInputs.ROW_TYPE_HIERARCHY_ISSUE,
                 clean=True,
             )
@@ -402,9 +397,8 @@ class ActionInputs:
             ActionInputs._row_format_issue = ActionInputs._detect_row_format_invalid_keywords(
                 get_action_input(
                     ROW_FORMAT_ISSUE, "{type}: {number} _{title}_ developed by {developers} in {pull-requests}"
-                ).strip(),  # type: ignore[union-attr]
+                ).strip(),
                 clean=True,
-                # mypy: string is returned as default
             )
         return ActionInputs._row_format_issue
 
@@ -417,10 +411,9 @@ class ActionInputs:
             ActionInputs._row_format_pr = ActionInputs._detect_row_format_invalid_keywords(
                 get_action_input(
                     ROW_FORMAT_PR, "{number} _{title}_ developed by {developers}"
-                ).strip(),  # type: ignore[union-attr]
+                ).strip(),
                 row_type=ActionInputs.ROW_TYPE_PR,
                 clean=True,
-                # mypy: string is returned as default
             )
         return ActionInputs._row_format_pr
 
@@ -429,8 +422,7 @@ class ActionInputs:
         """
         Get the value controlling whether the row format should include a 'PR:' prefix when linking to PRs.
         """
-        return get_action_input(ROW_FORMAT_LINK_PR, "true").lower() == "true"  # type: ignore[union-attr]
-        # mypy: string is returned as default
+        return get_action_input(ROW_FORMAT_LINK_PR, "true").lower() == "true"
 
     @staticmethod
     def validate_inputs() -> None:

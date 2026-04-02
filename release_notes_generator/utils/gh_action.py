@@ -20,10 +20,9 @@ This module provides utilities for GitHub Actions.
 
 import os
 import sys
-from typing import Optional
 
 
-def get_action_input(name: str, default: Optional[str] = None) -> Optional[str]:
+def get_action_input(name: str, default: str = "") -> str:
     """
     Retrieve the value of a specified input parameter from environment variables.
 
@@ -32,9 +31,6 @@ def get_action_input(name: str, default: Optional[str] = None) -> Optional[str]:
 
     @return: The value of the specified input parameter, or an empty string if the environment
     """
-    if default is None:
-        return os.getenv(f'INPUT_{name.replace("-", "_").upper()}')
-
     return os.getenv(f'INPUT_{name.replace("-", "_").upper()}', default=default)
 
 

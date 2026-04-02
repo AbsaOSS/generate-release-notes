@@ -222,14 +222,16 @@ class HierarchyIssueRecord(IssueRecord):
                     continue
             # Closed parent: render all sub-hierarchy issues regardless of state or change increment
             logger.debug("Rendering sub-hierarchy issue #%s", sub_hierarchy_issue.issue.number)
-            sub_row = sub_hierarchy_issue.to_chapter_row()
             if self.is_closed and sub_hierarchy_issue.is_open:
+                sub_row = sub_hierarchy_issue.to_chapter_row()
                 # Highlight open children under a closed parent to signal incomplete work
                 icon = ActionInputs.get_open_hierarchy_sub_issue_icon()
                 header_line, newline, remaining_lines = sub_row.partition("\n")
                 header_text = header_line.lstrip()
                 indent = header_line[: len(header_line) - len(header_text)]
                 sub_row = f"{indent}{icon} {header_text}{newline}{remaining_lines}"
+            else:
+                sub_row = sub_hierarchy_issue.to_chapter_row()
             row = f"{row}\n{sub_row}"
 
         # add sub-issues
@@ -248,7 +250,7 @@ class HierarchyIssueRecord(IssueRecord):
                 open_icon_prefix = ""
                 if self.is_closed and sub_issue.is_open:
                     # Highlight open children under a closed parent to signal incomplete work
-                    open_icon_prefix = f"{ActionInputs.get_open_hierarchy_sub_issue_icon()} "
+                    open_icon_prefix = ActionInputs.get_open_hierarchy_sub_issue_icon() + " "
                 sub_issue_block = "- " + open_icon_prefix + sub_issue.to_chapter_row()
                 ind_child_block = "\n".join(
                     f"{sub_indent}{line}" if line else "" for line in sub_issue_block.splitlines()
