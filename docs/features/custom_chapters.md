@@ -253,9 +253,9 @@ When super chapters are configured the output uses `##` headings for super chapt
 ```
 
 ### Behavior
-- A record is placed under a super chapter if it carries at least one label matching the super chapter's labels.
-- A record can appear in **multiple** super chapters if its labels match more than one.
-- Within each super chapter, records are routed to regular chapters by the normal label matching rules.
+- A record is placed under a super-chapter if it carries at least one label matching the super-chapter's labels.
+- A record can appear in **multiple** super-chapters if its labels match more than one.
+- Within each super-chapter, records are routed to regular chapters by the normal label-matching rules.
 - Empty super chapters (no matching records) respect the `print-empty-chapters` setting.
 - When no super chapters are configured, output is flat (unchanged from previous behavior).
 

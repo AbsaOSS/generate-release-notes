@@ -22,6 +22,7 @@ import logging
 import os
 import sys
 import re
+from typing import Any
 import yaml
 
 from release_notes_generator.utils.constants import (
@@ -58,7 +59,7 @@ from release_notes_generator.utils.constants import (
 )
 from release_notes_generator.utils.enums import DuplicityScopeEnum
 from release_notes_generator.utils.gh_action import get_action_input
-from release_notes_generator.utils.utils import normalize_version_tag
+from release_notes_generator.utils.utils import normalize_labels, normalize_version_tag
 
 logger = logging.getLogger(__name__)
 
@@ -172,9 +173,16 @@ class ActionInputs:
         return chapters
 
     @staticmethod
-    def get_super_chapters() -> list[dict[str, str]]:
+    def get_super_chapters() -> list[dict[str, Any]]:
         """
-        Get list of super chapter definitions from the action inputs.
+        Get list of validated super-chapter definitions from the action inputs.
+
+        Each returned entry is guaranteed to have:
+          - 'title': str
+          - 'labels': list[str] (non-empty, normalized)
+
+        Invalid entries (non-dict, missing title, missing/empty labels) are skipped
+        with a warning log.
         """
         # Get the 'super-chapters' input from environment variables
         super_chapters_input: str = get_action_input(SUPER_CHAPTERS, default="")  # type: ignore[assignment]
@@ -182,17 +190,39 @@ class ActionInputs:
 
         # Parse the received string back to YAML array input.
         try:
-            super_chapters = yaml.safe_load(super_chapters_input)
-            if super_chapters is None:
+            raw_list = yaml.safe_load(super_chapters_input)
+            if raw_list is None:
                 return []
-            if not isinstance(super_chapters, list):
+            if not isinstance(raw_list, list):
                 logger.error("Error: 'super-chapters' input is not a valid YAML list.")
                 return []
         except yaml.YAMLError as exc:
             logger.error("Error parsing 'super-chapters' input: %s", exc)
             return []
 
-        return super_chapters
+        result: list[dict[str, Any]] = []
+        for entry in raw_list:
+            if not isinstance(entry, dict):
+                logger.warning("Skipping super-chapter definition with invalid type %s: %s", type(entry), entry)
+                continue
+            if "title" not in entry:
+                logger.warning("Skipping super-chapter without title key: %s", entry)
+                continue
+            title = entry["title"]
+
+            raw_labels = entry.get("labels", entry.get("label"))
+            if raw_labels is None:
+                logger.warning("Super-chapter '%s' has no 'label' or 'labels' key; skipping", title)
+                continue
+            labels_input: str | list[str] = [raw_labels] if isinstance(raw_labels, str) else raw_labels
+            normalized = normalize_labels(labels_input)
+            if not normalized:
+                logger.warning("Super-chapter '%s' labels definition empty after normalization; skipping", title)
+                continue
+
+            result.append({"title": title, "labels": normalized})
+            logger.debug("Validated super-chapter '%s' with labels: %s", title, normalized)
+        return result
 
     @staticmethod
     def get_hierarchy() -> bool:

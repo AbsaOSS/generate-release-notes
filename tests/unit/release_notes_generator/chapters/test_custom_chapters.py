@@ -15,7 +15,8 @@
 #
 import pytest
 
-from release_notes_generator.chapters.custom_chapters import CustomChapters, _normalize_labels
+from release_notes_generator.chapters.custom_chapters import CustomChapters
+from release_notes_generator.utils.utils import normalize_labels
 from release_notes_generator.model.record.issue_record import IssueRecord
 from release_notes_generator.model.record.hierarchy_issue_record import HierarchyIssueRecord
 from release_notes_generator.model.record.commit_record import CommitRecord
@@ -302,7 +303,7 @@ def test_from_yaml_array_verbose_debug_branch(monkeypatch, caplog):
 )
 def test_normalize_labels_edge_cases(raw, expected):
     # Arrange / Act
-    result = _normalize_labels(raw)
+    result = normalize_labels(raw)
     # Assert
     assert result == expected
 
@@ -1257,8 +1258,8 @@ def test_super_chapters_records_grouped_under_super_chapter(mocker, record_stub)
             {"title": "Bugfixes", "label": "bug"},
         ],
         [
-            {"title": "Atum server", "label": "atum-server"},
-            {"title": "Atum agent", "label": "atum-agent"},
+            {"title": "Atum server", "labels": ["atum-server"]},
+            {"title": "Atum agent", "labels": ["atum-agent"]},
         ],
     )
     r1 = record_stub("org/repo#1", ["enhancement", "atum-server"])
@@ -1287,7 +1288,7 @@ def test_super_chapters_record_in_multiple_super_chapters(mocker, record_stub):
     cc = make_super_chapters_cc(
         mocker,
         [{"title": "Enhancements", "label": "enhancement"}],
-        [{"title": "Module A", "label": "mod-a"}, {"title": "Module B", "label": "mod-b"}],
+        [{"title": "Module A", "labels": ["mod-a"]}, {"title": "Module B", "labels": ["mod-b"]}],
     )
     r1 = record_stub("org/repo#1", ["enhancement", "mod-a", "mod-b"])
     cc.populate({"org/repo#1": r1})
@@ -1303,7 +1304,7 @@ def test_super_chapters_empty_super_chapter_skipped_when_print_empty_false(mocke
     cc = make_super_chapters_cc(
         mocker,
         [{"title": "Features", "label": "feature"}],
-        [{"title": "Module A", "label": "mod-a"}, {"title": "Module B", "label": "mod-b"}],
+        [{"title": "Module A", "labels": ["mod-a"]}, {"title": "Module B", "labels": ["mod-b"]}],
         print_empty=False,
     )
     r1 = record_stub("org/repo#1", ["feature", "mod-a"])
@@ -1316,21 +1317,16 @@ def test_super_chapters_empty_super_chapter_skipped_when_print_empty_false(mocke
 
 
 def test_super_chapters_parse_logs_and_skips_invalid(mocker):
-    """Invalid super-chapter entries are skipped with a warning."""
-    # Arrange
+    """Only valid super-chapter entries produce headings; validation now runs in ActionInputs."""
+    # Arrange - mock returns only the one valid entry (as ActionInputs would after validation)
     cc = make_super_chapters_cc(
         mocker,
         [{"title": "Features", "label": "feature"}],
-        [
-            "not-a-dict",
-            {"no-title": True},
-            {"title": "Missing labels"},
-            {"title": "Valid", "label": "ok"},
-        ],
+        [{"title": "Valid", "labels": ["ok"]}],
     )
     # Act
     output = cc.to_string()
-    # Assert - only the "Valid" super chapter survives
+    # Assert - only the "Valid" super chapter produces a heading
     assert "## Valid" in output
     assert sum(1 for line in output.splitlines() if line.startswith("## ") and not line.startswith("### ")) == 1
 
@@ -1344,7 +1340,7 @@ def test_super_chapters_uncategorized_fallback(mocker, record_stub):
             {"title": "Enhancements", "label": "enhancement"},
             {"title": "Bugfixes", "label": "bug"},
         ],
-        [{"title": "Module A", "label": "mod-a"}],
+        [{"title": "Module A", "labels": ["mod-a"]}],
     )
     r1 = record_stub("org/repo#1", ["enhancement", "mod-a"])
     r2 = record_stub("org/repo#2", ["bug"])  # no super-chapter label
@@ -1366,7 +1362,7 @@ def test_super_chapters_no_uncategorized_when_all_claimed(mocker, record_stub):
     cc = make_super_chapters_cc(
         mocker,
         [{"title": "Enhancements", "label": "enhancement"}],
-        [{"title": "Module A", "label": "mod-a"}],
+        [{"title": "Module A", "labels": ["mod-a"]}],
     )
     r1 = record_stub("org/repo#1", ["enhancement", "mod-a"])
     cc.populate({"org/repo#1": r1})
@@ -1386,7 +1382,7 @@ def test_super_chapters_coh_record_visible_in_fallback(mocker, hierarchy_record_
             {"title": "Features", "labels": "feature"},
             {"title": "Silent Live", "catch-open-hierarchy": True},
         ],
-        [{"title": "Module A", "label": "mod-a"}],
+        [{"title": "Module A", "labels": ["mod-a"]}],
         hierarchy=True,
     )
     record = hierarchy_record_stub("org/repo#H1", [], state="open")

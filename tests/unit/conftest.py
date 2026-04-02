@@ -38,7 +38,6 @@ from typing import Any
 
 from pytest_mock import MockerFixture
 
-from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.chapters.custom_chapters import CustomChapters
 from release_notes_generator.model.record.sub_issue_record import SubIssueRecord
 from release_notes_generator.utils.enums import DuplicityScopeEnum
@@ -105,8 +104,8 @@ def custom_chapters_not_print_empty_chapters():
 
 def make_super_chapters_cc(
     mocker: MockerFixture,
-    chapters_yaml: list[dict],
-    super_chapters_yaml: list[dict],
+    chapters_yaml: list[dict[str, Any]],
+    super_chapters_yaml: list[Any],
     print_empty: bool = True,
     hierarchy: bool = False,
 ) -> CustomChapters:

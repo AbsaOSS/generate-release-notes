@@ -21,7 +21,7 @@ notes.
 
 import logging
 from dataclasses import dataclass, field
-from typing import Any, Iterable
+from typing import Any
 
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.chapters.base_chapters import BaseChapters
@@ -30,6 +30,7 @@ from release_notes_generator.utils.constants import UNCATEGORIZED_CHAPTER_TITLE
 from release_notes_generator.model.record.commit_record import CommitRecord
 from release_notes_generator.model.record.hierarchy_issue_record import HierarchyIssueRecord
 from release_notes_generator.model.record.record import Record
+from release_notes_generator.utils.utils import normalize_labels
 
 logger = logging.getLogger(__name__)
 
@@ -40,44 +41,6 @@ class SuperChapter:
 
     title: str
     labels: list[str] = field(default_factory=list)
-
-
-def _normalize_labels(raw: Any) -> list[str]:  # helper for multi-label
-    """Normalize a raw labels definition into an ordered, de-duplicated list.
-
-    Parameters:
-        - str: may contain newlines and/or commas
-        - list[str]: already a sequence of labels (will still be trimmed & deduped)
-
-    Returns:
-        Ordered list preserving first occurrence order; excludes empty tokens.
-        Invalid (non str/list) returns empty list to be handled by caller.
-    """
-    if isinstance(raw, list):
-        working: Iterable[Any] = raw
-    elif isinstance(raw, str):
-        # newline first then comma per spec
-        parts: list[str] = []
-        for line in raw.splitlines():
-            for token in line.split(","):
-                parts.append(token)
-        working = parts
-    else:
-        return []
-
-    cleaned: list[str] = []
-    seen: set[str] = set()
-    for item in working:
-        if not isinstance(item, str):  # skip non-string items silently
-            continue
-        token = item.strip()
-        if not token:  # skip empty after trimming
-            continue
-        if token in seen:  # de-duplicate preserving first occurrence
-            continue
-        seen.add(token)
-        cleaned.append(token)
-    return cleaned
 
 
 class CustomChapters(BaseChapters):
@@ -365,38 +328,16 @@ class CustomChapters(BaseChapters):
         return self
 
     @staticmethod
-    def _parse_super_chapters(raw_super_chapters: list[dict[str, str]]) -> list[SuperChapter]:
-        """Parse super-chapter YAML definitions into SuperChapter instances.
+    def _parse_super_chapters(validated: list[dict[str, Any]]) -> list[SuperChapter]:
+        """Construct SuperChapter instances from pre-validated ActionInputs dicts.
 
         Parameters:
-            raw_super_chapters: Parsed YAML list of dicts with 'title' and 'label'/'labels'.
+            validated: List of fully-validated super-chapter dicts with 'title' and 'labels' keys.
 
         Returns:
-            List of validated SuperChapter instances; invalid entries are skipped with a warning.
+            List of SuperChapter instances.
         """
-        result: list[SuperChapter] = []
-        for entry in raw_super_chapters:
-            if not isinstance(entry, dict):
-                logger.warning("Skipping super-chapter definition with invalid type %s: %s", type(entry), entry)
-                continue
-            if "title" not in entry:
-                logger.warning("Skipping super-chapter without title key: %s", entry)
-                continue
-            title = entry["title"]
-
-            raw_labels = entry.get("labels", entry.get("label"))
-            if raw_labels is None:
-                logger.warning("Super-chapter '%s' has no 'label' or 'labels' key; skipping", title)
-                continue
-            labels_input: str | list[str] = [raw_labels] if isinstance(raw_labels, str) else raw_labels
-            normalized = _normalize_labels(labels_input)
-            if not normalized:
-                logger.warning("Super-chapter '%s' labels definition empty after normalization; skipping", title)
-                continue
-
-            result.append(SuperChapter(title=title, labels=normalized))
-            logger.debug("Registered super-chapter '%s' with labels: %s", title, normalized)
-        return result
+        return [SuperChapter(title=e["title"], labels=e["labels"]) for e in validated]
 
     @staticmethod
     def _parse_bool_flag(title: str, raw: Any, key: str) -> bool:
@@ -504,7 +445,7 @@ class CustomChapters(BaseChapters):
             )
             return None
 
-        normalized = _normalize_labels(raw_labels)
+        normalized = normalize_labels(raw_labels)
         if not normalized:
             logger.warning("Chapter '%s' labels definition empty after normalization; skipping", title)
             return None

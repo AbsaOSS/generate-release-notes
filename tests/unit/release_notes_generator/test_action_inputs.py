@@ -207,7 +207,7 @@ def test_get_super_chapters_success(mocker):
         "release_notes_generator.action_inputs.get_action_input",
         return_value='[{"title": "Module A", "label": "mod-a"}]',
     )
-    assert ActionInputs.get_super_chapters() == [{"title": "Module A", "label": "mod-a"}]
+    assert ActionInputs.get_super_chapters() == [{"title": "Module A", "labels": ["mod-a"]}]
 
 
 def test_get_super_chapters_empty_input(mocker):
@@ -248,13 +248,48 @@ def test_get_super_chapters_list_labels_preserved(mocker):
     assert result == [{"title": "Module A", "labels": ["mod-a", "mod-b"]}]
 
 
-def test_get_super_chapters_non_dict_entry_included(mocker):
+def test_get_super_chapters_non_dict_entry_skipped(mocker, caplog):
+    caplog.set_level("WARNING")
     mocker.patch(
         "release_notes_generator.action_inputs.get_action_input",
         return_value='["not-a-dict", {"title": "Valid", "label": "ok"}]',
     )
     result = ActionInputs.get_super_chapters()
-    assert result == ["not-a-dict", {"title": "Valid", "label": "ok"}]
+    assert result == [{"title": "Valid", "labels": ["ok"]}]
+    assert any("invalid type" in r.message for r in caplog.records)
+
+
+def test_get_super_chapters_missing_title_skipped(mocker, caplog):
+    caplog.set_level("WARNING")
+    mocker.patch(
+        "release_notes_generator.action_inputs.get_action_input",
+        return_value='[{"no-title": true}, {"title": "Valid", "label": "v"}]',
+    )
+    result = ActionInputs.get_super_chapters()
+    assert result == [{"title": "Valid", "labels": ["v"]}]
+    assert any("without title key" in r.message for r in caplog.records)
+
+
+def test_get_super_chapters_missing_labels_skipped(mocker, caplog):
+    caplog.set_level("WARNING")
+    mocker.patch(
+        "release_notes_generator.action_inputs.get_action_input",
+        return_value='[{"title": "No labels"}, {"title": "Valid", "label": "v"}]',
+    )
+    result = ActionInputs.get_super_chapters()
+    assert result == [{"title": "Valid", "labels": ["v"]}]
+    assert any("has no 'label' or 'labels' key" in r.message for r in caplog.records)
+
+
+def test_get_super_chapters_empty_labels_after_normalization_skipped(mocker, caplog):
+    caplog.set_level("WARNING")
+    mocker.patch(
+        "release_notes_generator.action_inputs.get_action_input",
+        return_value='[{"title": "Empty", "labels": []}, {"title": "Valid", "label": "v"}]',
+    )
+    result = ActionInputs.get_super_chapters()
+    assert result == [{"title": "Valid", "labels": ["v"]}]
+    assert any("empty after normalization" in r.message for r in caplog.records)
 
 
 def test_get_warnings(mocker):
