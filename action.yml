@@ -29,6 +29,14 @@ inputs:
       At most one `catch-open-hierarchy` chapter allowed; duplicates are warned and ignored.
     required: false
     default: ''
+  super-chapters:
+    description: |
+      YAML array of super-chapter definitions that group regular chapters by label.
+      Required keys: `title`, `label` or `labels`.
+      Records matching a super-chapter label are rendered inside that super-chapter.
+      A record can appear in multiple super-chapters.
+    required: false
+    default: ''
   duplicity-scope:
     description: 'Allow duplicity of issue lines in chapters. Scopes: custom, service, both, none.'
     required: false
@@ -177,6 +185,7 @@ runs:
         INPUT_GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
         INPUT_TAG_NAME: ${{ inputs.tag-name }}
         INPUT_CHAPTERS: ${{ inputs.chapters }}
+        INPUT_SUPER_CHAPTERS: ${{ inputs.super-chapters }}
         INPUT_FROM_TAG_NAME: ${{ inputs.from-tag-name }}
         INPUT_HIERARCHY: ${{ inputs.hierarchy }}
         INPUT_DUPLICITY_SCOPE: ${{ inputs.duplicity-scope }}

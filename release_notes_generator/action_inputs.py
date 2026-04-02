@@ -30,6 +30,7 @@ from release_notes_generator.utils.constants import (
     GITHUB_TOKEN,
     TAG_NAME,
     CHAPTERS,
+    SUPER_CHAPTERS,
     PUBLISHED_AT,
     VERBOSE,
     WARNINGS,
@@ -170,6 +171,30 @@ class ActionInputs:
             return []
 
         return chapters
+
+    @staticmethod
+    def get_super_chapters() -> list[dict[str, str]]:
+        """
+        Get list of super chapter definitions from the action inputs.
+
+        Returns:
+            Parsed YAML list of dicts with 'title' and 'label'/'labels' keys,
+            or an empty list when the input is absent or invalid.
+        """
+        raw: str = get_action_input(SUPER_CHAPTERS, default="")  # type: ignore[assignment]
+        if not raw or not raw.strip():
+            return []
+
+        try:
+            parsed = yaml.safe_load(raw)
+            if not isinstance(parsed, list):
+                logger.error("Error: 'super-chapters' input is not a valid YAML list.")
+                return []
+        except yaml.YAMLError as exc:
+            logger.error("Error parsing 'super-chapters' input: {%s}", exc)
+            return []
+
+        return parsed
 
     @staticmethod
     def get_hierarchy() -> bool:
@@ -546,6 +571,7 @@ class ActionInputs:
         logger.debug("CodeRabbit summary ignore groups: %s", coderabbit_summary_ignore_groups)
         logger.debug("Hidden service chapters: %s", ActionInputs.get_hidden_service_chapters())
         logger.debug("Service chapter order: %s", ActionInputs.get_service_chapter_order())
+        logger.debug("Super chapters: %s", ActionInputs.get_super_chapters())
 
     @staticmethod
     def _detect_row_format_invalid_keywords(row_format: str, row_type: str = "Issue", clean: bool = False) -> str:

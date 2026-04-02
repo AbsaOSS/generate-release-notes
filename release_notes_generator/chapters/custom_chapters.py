@@ -20,6 +20,7 @@ notes.
 """
 
 import logging
+from dataclasses import dataclass, field
 from typing import Any, Iterable
 
 from release_notes_generator.action_inputs import ActionInputs
@@ -30,6 +31,14 @@ from release_notes_generator.model.record.hierarchy_issue_record import Hierarch
 from release_notes_generator.model.record.record import Record
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class SuperChapter:
+    """A label-based grouping that wraps regular chapters in the rendered output."""
+
+    title: str
+    labels: list[str] = field(default_factory=list)
 
 
 def _normalize_labels(raw: Any) -> list[str]:  # helper for multi-label
@@ -74,6 +83,11 @@ class CustomChapters(BaseChapters):
     """
     A class used to represent the custom chapters in the release notes.
     """
+
+    def __init__(self, sort_ascending: bool = True, print_empty_chapters: bool = True):
+        super().__init__(sort_ascending, print_empty_chapters)
+        self._super_chapters: list[SuperChapter] = []
+        self._record_labels: dict[str, list[str]] = {}
 
     def _find_catch_open_hierarchy_chapter(self) -> Chapter | None:
         """Return the first chapter with catch_open_hierarchy enabled, or None."""
@@ -136,6 +150,10 @@ class CustomChapters(BaseChapters):
 
             record_labels = getattr(record, "labels", [])
 
+            # Track labels for super-chapter grouping at render time
+            if record_labels:
+                self._record_labels[record_id] = list(record_labels)
+
             # Conditional Custom Chapter gate: intercept open hierarchy parents before label routing.
             # Note: precedes the record_labels early-exit so label-less HierarchyIssueRecord
             # is still routed to a no-filter COH chapter.
@@ -175,9 +193,21 @@ class CustomChapters(BaseChapters):
         """
         Converts the custom chapters to a string, excluding hidden chapters.
 
+        When super chapters are configured, records are grouped under super-chapter
+        headings (``## Title``) with regular chapters nested inside (``### Title``).
+        A record may appear in multiple super chapters. Chapters with no matching
+        records under a given super chapter are governed by ``print_empty_chapters``.
+
         Returns:
             str: The chapters as a string with hidden chapters filtered out.
         """
+        if self._super_chapters:
+            return self._to_string_with_super_chapters()
+
+        return self._to_string_flat()
+
+    def _to_string_flat(self) -> str:
+        """Render chapters without super-chapter grouping (original behaviour)."""
         result = ""
         for chapter in self._sorted_chapters():
             # Skip hidden chapters from output
@@ -194,6 +224,42 @@ class CustomChapters(BaseChapters):
                 result += chapter_string + "\n\n"
 
         # Note: strip is required to remove leading newline chars when empty chapters are not printed option
+        return result.strip()
+
+    def _to_string_with_super_chapters(self) -> str:
+        """Render chapters grouped under super-chapter headings."""
+        result = ""
+        for sc in self._super_chapters:
+            # Collect record IDs whose labels match this super chapter
+            matching_ids: set[str] = set()
+            for rid, labels in self._record_labels.items():
+                if any(lbl in sc.labels for lbl in labels):
+                    matching_ids.add(rid)
+
+            sc_block = ""
+            for chapter in self._sorted_chapters():
+                if chapter.hidden:
+                    continue
+
+                # Filter chapter rows to only those matching the super chapter
+                filtered_rows = {
+                    rid: row for rid, row in chapter.rows.items() if str(rid) in matching_ids or rid in matching_ids
+                }
+                if not filtered_rows and not self.print_empty_chapters:
+                    continue
+
+                sorted_items = sorted(filtered_rows.items(), key=lambda item: item[0], reverse=not self.sort_ascending)
+                if sorted_items:
+                    ch_str = f"### {chapter.title}\n" + "".join(f"- {value}\n" for _, value in sorted_items)
+                    sc_block += ch_str.strip() + "\n\n"
+                elif self.print_empty_chapters:
+                    sc_block += f"### {chapter.title}\n{chapter.empty_message}\n\n"
+
+            if sc_block.strip():
+                result += f"## {sc.title}\n{sc_block}"
+            elif self.print_empty_chapters:
+                result += f"## {sc.title}\nNo entries detected.\n\n"
+
         return result.strip()
 
     def from_yaml_array(self, chapters: list[dict[str, Any]]) -> "CustomChapters":  # type: ignore[override]
@@ -262,7 +328,45 @@ class CustomChapters(BaseChapters):
                 parsed_order=parsed_order,
             )
 
+        # Parse super-chapter definitions from action inputs
+        self._super_chapters = self._parse_super_chapters(ActionInputs.get_super_chapters())
+
         return self
+
+    @staticmethod
+    def _parse_super_chapters(raw_super_chapters: list[dict[str, Any]]) -> list[SuperChapter]:
+        """Parse super-chapter YAML definitions into SuperChapter instances.
+
+        Parameters:
+            raw_super_chapters: Parsed YAML list of dicts with 'title' and 'label'/'labels'.
+
+        Returns:
+            List of validated SuperChapter instances; invalid entries are skipped with a warning.
+        """
+        result: list[SuperChapter] = []
+        for entry in raw_super_chapters:
+            if not isinstance(entry, dict):
+                logger.warning("Skipping super-chapter definition with invalid type %s: %s", type(entry), entry)
+                continue
+            if "title" not in entry:
+                logger.warning("Skipping super-chapter without title key: %s", entry)
+                continue
+            title = entry["title"]
+
+            raw_labels = entry.get("labels", entry.get("label"))
+            if raw_labels is None:
+                logger.warning("Super-chapter '%s' has no 'label' or 'labels' key; skipping", title)
+                continue
+            if isinstance(raw_labels, str):
+                raw_labels = [raw_labels]
+            normalized = _normalize_labels(raw_labels)
+            if not normalized:
+                logger.warning("Super-chapter '%s' labels definition empty after normalization; skipping", title)
+                continue
+
+            result.append(SuperChapter(title=title, labels=normalized))
+            logger.debug("Registered super-chapter '%s' with labels: %s", title, normalized)
+        return result
 
     @staticmethod
     def _parse_bool_flag(title: str, raw: Any, key: str) -> bool:

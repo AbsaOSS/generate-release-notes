@@ -27,6 +27,7 @@ This page lists all action inputs and outputs with defaults. Grouped for readabi
 | `row-format-issue` | No | `{type}: {number} _{title}_ developed by {developers} in {pull-requests}` | Template for issue rows. |
 | `row-format-pr` | No | `{number} _{title}_ developed by {developers}` | Template for PR rows. |
 | `row-format-link-pr` | No | `true` | If true adds `PR:` prefix when a PR is listed without an issue. |
+| `super-chapters` | No | "" | YAML multi-line list of super-chapter entries (`title` + `label`/`labels`). Groups regular chapters under higher-level headings by label. See [Super Chapters](features/custom_chapters.md#super-chapters). |
 
 > CodeRabbit summaries must already be present in the PR body (produced by your own CI/App setup). This action only parses existing summaries; it does not configure or call CodeRabbit.
 
