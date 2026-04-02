@@ -270,6 +270,28 @@ def test_get_super_chapters_missing_title_skipped(mocker, caplog):
     assert any("without title key" in r.message for r in caplog.records)
 
 
+def test_get_super_chapters_non_string_title_skipped(mocker, caplog):
+    caplog.set_level("WARNING")
+    mocker.patch(
+        "release_notes_generator.action_inputs.get_action_input",
+        return_value='[{"title": 42, "label": "l"}, {"title": "Valid", "label": "v"}]',
+    )
+    result = ActionInputs.get_super_chapters()
+    assert result == [{"title": "Valid", "labels": ["v"]}]
+    assert any("invalid title value" in r.message for r in caplog.records)
+
+
+def test_get_super_chapters_blank_title_skipped(mocker, caplog):
+    caplog.set_level("WARNING")
+    mocker.patch(
+        "release_notes_generator.action_inputs.get_action_input",
+        return_value='[{"title": "   ", "label": "l"}, {"title": "Valid", "label": "v"}]',
+    )
+    result = ActionInputs.get_super_chapters()
+    assert result == [{"title": "Valid", "labels": ["v"]}]
+    assert any("invalid title value" in r.message for r in caplog.records)
+
+
 def test_get_super_chapters_missing_labels_skipped(mocker, caplog):
     caplog.set_level("WARNING")
     mocker.patch(

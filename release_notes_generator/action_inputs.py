@@ -209,6 +209,9 @@ class ActionInputs:
                 logger.warning("Skipping super-chapter without title key: %s", entry)
                 continue
             title = entry["title"]
+            if not isinstance(title, str) or not title.strip():
+                logger.warning("Skipping super-chapter with invalid title value: %r", title)
+                continue
 
             raw_labels = entry.get("labels", entry.get("label"))
             if raw_labels is None:
