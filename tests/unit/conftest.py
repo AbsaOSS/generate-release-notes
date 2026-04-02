@@ -39,6 +39,7 @@ from typing import Any
 
 from pytest_mock import MockerFixture
 
+from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.chapters.custom_chapters import CustomChapters
 from release_notes_generator.model.record.sub_issue_record import SubIssueRecord
 from release_notes_generator.utils.enums import DuplicityScopeEnum

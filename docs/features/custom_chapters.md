@@ -264,6 +264,55 @@ When super chapters are configured the output uses `##` headings for super chapt
 - Non-dict entries are skipped with a warning.
 - Empty labels after normalization cause the entry to be skipped with a warning.
 
+## Super Chapters
+
+**Super chapters** group regular chapters under higher-level headings based on a separate label. This is useful in monorepo or multi-module projects where the same chapter structure (Features, Bugfixes, …) should appear once per component.
+
+### Configuration
+
+Define super chapters via the `super-chapters` input — a YAML array with `title` and `label`/`labels`:
+
+```yaml
+with:
+  super-chapters: |
+    - title: "Atum Server"
+      label: "atum-server"
+    - title: "Atum Agent"
+      labels: "atum-agent, atum-agent-spark"
+  chapters: |
+    - {"title": "Enhancements", "label": "enhancement"}
+    - {"title": "Bugfixes", "label": "bug"}
+```
+
+### Rendering
+
+When super chapters are configured the output uses `##` headings for super chapters and `###` for regular chapters nested inside:
+
+```markdown
+## Atum Server
+### Enhancements
+- #10 _Streaming API_ developed by @alice in #12
+
+### Bugfixes
+- #15 _Fix timeout_ developed by @bob in #16
+
+## Atum Agent
+### Enhancements
+- #20 _Checkpointing_ developed by @carol in #22
+```
+
+### Behavior
+- A record is placed under a super chapter if it carries at least one label matching the super chapter's labels.
+- A record can appear in **multiple** super chapters if its labels match more than one.
+- Within each super chapter, records are routed to regular chapters by the normal label matching rules.
+- Empty super chapters (no matching records) respect the `print-empty-chapters` setting.
+- When no super chapters are configured, output is flat (unchanged from previous behavior).
+
+### Validation
+- Entries missing `title` or `label`/`labels` are skipped with a warning.
+- Non-dict entries are skipped with a warning.
+- Empty labels after normalization cause the entry to be skipped with a warning.
+
 ## Related Features
 - [Duplicity Handling](./duplicity_handling.md) – governs multi-chapter visibility.
 - [Release Notes Extraction](./release_notes_extraction.md) – provides the change increment lines.
