@@ -216,24 +216,42 @@ class HierarchyIssueRecord(IssueRecord):
 
         # add sub-hierarchy issues
         for sub_hierarchy_issue in self._sub_hierarchy_issues.values():
-            logger.debug("Rendering hierarchy issue row for sub-issue #%s", sub_hierarchy_issue.issue.number)
-            if sub_hierarchy_issue.contains_change_increment():
-                logger.debug("Sub-hierarchy issue #%s contains change increment", sub_hierarchy_issue.issue.number)
-                row = f"{row}\n{sub_hierarchy_issue.to_chapter_row()}"
+            logger.debug("Rendering sub-hierarchy issue row for #%s", sub_hierarchy_issue.issue.number)
+            if self.is_open:
+                if not sub_hierarchy_issue.contains_change_increment():
+                    continue
+            # Closed parent: render all sub-hierarchy issues regardless of state or change increment
+            logger.debug("Rendering sub-hierarchy issue #%s", sub_hierarchy_issue.issue.number)
+            if self.is_closed and sub_hierarchy_issue.is_open:
+                sub_row = sub_hierarchy_issue.to_chapter_row()
+                # Highlight open children under a closed parent to signal incomplete work
+                icon = ActionInputs.get_open_hierarchy_sub_issue_icon()
+                header_line, newline, remaining_lines = sub_row.partition("\n")
+                header_text = header_line.lstrip()
+                indent = header_line[: len(header_line) - len(header_text)]
+                sub_row = f"{indent}{icon} {header_text}{newline}{remaining_lines}"
+            else:
+                sub_row = sub_hierarchy_issue.to_chapter_row()
+            row = f"{row}\n{sub_row}"
 
         # add sub-issues
         if len(self._sub_issues) > 0:
             sub_indent = "  " * (self._level + 1)
             for sub_issue in self._sub_issues.values():
-                logger.debug("Rendering sub-issue row for issue #%d", sub_issue.issue.number)
-                if sub_issue.is_open:
-                    continue  # only closed issues are reported in release notes
+                logger.debug("Rendering sub-issue row for issue #%s", sub_issue.issue.number)
+                if self.is_open:
+                    if sub_issue.is_open:
+                        continue  # only closed issues are reported in release notes
+                    if not sub_issue.contains_change_increment():
+                        continue  # skip sub-issues without change increment
+                # Closed parent: render all sub-issues regardless of state or change increment
 
-                if not sub_issue.contains_change_increment():
-                    continue  # skip sub-issues without change increment
-
-                logger.debug("Sub-issue #%s contains change increment", sub_issue.issue.number)
-                sub_issue_block = "- " + sub_issue.to_chapter_row()
+                logger.debug("Rendering sub-issue #%s", sub_issue.issue.number)
+                open_icon_prefix = ""
+                if self.is_closed and sub_issue.is_open:
+                    # Highlight open children under a closed parent to signal incomplete work
+                    open_icon_prefix = ActionInputs.get_open_hierarchy_sub_issue_icon() + " "
+                sub_issue_block = "- " + open_icon_prefix + sub_issue.to_chapter_row()
                 ind_child_block = "\n".join(
                     f"{sub_indent}{line}" if line else "" for line in sub_issue_block.splitlines()
                 )

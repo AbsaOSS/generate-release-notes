@@ -22,18 +22,18 @@ from release_notes_generator.utils.gh_action import get_action_input, set_action
 def test_get_input_with_hyphen(mocker):
     mock_getenv = mocker.patch("os.getenv", return_value="test_value")
 
-    result = get_action_input("test-input", default=None)
+    result = get_action_input("test-input")
 
-    mock_getenv.assert_called_with("INPUT_TEST_INPUT")
+    mock_getenv.assert_called_with("INPUT_TEST_INPUT", default="")
     assert "test_value" == result
 
 
 def test_get_input_without_hyphen(mocker):
     mock_getenv = mocker.patch("os.getenv", return_value="another_test_value")
 
-    result = get_action_input("anotherinput", default=None)
+    result = get_action_input("anotherinput")
 
-    mock_getenv.assert_called_with("INPUT_ANOTHERINPUT")
+    mock_getenv.assert_called_with("INPUT_ANOTHERINPUT", default="")
     assert "another_test_value" == result
 
 
