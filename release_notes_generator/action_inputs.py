@@ -254,9 +254,7 @@ class ActionInputs:
         """
         Get the CodeRabbit release notes title from the action inputs.
         """
-        return get_action_input(
-            CODERABBIT_RELEASE_NOTES_TITLE, CODERABBIT_RELEASE_NOTE_TITLE_DEFAULT
-        )
+        return get_action_input(CODERABBIT_RELEASE_NOTES_TITLE, CODERABBIT_RELEASE_NOTE_TITLE_DEFAULT)
 
     @staticmethod
     def get_coderabbit_summary_ignore_groups() -> list[str]:
@@ -380,9 +378,7 @@ class ActionInputs:
         """
         if ActionInputs._row_format_hierarchy_issue is None:
             ActionInputs._row_format_hierarchy_issue = ActionInputs._detect_row_format_invalid_keywords(
-                get_action_input(
-                    ROW_FORMAT_HIERARCHY_ISSUE, "{type}: _{title}_ {number}"
-                ).strip(),
+                get_action_input(ROW_FORMAT_HIERARCHY_ISSUE, "{type}: _{title}_ {number}").strip(),
                 row_type=ActionInputs.ROW_TYPE_HIERARCHY_ISSUE,
                 clean=True,
             )
@@ -409,9 +405,7 @@ class ActionInputs:
         """
         if ActionInputs._row_format_pr is None:
             ActionInputs._row_format_pr = ActionInputs._detect_row_format_invalid_keywords(
-                get_action_input(
-                    ROW_FORMAT_PR, "{number} _{title}_ developed by {developers}"
-                ).strip(),
+                get_action_input(ROW_FORMAT_PR, "{number} _{title}_ developed by {developers}").strip(),
                 row_type=ActionInputs.ROW_TYPE_PR,
                 clean=True,
             )
