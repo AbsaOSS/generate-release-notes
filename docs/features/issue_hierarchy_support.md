@@ -6,7 +6,12 @@ Represent issue → sub-issue relationships directly in release notes, aggregati
 ## How It Works
 - Enabled via input `hierarchy: true` (default: `false`). When disabled, all issues render flat.
 - Parent issues are detected; sub-issues (and nested hierarchy issues) are fetched and ordered by level. Levels indent with two spaces per depth; nested items use list markers (`-`).
-- Only closed sub-issues that contain a change increment (merged PR to default branch) are rendered; open ones, and PR to non default branch are ignored.
+- When the parent hierarchy issue is **open**:
+  - Leaf sub-issues: only closed ones with a change increment are rendered; open ones and those closed or delivered in a previous release are ignored.
+  - Nested sub-hierarchy children: filtered by change increment only — an open child that aggregates PRs from deeper levels is still rendered.
+- When the parent hierarchy issue is **closed**:
+  - All children (sub-issues and nested sub-hierarchy children) are rendered. Open children are prefixed with the `open-hierarchy-sub-issue-icon` (default `🟡`) to signal incomplete work.
+  - Set `open-hierarchy-sub-issue-icon` to an empty string to disable the highlighting.
 - Each hierarchy issue line can expand with its own extracted release notes block if present (prefixed with `_Release Notes_:` heading within the item block).
 
 ## Configuration
@@ -23,6 +28,12 @@ Represent issue → sub-issue relationships directly in release notes, aggregati
       - {"title": "New Features 🎉", "label": "feature"}
 ```
 
+Optional inputs related to hierarchy:
+
+| Input | Default | Description |
+|---|---|---|
+| `open-hierarchy-sub-issue-icon` | `🟡` | Icon prepended to open sub-issues and open sub-hierarchy issues rendered under a closed hierarchy parent. Set to an empty string to disable highlighting. |
+
 ## Example Result
 ```markdown
 ### New Features 🎉
@@ -33,6 +44,7 @@ Represent issue → sub-issue relationships directly in release notes, aggregati
   - Updated `scala213 = "2.13.13"`
   - Feature: _Add user MFA enrollment flow_ #123 developed by @alice in #124
     - Add user MFA enrollment flow
+  - 🟡 Feature: _Add OAuth2 login_ #125  ← open sub-issue under closed Epic
 ```
 (1st four indented bullets under Epic line represent the extracted release notes from the parent hierarchy issue's body.)
 

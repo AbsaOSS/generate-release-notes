@@ -17,6 +17,7 @@ from copy import deepcopy
 from datetime import datetime, timedelta
 
 import pytest
+from pytest_mock import MockerFixture
 
 from github import Github, IssueType, NamedUser
 from github.Commit import Commit
@@ -1226,3 +1227,108 @@ def mock_logging_setup(mocker):
     """Fixture to mock the basic logging setup using pytest-mock."""
     mock_log_config = mocker.patch("logging.basicConfig")
     yield mock_log_config
+
+
+# Helpers for hierarchy issue record tests
+_HIERARCHY_ROW_FMT = "_{title}_ {number}"
+_ISSUE_ROW_FMT_MINIMAL = "{number} _{title}_"
+
+
+def make_minimal_issue(mocker: MockerFixture, state: str, number: int) -> Issue:
+    """Return a minimal Issue mock."""
+    issue = mocker.Mock(spec=Issue)
+    issue.state = state
+    issue.number = number
+    issue.title = "Minimal test issue"
+    issue.body = None
+    issue.type = None
+    issue.user = None
+    issue.assignees = []
+    issue.get_labels.return_value = []
+    return issue
+
+
+def make_minimal_pr(mocker: MockerFixture, number: int) -> PullRequest:
+    """Return a minimal PullRequest mock."""
+    pr = mocker.Mock(spec=PullRequest)
+    pr.number = number
+    pr.body = None
+    pr.html_url = f"https://github.com/org/repo/pull/{number}"
+    pr.user = None
+    pr.assignees = []
+    pr.get_labels.return_value = []
+    return pr
+
+
+def make_closed_sub_issue_record_with_pr(mocker: MockerFixture, number: int) -> SubIssueRecord:
+    """Return a closed SubIssueRecord with one PR (no commits)."""
+    sub_record = SubIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number))
+    sub_record.register_pull_request(make_minimal_pr(mocker, number=number + 1000))
+    return sub_record
+
+
+def make_open_sub_issue_record_no_pr(mocker: MockerFixture, number: int) -> SubIssueRecord:
+    """Return an open SubIssueRecord with no PRs."""
+    return SubIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_OPEN, number))
+
+
+def make_closed_sub_issue_record_no_pr(mocker: MockerFixture, number: int) -> SubIssueRecord:
+    """Return a closed SubIssueRecord with no PRs (no change increment)."""
+    return SubIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number))
+
+
+def make_open_sub_hierarchy_record_no_pr(mocker: MockerFixture, number: int) -> HierarchyIssueRecord:
+    """Return an open HierarchyIssueRecord with no PRs."""
+    return HierarchyIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_OPEN, number))
+
+
+def make_open_sub_hierarchy_record_with_pr(mocker: MockerFixture, number: int) -> HierarchyIssueRecord:
+    """Return an open HierarchyIssueRecord with one PR (no commits)."""
+    rec = HierarchyIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_OPEN, number))
+    rec.register_pull_request(make_minimal_pr(mocker, number=number + 1000))
+    return rec
+
+
+def make_closed_sub_hierarchy_record_with_pr(mocker: MockerFixture, number: int) -> HierarchyIssueRecord:
+    """Return a closed HierarchyIssueRecord with one PR (no commits)."""
+    rec = HierarchyIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number))
+    rec.register_pull_request(make_minimal_pr(mocker, number=number + 1000))
+    return rec
+
+
+def make_closed_sub_hierarchy_record_no_pr(mocker: MockerFixture, number: int) -> HierarchyIssueRecord:
+    """Return a closed HierarchyIssueRecord with no PRs (no change increment)."""
+    return HierarchyIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number))
+
+
+@pytest.fixture
+def patch_hierarchy_action_inputs(mocker):
+    """Patch ActionInputs with minimal row-format values for HierarchyIssueRecord tests."""
+    mocker.patch(
+        "release_notes_generator.model.record.hierarchy_issue_record.ActionInputs.get_row_format_hierarchy_issue",
+        return_value=_HIERARCHY_ROW_FMT,
+    )
+    mocker.patch(
+        "release_notes_generator.model.record.hierarchy_issue_record.ActionInputs.get_duplicity_icon",
+        return_value="🔔",
+    )
+    mocker.patch(
+        "release_notes_generator.model.record.issue_record.ActionInputs.get_row_format_issue",
+        return_value=_ISSUE_ROW_FMT_MINIMAL,
+    )
+    mocker.patch(
+        "release_notes_generator.model.record.issue_record.ActionInputs.get_duplicity_icon",
+        return_value="🔔",
+    )
+    mocker.patch(
+        "release_notes_generator.model.record.record.ActionInputs.get_release_notes_title",
+        return_value="Release Notes:",
+    )
+    mocker.patch(
+        "release_notes_generator.model.record.record.ActionInputs.is_coderabbit_support_active",
+        return_value=False,
+    )
+    mocker.patch(
+        "release_notes_generator.model.record.hierarchy_issue_record.ActionInputs.get_open_hierarchy_sub_issue_icon",
+        return_value="🟡",
+    )
