@@ -26,6 +26,7 @@ from typing import Any, Iterable
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.chapters.base_chapters import BaseChapters
 from release_notes_generator.model.chapter import Chapter
+from release_notes_generator.utils.constants import UNCATEGORIZED_CHAPTER_TITLE
 from release_notes_generator.model.record.commit_record import CommitRecord
 from release_notes_generator.model.record.hierarchy_issue_record import HierarchyIssueRecord
 from release_notes_generator.model.record.record import Record
@@ -149,10 +150,7 @@ class CustomChapters(BaseChapters):
                 continue
 
             record_labels = getattr(record, "labels", [])
-
-            # Track labels for super-chapter grouping at render time
-            if record_labels:
-                self._record_labels[record_id] = list(record_labels)
+            self._record_labels[record_id] = list(record_labels)
 
             # Conditional Custom Chapter gate: intercept open hierarchy parents before label routing.
             # Note: precedes the record_labels early-exit so label-less HierarchyIssueRecord
@@ -226,39 +224,71 @@ class CustomChapters(BaseChapters):
         # Note: strip is required to remove leading newline chars when empty chapters are not printed option
         return result.strip()
 
+    def _collect_super_chapter_ids(self, sc: SuperChapter) -> set[str]:
+        """Return record IDs whose labels match the given super chapter."""
+        matching: set[str] = set()
+        for rid, labels in self._record_labels.items():
+            if any(lbl in sc.labels for lbl in labels):
+                matching.add(rid)
+        return matching
+
+    def _render_chapter_for_ids(self, chapter: Chapter, matching_ids: set[str]) -> str:
+        """Render a single chapter filtered to matching_ids, delegating to Chapter.to_string."""
+        original_rows = chapter.rows
+        chapter.rows = {
+            rid: row for rid, row in original_rows.items() if str(rid) in matching_ids or rid in matching_ids
+        }
+        try:
+            return chapter.to_string(sort_ascending=self.sort_ascending, print_empty_chapters=self.print_empty_chapters)
+        finally:
+            chapter.rows = original_rows
+
     def _to_string_with_super_chapters(self) -> str:
         """Render chapters grouped under super-chapter headings."""
+        # Collect all record IDs claimed by at least one super chapter
+        all_super_labels: set[str] = set()
+        for sc in self._super_chapters:
+            all_super_labels.update(sc.labels)
+
+        claimed_ids: set[str] = set()
+        for rid, labels in self._record_labels.items():
+            if any(lbl in all_super_labels for lbl in labels):
+                claimed_ids.add(rid)
+
         result = ""
         for sc in self._super_chapters:
-            # Collect record IDs whose labels match this super chapter
-            matching_ids: set[str] = set()
-            for rid, labels in self._record_labels.items():
-                if any(lbl in sc.labels for lbl in labels):
-                    matching_ids.add(rid)
+            matching_ids = self._collect_super_chapter_ids(sc)
 
             sc_block = ""
             for chapter in self._sorted_chapters():
                 if chapter.hidden:
                     continue
-
-                # Filter chapter rows to only those matching the super chapter
-                filtered_rows = {
-                    rid: row for rid, row in chapter.rows.items() if str(rid) in matching_ids or rid in matching_ids
-                }
-                if not filtered_rows and not self.print_empty_chapters:
-                    continue
-
-                sorted_items = sorted(filtered_rows.items(), key=lambda item: item[0], reverse=not self.sort_ascending)
-                if sorted_items:
-                    ch_str = f"### {chapter.title}\n" + "".join(f"- {value}\n" for _, value in sorted_items)
-                    sc_block += ch_str.strip() + "\n\n"
-                elif self.print_empty_chapters:
-                    sc_block += f"### {chapter.title}\n{chapter.empty_message}\n\n"
+                ch_str = self._render_chapter_for_ids(chapter, matching_ids)
+                if ch_str:
+                    sc_block += ch_str + "\n\n"
 
             if sc_block.strip():
                 result += f"## {sc.title}\n{sc_block}"
             elif self.print_empty_chapters:
                 result += f"## {sc.title}\nNo entries detected.\n\n"
+
+        # Fallback: records not claimed by any super chapter
+        unclaimed_ids: set[str] = set()
+        for chapter in self._sorted_chapters():
+            for rid in chapter.rows:
+                if str(rid) not in claimed_ids and rid not in claimed_ids:
+                    unclaimed_ids.add(str(rid))
+
+        if unclaimed_ids:
+            uc_block = ""
+            for chapter in self._sorted_chapters():
+                if chapter.hidden:
+                    continue
+                ch_str = self._render_chapter_for_ids(chapter, unclaimed_ids)
+                if ch_str:
+                    uc_block += ch_str + "\n\n"
+            if uc_block.strip():
+                result += f"## {UNCATEGORIZED_CHAPTER_TITLE}\n{uc_block}"
 
         return result.strip()
 
@@ -334,7 +364,7 @@ class CustomChapters(BaseChapters):
         return self
 
     @staticmethod
-    def _parse_super_chapters(raw_super_chapters: list[dict[str, Any]]) -> list[SuperChapter]:
+    def _parse_super_chapters(raw_super_chapters: list[dict[str, str]]) -> list[SuperChapter]:
         """Parse super-chapter YAML definitions into SuperChapter instances.
 
         Parameters:

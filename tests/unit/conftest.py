@@ -34,6 +34,10 @@ from release_notes_generator.model.mined_data import MinedData
 from release_notes_generator.model.record.pull_request_record import PullRequestRecord
 from release_notes_generator.chapters.service_chapters import ServiceChapters
 from release_notes_generator.model.chapter import Chapter
+from typing import Any
+
+from pytest_mock import MockerFixture
+
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.chapters.custom_chapters import CustomChapters
 from release_notes_generator.model.record.sub_issue_record import SubIssueRecord
@@ -99,14 +103,20 @@ def custom_chapters_not_print_empty_chapters():
     return chapters
 
 
-def make_super_chapters_cc(mocker, chapters_yaml, super_chapters_yaml, print_empty=True):
+def make_super_chapters_cc(
+    mocker: MockerFixture,
+    chapters_yaml: list[dict],
+    super_chapters_yaml: list[dict],
+    print_empty: bool = True,
+    hierarchy: bool = False,
+) -> CustomChapters:
     mocker.patch(
         "release_notes_generator.chapters.custom_chapters.ActionInputs.get_super_chapters",
         return_value=super_chapters_yaml,
     )
     mocker.patch(
         "release_notes_generator.chapters.custom_chapters.ActionInputs.get_hierarchy",
-        return_value=False,
+        return_value=hierarchy,
     )
     mocker.patch(
         "release_notes_generator.chapters.custom_chapters.ActionInputs.get_verbose",

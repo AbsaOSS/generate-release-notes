@@ -22,7 +22,6 @@ import logging
 import os
 import sys
 import re
-
 import yaml
 
 from release_notes_generator.utils.constants import (
@@ -167,7 +166,7 @@ class ActionInputs:
                 logger.error("Error: 'chapters' input is not a valid YAML list.")
                 return []
         except yaml.YAMLError as exc:
-            logger.error("Error parsing 'chapters' input: {%s}", exc)
+            logger.error("Error parsing 'chapters' input: %s", exc)
             return []
 
         return chapters
@@ -176,25 +175,24 @@ class ActionInputs:
     def get_super_chapters() -> list[dict[str, str]]:
         """
         Get list of super chapter definitions from the action inputs.
-
-        Returns:
-            Parsed YAML list of dicts with 'title' and 'label'/'labels' keys,
-            or an empty list when the input is absent or invalid.
         """
-        raw: str = get_action_input(SUPER_CHAPTERS, default="")  # type: ignore[assignment]
-        if not raw or not raw.strip():
-            return []
+        # Get the 'super-chapters' input from environment variables
+        super_chapters_input: str = get_action_input(SUPER_CHAPTERS, default="")  # type: ignore[assignment]
+        # mypy: string is returned as default
 
+        # Parse the received string back to YAML array input.
         try:
-            parsed = yaml.safe_load(raw)
-            if not isinstance(parsed, list):
+            super_chapters = yaml.safe_load(super_chapters_input)
+            if super_chapters is None:
+                return []
+            if not isinstance(super_chapters, list):
                 logger.error("Error: 'super-chapters' input is not a valid YAML list.")
                 return []
         except yaml.YAMLError as exc:
-            logger.error("Error parsing 'super-chapters' input: {%s}", exc)
+            logger.error("Error parsing 'super-chapters' input: %s", exc)
             return []
 
-        return parsed
+        return super_chapters
 
     @staticmethod
     def get_hierarchy() -> bool:

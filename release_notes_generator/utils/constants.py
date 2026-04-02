@@ -49,6 +49,9 @@ HIDDEN_SERVICE_CHAPTERS = "hidden-service-chapters"
 SERVICE_CHAPTER_ORDER = "service-chapter-order"
 PRINT_EMPTY_CHAPTERS = "print-empty-chapters"
 
+# Super chapter fallback heading
+UNCATEGORIZED_CHAPTER_TITLE: str = "Uncategorized"
+
 # Release notes comment constants
 RELEASE_NOTE_TITLE_DEFAULT: str = "[Rr]elease [Nn]otes:"
 CODERABBIT_RELEASE_NOTE_TITLE_DEFAULT: str = "Summary by CodeRabbit"

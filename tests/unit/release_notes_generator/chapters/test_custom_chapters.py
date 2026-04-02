@@ -1333,3 +1333,66 @@ def test_super_chapters_parse_logs_and_skips_invalid(mocker):
     # Assert - only the "Valid" super chapter survives
     assert "## Valid" in output
     assert sum(1 for line in output.splitlines() if line.startswith("## ") and not line.startswith("### ")) == 1
+
+
+def test_super_chapters_uncategorized_fallback(mocker, record_stub):
+    """Records without any super-chapter label appear under '## Uncategorized'."""
+    # Arrange
+    cc = make_super_chapters_cc(
+        mocker,
+        [
+            {"title": "Enhancements", "label": "enhancement"},
+            {"title": "Bugfixes", "label": "bug"},
+        ],
+        [{"title": "Module A", "label": "mod-a"}],
+    )
+    r1 = record_stub("org/repo#1", ["enhancement", "mod-a"])
+    r2 = record_stub("org/repo#2", ["bug"])  # no super-chapter label
+    cc.populate({"org/repo#1": r1, "org/repo#2": r2})
+    # Act
+    output = cc.to_string()
+    # Assert
+    assert "## Module A" in output
+    assert "org/repo#1 row" in output
+    assert "## Uncategorized" in output
+    uncategorized_section = output.split("## Uncategorized")[1]
+    assert "org/repo#2 row" in uncategorized_section
+    assert "org/repo#1 row" not in uncategorized_section
+
+
+def test_super_chapters_no_uncategorized_when_all_claimed(mocker, record_stub):
+    """No '## Uncategorized' section when all records match a super chapter."""
+    # Arrange
+    cc = make_super_chapters_cc(
+        mocker,
+        [{"title": "Enhancements", "label": "enhancement"}],
+        [{"title": "Module A", "label": "mod-a"}],
+    )
+    r1 = record_stub("org/repo#1", ["enhancement", "mod-a"])
+    cc.populate({"org/repo#1": r1})
+    # Act
+    output = cc.to_string()
+    # Assert
+    assert "## Module A" in output
+    assert "Uncategorized" not in output
+
+
+def test_super_chapters_coh_record_visible_in_fallback(mocker, hierarchy_record_stub):
+    """COH-routed label-less record appears in Uncategorized when super chapters are active."""
+    # Arrange
+    cc = make_super_chapters_cc(
+        mocker,
+        [
+            {"title": "Features", "labels": "feature"},
+            {"title": "Silent Live", "catch-open-hierarchy": True},
+        ],
+        [{"title": "Module A", "label": "mod-a"}],
+        hierarchy=True,
+    )
+    record = hierarchy_record_stub("org/repo#H1", [], state="open")
+    cc.populate({"org/repo#H1": record})
+    # Act
+    output = cc.to_string()
+    # Assert - COH record appears in Uncategorized since it has no super-chapter label
+    assert "## Uncategorized" in output
+    assert "org/repo#H1 row" in output

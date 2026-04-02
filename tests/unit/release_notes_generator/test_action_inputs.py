@@ -202,6 +202,61 @@ def test_get_chapters_yaml_error(mocker):
     assert [] == ActionInputs.get_chapters()
 
 
+def test_get_super_chapters_success(mocker):
+    mocker.patch(
+        "release_notes_generator.action_inputs.get_action_input",
+        return_value='[{"title": "Module A", "label": "mod-a"}]',
+    )
+    assert ActionInputs.get_super_chapters() == [{"title": "Module A", "label": "mod-a"}]
+
+
+def test_get_super_chapters_empty_input(mocker):
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="")
+    assert ActionInputs.get_super_chapters() == []
+
+
+def test_get_super_chapters_blank_input(mocker):
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="   ")
+    assert ActionInputs.get_super_chapters() == []
+
+
+def test_get_super_chapters_not_a_list(mocker, caplog):
+    caplog.set_level("ERROR")
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="not_a_list: true")
+    result = ActionInputs.get_super_chapters()
+    assert result == []
+    assert any("not a valid YAML list" in r.message for r in caplog.records)
+
+
+def test_get_super_chapters_yaml_error(mocker, caplog):
+    caplog.set_level("ERROR")
+    mocker.patch(
+        "release_notes_generator.action_inputs.get_action_input",
+        return_value='[{"title": "A" "label": "b"}]',
+    )
+    result = ActionInputs.get_super_chapters()
+    assert result == []
+    assert any("Error parsing 'super-chapters'" in r.message for r in caplog.records)
+
+
+def test_get_super_chapters_list_labels_preserved(mocker):
+    mocker.patch(
+        "release_notes_generator.action_inputs.get_action_input",
+        return_value='[{"title": "Module A", "labels": ["mod-a", "mod-b"]}]',
+    )
+    result = ActionInputs.get_super_chapters()
+    assert result == [{"title": "Module A", "labels": ["mod-a", "mod-b"]}]
+
+
+def test_get_super_chapters_non_dict_entry_included(mocker):
+    mocker.patch(
+        "release_notes_generator.action_inputs.get_action_input",
+        return_value='["not-a-dict", {"title": "Valid", "label": "ok"}]',
+    )
+    result = ActionInputs.get_super_chapters()
+    assert result == ["not-a-dict", {"title": "Valid", "label": "ok"}]
+
+
 def test_get_warnings(mocker):
     mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="true")
     assert ActionInputs.get_warnings() is True
