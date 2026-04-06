@@ -234,9 +234,7 @@ class CustomChapters(BaseChapters):
                     continue
                 filtered_rows[rid] = record.to_chapter_row(add_into_chapters=False, label_filter=super_labels)
             elif exclude_labels and isinstance(record, HierarchyIssueRecord):
-                filtered_rows[rid] = record.to_chapter_row(
-                    add_into_chapters=False, exclude_labels=exclude_labels
-                )
+                filtered_rows[rid] = record.to_chapter_row(add_into_chapters=False, exclude_labels=exclude_labels)
             else:
                 filtered_rows[rid] = row
         chapter.rows = filtered_rows
@@ -288,9 +286,8 @@ class CustomChapters(BaseChapters):
                     unclaimed_ids.add(row_id_str)
                 elif row_id_str in claimed_ids:
                     record = self._records.get(row_id_str)
-                    if (
-                        isinstance(record, HierarchyIssueRecord)
-                        and record.has_unmatched_descendants(all_super_labels_list)
+                    if isinstance(record, HierarchyIssueRecord) and record.has_unmatched_descendants(
+                        all_super_labels_list
                     ):
                         partial_hierarchy_ids.add(row_id_str)
 
@@ -300,9 +297,7 @@ class CustomChapters(BaseChapters):
             for chapter in self._sorted_chapters():
                 if chapter.hidden:
                     continue
-                ch_str = self._render_chapter_for_ids(
-                    chapter, all_uncat_ids, exclude_labels=all_super_labels_list
-                )
+                ch_str = self._render_chapter_for_ids(chapter, all_uncat_ids, exclude_labels=all_super_labels_list)
                 if ch_str:
                     uc_block += ch_str + "\n\n"
             if uc_block.strip():
