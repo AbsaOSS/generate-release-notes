@@ -245,11 +245,7 @@ class CustomChapters(BaseChapters):
 
     def _collect_claimed_ids(self, all_super_labels: set[str]) -> set[str]:
         """Return record IDs whose labels intersect any super-chapter label."""
-        return {
-            rid
-            for rid, labels in self._record_labels.items()
-            if any(lbl in all_super_labels for lbl in labels)
-        }
+        return {rid for rid, labels in self._record_labels.items() if any(lbl in all_super_labels for lbl in labels)}
 
     def _render_super_chapter_block(self, sc: SuperChapter) -> str:
         """Render all chapters filtered to the given super chapter's matching records."""
