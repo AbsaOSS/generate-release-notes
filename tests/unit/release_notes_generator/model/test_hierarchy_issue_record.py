@@ -88,6 +88,52 @@ def test_to_chapter_row_closed_parent_highlights_open_sub_hierarchy_issue(mocker
     assert "🟡" not in closed_line, f"Closed sub-hierarchy line must NOT contain icon; got: {closed_line!r}"
 
 
+def test_to_chapter_row_open_sub_hierarchy_icon_placed_after_list_marker(mocker, patch_hierarchy_action_inputs):
+    """Icon must appear after the '- ' list marker, not before it.
+
+    Correct:   '  - 🟡 _title_ #360'
+    Wrong:     '  🟡 - _title_ #360'
+    """
+    parent = make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=300)
+    record = HierarchyIssueRecord(parent)
+    child = make_open_sub_hierarchy_record_with_pr(mocker, number=360)
+    child.level = 1
+    record.sub_hierarchy_issues["360"] = child
+
+    row = record.to_chapter_row()
+
+    open_line = next((l for l in row.splitlines() if "#360" in l), None)
+    assert open_line is not None
+    stripped = open_line.lstrip()
+    assert stripped.startswith("- 🟡 "), (
+        f"Expected '- 🟡 ' after leading spaces; got: {open_line!r}"
+    )
+
+
+def test_to_chapter_row_empty_icon_leaves_no_stray_space(mocker, patch_hierarchy_action_inputs):
+    """When open-hierarchy-sub-issue-icon is '', the row indentation is unchanged (no stray space)."""
+    mocker.patch(
+        "release_notes_generator.model.record.hierarchy_issue_record.ActionInputs.get_open_hierarchy_sub_issue_icon",
+        return_value="",
+    )
+    parent = make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=300)
+    record = HierarchyIssueRecord(parent)
+    child = make_open_sub_hierarchy_record_with_pr(mocker, number=360)
+    child.level = 1
+    record.sub_hierarchy_issues["360"] = child
+
+    row = record.to_chapter_row()
+
+    open_line = next((l for l in row.splitlines() if "#360" in l), None)
+    assert open_line is not None
+    assert open_line.startswith("  - "), (
+        f"Level-1 row must start with exactly '  - ' (2 spaces); got: {open_line!r}"
+    )
+    assert not open_line.startswith("   "), (
+        f"No stray extra space in indentation with empty icon; got: {open_line!r}"
+    )
+
+
 def test_to_chapter_row_open_parent_only_renders_closed_sub_issues_with_change_increment(mocker, patch_hierarchy_action_inputs):
     """
     Open parent with one closed sub-issue (has PR) and one open sub-issue (no PR) →

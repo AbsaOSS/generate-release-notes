@@ -279,12 +279,19 @@ class HierarchyIssueRecord(IssueRecord):
             logger.debug("Rendering sub-hierarchy issue #%s", sub_hierarchy_issue.issue.number)
             if self.is_closed and sub_hierarchy_issue.is_open:
                 sub_row = sub_hierarchy_issue.to_chapter_row(label_filter=label_filter, exclude_labels=exclude_labels)
-                # Highlight open children under a closed parent to signal incomplete work
+                # Highlight open children under a closed parent to signal incomplete work.
+                # Insert icon after the list marker ('- ') to preserve Markdown structure,
+                # and skip insertion entirely when the icon is empty.
                 icon = ActionInputs.get_open_hierarchy_sub_issue_icon()
-                header_line, newline, remaining_lines = sub_row.partition("\n")
-                header_text = header_line.lstrip()
-                indent = header_line[: len(header_line) - len(header_text)]
-                sub_row = f"{indent}{icon} {header_text}{newline}{remaining_lines}"
+                if icon:
+                    header_line, newline, remaining_lines = sub_row.partition("\n")
+                    header_text = header_line.lstrip()
+                    spaces = header_line[: len(header_line) - len(header_text)]
+                    if header_text.startswith("- "):
+                        marker, content = "- ", header_text[2:]
+                    else:
+                        marker, content = "", header_text
+                    sub_row = f"{spaces}{marker}{icon} {content}{newline}{remaining_lines}"
             else:
                 sub_row = sub_hierarchy_issue.to_chapter_row(label_filter=label_filter, exclude_labels=exclude_labels)
             row = f"{row}\n{sub_row}"
