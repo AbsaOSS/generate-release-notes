@@ -249,6 +249,16 @@ def test_get_super_chapters_list_labels_preserved(mocker):
     assert result == [{"title": "Module A", "labels": ["mod-a", "mod-b"]}]
 
 
+def test_get_super_chapters_comma_separated_labels_string(mocker):
+    """Comma-separated string labels are split into individual label tokens."""
+    mocker.patch(
+        "release_notes_generator.action_inputs.get_action_input",
+        return_value='[{"title": "Module A", "labels": "atum-agent, atum-agent-spark"}]',
+    )
+    result = ActionInputs.get_super_chapters()
+    assert result == [{"title": "Module A", "labels": ["atum-agent", "atum-agent-spark"]}]
+
+
 def test_get_super_chapters_non_dict_entry_skipped(mocker, caplog):
     caplog.set_level("WARNING")
     mocker.patch(

@@ -85,12 +85,12 @@ Testing
 - Must place shared test helper functions and factory fixtures in the nearest `conftest.py` and reuse them across tests.
 - Must annotate pytest fixture parameters with `MockerFixture` (from `pytest_mock`) and return types with `Callable[..., T]` (from `collections.abc`) when the fixture returns a factory function.
 - Prefer TDD workflow:
-  1. Create or update `SPEC.md` in the relevant package directory to describe the expected solution — list the scenarios, inputs, and expected outputs before any code is written.
-  2. Propose the full set of test cases (name + one-line intent + input summary + expected output summary) and wait for user confirmation before writing any code.
-  3. Be ready to add, remove, or rename tests based on user feedback before proceeding.
-  4. Once confirmed, write all failing tests first (red), then implement until all pass (green).
-  5. Cover all distinct combinations; each test must state its scenario in the docstring.
-  6. After all tests pass, update `SPEC.md` with the confirmed test case table (name + intent + input + expected output) to show what is covered.
+  - Must create or update `SPEC.md` in the relevant package directory before writing any code, listing scenarios, inputs, and expected outputs.
+  - Must propose the full set of test cases (name + one-line intent + input summary + expected output summary) and wait for user confirmation before writing any code.
+  - Must be ready to add, remove, or rename tests based on user feedback before proceeding.
+  - Must write all failing tests first (red), then implement until all pass (green).
+  - Must cover all distinct combinations; each test must state its scenario in the docstring.
+  - Must update `SPEC.md` after all tests pass with the confirmed test case table (name + intent + input + expected output).
 - Must not add comments outside test methods in `test_*.py` files; use section-header comments (`# --- section ---`) only to separate logical groups of tests.
 
 Tooling

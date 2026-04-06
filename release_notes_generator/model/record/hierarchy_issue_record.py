@@ -163,7 +163,10 @@ class HierarchyIssueRecord(IssueRecord):
     def get_labels(self) -> list[str]:
         """Return all labels from this issue, its sub-issues, sub-hierarchy-issues, and attached PRs."""
         labels: set[str] = set()
-        labels.update(label.name for label in self._issue.get_labels())
+        if self._labels is not None:
+            labels.update(self._labels)
+        else:
+            labels.update(label.name for label in self._issue.get_labels())
 
         for sub_issue in self._sub_issues.values():
             labels.update(sub_issue.labels)

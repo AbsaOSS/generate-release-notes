@@ -216,8 +216,7 @@ class ActionInputs:
             if raw_labels is None:
                 logger.warning("Super-chapter '%s' has no 'label' or 'labels' key; skipping", title)
                 continue
-            labels_input: str | list[str] = [raw_labels] if isinstance(raw_labels, str) else raw_labels
-            normalized = normalize_labels(labels_input)
+            normalized = normalize_labels(raw_labels)
             if not normalized:
                 logger.warning("Super-chapter '%s' labels definition empty after normalization; skipping", title)
                 continue
