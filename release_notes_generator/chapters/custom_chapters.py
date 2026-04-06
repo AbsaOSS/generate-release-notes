@@ -221,7 +221,7 @@ class CustomChapters(BaseChapters):
             super_labels: When set, HierarchyIssueRecords are re-rendered with sub-issues
                 filtered to those whose labels intersect *super_labels*.
             exclude_labels: When set, HierarchyIssueRecords are re-rendered with sub-issues
-                whose labels intersect *exclude_labels* removed (for Uncategorized fallback). TODO - make this test simpler and descriptive
+                whose labels intersect *exclude_labels* removed (for Uncategorized fallback).
         """
         original_rows = chapter.rows
         filtered_rows: dict[int | str, str] = {}
