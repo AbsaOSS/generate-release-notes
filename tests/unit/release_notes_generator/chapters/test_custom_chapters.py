@@ -15,6 +15,8 @@
 #
 import pytest
 
+from github.Issue import Issue
+
 from release_notes_generator.chapters.custom_chapters import CustomChapters
 from release_notes_generator.utils.utils import normalize_labels
 from release_notes_generator.model.record.issue_record import IssueRecord
@@ -827,38 +829,22 @@ def test_sorted_chapters_hidden_with_order():
 
 
 @pytest.fixture
-def hierarchy_record_stub():
+def hierarchy_record_stub(mocker):
     """Create a minimal HierarchyIssueRecord-like stub for catch-open-hierarchy tests."""
 
     class HierarchyRecordStub(HierarchyIssueRecord):
         """Stub that avoids calling real GitHub Issue methods."""
 
-        # noinspection PyMissingConstructor
         def __init__(self, rid, labels, state, contains_change):
-            # Bypass real __init__ to avoid GitHub API objects
-            Record.__init__(self, labels=labels, skip=False)
+            mock_issue = mocker.MagicMock(spec=Issue)
+            mock_issue.state = state
+            mock_issue.number = rid
+            mock_issue.type = None
+            mock_issue.user = None
+            mock_issue.assignees = []
+            super().__init__(mock_issue, issue_labels=labels)
             self._rid = rid
-            self._state = state
             self._contains = contains_change
-            self._level = 0
-            self._sub_issues = {}
-            self._sub_hierarchy_issues = {}
-            self._issue = None
-            self._pull_requests = {}
-            self._commits = {}
-            self._issue_type = None
-
-        @property
-        def record_id(self):
-            return self._rid
-
-        @property
-        def is_closed(self):
-            return self._state == "closed"
-
-        @property
-        def is_open(self):
-            return self._state == "open"
 
         @property
         def author(self):
@@ -1395,7 +1381,7 @@ def test_super_chapters_coh_record_visible_in_fallback(mocker, hierarchy_record_
 
 
 @pytest.fixture
-def hierarchy_with_sub_issues_stub():
+def hierarchy_with_sub_issues_stub(mocker):
     """Create a HierarchyIssueRecord-like stub that renders sub-issues filtered by label_filter."""
 
     class SubIssueStub:
@@ -1410,32 +1396,16 @@ def hierarchy_with_sub_issues_stub():
     class HierarchyWithSubsStub(HierarchyIssueRecord):
         """Stub with sub-issue-aware to_chapter_row that respects label_filter."""
 
-        # noinspection PyMissingConstructor
         def __init__(self, rid, labels, sub_issue_stubs, state="closed"):
-            Record.__init__(self, labels=labels, skip=False)
+            mock_issue = mocker.MagicMock(spec=Issue)
+            mock_issue.state = state
+            mock_issue.number = rid
+            mock_issue.type = None
+            mock_issue.user = None
+            mock_issue.assignees = []
+            super().__init__(mock_issue, issue_labels=labels)
             self._rid = rid
-            self._state = state
-            self._contains = True
-            self._level = 0
-            self._sub_issues = {}
-            self._sub_hierarchy_issues = {}
-            self._issue = None
-            self._pull_requests = {}
-            self._commits = {}
-            self._issue_type = None
             self._sub_stubs: list[SubIssueStub] = sub_issue_stubs
-
-        @property
-        def record_id(self):
-            return self._rid
-
-        @property
-        def is_closed(self):
-            return self._state == "closed"
-
-        @property
-        def is_open(self):
-            return self._state == "open"
 
         @property
         def author(self):
@@ -1460,21 +1430,16 @@ def hierarchy_with_sub_issues_stub():
             return row
 
         def contains_change_increment(self):
-            return self._contains
+            return True
 
         def get_labels(self):
-            all_labels = list(self._labels or [])
+            all_labels = list(self.labels)
             for stub in self._sub_stubs:
                 all_labels.extend(stub.labels)
             return all_labels
 
         def has_matching_labels(self, label_filter):
-            if any(lbl in label_filter for lbl in (self._labels or [])):
-                return True
-            for stub in self._sub_stubs:
-                if any(lbl in label_filter for lbl in stub.labels):
-                    return True
-            return False
+            return any(lbl in label_filter for lbl in self.get_labels())
 
         def has_unmatched_descendants(self, all_super_labels):
             if not self._sub_stubs:

@@ -232,7 +232,7 @@ class CustomChapters(BaseChapters):
         for rid, row in original_rows.items():
             if str(rid) not in matching_ids and rid not in matching_ids:
                 continue
-            record = self._records.get(str(rid)) or self._records.get(rid)  # type: ignore[arg-type]
+            record = self._records.get(str(rid))
             if super_labels and isinstance(record, HierarchyIssueRecord):
                 if not record.has_matching_labels(super_labels):
                     continue

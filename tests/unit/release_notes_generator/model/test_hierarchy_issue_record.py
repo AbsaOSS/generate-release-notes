@@ -552,6 +552,19 @@ def test_has_matching_labels_no_match_returns_false(make_hierarchy_issue):
     assert record.has_matching_labels(["frontend"]) is False
 
 
+def test_has_matching_labels_pr_label_matches(mocker, make_hierarchy_issue):
+    """A label on an attached PR satisfies the filter (aligns with get_labels behaviour)."""
+    issue = make_hierarchy_issue(100, IssueRecord.ISSUE_STATE_CLOSED)
+    record = HierarchyIssueRecord(issue, issue_labels=["epic"])
+
+    pr = make_minimal_pr(mocker, number=1100)
+    pr.get_labels.return_value = [type("L", (), {"name": "frontend"})()]
+    record.register_pull_request(pr)
+
+    assert record.has_matching_labels(["frontend"]) is True
+    assert record.has_matching_labels(["backend"]) is False
+
+
 # --- to_chapter_row with label_filter ---
 
 

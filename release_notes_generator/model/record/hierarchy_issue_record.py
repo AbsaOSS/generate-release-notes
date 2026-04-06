@@ -182,21 +182,16 @@ class HierarchyIssueRecord(IssueRecord):
     def has_matching_labels(self, label_filter: list[str]) -> bool:
         """Check if this hierarchy issue or any descendant has labels matching the filter.
 
+        Uses the same aggregated label set as get_labels() so that PR labels attached to
+        this record or its descendants are considered when matching super-chapter filters.
+
         Parameters:
             label_filter: Labels to check against.
 
         Returns:
             True if this record or any descendant has at least one matching label.
         """
-        if any(lbl in label_filter for lbl in self.labels):
-            return True
-        for sub_issue in self._sub_issues.values():
-            if any(lbl in label_filter for lbl in sub_issue.labels):
-                return True
-        for sub_hierarchy_issue in self._sub_hierarchy_issues.values():
-            if sub_hierarchy_issue.has_matching_labels(label_filter):
-                return True
-        return False
+        return any(lbl in label_filter for lbl in self.get_labels())
 
     def has_unmatched_descendants(self, all_super_labels: list[str]) -> bool:
         """Check if any descendant does NOT match any label in the combined super-chapter label set.
