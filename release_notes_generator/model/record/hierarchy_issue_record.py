@@ -167,15 +167,62 @@ class HierarchyIssueRecord(IssueRecord):
             labels.update(sub_issue.labels)
 
         for sub_hierarchy_issue in self._sub_hierarchy_issues.values():
-            labels.update(sub_hierarchy_issue.labels)
+            labels.update(sub_hierarchy_issue.get_labels())
 
         for pull in self._pull_requests.values():
             labels.update(label.name for label in pull.get_labels())
 
         return list(labels)
 
+    def has_matching_labels(self, label_filter: list[str]) -> bool:
+        """Check if this hierarchy issue or any descendant has labels matching the filter.
+
+        Parameters:
+            label_filter: Labels to check against.
+
+        Returns:
+            True if this record or any descendant has at least one matching label.
+        """
+        if any(lbl in label_filter for lbl in self.labels):
+            return True
+        for sub_issue in self._sub_issues.values():
+            if any(lbl in label_filter for lbl in sub_issue.labels):
+                return True
+        for sub_hierarchy_issue in self._sub_hierarchy_issues.values():
+            if sub_hierarchy_issue.has_matching_labels(label_filter):
+                return True
+        return False
+
+    def has_unmatched_descendants(self, all_super_labels: list[str]) -> bool:
+        """Check if any descendant does NOT match any label in the combined super-chapter label set.
+
+        Parameters:
+            all_super_labels: Union of all super-chapter labels.
+
+        Returns:
+            True if at least one descendant has no label intersecting *all_super_labels*.
+        """
+        for sub_issue in self._sub_issues.values():
+            if not any(lbl in all_super_labels for lbl in sub_issue.labels):
+                return True
+        for sub_hierarchy_issue in self._sub_hierarchy_issues.values():
+            if sub_hierarchy_issue.has_unmatched_descendants(all_super_labels):
+                return True
+            # A leaf HierarchyIssueRecord (no children of its own) is unmatched if
+            # its own labels don't intersect the SC set.  Intermediate nodes are
+            # pure containers — their own organisational labels are irrelevant.
+            is_leaf = not sub_hierarchy_issue.sub_issues and not sub_hierarchy_issue.sub_hierarchy_issues
+            if is_leaf and not any(lbl in all_super_labels for lbl in sub_hierarchy_issue.labels):
+                return True
+        return False
+
     # methods - override ancestor methods
-    def to_chapter_row(self, add_into_chapters: bool = True) -> str:
+    def to_chapter_row(
+        self,
+        add_into_chapters: bool = True,
+        label_filter: list[str] | None = None,
+        exclude_labels: list[str] | None = None,
+    ) -> str:
         logger.debug("Rendering hierarchy issue row for issue #%s", self.issue.number)
         row_prefix = f"{ActionInputs.get_duplicity_icon()} " if self.chapter_presence_count() > 1 else ""
         format_values: dict[str, Any] = {}
@@ -215,15 +262,25 @@ class HierarchyIssueRecord(IssueRecord):
             row = f"{row}\n{rls_block}"
 
         # add sub-hierarchy issues
-        for sub_hierarchy_issue in self._sub_hierarchy_issues.values():
+        for sub_hierarchy_issue in sorted(self._sub_hierarchy_issues.values(), key=lambda r: r.issue.number):
             logger.debug("Rendering sub-hierarchy issue row for #%s", sub_hierarchy_issue.issue.number)
+            if label_filter and not sub_hierarchy_issue.has_matching_labels(label_filter):
+                continue
+            if (
+                exclude_labels
+                and not sub_hierarchy_issue.has_unmatched_descendants(exclude_labels)
+                and sub_hierarchy_issue.has_matching_labels(exclude_labels)
+            ):
+                continue
             if self.is_open:
                 if not sub_hierarchy_issue.contains_change_increment():
                     continue
             # Closed parent: render all sub-hierarchy issues regardless of state or change increment
             logger.debug("Rendering sub-hierarchy issue #%s", sub_hierarchy_issue.issue.number)
             if self.is_closed and sub_hierarchy_issue.is_open:
-                sub_row = sub_hierarchy_issue.to_chapter_row()
+                sub_row = sub_hierarchy_issue.to_chapter_row(
+                    label_filter=label_filter, exclude_labels=exclude_labels
+                )
                 # Highlight open children under a closed parent to signal incomplete work
                 icon = ActionInputs.get_open_hierarchy_sub_issue_icon()
                 header_line, newline, remaining_lines = sub_row.partition("\n")
@@ -231,14 +288,20 @@ class HierarchyIssueRecord(IssueRecord):
                 indent = header_line[: len(header_line) - len(header_text)]
                 sub_row = f"{indent}{icon} {header_text}{newline}{remaining_lines}"
             else:
-                sub_row = sub_hierarchy_issue.to_chapter_row()
+                sub_row = sub_hierarchy_issue.to_chapter_row(
+                    label_filter=label_filter, exclude_labels=exclude_labels
+                )
             row = f"{row}\n{sub_row}"
 
         # add sub-issues
         if len(self._sub_issues) > 0:
             sub_indent = "  " * (self._level + 1)
-            for sub_issue in self._sub_issues.values():
+            for sub_issue in sorted(self._sub_issues.values(), key=lambda r: r.issue.number):
                 logger.debug("Rendering sub-issue row for issue #%s", sub_issue.issue.number)
+                if label_filter and not any(lbl in label_filter for lbl in sub_issue.labels):
+                    continue
+                if exclude_labels and any(lbl in exclude_labels for lbl in sub_issue.labels):
+                    continue
                 if self.is_open:
                     if sub_issue.is_open:
                         continue  # only closed issues are reported in release notes

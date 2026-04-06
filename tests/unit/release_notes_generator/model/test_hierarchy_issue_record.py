@@ -19,6 +19,7 @@ Unit tests for HierarchyIssueRecord.
 
 from release_notes_generator.model.record.hierarchy_issue_record import HierarchyIssueRecord
 from release_notes_generator.model.record.issue_record import IssueRecord
+from release_notes_generator.model.record.sub_issue_record import SubIssueRecord
 from tests.unit.conftest import (
     make_closed_sub_hierarchy_record_no_pr,
     make_closed_sub_hierarchy_record_with_pr,
@@ -452,3 +453,416 @@ def test_contains_change_increment_true_nested_with_closed_leaf(mocker, make_hie
     root.sub_hierarchy_issues.update({"org/repo#71": child})
 
     assert root.contains_change_increment() is True
+
+
+# --- has_matching_labels ---
+
+
+def test_has_matching_labels_own_label_matches(make_hierarchy_issue):
+    """Parent's own labels trigger a match."""
+    issue = make_hierarchy_issue(100, IssueRecord.ISSUE_STATE_OPEN)
+    issue.get_labels.return_value = [type("L", (), {"name": "frontend"})()]
+    record = HierarchyIssueRecord(issue, issue_labels=["frontend"])
+
+    assert record.has_matching_labels(["frontend"]) is True
+
+
+def test_has_matching_labels_sub_issue_label_matches(mocker, make_hierarchy_issue):
+    """A sub-issue label satisfies the filter even when the parent has no matching labels."""
+    issue = make_hierarchy_issue(100, IssueRecord.ISSUE_STATE_OPEN)
+    record = HierarchyIssueRecord(issue, issue_labels=["epic"])
+
+    sub_issue = make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=200)
+    sub_record = SubIssueRecord(sub_issue, issue_labels=["frontend"])
+    record.sub_issues["200"] = sub_record
+
+    assert record.has_matching_labels(["frontend"]) is True
+    assert record.has_matching_labels(["backend"]) is False
+
+
+def test_has_matching_labels_recursive_through_sub_hierarchy(mocker, make_hierarchy_issue):
+    """Label matching recurses through nested HierarchyIssueRecords."""
+    root_issue = make_hierarchy_issue(100, IssueRecord.ISSUE_STATE_OPEN)
+    root = HierarchyIssueRecord(root_issue, issue_labels=["epic"])
+
+    child_issue = make_hierarchy_issue(200, IssueRecord.ISSUE_STATE_OPEN)
+    child = HierarchyIssueRecord(child_issue, issue_labels=["sub-epic"])
+
+    leaf_issue = make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=300)
+    leaf = SubIssueRecord(leaf_issue, issue_labels=["backend"])
+    child.sub_issues["300"] = leaf
+
+    root.sub_hierarchy_issues["200"] = child
+
+    assert root.has_matching_labels(["backend"]) is True
+    assert root.has_matching_labels(["frontend"]) is False
+
+
+def test_has_matching_labels_no_match_returns_false(make_hierarchy_issue):
+    """Returns False when no labels match anywhere in the tree."""
+    issue = make_hierarchy_issue(100, IssueRecord.ISSUE_STATE_OPEN)
+    record = HierarchyIssueRecord(issue, issue_labels=["epic"])
+
+    assert record.has_matching_labels(["frontend"]) is False
+
+
+# --- to_chapter_row with label_filter ---
+
+
+def test_to_chapter_row_label_filter_includes_matching_sub_issues(mocker, patch_hierarchy_action_inputs):
+    """Only sub-issues whose labels intersect label_filter appear in the output."""
+    parent = make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=1)
+    record = HierarchyIssueRecord(parent)
+
+    fe_sub = make_closed_sub_issue_record_with_pr(mocker, number=2)
+    fe_sub._labels = ["enhancement", "frontend"]
+    be_sub = make_closed_sub_issue_record_with_pr(mocker, number=3)
+    be_sub._labels = ["enhancement", "backend"]
+    record.sub_issues["2"] = fe_sub
+    record.sub_issues["3"] = be_sub
+
+    row = record.to_chapter_row(label_filter=["frontend"])
+
+    assert "#2" in row, f"Frontend sub-issue #2 should appear; got:\n{row}"
+    assert "#3" not in row, f"Backend sub-issue #3 should NOT appear; got:\n{row}"
+
+
+def test_to_chapter_row_label_filter_includes_matching_sub_hierarchy(mocker, patch_hierarchy_action_inputs):
+    """Sub-hierarchy issues are filtered by label_filter recursively."""
+    parent = make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=1)
+    record = HierarchyIssueRecord(parent)
+
+    fe_child = make_closed_sub_hierarchy_record_with_pr(mocker, number=10)
+    fe_child._labels = ["frontend"]
+    be_child = make_closed_sub_hierarchy_record_with_pr(mocker, number=20)
+    be_child._labels = ["backend"]
+    record.sub_hierarchy_issues["10"] = fe_child
+    record.sub_hierarchy_issues["20"] = be_child
+
+    row = record.to_chapter_row(label_filter=["frontend"])
+
+    assert "#10" in row, f"Frontend sub-hierarchy #10 should appear; got:\n{row}"
+    assert "#20" not in row, f"Backend sub-hierarchy #20 should NOT appear; got:\n{row}"
+
+
+def test_to_chapter_row_no_label_filter_renders_all(mocker, patch_hierarchy_action_inputs):
+    """Without label_filter, all sub-issues render (existing behaviour preserved)."""
+    parent = make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=1)
+    record = HierarchyIssueRecord(parent)
+
+    fe_sub = make_closed_sub_issue_record_with_pr(mocker, number=2)
+    fe_sub._labels = ["frontend"]
+    be_sub = make_closed_sub_issue_record_with_pr(mocker, number=3)
+    be_sub._labels = ["backend"]
+    record.sub_issues["2"] = fe_sub
+    record.sub_issues["3"] = be_sub
+
+    row = record.to_chapter_row()
+
+    assert "#2" in row
+    assert "#3" in row
+
+
+def test_has_unmatched_descendants_true_when_sub_issue_has_no_matching_label(mocker, make_hierarchy_issue):
+    """Returns True when at least one sub-issue does not match the label set."""
+    issue = make_hierarchy_issue(100, IssueRecord.ISSUE_STATE_OPEN)
+    record = HierarchyIssueRecord(issue, issue_labels=["epic"])
+
+    matched = SubIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, 200), issue_labels=["security"])
+    unmatched = SubIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, 201), issue_labels=["other"])
+    record.sub_issues["200"] = matched
+    record.sub_issues["201"] = unmatched
+
+    assert record.has_unmatched_descendants(["security"]) is True
+
+
+def test_has_unmatched_descendants_false_when_all_match(mocker, make_hierarchy_issue):
+    """Returns False when every descendant matches the label set."""
+    issue = make_hierarchy_issue(100, IssueRecord.ISSUE_STATE_OPEN)
+    record = HierarchyIssueRecord(issue, issue_labels=["epic"])
+
+    s1 = SubIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, 200), issue_labels=["security"])
+    s2 = SubIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, 201), issue_labels=["security", "bug"])
+    record.sub_issues["200"] = s1
+    record.sub_issues["201"] = s2
+
+    assert record.has_unmatched_descendants(["security"]) is False
+
+
+def test_has_unmatched_descendants_recursive(mocker, make_hierarchy_issue):
+    """Recurses through sub-hierarchy-issues to find unmatched descendants."""
+    root = HierarchyIssueRecord(make_hierarchy_issue(100, IssueRecord.ISSUE_STATE_OPEN), issue_labels=["epic"])
+    child = HierarchyIssueRecord(make_hierarchy_issue(200, IssueRecord.ISSUE_STATE_OPEN), issue_labels=["sub-epic"])
+    leaf = SubIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, 300), issue_labels=["other"])
+    child.sub_issues["300"] = leaf
+    root.sub_hierarchy_issues["200"] = child
+
+    assert root.has_unmatched_descendants(["security"]) is True
+
+
+def test_has_unmatched_descendants_empty_tree(make_hierarchy_issue):
+    """A leaf hierarchy issue with no descendants returns False (nothing to be unmatched)."""
+    record = HierarchyIssueRecord(make_hierarchy_issue(100, IssueRecord.ISSUE_STATE_OPEN))
+
+    assert record.has_unmatched_descendants(["security"]) is False
+
+
+def test_to_chapter_row_exclude_labels_hides_matching_sub_issues(mocker, patch_hierarchy_action_inputs):
+    """Sub-issues whose labels intersect exclude_labels are hidden from the output."""
+    parent = make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=1)
+    record = HierarchyIssueRecord(parent)
+
+    sec_sub = make_closed_sub_issue_record_with_pr(mocker, number=2)
+    sec_sub._labels = ["enhancement", "scope:security"]
+    plain_sub = make_closed_sub_issue_record_with_pr(mocker, number=3)
+    plain_sub._labels = ["enhancement"]
+    record.sub_issues["2"] = sec_sub
+    record.sub_issues["3"] = plain_sub
+
+    row = record.to_chapter_row(exclude_labels=["scope:security"])
+
+    assert "#3" in row, f"Non-security sub-issue should appear; got:\n{row}"
+    assert "#2" not in row, f"Security sub-issue should be excluded; got:\n{row}"
+
+
+def test_to_chapter_row_exclude_labels_hides_matching_sub_hierarchy(mocker, patch_hierarchy_action_inputs):
+    """Sub-hierarchy issue with only SC-matching labels is hidden by exclude_labels.
+
+    A leaf sub-hierarchy node whose own labels all match exclude_labels and which
+    has no unmatched descendants is excluded from the Uncategorized render.
+    A sibling leaf whose labels do NOT match is kept.
+    """
+    parent = make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=1)
+    record = HierarchyIssueRecord(parent)
+
+    sec_child = make_closed_sub_hierarchy_record_with_pr(mocker, number=10)
+    sec_child._labels = ["scope:security"]
+    plain_child = make_closed_sub_hierarchy_record_with_pr(mocker, number=20)
+    plain_child._labels = ["other"]
+    record.sub_hierarchy_issues["10"] = sec_child
+    record.sub_hierarchy_issues["20"] = plain_child
+
+    row = record.to_chapter_row(exclude_labels=["scope:security"])
+
+    assert "#20" in row, f"Non-security sub-hierarchy should appear; got:\n{row}"
+    assert "#10" not in row, f"Security sub-hierarchy should be excluded; got:\n{row}"
+
+
+def test_to_chapter_row_exclude_labels_none_renders_all(mocker, patch_hierarchy_action_inputs):
+    """Without exclude_labels, all sub-issues render (backward compatible)."""
+    parent = make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=1)
+    record = HierarchyIssueRecord(parent)
+
+    s1 = make_closed_sub_issue_record_with_pr(mocker, number=2)
+    s1._labels = ["scope:security"]
+    s2 = make_closed_sub_issue_record_with_pr(mocker, number=3)
+    s2._labels = ["other"]
+    record.sub_issues["2"] = s1
+    record.sub_issues["3"] = s2
+
+    row = record.to_chapter_row()
+
+    assert "#2" in row
+    assert "#3" in row
+
+
+def test_to_chapter_row_exclude_labels_keeps_sub_hierarchy_with_mixed_descendants(mocker, patch_hierarchy_action_inputs):
+    """Sub-hierarchy issue with SOME matching descendants is kept (not hidden) by exclude_labels.
+
+    Real-data scenario:
+      Epic (level 0)
+        Feature (level 1) — aggregates scope:security from Task2
+          Task1 (no scope:security)  → must appear in Uncategorized
+          Task2 (scope:security)     → must be excluded from Uncategorized
+
+    Bug: Feature's aggregated labels include scope:security so has_matching_labels returns True,
+    causing the entire Feature branch to be skipped — leaving only the Epic root line.
+    Fix: skip Feature only when ALL its descendants are SC-covered (has_unmatched_descendants=False).
+    """
+    epic = HierarchyIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=1))
+
+    feature = HierarchyIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=10))
+    feature._labels = ["security"]
+
+    task1 = make_closed_sub_issue_record_with_pr(mocker, number=20)
+    task1._labels = ["enhancement"]
+    task2 = make_closed_sub_issue_record_with_pr(mocker, number=21)
+    task2._labels = ["enhancement", "scope:security"]
+
+    feature.sub_issues["20"] = task1
+    feature.sub_issues["21"] = task2
+    epic.sub_hierarchy_issues["10"] = feature
+
+    row = epic.to_chapter_row(exclude_labels=["scope:security"])
+
+    assert "#10" in row, f"Feature should appear (has non-SC sub-issue Task1); got:\n{row}"
+    assert "#20" in row, f"Task1 (no SC label) should appear; got:\n{row}"
+    assert "#21" not in row, f"Task2 (scope:security) should be excluded; got:\n{row}"
+
+
+def test_to_chapter_row_exclude_labels_hides_sub_hierarchy_when_all_descendants_match(
+    mocker, patch_hierarchy_action_inputs
+):
+    """Sub-hierarchy issue is hidden when ALL its descendants match exclude_labels."""
+    epic = HierarchyIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=1))
+
+    feature = HierarchyIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=10))
+    feature._labels = ["security"]
+
+    task2 = make_closed_sub_issue_record_with_pr(mocker, number=21)
+    task2._labels = ["enhancement", "scope:security"]
+
+    feature.sub_issues["21"] = task2
+    epic.sub_hierarchy_issues["10"] = feature
+
+    row = epic.to_chapter_row(exclude_labels=["scope:security"])
+
+    assert "#10" not in row, f"Feature should be hidden (all descendants have SC label); got:\n{row}"
+    assert "#21" not in row, f"Task2 should be excluded; got:\n{row}"
+
+
+def test_get_labels_aggregates_deep_sub_hierarchy_labels(mocker, make_hierarchy_issue):
+    """get_labels() must recursively aggregate labels from nested HierarchyIssueRecords.
+
+    Bug: previous implementation used sub_hierarchy_issue.labels (own labels only),
+    so a label that exists only on a grandchild was invisible to the root Epic.
+    This caused the root Epic to be missing from claimed_ids and therefore never rendered
+    in the matching super chapter.
+    """
+    root_issue = make_hierarchy_issue(100, IssueRecord.ISSUE_STATE_CLOSED)
+    root = HierarchyIssueRecord(root_issue, issue_labels=["epic"])
+
+    feature_issue = make_hierarchy_issue(200, IssueRecord.ISSUE_STATE_CLOSED)
+    feature = HierarchyIssueRecord(feature_issue, issue_labels=["feature"])  # no "scope:security"
+
+    leaf_issue = make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=300)
+    leaf = SubIssueRecord(leaf_issue, issue_labels=["scope:security"])
+    feature.sub_issues["300"] = leaf
+
+    root.sub_hierarchy_issues["200"] = feature
+
+    result = root.get_labels()
+
+    assert "scope:security" in result, (
+        "Root Epic must aggregate 'scope:security' from grandchild leaf; got: " + str(result)
+    )
+
+
+def test_to_chapter_row_sub_issues_rendered_in_ascending_number_order(mocker, patch_hierarchy_action_inputs):
+    """Leaf sub-issues must be rendered sorted ascending by issue number regardless of insertion order."""
+    parent = HierarchyIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=1))
+
+    high = make_closed_sub_issue_record_with_pr(mocker, number=4150)
+    low = make_closed_sub_issue_record_with_pr(mocker, number=4149)
+
+    # Intentionally insert higher number first
+    parent.sub_issues["4150"] = high
+    parent.sub_issues["4149"] = low
+
+    row = parent.to_chapter_row()
+
+    pos_low = row.index("#4149")
+    pos_high = row.index("#4150")
+    assert pos_low < pos_high, f"#4149 must appear before #4150; got:\n{row}"
+
+
+def test_to_chapter_row_sub_hierarchy_issues_rendered_in_ascending_number_order(
+    mocker, patch_hierarchy_action_inputs
+):
+    """Sub-hierarchy issues must be rendered sorted ascending by issue number regardless of insertion order."""
+    parent = HierarchyIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=1))
+
+    high = make_closed_sub_hierarchy_record_with_pr(mocker, number=200)
+    high.level = 1
+    low = make_closed_sub_hierarchy_record_with_pr(mocker, number=100)
+    low.level = 1
+
+    # Intentionally insert higher number first
+    parent.sub_hierarchy_issues["200"] = high
+    parent.sub_hierarchy_issues["100"] = low
+
+    row = parent.to_chapter_row()
+
+    pos_low = row.index("#100")
+    pos_high = row.index("#200")
+    assert pos_low < pos_high, f"#100 must appear before #200; got:\n{row}"
+
+
+def test_five_level_hierarchy_label_filter_and_exclude_labels(mocker, patch_hierarchy_action_inputs):
+    """All recursive methods work correctly at 5 levels of nesting.
+
+    Tree:
+      L1: Epic #1        (labels: epic)
+        L2: Theme #2     (labels: theme)
+          L3: Feature #3 (labels: feature)
+            L4: Story #4 (labels: story)
+              L5a: Task #10 (labels: scope:security)   ← SC match
+              L5b: Task #11 (labels: enhancement)       ← no SC label
+
+    Verified behaviours:
+    - get_labels() on L1 includes scope:security (aggregated from 4 levels down)
+    - has_matching_labels(["scope:security"]) on L1 is True
+    - has_unmatched_descendants(["scope:security"]) on L1 is True (Task #11 is unmatched)
+    - to_chapter_row(label_filter=["scope:security"]) shows only the SC path down to Task #10
+    - to_chapter_row(exclude_labels=["scope:security"]) shows the non-SC path down to Task #11
+      and omits Task #10
+    """
+    # Build bottom-up: Task leaves first
+    task_sc = make_closed_sub_issue_record_with_pr(mocker, number=10)
+    task_sc._labels = ["scope:security"]
+    task_plain = make_closed_sub_issue_record_with_pr(mocker, number=11)
+    task_plain._labels = ["enhancement"]
+
+    story = HierarchyIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=4))
+    story._labels = ["story"]
+    story._level = 3
+    story.sub_issues["10"] = task_sc
+    story.sub_issues["11"] = task_plain
+
+    feature = HierarchyIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=3))
+    feature._labels = ["feature"]
+    feature._level = 2
+    feature.sub_hierarchy_issues["4"] = story
+
+    theme = HierarchyIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=2))
+    theme._labels = ["theme"]
+    theme._level = 1
+    theme.sub_hierarchy_issues["3"] = feature
+
+    epic = HierarchyIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=1))
+    epic._labels = ["epic"]
+    epic._level = 0
+    epic.sub_hierarchy_issues["2"] = theme
+
+    # --- get_labels aggregates across all 5 levels ---
+    all_labels = epic.get_labels()
+    assert "scope:security" in all_labels, f"scope:security must bubble up to L1; got {all_labels}"
+    assert "enhancement" in all_labels, f"enhancement must bubble up to L1; got {all_labels}"
+
+    # --- has_matching_labels ---
+    assert epic.has_matching_labels(["scope:security"]) is True
+    assert epic.has_matching_labels(["unknown"]) is False
+
+    # --- has_unmatched_descendants ---
+    # Task #11 has no scope:security → True
+    assert epic.has_unmatched_descendants(["scope:security"]) is True
+    # Both leaf labels covered → False
+    assert epic.has_unmatched_descendants(["scope:security", "enhancement"]) is False
+
+    # --- to_chapter_row with label_filter: only SC path visible ---
+    row_sc = epic.to_chapter_row(label_filter=["scope:security"])
+    assert "#1" in row_sc, f"Epic root must appear; got:\n{row_sc}"
+    assert "#2" in row_sc, f"Theme must appear (contains SC path); got:\n{row_sc}"
+    assert "#3" in row_sc, f"Feature must appear (contains SC path); got:\n{row_sc}"
+    assert "#4" in row_sc, f"Story must appear (contains SC path); got:\n{row_sc}"
+    assert "#10" in row_sc, f"SC task must appear; got:\n{row_sc}"
+    assert "#11" not in row_sc, f"Plain task must be excluded; got:\n{row_sc}"
+
+    # --- to_chapter_row with exclude_labels: only non-SC path visible ---
+    row_plain = epic.to_chapter_row(exclude_labels=["scope:security"])
+    assert "#1" in row_plain, f"Epic root must appear; got:\n{row_plain}"
+    assert "#2" in row_plain, f"Theme must appear (has non-SC path); got:\n{row_plain}"
+    assert "#3" in row_plain, f"Feature must appear (has non-SC path); got:\n{row_plain}"
+    assert "#4" in row_plain, f"Story must appear (has non-SC path); got:\n{row_plain}"
+    assert "#11" in row_plain, f"Plain task must appear; got:\n{row_plain}"
+    assert "#10" not in row_plain, f"SC task must be excluded; got:\n{row_plain}"

@@ -84,6 +84,11 @@ Testing
 - Must not access private members (names starting with `_`) of the class under test directly in tests.
 - Must place shared test helper functions and factory fixtures in the nearest `conftest.py` and reuse them across tests.
 - Must annotate pytest fixture parameters with `MockerFixture` (from `pytest_mock`) and return types with `Callable[..., T]` (from `collections.abc`) when the fixture returns a factory function.
+- Prefer TDD workflow:
+  1. Propose the full set of test cases (name + one-line intent + input summary + expected output summary) and wait for user confirmation before writing any code.
+  2. Be ready to add, remove, or rename tests based on user feedback before proceeding.
+  3. Once confirmed, write all failing tests first (red), then implement until all pass (green).
+  4. Cover all distinct combinations; each test must state its scenario in the docstring.
 
 Tooling
 - Must format with Black (pyproject.toml).

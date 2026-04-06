@@ -52,6 +52,7 @@ class CustomChapters(BaseChapters):
         super().__init__(sort_ascending, print_empty_chapters)
         self._super_chapters: list[SuperChapter] = []
         self._record_labels: dict[str, list[str]] = {}
+        self._records: dict[str, Record] = {}
 
     def _find_catch_open_hierarchy_chapter(self) -> Chapter | None:
         """Return the first chapter with catch_open_hierarchy enabled, or None."""
@@ -66,6 +67,7 @@ class CustomChapters(BaseChapters):
             if not chapter.hidden:
                 record.add_to_chapter_presence(chapter.title)
             chapter.add_row(record_id, record.to_chapter_row(not chapter.hidden))
+            self._records[record_id] = record
             if record_id not in self.populated_record_numbers_list:
                 self.populated_record_numbers_list.append(record_id)
             if chapter.hidden and ActionInputs.get_verbose():
@@ -114,8 +116,14 @@ class CustomChapters(BaseChapters):
 
             record_labels = getattr(record, "labels", [])
 
-            # Track labels for super-chapter grouping at render time
-            if record_labels:
+            # Track labels for super-chapter grouping at render time.
+            # HierarchyIssueRecords use aggregated labels (own + descendants) so the
+            # hierarchy parent matches super chapters via sub-issue labels.
+            if isinstance(record, HierarchyIssueRecord):
+                all_labels = record.get_labels()
+                if all_labels:
+                    self._record_labels[record_id] = list(all_labels)
+            elif record_labels:
                 self._record_labels[record_id] = list(record_labels)
 
             # Conditional Custom Chapter gate: intercept open hierarchy parents before label routing.
@@ -198,12 +206,40 @@ class CustomChapters(BaseChapters):
                 matching.add(rid)
         return matching
 
-    def _render_chapter_for_ids(self, chapter: Chapter, matching_ids: set[str]) -> str:
-        """Render a single chapter filtered to matching_ids, delegating to Chapter.to_string."""
+    def _render_chapter_for_ids(
+        self,
+        chapter: Chapter,
+        matching_ids: set[str],
+        super_labels: list[str] | None = None,
+        exclude_labels: list[str] | None = None,
+    ) -> str:
+        """Render a single chapter filtered to matching_ids, delegating to Chapter.to_string.
+
+        Parameters:
+            chapter: The chapter to render.
+            matching_ids: Record IDs to include.
+            super_labels: When set, HierarchyIssueRecords are re-rendered with sub-issues
+                filtered to those whose labels intersect *super_labels*.
+            exclude_labels: When set, HierarchyIssueRecords are re-rendered with sub-issues
+                whose labels intersect *exclude_labels* removed (for Uncategorized fallback). TODO - make this test simpler and descriptive
+        """
         original_rows = chapter.rows
-        chapter.rows = {
-            rid: row for rid, row in original_rows.items() if str(rid) in matching_ids or rid in matching_ids
-        }
+        filtered_rows: dict[int | str, str] = {}
+        for rid, row in original_rows.items():
+            if str(rid) not in matching_ids and rid not in matching_ids:
+                continue
+            record = self._records.get(str(rid)) or self._records.get(rid)  # type: ignore[arg-type]
+            if super_labels and isinstance(record, HierarchyIssueRecord):
+                if not record.has_matching_labels(super_labels):
+                    continue
+                filtered_rows[rid] = record.to_chapter_row(add_into_chapters=False, label_filter=super_labels)
+            elif exclude_labels and isinstance(record, HierarchyIssueRecord):
+                filtered_rows[rid] = record.to_chapter_row(
+                    add_into_chapters=False, exclude_labels=exclude_labels
+                )
+            else:
+                filtered_rows[rid] = row
+        chapter.rows = filtered_rows
         try:
             return chapter.to_string(sort_ascending=self.sort_ascending, print_empty_chapters=self.print_empty_chapters)
         finally:
@@ -215,6 +251,8 @@ class CustomChapters(BaseChapters):
         all_super_labels: set[str] = set()
         for sc in self._super_chapters:
             all_super_labels.update(sc.labels)
+
+        all_super_labels_list = list(all_super_labels)
 
         claimed_ids: set[str] = set()
         for rid, labels in self._record_labels.items():
@@ -229,7 +267,7 @@ class CustomChapters(BaseChapters):
             for chapter in self._sorted_chapters():
                 if chapter.hidden:
                     continue
-                ch_str = self._render_chapter_for_ids(chapter, matching_ids)
+                ch_str = self._render_chapter_for_ids(chapter, matching_ids, super_labels=sc.labels)
                 if ch_str:
                     sc_block += ch_str + "\n\n"
 
@@ -238,20 +276,33 @@ class CustomChapters(BaseChapters):
             elif self.print_empty_chapters:
                 result += f"## {sc.title}\nNo entries detected.\n\n"
 
-        # Fallback: records not claimed by any super chapter
+        # Fallback: records not claimed by any super chapter.
+        # Hierarchy records that ARE claimed but have unmatched descendants also appear
+        # in Uncategorized with exclude_labels to render only the non-SC portion.
         unclaimed_ids: set[str] = set()
+        partial_hierarchy_ids: set[str] = set()
         for chapter in self._sorted_chapters():
             for row_id in chapter.rows:
                 row_id_str = str(row_id)
                 if row_id_str not in claimed_ids:
                     unclaimed_ids.add(row_id_str)
+                elif row_id_str in claimed_ids:
+                    record = self._records.get(row_id_str)
+                    if (
+                        isinstance(record, HierarchyIssueRecord)
+                        and record.has_unmatched_descendants(all_super_labels_list)
+                    ):
+                        partial_hierarchy_ids.add(row_id_str)
 
-        if unclaimed_ids:
+        all_uncat_ids = unclaimed_ids | partial_hierarchy_ids
+        if all_uncat_ids:
             uc_block = ""
             for chapter in self._sorted_chapters():
                 if chapter.hidden:
                     continue
-                ch_str = self._render_chapter_for_ids(chapter, unclaimed_ids)
+                ch_str = self._render_chapter_for_ids(
+                    chapter, all_uncat_ids, exclude_labels=all_super_labels_list
+                )
                 if ch_str:
                     uc_block += ch_str + "\n\n"
             if uc_block.strip():

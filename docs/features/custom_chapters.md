@@ -256,57 +256,69 @@ When super chapters are configured the output uses `##` headings for super chapt
 - A record is placed under a super-chapter if it carries at least one label matching the super-chapter's labels.
 - A record can appear in **multiple** super-chapters if its labels match more than one.
 - Within each super-chapter, records are routed to regular chapters by the normal label-matching rules.
-- Empty super chapters (no matching records) respect the `print-empty-chapters` setting.
+- Empty super chapters (no matching records) respect the `print-empty-chapters` setting:
+  - `print-empty-chapters: true` → header is printed with `No entries detected.`
+  - `print-empty-chapters: false` → header is omitted entirely
+- `## Uncategorized` is only emitted when there are actually unmatched records; `print-empty-chapters` has no effect on it.
 - When no super chapters are configured, output is flat (unchanged from previous behavior).
 
-### Validation
-- Entries missing `title` or `label`/`labels` are skipped with a warning.
-- Non-dict entries are skipped with a warning.
-- Empty labels after normalization cause the entry to be skipped with a warning.
+### Hierarchy Split (with `hierarchy: true`)
 
-## Super Chapters
+With `hierarchy: true`, super-chapter matching uses each hierarchy record's **full aggregated label set** — own labels plus all descendant labels recursively at every depth. So an Epic matches a super chapter even when the relevant label lives only on a grandchild Task (e.g. Epic → Feature → Task).
 
-**Super chapters** group regular chapters under higher-level headings based on a separate label. This is useful in monorepo or multi-module projects where the same chapter structure (Features, Bugfixes, …) should appear once per component.
+The record is then split by which descendants belong to which super chapter:
 
-### Configuration
+| Descendants | Output |
+|---|---|
+| All match one super chapter | Record appears in that super chapter only |
+| None match any super chapter | Record appears in `## Uncategorized` only |
+| Some match, some don't | Record appears in the matching super chapter **and** in `## Uncategorized`, each showing only its own subset |
+| Match multiple super chapters | Record appears in each matching super chapter with its relevant subset |
+| Match multiple SCs + some unmatched | Record appears in each matching super chapter and in `## Uncategorized` |
 
-Define super chapters via the `super-chapters` input — a YAML array with `title` and `label`/`labels`:
+#### Example
+
+Epic #1 has Task #2 (`scope:frontend`) and Task #3 (`scope:backend`):
 
 ```yaml
-with:
-  super-chapters: |
-    - title: "Atum Server"
-      label: "atum-server"
-    - title: "Atum Agent"
-      labels: "atum-agent, atum-agent-spark"
-  chapters: |
-    - {"title": "Enhancements", "label": "enhancement"}
-    - {"title": "Bugfixes", "label": "bug"}
+super-chapters: |
+  - title: "Frontend"
+    label: "scope:frontend"
+  - title: "Backend"
+    label: "scope:backend"
+chapters: |
+  - {"title": "New Features", "labels": "feature"}
 ```
-
-### Rendering
-
-When super chapters are configured the output uses `##` headings for super chapters and `###` for regular chapters nested inside:
 
 ```markdown
-## Atum Server
-### Enhancements
-- #10 _Streaming API_ developed by @alice in #12
+## Frontend
+### New Features
+- Epic: _Add user authentication_ #1
+  - #2 _Build login form_
 
-### Bugfixes
-- #15 _Fix timeout_ developed by @bob in #16
-
-## Atum Agent
-### Enhancements
-- #20 _Checkpointing_ developed by @carol in #22
+## Backend
+### New Features
+- Epic: _Add user authentication_ #1
+  - #3 _Add JWT endpoint_
 ```
 
-### Behavior
-- A record is placed under a super chapter if it carries at least one label matching the super chapter's labels.
-- A record can appear in **multiple** super chapters if its labels match more than one.
-- Within each super chapter, records are routed to regular chapters by the normal label matching rules.
-- Empty super chapters (no matching records) respect the `print-empty-chapters` setting.
-- When no super chapters are configured, output is flat (unchanged from previous behavior).
+If Epic #1 also had Task #4 with no super-chapter label, it would additionally appear in `## Uncategorized` with only Task #4.
+
+#### 3-level depth
+
+The same split works when the matching label is on a grandchild. Epic #1 → Feature #2 → Task #3 (`scope:security`):
+
+```markdown
+## Security
+### New Features
+- Epic: _Add authentication_ #1
+  - Feature: _Auth flow_ #2
+    - #3 _Add JWT endpoint_
+```
+
+Feature #2 has no `scope:security` label of its own, but its aggregated set includes it via Task #3, so it is routed to the Security super chapter.
+
+Children within each rendered node are sorted **ascending by issue number**.
 
 ### Validation
 - Entries missing `title` or `label`/`labels` are skipped with a warning.
