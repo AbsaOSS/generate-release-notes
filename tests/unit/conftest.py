@@ -1295,9 +1295,13 @@ def make_minimal_pr(mocker: MockerFixture, number: int) -> PullRequest:
     return pr
 
 
-def make_closed_sub_issue_record_with_pr(mocker: MockerFixture, number: int) -> SubIssueRecord:
+def make_closed_sub_issue_record_with_pr(
+    mocker: MockerFixture, number: int, issue_labels: list[str] | None = None
+) -> SubIssueRecord:
     """Return a closed SubIssueRecord with one PR (no commits)."""
-    sub_record = SubIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number))
+    sub_record = SubIssueRecord(
+        make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number), issue_labels=issue_labels
+    )
     sub_record.register_pull_request(make_minimal_pr(mocker, number=number + 1000))
     return sub_record
 
@@ -1324,9 +1328,13 @@ def make_open_sub_hierarchy_record_with_pr(mocker: MockerFixture, number: int) -
     return rec
 
 
-def make_closed_sub_hierarchy_record_with_pr(mocker: MockerFixture, number: int) -> HierarchyIssueRecord:
+def make_closed_sub_hierarchy_record_with_pr(
+    mocker: MockerFixture, number: int, issue_labels: list[str] | None = None
+) -> HierarchyIssueRecord:
     """Return a closed HierarchyIssueRecord with one PR (no commits)."""
-    rec = HierarchyIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number))
+    rec = HierarchyIssueRecord(
+        make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number), issue_labels=issue_labels
+    )
     rec.register_pull_request(make_minimal_pr(mocker, number=number + 1000))
     return rec
 

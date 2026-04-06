@@ -1681,10 +1681,6 @@ def test_sc_combo_c3b_three_level_hierarchy_split(mocker, hierarchy_with_sub_iss
         sub_issue_stubs=[SI("org/repo#2", ["security", "scope:security", "enhancement"])],
     )
     # Override to_chapter_row and helper methods so Feature renders correctly
-    epic._sub_stubs = []
-
-    original_to_row = epic.to_chapter_row.__func__ if hasattr(epic.to_chapter_row, "__func__") else None
-
     def epic_to_chapter_row(add_into_chapters=True, label_filter=None, exclude_labels=None):
         row = f"org/repo#1 row"
         sub_row = feature.to_chapter_row(
@@ -1694,7 +1690,6 @@ def test_sc_combo_c3b_three_level_hierarchy_split(mocker, hierarchy_with_sub_iss
             row += f"\n  {sub_row}"
         return row
 
-    import types
     epic.to_chapter_row = epic_to_chapter_row
 
     def epic_has_matching_labels(label_filter):
@@ -1711,7 +1706,6 @@ def test_sc_combo_c3b_three_level_hierarchy_split(mocker, hierarchy_with_sub_iss
     epic.has_matching_labels = epic_has_matching_labels
     epic.has_unmatched_descendants = epic_has_unmatched_descendants
     epic.get_labels = epic_get_labels
-    epic._labels = ["epic", "enhancement"] + feature.get_labels()
 
     cc = make_super_chapters_cc(
         mocker,

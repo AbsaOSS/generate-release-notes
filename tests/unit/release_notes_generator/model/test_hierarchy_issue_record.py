@@ -560,10 +560,8 @@ def test_to_chapter_row_label_filter_includes_matching_sub_issues(mocker, patch_
     parent = make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=1)
     record = HierarchyIssueRecord(parent)
 
-    fe_sub = make_closed_sub_issue_record_with_pr(mocker, number=2)
-    fe_sub._labels = ["enhancement", "frontend"]
-    be_sub = make_closed_sub_issue_record_with_pr(mocker, number=3)
-    be_sub._labels = ["enhancement", "backend"]
+    fe_sub = make_closed_sub_issue_record_with_pr(mocker, number=2, issue_labels=["enhancement", "frontend"])
+    be_sub = make_closed_sub_issue_record_with_pr(mocker, number=3, issue_labels=["enhancement", "backend"])
     record.sub_issues["2"] = fe_sub
     record.sub_issues["3"] = be_sub
 
@@ -578,10 +576,8 @@ def test_to_chapter_row_label_filter_includes_matching_sub_hierarchy(mocker, pat
     parent = make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=1)
     record = HierarchyIssueRecord(parent)
 
-    fe_child = make_closed_sub_hierarchy_record_with_pr(mocker, number=10)
-    fe_child._labels = ["frontend"]
-    be_child = make_closed_sub_hierarchy_record_with_pr(mocker, number=20)
-    be_child._labels = ["backend"]
+    fe_child = make_closed_sub_hierarchy_record_with_pr(mocker, number=10, issue_labels=["frontend"])
+    be_child = make_closed_sub_hierarchy_record_with_pr(mocker, number=20, issue_labels=["backend"])
     record.sub_hierarchy_issues["10"] = fe_child
     record.sub_hierarchy_issues["20"] = be_child
 
@@ -596,10 +592,8 @@ def test_to_chapter_row_no_label_filter_renders_all(mocker, patch_hierarchy_acti
     parent = make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=1)
     record = HierarchyIssueRecord(parent)
 
-    fe_sub = make_closed_sub_issue_record_with_pr(mocker, number=2)
-    fe_sub._labels = ["frontend"]
-    be_sub = make_closed_sub_issue_record_with_pr(mocker, number=3)
-    be_sub._labels = ["backend"]
+    fe_sub = make_closed_sub_issue_record_with_pr(mocker, number=2, issue_labels=["frontend"])
+    be_sub = make_closed_sub_issue_record_with_pr(mocker, number=3, issue_labels=["backend"])
     record.sub_issues["2"] = fe_sub
     record.sub_issues["3"] = be_sub
 
@@ -658,10 +652,8 @@ def test_to_chapter_row_exclude_labels_hides_matching_sub_issues(mocker, patch_h
     parent = make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=1)
     record = HierarchyIssueRecord(parent)
 
-    sec_sub = make_closed_sub_issue_record_with_pr(mocker, number=2)
-    sec_sub._labels = ["enhancement", "scope:security"]
-    plain_sub = make_closed_sub_issue_record_with_pr(mocker, number=3)
-    plain_sub._labels = ["enhancement"]
+    sec_sub = make_closed_sub_issue_record_with_pr(mocker, number=2, issue_labels=["enhancement", "scope:security"])
+    plain_sub = make_closed_sub_issue_record_with_pr(mocker, number=3, issue_labels=["enhancement"])
     record.sub_issues["2"] = sec_sub
     record.sub_issues["3"] = plain_sub
 
@@ -681,10 +673,8 @@ def test_to_chapter_row_exclude_labels_hides_matching_sub_hierarchy(mocker, patc
     parent = make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=1)
     record = HierarchyIssueRecord(parent)
 
-    sec_child = make_closed_sub_hierarchy_record_with_pr(mocker, number=10)
-    sec_child._labels = ["scope:security"]
-    plain_child = make_closed_sub_hierarchy_record_with_pr(mocker, number=20)
-    plain_child._labels = ["other"]
+    sec_child = make_closed_sub_hierarchy_record_with_pr(mocker, number=10, issue_labels=["scope:security"])
+    plain_child = make_closed_sub_hierarchy_record_with_pr(mocker, number=20, issue_labels=["other"])
     record.sub_hierarchy_issues["10"] = sec_child
     record.sub_hierarchy_issues["20"] = plain_child
 
@@ -699,10 +689,8 @@ def test_to_chapter_row_exclude_labels_none_renders_all(mocker, patch_hierarchy_
     parent = make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=1)
     record = HierarchyIssueRecord(parent)
 
-    s1 = make_closed_sub_issue_record_with_pr(mocker, number=2)
-    s1._labels = ["scope:security"]
-    s2 = make_closed_sub_issue_record_with_pr(mocker, number=3)
-    s2._labels = ["other"]
+    s1 = make_closed_sub_issue_record_with_pr(mocker, number=2, issue_labels=["scope:security"])
+    s2 = make_closed_sub_issue_record_with_pr(mocker, number=3, issue_labels=["other"])
     record.sub_issues["2"] = s1
     record.sub_issues["3"] = s2
 
@@ -727,13 +715,10 @@ def test_to_chapter_row_exclude_labels_keeps_sub_hierarchy_with_mixed_descendant
     """
     epic = HierarchyIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=1))
 
-    feature = HierarchyIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=10))
-    feature._labels = ["security"]
+    feature = HierarchyIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=10), issue_labels=["security"])
 
-    task1 = make_closed_sub_issue_record_with_pr(mocker, number=20)
-    task1._labels = ["enhancement"]
-    task2 = make_closed_sub_issue_record_with_pr(mocker, number=21)
-    task2._labels = ["enhancement", "scope:security"]
+    task1 = make_closed_sub_issue_record_with_pr(mocker, number=20, issue_labels=["enhancement"])
+    task2 = make_closed_sub_issue_record_with_pr(mocker, number=21, issue_labels=["enhancement", "scope:security"])
 
     feature.sub_issues["20"] = task1
     feature.sub_issues["21"] = task2
@@ -752,11 +737,9 @@ def test_to_chapter_row_exclude_labels_hides_sub_hierarchy_when_all_descendants_
     """Sub-hierarchy issue is hidden when ALL its descendants match exclude_labels."""
     epic = HierarchyIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=1))
 
-    feature = HierarchyIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=10))
-    feature._labels = ["security"]
+    feature = HierarchyIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=10), issue_labels=["security"])
 
-    task2 = make_closed_sub_issue_record_with_pr(mocker, number=21)
-    task2._labels = ["enhancement", "scope:security"]
+    task2 = make_closed_sub_issue_record_with_pr(mocker, number=21, issue_labels=["enhancement", "scope:security"])
 
     feature.sub_issues["21"] = task2
     epic.sub_hierarchy_issues["10"] = feature
@@ -854,30 +837,23 @@ def test_five_level_hierarchy_label_filter_and_exclude_labels(mocker, patch_hier
       and omits Task #10
     """
     # Build bottom-up: Task leaves first
-    task_sc = make_closed_sub_issue_record_with_pr(mocker, number=10)
-    task_sc._labels = ["scope:security"]
-    task_plain = make_closed_sub_issue_record_with_pr(mocker, number=11)
-    task_plain._labels = ["enhancement"]
+    task_sc = make_closed_sub_issue_record_with_pr(mocker, number=10, issue_labels=["scope:security"])
+    task_plain = make_closed_sub_issue_record_with_pr(mocker, number=11, issue_labels=["enhancement"])
 
-    story = HierarchyIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=4))
-    story._labels = ["story"]
-    story._level = 3
+    story = HierarchyIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=4), issue_labels=["story"])
+    story.level = 3
     story.sub_issues["10"] = task_sc
     story.sub_issues["11"] = task_plain
 
-    feature = HierarchyIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=3))
-    feature._labels = ["feature"]
-    feature._level = 2
+    feature = HierarchyIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=3), issue_labels=["feature"])
+    feature.level = 2
     feature.sub_hierarchy_issues["4"] = story
 
-    theme = HierarchyIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=2))
-    theme._labels = ["theme"]
-    theme._level = 1
+    theme = HierarchyIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=2), issue_labels=["theme"])
+    theme.level = 1
     theme.sub_hierarchy_issues["3"] = feature
 
-    epic = HierarchyIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=1))
-    epic._labels = ["epic"]
-    epic._level = 0
+    epic = HierarchyIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=1), issue_labels=["epic"])
     epic.sub_hierarchy_issues["2"] = theme
 
     # --- get_labels aggregates across all 5 levels ---
