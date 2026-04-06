@@ -19,7 +19,6 @@ A module that defines the HierarchyIssueRecord class for hierarchical issue rend
 """
 
 import logging
-from typing import Any
 from github.Issue import Issue
 
 from release_notes_generator.action_inputs import ActionInputs
@@ -221,9 +220,9 @@ class HierarchyIssueRecord(IssueRecord):
 
     # methods - override ancestor methods
 
-    def _collect_format_values(self) -> dict[str, Any]:
+    def _collect_format_values(self) -> dict[str, str]:
         """Collect template substitution values for the hierarchy issue row format string."""
-        format_values: dict[str, Any] = {}
+        format_values: dict[str, str] = {}
         format_values["number"] = f"#{self.issue.number}"
         format_values["title"] = self.issue.title
         format_values["author"] = self.author
@@ -305,8 +304,7 @@ class HierarchyIssueRecord(IssueRecord):
     ) -> str:
         """Append rendered rows for all qualifying direct sub-issues to *row*."""
         if not self._sub_issues:
-            # else: this will be reported in service chapters as violation of hierarchy in this initial version
-            # No data loss - in service chapter there will be all detail not presented here
+            # No sub-issues: violations of hierarchy are reported in service chapters (no data loss)
             return row
         sub_indent = "  " * (self._level + 1)
         for sub_issue in sorted(self._sub_issues.values(), key=lambda r: r.issue.number):

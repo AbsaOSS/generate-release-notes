@@ -307,8 +307,9 @@ class CustomChapters(BaseChapters):
         )
         return result.strip()
 
+    @staticmethod
     def _enforce_coh_constraint(
-        self, title: str, catch_open_hierarchy: bool, coh_chapter_title: str | None
+        title: str, catch_open_hierarchy: bool, coh_chapter_title: str | None
     ) -> tuple[bool, str | None]:
         """Enforce the single catch-open-hierarchy chapter constraint.
 
