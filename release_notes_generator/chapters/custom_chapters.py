@@ -212,6 +212,7 @@ class CustomChapters(BaseChapters):
         matching_ids: set[str],
         super_labels: list[str] | None = None,
         exclude_labels: list[str] | None = None,
+        print_empty_chapters: bool | None = None,
     ) -> str:
         """Render a single chapter filtered to matching_ids, delegating to Chapter.to_string.
 
@@ -222,7 +223,10 @@ class CustomChapters(BaseChapters):
                 filtered to those whose labels intersect *super_labels*.
             exclude_labels: When set, HierarchyIssueRecords are re-rendered with sub-issues
                 whose labels intersect *exclude_labels* removed (for Uncategorized fallback).
+            print_empty_chapters: Override for the empty-chapter setting; defaults to
+                ``self.print_empty_chapters`` when ``None``.
         """
+        effective_print_empty = self.print_empty_chapters if print_empty_chapters is None else print_empty_chapters
         original_rows = chapter.rows
         filtered_rows: dict[int | str, str] = {}
         for rid, row in original_rows.items():
@@ -239,7 +243,7 @@ class CustomChapters(BaseChapters):
                 filtered_rows[rid] = row
         chapter.rows = filtered_rows
         try:
-            return chapter.to_string(sort_ascending=self.sort_ascending, print_empty_chapters=self.print_empty_chapters)
+            return chapter.to_string(sort_ascending=self.sort_ascending, print_empty_chapters=effective_print_empty)
         finally:
             chapter.rows = original_rows
 
@@ -288,7 +292,9 @@ class CustomChapters(BaseChapters):
         for chapter in self._sorted_chapters():
             if chapter.hidden:
                 continue
-            ch_str = self._render_chapter_for_ids(chapter, all_uncat_ids, exclude_labels=all_super_labels_list)
+            ch_str = self._render_chapter_for_ids(
+                chapter, all_uncat_ids, exclude_labels=all_super_labels_list, print_empty_chapters=False
+            )
             if ch_str:
                 uc_block += ch_str + "\n\n"
         if uc_block.strip():

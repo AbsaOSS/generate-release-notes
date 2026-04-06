@@ -1873,7 +1873,11 @@ def test_from_yaml_array_repeated_chapter_with_hidden_logs_info(caplog):
 
 
 def test_super_chapters_hidden_chapter_skipped_in_sc_and_uncat_loops(mocker, record_stub):
-    """Hidden chapters are skipped during both SC-block and Uncategorized-block rendering."""
+    """Hidden chapters are skipped during both SC-block and Uncategorized-block rendering.
+
+    When the only unclaimed record lives in a hidden chapter, visible chapters produce
+    no matching rows for Uncategorized, so ## Uncategorized must not be emitted.
+    """
     cc = make_super_chapters_cc(
         mocker,
         [
@@ -1884,7 +1888,7 @@ def test_super_chapters_hidden_chapter_skipped_in_sc_and_uncat_loops(mocker, rec
         print_empty=True,
     )
     r_sc = record_stub("org/repo#1", ["sc-label"])
-    r_plain = record_stub("org/repo#2", ["other-label"])  # assigned to hidden chapter
+    r_plain = record_stub("org/repo#2", ["other-label"])  # assigned only to hidden chapter
     cc.populate({"org/repo#1": r_sc, "org/repo#2": r_plain})
 
     output = cc.to_string()
@@ -1892,9 +1896,9 @@ def test_super_chapters_hidden_chapter_skipped_in_sc_and_uncat_loops(mocker, rec
     # SC section renders with visible chapter (hidden chapter is skipped in SC loop)
     assert "## Security" in output
     assert "org/repo#1 row" in output
-    # Uncategorized section is entered (r_plain is unclaimed) but hidden chapter is skipped,
-    # so r_plain does NOT appear in the rendered output
-    assert "Uncategorized" in output
+    # r_plain is unclaimed but lives only in a hidden chapter; the visible chapter has no
+    # matching uncategorized rows → uc_block is empty → ## Uncategorized must NOT appear
+    assert "Uncategorized" not in output
     assert "org/repo#2 row" not in output
 
 
@@ -2017,3 +2021,53 @@ def test_collect_uncategorized_ids_no_rows_produces_no_uncat_section(mocker):
     )
     output = cc.to_string()
     assert "Uncategorized" not in output
+
+
+def test_uncategorized_no_empty_sub_chapters_when_print_empty_true(mocker, record_stub):
+    """print-empty-chapters=True must not produce empty ### sub-chapters inside ## Uncategorized."""
+    cc = make_super_chapters_cc(
+        mocker,
+        [
+            {"title": "Bugs", "label": "bug"},
+            {"title": "Features", "label": "feature"},
+        ],
+        [{"title": "Security", "labels": ["scope:security"]}],
+        print_empty=True,
+    )
+    # Only a 'bug' record with no SC label → goes to Uncategorized under Bugs only
+    r1 = record_stub("org/repo#1", ["bug"])
+    cc.populate({"org/repo#1": r1})
+    output = cc.to_string()
+
+    assert "## Uncategorized" in output
+    uncat_section = output.split("## Uncategorized")[1]
+    assert "org/repo#1 row" in uncat_section
+    # Features chapter has no matching records → must NOT appear inside Uncategorized
+    assert "Features" not in uncat_section, (
+        "Empty sub-chapter 'Features' must not appear in Uncategorized regardless of print-empty-chapters setting"
+    )
+
+
+def test_uncategorized_not_emitted_when_only_visible_unclaimed_records_comes_from_empty_chapters(
+    mocker, record_stub
+):
+    """## Uncategorized is not emitted when visible chapters have no matching unclaimed rows.
+
+    Distinct from the hidden-chapter case: here a visible chapter has a record but that
+    record is SC-claimed, so the filtered rows for Uncategorized are empty for every
+    visible chapter → no ## Uncategorized should appear.
+    """
+    cc = make_super_chapters_cc(
+        mocker,
+        [{"title": "Features", "label": "feature"}],
+        [{"title": "Security", "labels": ["feature"]}],
+        print_empty=True,
+    )
+    # r1 matches feature AND the SC label → it is claimed; Uncategorized would be empty
+    r1 = record_stub("org/repo#1", ["feature"])
+    cc.populate({"org/repo#1": r1})
+    output = cc.to_string()
+
+    assert "Uncategorized" not in output, (
+        "## Uncategorized must not appear when all records are SC-claimed"
+    )
