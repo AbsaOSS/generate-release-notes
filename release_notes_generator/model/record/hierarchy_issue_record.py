@@ -321,7 +321,8 @@ class HierarchyIssueRecord(IssueRecord):
             open_icon_prefix = ""
             if self.is_closed and sub_issue.is_open:
                 # Highlight open children under a closed parent to signal incomplete work
-                open_icon_prefix = ActionInputs.get_open_hierarchy_sub_issue_icon() + " "
+                icon = ActionInputs.get_open_hierarchy_sub_issue_icon()
+                open_icon_prefix = (icon + " ") if icon else ""
             sub_issue_block = "- " + open_icon_prefix + sub_issue.to_chapter_row()
             ind_child_block = "\n".join(f"{sub_indent}{line}" if line else "" for line in sub_issue_block.splitlines())
             row = f"{row}\n{ind_child_block}"
