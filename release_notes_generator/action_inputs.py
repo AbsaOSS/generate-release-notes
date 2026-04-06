@@ -142,7 +142,7 @@ class ActionInputs:
         Get the from-tag name from the action inputs.
         """
         raw = get_action_input(FROM_TAG_NAME, default="")
-        return normalize_version_tag(raw)  # type: ignore[arg-type]
+        return normalize_version_tag(raw)
 
     @staticmethod
     def is_from_tag_name_defined() -> bool:
@@ -185,8 +185,7 @@ class ActionInputs:
         with a warning log.
         """
         # Get the 'super-chapters' input from environment variables
-        super_chapters_input: str = get_action_input(SUPER_CHAPTERS, default="")  # type: ignore[assignment]
-        # mypy: string is returned as default
+        super_chapters_input: str = get_action_input(SUPER_CHAPTERS, default="")
 
         # Parse the received string back to YAML array input.
         try:
@@ -407,8 +406,7 @@ class ActionInputs:
         """
         Get the print empty chapters parameter value from the action inputs.
         """
-        return get_action_input(PRINT_EMPTY_CHAPTERS, "true").lower() == "true"  # type: ignore[union-attr]
-        # mypy: string is returned as default
+        return get_action_input(PRINT_EMPTY_CHAPTERS, "true").lower() == "true"
 
     @staticmethod
     def validate_input(input_value, expected_type: type, error_message: str, error_buffer: list) -> bool:

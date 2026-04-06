@@ -912,3 +912,114 @@ def test_five_level_hierarchy_label_filter_and_exclude_labels(mocker, patch_hier
     assert "#4" in row_plain, f"Story must appear (has non-SC path); got:\n{row_plain}"
     assert "#11" in row_plain, f"Plain task must appear; got:\n{row_plain}"
     assert "#10" not in row_plain, f"SC task must be excluded; got:\n{row_plain}"
+
+
+def test_developers_returns_empty_list_when_issue_is_none():
+    """developers returns [] when the underlying issue is None (defensive guard)."""
+    record = HierarchyIssueRecord(None)  # type: ignore[arg-type]
+    assert record.developers == []
+
+
+def test_pull_requests_count_cross_repo_sub_issue(mocker, make_hierarchy_issue):
+    """A cross-repo sub-issue counts as 1 PR regardless of its own pull-request list."""
+    parent = HierarchyIssueRecord(make_hierarchy_issue(100, IssueRecord.ISSUE_STATE_OPEN))
+    sub = SubIssueRecord(make_hierarchy_issue(200, IssueRecord.ISSUE_STATE_CLOSED))
+    sub.is_cross_repo = True
+    parent.sub_issues["org/repo#200"] = sub
+
+    assert parent.pull_requests_count() == 1
+
+
+def test_pull_requests_count_cross_repo_sub_hierarchy_issue(mocker, make_hierarchy_issue):
+    """A cross-repo sub-hierarchy-issue counts as 1 PR."""
+    parent = HierarchyIssueRecord(make_hierarchy_issue(100, IssueRecord.ISSUE_STATE_OPEN))
+    child = HierarchyIssueRecord(make_hierarchy_issue(200, IssueRecord.ISSUE_STATE_CLOSED))
+    child.is_cross_repo = True
+    parent.sub_hierarchy_issues["org/repo#200"] = child
+
+    assert parent.pull_requests_count() == 1
+
+
+def test_get_labels_includes_pr_labels(mocker, make_hierarchy_issue, make_sub_issue):
+    """get_labels aggregates labels from attached pull requests."""
+    issue = make_hierarchy_issue(10, IssueRecord.ISSUE_STATE_OPEN)
+    record = HierarchyIssueRecord(issue)
+
+    pr = mocker.Mock()
+    mock_label = mocker.Mock()
+    mock_label.name = "pr-label"
+    pr.get_labels.return_value = [mock_label]
+    record.register_pull_request(pr)
+
+    labels = record.get_labels()
+    assert "pr-label" in labels
+
+
+def test_has_unmatched_descendants_leaf_hierarchy_child_unmatched(mocker, make_hierarchy_issue):
+    """Leaf sub-hierarchy-issue whose own labels don't match the SC set returns True."""
+    parent = HierarchyIssueRecord(make_hierarchy_issue(1, IssueRecord.ISSUE_STATE_OPEN))
+
+    leaf_issue = make_hierarchy_issue(2, IssueRecord.ISSUE_STATE_OPEN)
+    other_label = mocker.Mock()
+    other_label.name = "other-label"
+    leaf_issue.get_labels.return_value = [other_label]
+    leaf = HierarchyIssueRecord(leaf_issue)
+    parent.sub_hierarchy_issues["org/repo#2"] = leaf
+
+    assert parent.has_unmatched_descendants(["sc-label"]) is True
+
+
+def test_has_unmatched_descendants_leaf_hierarchy_child_matched(mocker, make_hierarchy_issue):
+    """Leaf sub-hierarchy-issue whose labels match the SC set returns False."""
+    parent = HierarchyIssueRecord(make_hierarchy_issue(1, IssueRecord.ISSUE_STATE_OPEN))
+
+    leaf_issue = make_hierarchy_issue(2, IssueRecord.ISSUE_STATE_OPEN)
+    sc_label = mocker.Mock()
+    sc_label.name = "sc-label"
+    leaf_issue.get_labels.return_value = [sc_label]
+    leaf = HierarchyIssueRecord(leaf_issue)
+    parent.sub_hierarchy_issues["org/repo#2"] = leaf
+
+    assert parent.has_unmatched_descendants(["sc-label"]) is False
+
+
+# --- release notes block rendering ---
+
+
+def test_to_chapter_row_renders_release_notes_heading_and_content(mocker, patch_hierarchy_action_inputs):
+    """Issue body with a Release Notes section is rendered as an indented block by to_chapter_row()."""
+    parent = make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=300)
+    parent.body = "Description\nRelease Notes:\n- Fixed the critical bug"
+    record = HierarchyIssueRecord(parent)
+
+    row = record.to_chapter_row()
+
+    assert "_Release Notes_:" in row, f"Release Notes heading must appear; got:\n{row}"
+    assert "Fixed the critical bug" in row, f"Release notes content must appear; got:\n{row}"
+
+
+def test_to_chapter_row_release_notes_block_indented_relative_to_level(mocker, patch_hierarchy_action_inputs):
+    """Release Notes heading is indented one level deeper than the issue's own hierarchy level."""
+    parent = make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=300)
+    parent.body = "Description\nRelease Notes:\n- Fixed the critical bug"
+    record = HierarchyIssueRecord(parent)
+    record.level = 0
+
+    row = record.to_chapter_row()
+
+    rls_line = next((line for line in row.splitlines() if "_Release Notes_:" in line), None)
+    assert rls_line is not None, f"Release Notes heading line missing; got:\n{row}"
+    assert rls_line.startswith("  - "), (
+        f"At level 0 heading must start with '  - ' (2-space indent + list marker); got: {rls_line!r}"
+    )
+
+
+def test_to_chapter_row_no_release_notes_body_omits_block(mocker, patch_hierarchy_action_inputs):
+    """Issue body without a Release Notes section produces no Release Notes heading."""
+    parent = make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number=301)
+    parent.body = "Just a plain description with no special section."
+    record = HierarchyIssueRecord(parent)
+
+    row = record.to_chapter_row()
+
+    assert "_Release Notes_:" not in row, f"No Release Notes heading expected; got:\n{row}"

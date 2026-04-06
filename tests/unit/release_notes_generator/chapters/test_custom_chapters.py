@@ -1838,3 +1838,188 @@ def test_sc_combo_c6_plain_record_routing_unchanged(mocker, record_stub):
     assert "Uncategorized" in output
     uncat_section = output.split("Uncategorized")[1]
     assert "org/repo#11 row" in uncat_section
+
+
+def test_from_yaml_array_coh_chapter_with_explicit_null_labels():
+    """catch-open-hierarchy chapter with 'labels: null' is accepted with an empty label list."""
+    cc = CustomChapters()
+    cc.from_yaml_array([{"title": "Open Issues", "catch-open-hierarchy": True, "labels": None}])
+    assert "Open Issues" in cc.chapters
+    assert cc.chapters["Open Issues"].catch_open_hierarchy is True
+    assert cc.chapters["Open Issues"].labels == []
+
+
+def test_from_yaml_array_chapter_order_conflict_warns(caplog):
+    """Same chapter title defined twice with different orders logs a warning and keeps the first."""
+    caplog.set_level("WARNING", logger="release_notes_generator.chapters.custom_chapters")
+    cc = CustomChapters()
+    cc.from_yaml_array(
+        [
+            {"title": "Changes", "labels": "bug", "order": 1},
+            {"title": "Changes", "labels": "enhancement", "order": 2},
+        ]
+    )
+    assert "Changes" in cc.chapters
+    assert cc.chapters["Changes"].order == 1
+    assert any("conflicting order" in r.message for r in caplog.records)
+
+
+def test_from_yaml_array_repeated_chapter_with_hidden_logs_info(caplog):
+    """Repeated chapter definition with hidden=True logs an info message about hidden status."""
+    caplog.set_level("INFO", logger="release_notes_generator.chapters.custom_chapters")
+    cc = CustomChapters()
+    cc.from_yaml_array(
+        [
+            {"title": "Changes", "labels": "bug"},
+            {"title": "Changes", "labels": "enhancement", "hidden": True},
+        ]
+    )
+    assert "Changes" in cc.chapters
+    assert any("marked as hidden" in r.message for r in caplog.records)
+
+
+def test_super_chapters_hidden_chapter_skipped_in_sc_and_uncat_loops(mocker, record_stub):
+    """Hidden chapters are skipped during both SC-block and Uncategorized-block rendering."""
+    cc = make_super_chapters_cc(
+        mocker,
+        [
+            {"title": "SC-Chapter", "labels": "sc-label"},
+            {"title": "Hidden-Chapter", "labels": "other-label", "hidden": True},
+        ],
+        [{"title": "Security", "labels": ["sc-label"]}],
+        print_empty=True,
+    )
+    r_sc = record_stub("org/repo#1", ["sc-label"])
+    r_plain = record_stub("org/repo#2", ["other-label"])  # assigned to hidden chapter
+    cc.populate({"org/repo#1": r_sc, "org/repo#2": r_plain})
+
+    output = cc.to_string()
+
+    # SC section renders with visible chapter (hidden chapter is skipped in SC loop)
+    assert "## Security" in output
+    assert "org/repo#1 row" in output
+    # Uncategorized section is entered (r_plain is unclaimed) but hidden chapter is skipped,
+    # so r_plain does NOT appear in the rendered output
+    assert "Uncategorized" in output
+    assert "org/repo#2 row" not in output
+
+
+def test_super_chapters_empty_sc_block_printed_when_all_chapters_hidden(mocker, record_stub):
+    """When all chapters are hidden, a super chapter with no visible content renders 'No entries detected.'"""
+    cc = make_super_chapters_cc(
+        mocker,
+        [{"title": "Hidden-Only", "labels": "bug", "hidden": True}],
+        [{"title": "Security", "labels": ["sc-label"]}],
+        print_empty=True,
+    )
+    r1 = record_stub("org/repo#1", ["bug", "sc-label"])
+    cc.populate({"org/repo#1": r1})
+
+    output = cc.to_string()
+
+    assert "## Security" in output
+    assert "No entries detected." in output
+
+
+def test_render_chapter_for_ids_hierarchy_record_no_matching_labels_skipped(mocker, record_stub):
+    """HierarchyIssueRecord whose has_matching_labels returns False is skipped in SC rendering."""
+    cc = make_super_chapters_cc(
+        mocker,
+        [{"title": "Changes", "labels": "sc-label"}],
+        [{"title": "Security", "labels": ["sc-label"]}],
+        print_empty=False,
+    )
+    mock_hi = mocker.create_autospec(HierarchyIssueRecord, instance=True)
+    mock_hi.labels = ["sc-label"]
+    mock_hi.get_labels.return_value = ["sc-label"]
+    mock_hi.contains_change_increment.return_value = True
+    mock_hi.skip = False
+    mock_hi.is_open = True
+    mock_hi.has_matching_labels.return_value = False
+    mock_hi.to_chapter_row.return_value = "hi_row"
+    cc.populate({"org/repo#1": mock_hi})
+
+    output = cc.to_string()
+
+    # The record must NOT appear in Security section because has_matching_labels returned False
+    security_section = output.split("## Security")[1].split("## ")[0] if "## Security" in output else ""
+    assert "hi_row" not in security_section
+
+
+# --- _enforce_coh_constraint via from_yaml_array ---
+
+
+def test_enforce_coh_constraint_no_coh_passes_through(caplog):
+    """Chapter with no catch-open-hierarchy is registered normally (pass-through path)."""
+    caplog.set_level("WARNING", logger="release_notes_generator.chapters.custom_chapters")
+    cc = CustomChapters()
+    cc.from_yaml_array([{"title": "Features", "labels": "feature"}])
+    assert "Features" in cc.chapters
+    assert cc.chapters["Features"].catch_open_hierarchy is False
+    assert not caplog.records
+
+
+def test_enforce_coh_constraint_first_coh_chapter_accepted():
+    """First chapter with catch-open-hierarchy is accepted without warning."""
+    cc = CustomChapters()
+    cc.from_yaml_array([{"title": "Open Issues", "catch-open-hierarchy": True}])
+    assert "Open Issues" in cc.chapters
+    assert cc.chapters["Open Issues"].catch_open_hierarchy is True
+
+
+def test_enforce_coh_constraint_duplicate_different_title_rejected_with_warning(caplog):
+    """Second distinct title with catch-open-hierarchy is demoted and a warning is emitted."""
+    caplog.set_level("WARNING", logger="release_notes_generator.chapters.custom_chapters")
+    cc = CustomChapters()
+    cc.from_yaml_array(
+        [
+            {"title": "First", "catch-open-hierarchy": True},
+            {"title": "Second", "catch-open-hierarchy": True, "labels": "bug"},
+        ]
+    )
+    assert cc.chapters["First"].catch_open_hierarchy is True
+    assert cc.chapters["Second"].catch_open_hierarchy is False
+    assert any("ignoring duplicate" in r.message.lower() for r in caplog.records)
+
+
+def test_enforce_coh_constraint_same_title_repeat_merges_silently(caplog):
+    """Repeating catch-open-hierarchy on the same title merges labels without warning."""
+    caplog.set_level("WARNING", logger="release_notes_generator.chapters.custom_chapters")
+    cc = CustomChapters()
+    cc.from_yaml_array(
+        [
+            {"title": "Open Issues", "catch-open-hierarchy": True, "labels": "epic"},
+            {"title": "Open Issues", "catch-open-hierarchy": True, "labels": "feature"},
+        ]
+    )
+    assert cc.chapters["Open Issues"].catch_open_hierarchy is True
+    assert cc.chapters["Open Issues"].labels == ["epic", "feature"]
+    assert not any("ignoring duplicate" in r.message.lower() for r in caplog.records)
+
+
+# --- _collect_uncategorized_ids via to_string with super chapters ---
+
+
+def test_collect_uncategorized_ids_claimed_hierarchy_with_all_matched_not_in_uncat(mocker, record_stub):
+    """A hierarchy record whose every descendant is SC-matched must not appear in Uncategorized."""
+    cc = make_super_chapters_cc(
+        mocker,
+        [{"title": "Features", "label": "enhancement"}],
+        [{"title": "Security", "labels": ["scope:security"]}],
+    )
+    r1 = record_stub("org/repo#1", ["enhancement", "scope:security"])
+    cc.populate({"org/repo#1": r1})
+    output = cc.to_string()
+    assert "Uncategorized" not in output, f"Claimed record must not appear in Uncategorized; got:\n{output}"
+
+
+def test_collect_uncategorized_ids_no_rows_produces_no_uncat_section(mocker):
+    """When all chapters are empty, no Uncategorized section is rendered."""
+    cc = make_super_chapters_cc(
+        mocker,
+        [{"title": "Features", "label": "feature"}],
+        [{"title": "Security", "labels": ["scope:security"]}],
+        print_empty=False,
+    )
+    output = cc.to_string()
+    assert "Uncategorized" not in output

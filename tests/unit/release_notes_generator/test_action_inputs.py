@@ -61,6 +61,7 @@ failure_cases = [
     ("get_duplicity_icon", "Oj", "Duplicity icon must be a non-empty string and have a length of 1."),
     ("get_row_format_issue", "", "Issue row format must be a non-empty string."),
     ("get_row_format_pr", "", "PR Row format must be a non-empty string."),
+    ("get_row_format_hierarchy_issue", "", "Hierarchy Issue row format must be a non-empty string."),
     ("get_release_notes_title", "", "Release Notes title must be a non-empty string and have non-zero length."),
     (
         "get_coderabbit_release_notes_title",
@@ -586,6 +587,62 @@ def test_get_row_format_link_pr_true(mocker):
 def test_get_row_format_link_pr_false(mocker):
     mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="false")
     assert ActionInputs.get_row_format_link_pr() is False
+
+
+def test_get_github_owner_no_slash_in_repository_id(monkeypatch, mocker):
+    """Repository ID without '/' sets owner to the whole string."""
+    monkeypatch.setattr(ActionInputs, "_owner", "")
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="standalone")
+    assert ActionInputs.get_github_owner() == "standalone"
+
+
+def test_get_github_owner_with_slash_in_repository_id(monkeypatch, mocker):
+    """Repository ID with '/' extracts the owner part before the slash."""
+    monkeypatch.setattr(ActionInputs, "_owner", "")
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="my-org/my-repo")
+    assert ActionInputs.get_github_owner() == "my-org"
+
+
+def test_get_github_owner_cache_hit(monkeypatch):
+    """Cached owner value is returned without querying the environment."""
+    monkeypatch.setattr(ActionInputs, "_owner", "primed-org")
+    assert ActionInputs.get_github_owner() == "primed-org"
+
+
+def test_get_github_repo_name_no_slash_in_repository_id(monkeypatch, mocker):
+    """Repository ID without '/' sets repo_name to the whole string."""
+    monkeypatch.setattr(ActionInputs, "_repo_name", "")
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="standalone")
+    assert ActionInputs.get_github_repo_name() == "standalone"
+
+
+def test_get_github_repo_name_with_slash_in_repository_id(monkeypatch, mocker):
+    """Repository ID with '/' extracts the repo name part after the slash."""
+    monkeypatch.setattr(ActionInputs, "_repo_name", "")
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="my-org/my-repo")
+    assert ActionInputs.get_github_repo_name() == "my-repo"
+
+
+def test_get_github_repo_name_cache_hit(monkeypatch):
+    """Cached repo name is returned without querying the environment."""
+    monkeypatch.setattr(ActionInputs, "_repo_name", "primed-repo")
+    assert ActionInputs.get_github_repo_name() == "primed-repo"
+
+
+def test_get_open_hierarchy_sub_issue_icon_default():
+    assert ActionInputs.get_open_hierarchy_sub_issue_icon() == "🟡"
+
+
+def test_get_open_hierarchy_sub_issue_icon_custom(mocker):
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="⚡")
+    assert ActionInputs.get_open_hierarchy_sub_issue_icon() == "⚡"
+
+
+def test_detect_row_format_invalid_keywords_unknown_row_type(caplog):
+    """Unknown row_type logs a warning and defaults to Issue keys."""
+    caplog.set_level("WARNING", logger="release_notes_generator.action_inputs")
+    ActionInputs._detect_row_format_invalid_keywords("{number} {bogus}", row_type="Unknown")
+    assert any("Unknown row_type" in r.message for r in caplog.records)
 
 
 # Mirrored test file for release_notes_generator/generator.py
