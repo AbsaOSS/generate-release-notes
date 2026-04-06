@@ -230,10 +230,17 @@ class BulkSubIssueCollector:
                 logger.debug("Posted graphql query")
                 return data
             except Exception as e:  # pylint: disable=broad-exception-caught
-                logger.exception("GraphQL query failed")
                 last_exc = e
                 if attempt == self._cfg.max_retries:
+                    logger.exception("GraphQL query failed after %d attempts", self._cfg.max_retries)
                     raise
+                logger.warning(
+                    "GraphQL query failed (attempt %d/%d): %s; retrying in %.1fs",
+                    attempt,
+                    self._cfg.max_retries,
+                    e,
+                    self._cfg.base_backoff * attempt,
+                )
                 time.sleep(self._cfg.base_backoff * attempt)
         if last_exc:
             raise last_exc
