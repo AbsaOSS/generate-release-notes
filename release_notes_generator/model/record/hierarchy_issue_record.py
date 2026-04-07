@@ -182,8 +182,10 @@ class HierarchyIssueRecord(IssueRecord):
     def has_matching_labels(self, label_filter: list[str]) -> bool:
         """Check if this hierarchy issue or any descendant has labels matching the filter.
 
-        Uses the same aggregated label set as get_labels() so that PR labels attached to
-        this record or its descendants are considered when matching super-chapter filters.
+        Uses the same aggregated label set as get_labels():
+        - own issue labels and PR labels attached directly to this record
+        - issue labels of direct SubIssueRecord children (PR labels on those children are not included)
+        - recursively, all labels (issue and PR) from sub-HierarchyIssueRecord descendants
 
         Parameters:
             label_filter: Labels to check against.

@@ -326,8 +326,10 @@ def test_get_super_chapters_empty_labels_after_normalization_skipped(mocker, cap
     assert any("empty after normalization" in r.message for r in caplog.records)
 
 
-def test_get_super_chapters_cached_on_same_raw_input(mocker):
+def test_get_super_chapters_cached_on_same_raw_input(mocker, monkeypatch):
     """Parsing and validation run only once when the raw input string has not changed."""
+    monkeypatch.setattr(ActionInputs, "_super_chapters_raw", None)
+    monkeypatch.setattr(ActionInputs, "_super_chapters_cache", None)
     raw = '[{"title": "Module A", "label": "mod-a"}]'
     mock_get = mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value=raw)
     spy = mocker.spy(yaml, "safe_load")
@@ -341,8 +343,10 @@ def test_get_super_chapters_cached_on_same_raw_input(mocker):
     assert mock_get.call_count == 2  # env is read each time, only parse is skipped
 
 
-def test_get_super_chapters_cache_invalidated_on_new_raw_input(mocker):
+def test_get_super_chapters_cache_invalidated_on_new_raw_input(mocker, monkeypatch):
     """Cache is bypassed and re-parsed when the raw input string changes between calls."""
+    monkeypatch.setattr(ActionInputs, "_super_chapters_raw", None)
+    monkeypatch.setattr(ActionInputs, "_super_chapters_cache", None)
     raw_a = '[{"title": "Module A", "label": "mod-a"}]'
     raw_b = '[{"title": "Module B", "label": "mod-b"}]'
     mock_get = mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value=raw_a)
