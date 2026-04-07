@@ -610,8 +610,7 @@ class ActionInputs:
         logger.debug("CodeRabbit summary ignore groups: %s", coderabbit_summary_ignore_groups)
         logger.debug("Hidden service chapters: %s", ActionInputs.get_hidden_service_chapters())
         logger.debug("Service chapter order: %s", ActionInputs.get_service_chapter_order())
-        super_chapters = ActionInputs.get_super_chapters()
-        logger.debug("Super chapters: %s", super_chapters)
+        logger.debug("Super chapters (raw): %s", get_action_input(SUPER_CHAPTERS, default=""))
 
     @staticmethod
     def _detect_row_format_invalid_keywords(row_format: str, row_type: str = "Issue", clean: bool = False) -> str:

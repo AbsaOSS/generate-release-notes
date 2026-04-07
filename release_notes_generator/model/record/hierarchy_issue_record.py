@@ -211,10 +211,12 @@ class HierarchyIssueRecord(IssueRecord):
             if sub_hierarchy_issue.has_unmatched_descendants(all_super_labels):
                 return True
             # A leaf HierarchyIssueRecord (no children of its own) is unmatched if
-            # its own labels don't intersect the SC set.  Intermediate nodes are
-            # pure containers — their own organisational labels are irrelevant.
+            # its aggregated labels (own + PR labels) don't intersect the SC set.
+            # Use has_matching_labels() instead of .labels to include PR labels,
+            # consistent with how has_matching_labels() itself is implemented.
+            # Intermediate nodes are pure containers — their own labels are irrelevant.
             is_leaf = not sub_hierarchy_issue.sub_issues and not sub_hierarchy_issue.sub_hierarchy_issues
-            if is_leaf and not any(lbl in all_super_labels for lbl in sub_hierarchy_issue.labels):
+            if is_leaf and not sub_hierarchy_issue.has_matching_labels(all_super_labels):
                 return True
         return False
 
