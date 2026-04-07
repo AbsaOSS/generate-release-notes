@@ -55,7 +55,7 @@ class HierarchyIssueRecord(IssueRecord):
         Sets the level of the hierarchy issue.
 
         Parameters:
-            value (int): The level of the hierarchy issue.
+            value: The level of the hierarchy issue.
         """
         self._level = value
 
@@ -356,10 +356,7 @@ class HierarchyIssueRecord(IssueRecord):
         Orders the hierarchy levels of the issue and its sub-issues recursively.
 
         Parameters:
-            level (int): The starting level for the hierarchy. Default is 0.
-
-        Returns:
-            None
+            level: The starting level for the hierarchy. Default is 0.
         """
         self._level = level
         for sub_hierarchy_record in self.sub_hierarchy_issues.values():

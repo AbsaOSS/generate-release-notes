@@ -429,11 +429,14 @@ class ActionInputs:
         """
         Validates the input value against the expected type.
 
-        @param input_value: The input value to validate.
-        @param expected_type: The expected type of the input value.
-        @param error_message: The error message to log if the validation fails.
-        @param error_buffer: The buffer to store the error messages.
-        @return: The boolean result of the validation.
+        Parameters:
+            input_value: The input value to validate.
+            expected_type: The expected type of the input value.
+            error_message: The error message to log if the validation fails.
+            error_buffer: The buffer to store the error messages.
+
+        Returns:
+            The boolean result of the validation.
         """
 
         if not isinstance(input_value, expected_type):
@@ -493,7 +496,6 @@ class ActionInputs:
         """
         Validates the inputs provided for the release notes generator.
         Logs any validation errors and exits if any are found.
-        @return: None
         """
         errors = []
 
@@ -617,9 +619,13 @@ class ActionInputs:
         """
         Detects invalid keywords in the row format.
 
-        @param row_format: The row format to be checked for invalid keywords.
-        @param row_type: The type of row format. Default is "Issue".
-        @return: If clean is True, the cleaned row format. Otherwise, the original row format.
+        Parameters:
+            row_format: The row format to be checked for invalid keywords.
+            row_type: The type of row format. Default is "Issue".
+            clean: When True, strip invalid keywords from the returned string.
+
+        Returns:
+            If clean is True, the cleaned row format. Otherwise, the original row format.
         """
         keywords_in_braces = re.findall(r"\{(.*?)\}", row_format)
 

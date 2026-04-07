@@ -82,6 +82,12 @@ class CustomChapters(BaseChapters):
     ) -> bool:
         """Try to route an open HierarchyIssueRecord to the COH chapter.
 
+        Parameters:
+            record_id: The unique record identifier.
+            record: The record to route.
+            record_labels: Labels attached to the record.
+            coh_chapter: The catch-open-hierarchy chapter to route into.
+
         Returns:
             True if the record was routed to the COH chapter, False if the label filter excluded it.
         """
@@ -95,10 +101,7 @@ class CustomChapters(BaseChapters):
         Populates the custom chapters with records.
 
         Parameters:
-            @param records: A dictionary of records keyed by 'owner/repo#number' and values are Record objects.
-
-        Returns:
-            None
+            records: A dictionary of records keyed by 'owner/repo#number' and values are Record objects.
         """
         hierarchy_enabled = ActionInputs.get_hierarchy()
         coh_chapter = self._find_catch_open_hierarchy_chapter()
@@ -173,7 +176,7 @@ class CustomChapters(BaseChapters):
         records under a given super chapter are governed by ``print_empty_chapters``.
 
         Returns:
-            str: The chapters as a string with hidden chapters filtered out.
+            The chapters as a string with hidden chapters filtered out.
         """
         if self._super_chapters:
             return self._to_string_with_super_chapters()
@@ -227,6 +230,9 @@ class CustomChapters(BaseChapters):
                 whose labels intersect *exclude_labels* removed (for Uncategorized fallback).
             print_empty_chapters: Override for the empty-chapter setting; defaults to
                 ``self.print_empty_chapters`` when ``None``.
+
+        Returns:
+            Rendered chapter string, or empty string if the chapter has no matching rows.
         """
         effective_print_empty = self.print_empty_chapters if print_empty_chapters is None else print_empty_chapters
         original_rows = chapter.rows
@@ -355,7 +361,7 @@ class CustomChapters(BaseChapters):
         Empty / invalid label definitions are skipped with a warning.
 
         Parameters:
-            @param chapters: A list of dictionaries representing the chapters.
+            chapters: A list of dictionaries representing the chapters.
 
         Returns:
             The CustomChapters instance for chaining.
