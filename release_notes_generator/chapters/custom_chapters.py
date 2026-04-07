@@ -117,14 +117,16 @@ class CustomChapters(BaseChapters):
             record_labels = getattr(record, "labels", [])
 
             # Track labels for super-chapter grouping at render time.
-            # HierarchyIssueRecords use aggregated labels (own + descendants) so the
-            # hierarchy parent matches super chapters via sub-issue labels.
-            if isinstance(record, HierarchyIssueRecord):
-                all_labels = record.get_labels()
-                if all_labels:
-                    self._record_labels[record_id] = list(all_labels)
-            elif record_labels:
-                self._record_labels[record_id] = list(record_labels)
+            # Only populated when super chapters are configured; skipped for flat rendering
+            # to avoid the recursive get_labels() cost (including PR API calls) on every
+            # HierarchyIssueRecord when it would never be read.
+            if self._super_chapters:
+                if isinstance(record, HierarchyIssueRecord):
+                    all_labels = record.get_labels()
+                    if all_labels:
+                        self._record_labels[record_id] = list(all_labels)
+                elif record_labels:
+                    self._record_labels[record_id] = list(record_labels)
 
             # Conditional Custom Chapter gate: intercept open hierarchy parents before label routing.
             # Note: precedes the record_labels early-exit so label-less HierarchyIssueRecord
