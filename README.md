@@ -9,6 +9,7 @@ Categorize changes, highlight contributors, and maintain consistent release docu
 - [Overview](#overview)
 - [Motivation](#motivation)
 - [Quick Start](#quick-start)
+- [How Release Notes Are Recognized](#how-release-notes-are-recognized)
 - [Requirements](#requirements)
 - [Configuration](#configuration)
 - [Example Workflow](#example-workflow)
@@ -75,6 +76,25 @@ https://github.com/org/repo/compare/v1.1.0...v1.2.0
 2. Categorize them by labels.
 3. Extract release note text and contributors.
 4. Output a Markdown section ready for publishing.
+## How Release Notes Are Recognized
+
+The action looks for a section whose heading matches the regex `[Rr]elease [Nn]otes:` (configurable via `release-notes-title`) in the **issue body first**, then in each **linked PR body**. Every bullet line (`-`, `*`, or `+`) immediately below that heading becomes one release note entry.
+
+**Example — issue or PR body:**
+
+```markdown
+Some intro text
+
+Release Notes:
+- Add user MFA enrollment flow
+- Improve cache invalidation logic
+
+Other commentary...
+```
+
+Only the first matching section per body is used; content outside it is ignored. If no section is found in any linked PR body and [CodeRabbit Integration](docs/features/coderabbit_integration.md) is enabled, the AI-generated summary is used as a fallback.
+
+For full details — including the configurable title regex, `skip-release-notes-labels`, and edge cases — see [Release Notes Extraction](docs/features/release_notes_extraction.md).
 
 ## Requirements
 
