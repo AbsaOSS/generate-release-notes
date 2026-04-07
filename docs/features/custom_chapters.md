@@ -322,11 +322,11 @@ Children within each rendered node are sorted **ascending by issue number**.
 
 ### Validation
 - Non-dict entries are skipped with a warning.
-- Entries missing `title` are skipped with a warning.
-- Entries where `title` is present but is not a string, or is blank/whitespace-only, are skipped with a warning.
-- Entries missing `label`/`labels` are skipped with a warning.
+- A missing `title` key causes the entry to be skipped with a warning.
+- A `title` that is not a string or is blank/whitespace-only is skipped with a warning.
+- A missing `label`/`labels` key causes the entry to be skipped with a warning.
 - An invalid `label`/`labels` type (not a string or list) is treated as empty and causes the entry to be skipped with a warning.
-- Empty labels after normalization (e.g. only blank tokens) cause the entry to be skipped with a warning.
+- Labels that are empty after normalization (e.g. only blank tokens) cause the entry to be skipped with a warning.
 
 ## Related Features
 - [Duplicity Handling](./duplicity_handling.md) – governs multi-chapter visibility.
