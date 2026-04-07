@@ -81,6 +81,8 @@ class ActionInputs:
     _row_format_link_pr = None
     _owner = ""
     _repo_name = ""
+    _super_chapters_raw: str | None = None
+    _super_chapters_cache: list[dict[str, Any]] | None = None
 
     @staticmethod
     def get_github_owner() -> str:
@@ -187,16 +189,29 @@ class ActionInputs:
         # Get the 'super-chapters' input from environment variables
         super_chapters_input: str = get_action_input(SUPER_CHAPTERS, default="")
 
+        if (
+            ActionInputs._super_chapters_raw is not None
+            and ActionInputs._super_chapters_raw == super_chapters_input
+            and ActionInputs._super_chapters_cache is not None
+        ):
+            return ActionInputs._super_chapters_cache
+
         # Parse the received string back to YAML array input.
         try:
             raw_list = yaml.safe_load(super_chapters_input)
             if raw_list is None:
+                ActionInputs._super_chapters_raw = super_chapters_input
+                ActionInputs._super_chapters_cache = []
                 return []
             if not isinstance(raw_list, list):
                 logger.error("Error: 'super-chapters' input is not a valid YAML list.")
+                ActionInputs._super_chapters_raw = super_chapters_input
+                ActionInputs._super_chapters_cache = []
                 return []
         except yaml.YAMLError as exc:
             logger.error("Error parsing 'super-chapters' input: %s", exc)
+            ActionInputs._super_chapters_raw = super_chapters_input
+            ActionInputs._super_chapters_cache = []
             return []
 
         result: list[dict[str, Any]] = []
@@ -223,6 +238,8 @@ class ActionInputs:
 
             result.append({"title": title, "labels": normalized})
             logger.debug("Validated super-chapter '%s' with labels: %s", title, normalized)
+        ActionInputs._super_chapters_raw = super_chapters_input
+        ActionInputs._super_chapters_cache = result
         return result
 
     @staticmethod
