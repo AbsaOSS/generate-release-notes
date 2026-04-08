@@ -84,6 +84,14 @@ Testing
 - Must not access private members (names starting with `_`) of the class under test directly in tests.
 - Must place shared test helper functions and factory fixtures in the nearest `conftest.py` and reuse them across tests.
 - Must annotate pytest fixture parameters with `MockerFixture` (from `pytest_mock`) and return types with `Callable[..., T]` (from `collections.abc`) when the fixture returns a factory function.
+- Prefer TDD workflow:
+  - Must create or update `SPEC.md` in the relevant package directory before writing any code, listing scenarios, inputs, and expected outputs.
+  - Must propose the full set of test cases (name + one-line intent + input summary + expected output summary) and wait for user confirmation before writing any code.
+  - Must be ready to add, remove, or rename tests based on user feedback before proceeding.
+  - Must write all failing tests first (red), then implement until all pass (green).
+  - Must cover all distinct combinations; each test must state its scenario in the docstring.
+  - Must update `SPEC.md` after all tests pass with the confirmed test case table (name + intent + input + expected output).
+- Must not add comments outside test methods in `test_*.py` files; use section-header comments (`# --- section ---`) only to separate logical groups of tests.
 
 Tooling
 - Must format with Black (pyproject.toml).

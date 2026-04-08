@@ -15,13 +15,17 @@
 #
 import pytest
 
-from release_notes_generator.chapters.custom_chapters import CustomChapters, _normalize_labels
+from github.Issue import Issue
+
+from release_notes_generator.chapters.custom_chapters import CustomChapters
+from release_notes_generator.utils.utils import normalize_labels
 from release_notes_generator.model.record.issue_record import IssueRecord
 from release_notes_generator.model.record.hierarchy_issue_record import HierarchyIssueRecord
 from release_notes_generator.model.record.commit_record import CommitRecord
 from release_notes_generator.model.record.record import Record
 from release_notes_generator.utils.enums import DuplicityScopeEnum
 from release_notes_generator.action_inputs import ActionInputs
+from tests.unit.conftest import make_super_chapters_cc
 
 
 @pytest.fixture
@@ -301,7 +305,7 @@ def test_from_yaml_array_verbose_debug_branch(monkeypatch, caplog):
 )
 def test_normalize_labels_edge_cases(raw, expected):
     # Arrange / Act
-    result = _normalize_labels(raw)
+    result = normalize_labels(raw)
     # Assert
     assert result == expected
 
@@ -445,13 +449,6 @@ def test_populate_hidden_chapter_assigns_records(record_stub):
 
 
 def test_populate_hidden_chapter_no_duplicity_count(record_stub, mocker):
-    """
-    Test that hidden chapters don't increment the duplicity counter.
-
-    When a record is assigned to a hidden chapter, to_chapter_row should be called
-    with add_into_chapters=False to prevent incrementing the chapter presence count.
-    This ensures hidden chapters don't contribute to duplicity detection.
-    """
     # Arrange
     cc = CustomChapters()
     cc.from_yaml_array([{"title": "Hidden", "labels": "bug", "hidden": True}])
@@ -468,13 +465,6 @@ def test_populate_hidden_chapter_no_duplicity_count(record_stub, mocker):
 
 
 def test_populate_visible_chapter_duplicity_count(record_stub, mocker):
-    """
-    Test that visible (non-hidden) chapters increment the duplicity counter.
-
-    When a record is assigned to a visible chapter, to_chapter_row should be called
-    with add_into_chapters=True to increment the chapter presence count.
-    This ensures visible chapters contribute to duplicity detection as expected.
-    """
     # Arrange
     cc = CustomChapters()
     cc.from_yaml_array([{"title": "Visible", "labels": "bug", "hidden": False}])
@@ -533,12 +523,6 @@ def test_to_string_hidden_chapter_excluded():
 
 
 def test_to_string_all_hidden_returns_empty():
-    """
-    Test that when all chapters are hidden, to_string returns empty string.
-
-    This also verifies that hidden chapters are never shown even when
-    print_empty_chapters is True, since they are filtered out before rendering.
-    """
     # Arrange
     cc = CustomChapters()
     cc.print_empty_chapters = True  # Verify hidden chapters ignored even with this True
@@ -844,42 +828,23 @@ def test_sorted_chapters_hidden_with_order():
     assert sorted_chs[2].title == "Visible2"
 
 
-# ------- Tests for catch-open-hierarchy (Feature 1) -------
-
-
 @pytest.fixture
-def hierarchy_record_stub():
+def hierarchy_record_stub(mocker):
     """Create a minimal HierarchyIssueRecord-like stub for catch-open-hierarchy tests."""
 
     class HierarchyRecordStub(HierarchyIssueRecord):
         """Stub that avoids calling real GitHub Issue methods."""
 
-        # noinspection PyMissingConstructor
         def __init__(self, rid, labels, state, contains_change):
-            # Bypass real __init__ to avoid GitHub API objects
-            Record.__init__(self, labels=labels, skip=False)
+            mock_issue = mocker.MagicMock(spec=Issue)
+            mock_issue.state = state
+            mock_issue.number = rid
+            mock_issue.type = None
+            mock_issue.user = None
+            mock_issue.assignees = []
+            super().__init__(mock_issue, issue_labels=labels)
             self._rid = rid
-            self._state = state
             self._contains = contains_change
-            self._level = 0
-            self._sub_issues = {}
-            self._sub_hierarchy_issues = {}
-            self._issue = None
-            self._pull_requests = {}
-            self._commits = {}
-            self._issue_type = None
-
-        @property
-        def record_id(self):
-            return self._rid
-
-        @property
-        def is_closed(self):
-            return self._state == "closed"
-
-        @property
-        def is_open(self):
-            return self._state == "open"
 
         @property
         def author(self):
@@ -893,7 +858,7 @@ def hierarchy_record_stub():
         def developers(self):
             return []
 
-        def to_chapter_row(self, add_into_chapters=True):
+        def to_chapter_row(self, add_into_chapters=True, label_filter=None, exclude_labels=None):
             return f"{self._rid} row"
 
         def contains_change_increment(self):
@@ -901,6 +866,9 @@ def hierarchy_record_stub():
 
         def get_labels(self):
             return self.labels
+
+        def has_unmatched_descendants(self, all_super_labels):
+            return False
 
         def get_rls_notes(self, _line_marks=None):
             return ""
@@ -1251,3 +1219,820 @@ def test_coh_chapter_not_populated_via_label_routing(hierarchy_record_stub, monk
     assert "org/repo#C1" in cc.chapters["New Features 🎉"].rows
     assert "org/repo#O1" in cc.chapters["Silent Live 🤫"].rows
     assert "org/repo#O1" not in cc.chapters["New Features 🎉"].rows
+
+
+def test_super_chapters_no_super_chapters_renders_flat(mocker, record_stub):
+    """When no super chapters are defined, output is flat (### headings only)."""
+    # Arrange
+    cc = make_super_chapters_cc(mocker, [{"title": "Features", "label": "feature"}], [])
+    cc.populate({"org/repo#1": record_stub("org/repo#1", ["feature"])})
+    # Act
+    output = cc.to_string()
+    # Assert
+    assert output.startswith("### Features")
+    for line in output.splitlines():
+        assert not line.startswith("## ")
+
+
+def test_super_chapters_records_grouped_under_super_chapter(mocker, record_stub):
+    """Records matching a super-chapter label appear nested under the super-chapter heading."""
+    # Arrange
+    cc = make_super_chapters_cc(
+        mocker,
+        [
+            {"title": "Enhancements", "label": "enhancement"},
+            {"title": "Bugfixes", "label": "bug"},
+        ],
+        [
+            {"title": "Atum server", "labels": ["atum-server"]},
+            {"title": "Atum agent", "labels": ["atum-agent"]},
+        ],
+    )
+    r1 = record_stub("org/repo#1", ["enhancement", "atum-server"])
+    r2 = record_stub("org/repo#2", ["enhancement", "atum-agent"])
+    r3 = record_stub("org/repo#3", ["bug", "atum-agent"])
+    cc.populate({"org/repo#1": r1, "org/repo#2": r2, "org/repo#3": r3})
+    # Act
+    output = cc.to_string()
+    # Assert
+    assert "## Atum server" in output
+    assert "## Atum agent" in output
+    server_section = output.split("## Atum agent")[0]
+    assert "### Enhancements" in server_section
+    assert "org/repo#1 row" in server_section
+    assert "org/repo#2 row" not in server_section
+    agent_section = output.split("## Atum agent")[1]
+    assert "### Enhancements" in agent_section
+    assert "org/repo#2 row" in agent_section
+    assert "### Bugfixes" in agent_section
+    assert "org/repo#3 row" in agent_section
+
+
+def test_super_chapters_record_in_multiple_super_chapters(mocker, record_stub):
+    """A record with labels matching multiple super chapters appears in each."""
+    # Arrange
+    cc = make_super_chapters_cc(
+        mocker,
+        [{"title": "Enhancements", "label": "enhancement"}],
+        [{"title": "Module A", "labels": ["mod-a"]}, {"title": "Module B", "labels": ["mod-b"]}],
+    )
+    r1 = record_stub("org/repo#1", ["enhancement", "mod-a", "mod-b"])
+    cc.populate({"org/repo#1": r1})
+    # Act
+    output = cc.to_string()
+    # Assert
+    assert output.count("org/repo#1 row") == 2
+
+
+def test_super_chapters_empty_super_chapter_skipped_when_print_empty_false(mocker, record_stub):
+    """Super chapter with no matching records is omitted when print_empty_chapters=False."""
+    # Arrange
+    cc = make_super_chapters_cc(
+        mocker,
+        [{"title": "Features", "label": "feature"}],
+        [{"title": "Module A", "labels": ["mod-a"]}, {"title": "Module B", "labels": ["mod-b"]}],
+        print_empty=False,
+    )
+    r1 = record_stub("org/repo#1", ["feature", "mod-a"])
+    cc.populate({"org/repo#1": r1})
+    # Act
+    output = cc.to_string()
+    # Assert
+    assert "## Module A" in output
+    assert "## Module B" not in output
+
+
+def test_super_chapters_parse_logs_and_skips_invalid(mocker):
+    """Only valid super-chapter entries produce headings; validation now runs in ActionInputs."""
+    # Arrange - mock returns only the one valid entry (as ActionInputs would after validation)
+    cc = make_super_chapters_cc(
+        mocker,
+        [{"title": "Features", "label": "feature"}],
+        [{"title": "Valid", "labels": ["ok"]}],
+    )
+    # Act
+    output = cc.to_string()
+    # Assert - only the "Valid" super chapter produces a heading
+    assert "## Valid" in output
+    assert sum(1 for line in output.splitlines() if line.startswith("## ") and not line.startswith("### ")) == 1
+
+
+def test_super_chapters_uncategorized_fallback(mocker, record_stub):
+    """Records without any super-chapter label appear under '## Uncategorized'."""
+    # Arrange
+    cc = make_super_chapters_cc(
+        mocker,
+        [
+            {"title": "Enhancements", "label": "enhancement"},
+            {"title": "Bugfixes", "label": "bug"},
+        ],
+        [{"title": "Module A", "labels": ["mod-a"]}],
+    )
+    r1 = record_stub("org/repo#1", ["enhancement", "mod-a"])
+    r2 = record_stub("org/repo#2", ["bug"])  # no super-chapter label
+    cc.populate({"org/repo#1": r1, "org/repo#2": r2})
+    # Act
+    output = cc.to_string()
+    # Assert
+    assert "## Module A" in output
+    assert "org/repo#1 row" in output
+    assert "## Uncategorized" in output
+    uncategorized_section = output.split("## Uncategorized")[1]
+    assert "org/repo#2 row" in uncategorized_section
+    assert "org/repo#1 row" not in uncategorized_section
+
+
+def test_super_chapters_no_uncategorized_when_all_claimed(mocker, record_stub):
+    """No '## Uncategorized' section when all records match a super chapter."""
+    # Arrange
+    cc = make_super_chapters_cc(
+        mocker,
+        [{"title": "Enhancements", "label": "enhancement"}],
+        [{"title": "Module A", "labels": ["mod-a"]}],
+    )
+    r1 = record_stub("org/repo#1", ["enhancement", "mod-a"])
+    cc.populate({"org/repo#1": r1})
+    # Act
+    output = cc.to_string()
+    # Assert
+    assert "## Module A" in output
+    assert "Uncategorized" not in output
+
+
+def test_super_chapters_coh_record_visible_in_fallback(mocker, hierarchy_record_stub):
+    """COH-routed label-less record appears in Uncategorized when super chapters are active."""
+    # Arrange
+    cc = make_super_chapters_cc(
+        mocker,
+        [
+            {"title": "Features", "labels": "feature"},
+            {"title": "Silent Live", "catch-open-hierarchy": True},
+        ],
+        [{"title": "Module A", "labels": ["mod-a"]}],
+        hierarchy=True,
+    )
+    record = hierarchy_record_stub("org/repo#H1", [], state="open")
+    cc.populate({"org/repo#H1": record})
+    # Act
+    output = cc.to_string()
+    # Assert - COH record appears in Uncategorized since it has no super-chapter label
+    assert "## Uncategorized" in output
+    assert "org/repo#H1 row" in output
+
+
+@pytest.fixture
+def hierarchy_with_sub_issues_stub(mocker):
+    """Create a HierarchyIssueRecord-like stub that renders sub-issues filtered by label_filter."""
+
+    class SubIssueStub:
+        def __init__(self, rid, labels):
+            self.rid = rid
+            self._labels = labels
+
+        @property
+        def labels(self):
+            return self._labels
+
+    class HierarchyWithSubsStub(HierarchyIssueRecord):
+        """Stub with sub-issue-aware to_chapter_row that respects label_filter."""
+
+        def __init__(self, rid, labels, sub_issue_stubs, state="closed"):
+            mock_issue = mocker.MagicMock(spec=Issue)
+            mock_issue.state = state
+            mock_issue.number = rid
+            mock_issue.type = None
+            mock_issue.user = None
+            mock_issue.assignees = []
+            super().__init__(mock_issue, issue_labels=labels)
+            self._rid = rid
+            self._sub_stubs: list[SubIssueStub] = sub_issue_stubs
+
+        @property
+        def author(self):
+            return "author"
+
+        @property
+        def assignees(self):
+            return []
+
+        @property
+        def developers(self):
+            return []
+
+        def to_chapter_row(self, add_into_chapters=True, label_filter=None, exclude_labels=None):
+            row = f"{self._rid} row"
+            for stub in self._sub_stubs:
+                if label_filter and not any(lbl in label_filter for lbl in stub.labels):
+                    continue
+                if exclude_labels and any(lbl in exclude_labels for lbl in stub.labels):
+                    continue
+                row += f"\n  {stub.rid} sub-row"
+            return row
+
+        def contains_change_increment(self):
+            return True
+
+        def get_labels(self):
+            all_labels = list(self.labels)
+            for stub in self._sub_stubs:
+                all_labels.extend(stub.labels)
+            return all_labels
+
+        def has_matching_labels(self, label_filter):
+            return any(lbl in label_filter for lbl in self.get_labels())
+
+        def has_unmatched_descendants(self, all_super_labels):
+            if not self._sub_stubs:
+                return False
+            for stub in self._sub_stubs:
+                if not any(lbl in all_super_labels for lbl in stub.labels):
+                    return True
+            return False
+
+        def get_rls_notes(self, _line_marks=None):
+            return ""
+
+    def _make(rid, labels, sub_issue_stubs, state="closed"):
+        return HierarchyWithSubsStub(rid, labels, sub_issue_stubs, state)
+
+    _make.SubIssueStub = SubIssueStub
+    return _make
+
+
+def test_super_chapters_hierarchy_sub_issues_filtered_by_service(mocker, hierarchy_with_sub_issues_stub):
+    """Epic with frontend + backend tasks renders only relevant sub-issues per super chapter."""
+    # Arrange
+    SI = hierarchy_with_sub_issues_stub.SubIssueStub
+    epic = hierarchy_with_sub_issues_stub(
+        rid="org/repo#1",
+        labels=["epic", "enhancement"],
+        sub_issue_stubs=[
+            SI("org/repo#2", ["enhancement", "frontend"]),
+            SI("org/repo#3", ["enhancement", "backend"]),
+        ],
+    )
+    cc = make_super_chapters_cc(
+        mocker,
+        [{"title": "New Features", "label": "enhancement"}],
+        [
+            {"title": "Frontend", "labels": ["frontend"]},
+            {"title": "Backend", "labels": ["backend"]},
+        ],
+    )
+    cc.populate({"org/repo#1": epic})
+    # Act
+    output = cc.to_string()
+    # Assert structure
+    assert "## Frontend" in output
+    assert "## Backend" in output
+    fe_section = output.split("## Backend")[0]
+    be_section = output.split("## Backend")[1]
+    # Frontend section has only sub-issue #2
+    assert "org/repo#2 sub-row" in fe_section
+    assert "org/repo#3 sub-row" not in fe_section
+    # Backend section has only sub-issue #3
+    assert "org/repo#3 sub-row" in be_section
+    assert "org/repo#2 sub-row" not in be_section
+
+
+def test_super_chapters_hierarchy_no_matching_descendants_hides_epic(mocker, hierarchy_with_sub_issues_stub):
+    """Epic is hidden from a super chapter if none of its descendants match."""
+    SI = hierarchy_with_sub_issues_stub.SubIssueStub
+    epic = hierarchy_with_sub_issues_stub(
+        rid="org/repo#1",
+        labels=["epic", "enhancement"],
+        sub_issue_stubs=[SI("org/repo#2", ["enhancement", "frontend"])],
+    )
+    cc = make_super_chapters_cc(
+        mocker,
+        [{"title": "New Features", "label": "enhancement"}],
+        [
+            {"title": "Frontend", "labels": ["frontend"]},
+            {"title": "Backend", "labels": ["backend"]},
+        ],
+        print_empty=False,
+    )
+    cc.populate({"org/repo#1": epic})
+    # Act
+    output = cc.to_string()
+    # Assert
+    assert "## Frontend" in output
+    assert "## Backend" not in output, "Backend should be skipped when no matching descendants"
+
+
+def test_sc_combo_c1_all_descendants_match_one_sc(mocker, hierarchy_with_sub_issues_stub):
+    """When every descendant matches a single super chapter, epic appears only there, not in Uncategorized."""
+    SI = hierarchy_with_sub_issues_stub.SubIssueStub
+    epic = hierarchy_with_sub_issues_stub(
+        rid="org/repo#1",
+        labels=["epic", "enhancement"],
+        sub_issue_stubs=[
+            SI("org/repo#2", ["enhancement", "scope:security"]),
+            SI("org/repo#3", ["enhancement", "scope:security"]),
+        ],
+    )
+    cc = make_super_chapters_cc(
+        mocker,
+        [{"title": "New Features", "label": "enhancement"}],
+        [{"title": "Security", "labels": ["scope:security"]}],
+    )
+    cc.populate({"org/repo#1": epic})
+    output = cc.to_string()
+
+    assert "## Security" in output
+    assert "org/repo#1 row" in output
+    assert "org/repo#2 sub-row" in output
+    assert "org/repo#3 sub-row" in output
+    assert "Uncategorized" not in output
+
+
+def test_sc_combo_c2_no_descendants_match_any_sc(mocker, hierarchy_with_sub_issues_stub):
+    """When no descendant matches any super chapter, epic appears only in Uncategorized."""
+    SI = hierarchy_with_sub_issues_stub.SubIssueStub
+    epic = hierarchy_with_sub_issues_stub(
+        rid="org/repo#1",
+        labels=["epic", "enhancement"],
+        sub_issue_stubs=[
+            SI("org/repo#2", ["enhancement", "frontend"]),
+            SI("org/repo#3", ["enhancement", "backend"]),
+        ],
+    )
+    cc = make_super_chapters_cc(
+        mocker,
+        [{"title": "New Features", "label": "enhancement"}],
+        [{"title": "Security", "labels": ["scope:security"]}],
+    )
+    cc.populate({"org/repo#1": epic})
+    output = cc.to_string()
+
+    assert "## Security" in output  # header present (empty or not)
+    security_section = output.split("## Security")[1].split("\n## ")[0] if "## Security" in output else ""
+    assert "org/repo#1 row" not in security_section
+    assert "Uncategorized" in output
+    uncat_section = output.split("Uncategorized")[1]
+    assert "org/repo#1 row" in uncat_section
+    assert "org/repo#2 sub-row" in uncat_section
+    assert "org/repo#3 sub-row" in uncat_section
+
+
+def test_sc_combo_c3_split_descendants_between_sc_and_uncategorized(mocker, hierarchy_with_sub_issues_stub):
+    """Epic with security-labeled and non-security-labeled descendants appears in both SC and Uncategorized.
+
+    This is the user-reported scenario:
+      Epic (labels: epic, scope:security)
+        Task A (labels: enhancement, scope:security) → Security SC
+        Task B (labels: enhancement)                 → Uncategorized
+    """
+    SI = hierarchy_with_sub_issues_stub.SubIssueStub
+    epic = hierarchy_with_sub_issues_stub(
+        rid="org/repo#1",
+        labels=["epic", "enhancement"],
+        sub_issue_stubs=[
+            SI("org/repo#2", ["enhancement", "scope:security"]),
+            SI("org/repo#3", ["enhancement"]),
+        ],
+    )
+    cc = make_super_chapters_cc(
+        mocker,
+        [{"title": "New Features", "label": "enhancement"}],
+        [{"title": "Security", "labels": ["scope:security"]}],
+    )
+    cc.populate({"org/repo#1": epic})
+    output = cc.to_string()
+
+    # Security SC contains epic with only the security sub-issue
+    assert "## Security" in output
+    security_section = output.split("## Security")[1].split("\n## ")[0]
+    assert "org/repo#1 row" in security_section
+    assert "org/repo#2 sub-row" in security_section
+    assert "org/repo#3 sub-row" not in security_section
+
+    # Uncategorized contains the same epic with only the non-security sub-issue
+    assert "Uncategorized" in output
+    uncat_section = output.split("Uncategorized")[1]
+    assert "org/repo#1 row" in uncat_section
+    assert "org/repo#3 sub-row" in uncat_section
+    assert "org/repo#2 sub-row" not in uncat_section
+
+
+def test_sc_combo_c3b_three_level_hierarchy_split(mocker, hierarchy_with_sub_issues_stub):
+    """Three-level scenario: Epic → Feature → Tasks; Feature has mixed SC/non-SC descendants.
+
+    Epic (labels: epic, enhancement)
+      Feature (labels: security) — aggregates scope:security from Task2
+        Task1 (enhancement)             → Uncategorized
+        Task2 (enhancement, scope:security) → Security SC
+
+    Expected:
+      ## Security  → Epic row + Feature sub-row containing Task2
+      ## Uncategorized → Epic row + Feature sub-row containing Task1
+    """
+    SI = hierarchy_with_sub_issues_stub.SubIssueStub
+
+    task1_si = SI("org/repo#3", ["enhancement"])
+    task2_si = SI("org/repo#4", ["enhancement", "scope:security"])
+
+    # Feature stub with two sub-issues
+    feature = hierarchy_with_sub_issues_stub(
+        rid="org/repo#2",
+        labels=["security"],
+        sub_issue_stubs=[task1_si, task2_si],
+    )
+
+    # Epic stub with feature as a sub-hierarchy
+    epic = hierarchy_with_sub_issues_stub(
+        rid="org/repo#1",
+        labels=["epic", "enhancement"],
+        sub_issue_stubs=[SI("org/repo#2", ["security", "scope:security", "enhancement"])],
+    )
+    # Override to_chapter_row and helper methods so Feature renders correctly
+    def epic_to_chapter_row(add_into_chapters=True, label_filter=None, exclude_labels=None):
+        row = f"org/repo#1 row"
+        sub_row = feature.to_chapter_row(
+            add_into_chapters=add_into_chapters, label_filter=label_filter, exclude_labels=exclude_labels
+        )
+        if sub_row:
+            row += f"\n  {sub_row}"
+        return row
+
+    epic.to_chapter_row = epic_to_chapter_row
+
+    def epic_has_matching_labels(label_filter):
+        if any(lbl in label_filter for lbl in ["epic", "enhancement"]):
+            return True
+        return feature.has_matching_labels(label_filter)
+
+    def epic_has_unmatched_descendants(all_super_labels):
+        return feature.has_unmatched_descendants(all_super_labels)
+
+    def epic_get_labels():
+        return ["epic", "enhancement"] + feature.get_labels()
+
+    epic.has_matching_labels = epic_has_matching_labels
+    epic.has_unmatched_descendants = epic_has_unmatched_descendants
+    epic.get_labels = epic_get_labels
+
+    cc = make_super_chapters_cc(
+        mocker,
+        [{"title": "New Features", "label": "enhancement"}],
+        [{"title": "Security", "labels": ["scope:security"]}],
+    )
+    cc.populate({"org/repo#1": epic})
+    output = cc.to_string()
+
+    # Security SC: shows epic with feature fragment containing only task2
+    assert "## Security" in output
+    sec_section = output.split("## Security")[1].split("\n## ")[0]
+    assert "org/repo#1 row" in sec_section
+    assert "org/repo#4 sub-row" in sec_section
+    assert "org/repo#3 sub-row" not in sec_section
+
+    # Uncategorized: same epic with feature fragment containing only task1
+    assert "Uncategorized" in output
+    uncat_section = output.split("Uncategorized")[1]
+    assert "org/repo#1 row" in uncat_section
+    assert "org/repo#3 sub-row" in uncat_section
+    assert "org/repo#4 sub-row" not in uncat_section
+
+
+def test_sc_combo_c4_descendants_match_multiple_scs(mocker, hierarchy_with_sub_issues_stub):
+    """Epic with descendants matching different super chapters appears in each, filtered appropriately."""
+    SI = hierarchy_with_sub_issues_stub.SubIssueStub
+    epic = hierarchy_with_sub_issues_stub(
+        rid="org/repo#1",
+        labels=["epic", "enhancement"],
+        sub_issue_stubs=[
+            SI("org/repo#2", ["enhancement", "frontend"]),
+            SI("org/repo#3", ["enhancement", "backend"]),
+        ],
+    )
+    cc = make_super_chapters_cc(
+        mocker,
+        [{"title": "New Features", "label": "enhancement"}],
+        [
+            {"title": "Frontend", "labels": ["frontend"]},
+            {"title": "Backend", "labels": ["backend"]},
+        ],
+    )
+    cc.populate({"org/repo#1": epic})
+    output = cc.to_string()
+
+    # Epic appears in both super chapters
+    assert "## Frontend" in output
+    assert "## Backend" in output
+    fe_section = output.split("## Backend")[0]
+    be_section = output.split("## Backend")[1]
+    assert "org/repo#2 sub-row" in fe_section
+    assert "org/repo#3 sub-row" not in fe_section
+    assert "org/repo#3 sub-row" in be_section
+    assert "org/repo#2 sub-row" not in be_section
+    # Every descendant is covered → no Uncategorized
+    assert "Uncategorized" not in output
+
+
+def test_sc_combo_c5_multi_sc_plus_uncategorized(mocker, hierarchy_with_sub_issues_stub):
+    """Epic with descendants for two SCs plus an unmatched descendant appears in all three sections."""
+    SI = hierarchy_with_sub_issues_stub.SubIssueStub
+    epic = hierarchy_with_sub_issues_stub(
+        rid="org/repo#1",
+        labels=["epic", "enhancement"],
+        sub_issue_stubs=[
+            SI("org/repo#2", ["enhancement", "frontend"]),
+            SI("org/repo#3", ["enhancement", "backend"]),
+            SI("org/repo#4", ["enhancement"]),
+        ],
+    )
+    cc = make_super_chapters_cc(
+        mocker,
+        [{"title": "New Features", "label": "enhancement"}],
+        [
+            {"title": "Frontend", "labels": ["frontend"]},
+            {"title": "Backend", "labels": ["backend"]},
+        ],
+    )
+    cc.populate({"org/repo#1": epic})
+    output = cc.to_string()
+
+    # Frontend
+    assert "## Frontend" in output
+    fe_section = output.split("## Backend")[0]
+    assert "org/repo#2 sub-row" in fe_section
+    assert "org/repo#3 sub-row" not in fe_section
+    assert "org/repo#4 sub-row" not in fe_section
+
+    # Backend
+    assert "## Backend" in output
+    # Backend section is between "## Backend" and next "\n## " or end
+    be_section = output.split("## Backend")[1].split("\n## ")[0]
+    assert "org/repo#3 sub-row" in be_section
+    assert "org/repo#2 sub-row" not in be_section
+    assert "org/repo#4 sub-row" not in be_section
+
+    # Uncategorized
+    assert "Uncategorized" in output
+    uncat_section = output.split("Uncategorized")[1]
+    assert "org/repo#4 sub-row" in uncat_section
+    assert "org/repo#2 sub-row" not in uncat_section
+    assert "org/repo#3 sub-row" not in uncat_section
+
+
+def test_sc_combo_c6_plain_record_routing_unchanged(mocker, record_stub):
+    """Non-hierarchy records follow standard label-based super-chapter routing (no split logic)."""
+    cc = make_super_chapters_cc(
+        mocker,
+        [{"title": "New Features", "label": "enhancement"}],
+        [{"title": "Security", "labels": ["scope:security"]}],
+    )
+    r1 = record_stub("org/repo#10", ["enhancement", "scope:security"])
+    r2 = record_stub("org/repo#11", ["enhancement"])
+    cc.populate({"org/repo#10": r1, "org/repo#11": r2})
+    output = cc.to_string()
+
+    # r1 goes to Security SC
+    assert "## Security" in output
+    security_section = output.split("## Security")[1].split("\n## ")[0]
+    assert "org/repo#10 row" in security_section
+
+    # r2 goes to Uncategorized
+    assert "Uncategorized" in output
+    uncat_section = output.split("Uncategorized")[1]
+    assert "org/repo#11 row" in uncat_section
+
+
+def test_from_yaml_array_coh_chapter_with_explicit_null_labels():
+    """catch-open-hierarchy chapter with 'labels: null' is accepted with an empty label list."""
+    cc = CustomChapters()
+    cc.from_yaml_array([{"title": "Open Issues", "catch-open-hierarchy": True, "labels": None}])
+    assert "Open Issues" in cc.chapters
+    assert cc.chapters["Open Issues"].catch_open_hierarchy is True
+    assert cc.chapters["Open Issues"].labels == []
+
+
+def test_from_yaml_array_chapter_order_conflict_warns(caplog):
+    """Same chapter title defined twice with different orders logs a warning and keeps the first."""
+    caplog.set_level("WARNING", logger="release_notes_generator.chapters.custom_chapters")
+    cc = CustomChapters()
+    cc.from_yaml_array(
+        [
+            {"title": "Changes", "labels": "bug", "order": 1},
+            {"title": "Changes", "labels": "enhancement", "order": 2},
+        ]
+    )
+    assert "Changes" in cc.chapters
+    assert cc.chapters["Changes"].order == 1
+    assert any("conflicting order" in r.message for r in caplog.records)
+
+
+def test_from_yaml_array_repeated_chapter_with_hidden_logs_info(caplog):
+    """Repeated chapter definition with hidden=True logs an info message about hidden status."""
+    caplog.set_level("INFO", logger="release_notes_generator.chapters.custom_chapters")
+    cc = CustomChapters()
+    cc.from_yaml_array(
+        [
+            {"title": "Changes", "labels": "bug"},
+            {"title": "Changes", "labels": "enhancement", "hidden": True},
+        ]
+    )
+    assert "Changes" in cc.chapters
+    assert any("marked as hidden" in r.message for r in caplog.records)
+
+
+def test_super_chapters_hidden_chapter_skipped_in_sc_and_uncat_loops(mocker, record_stub):
+    """Hidden chapters are skipped during both SC-block and Uncategorized-block rendering.
+
+    When the only unclaimed record lives in a hidden chapter, visible chapters produce
+    no matching rows for Uncategorized, so ## Uncategorized must not be emitted.
+    """
+    cc = make_super_chapters_cc(
+        mocker,
+        [
+            {"title": "SC-Chapter", "labels": "sc-label"},
+            {"title": "Hidden-Chapter", "labels": "other-label", "hidden": True},
+        ],
+        [{"title": "Security", "labels": ["sc-label"]}],
+        print_empty=True,
+    )
+    r_sc = record_stub("org/repo#1", ["sc-label"])
+    r_plain = record_stub("org/repo#2", ["other-label"])  # assigned only to hidden chapter
+    cc.populate({"org/repo#1": r_sc, "org/repo#2": r_plain})
+
+    output = cc.to_string()
+
+    # SC section renders with visible chapter (hidden chapter is skipped in SC loop)
+    assert "## Security" in output
+    assert "org/repo#1 row" in output
+    # r_plain is unclaimed but lives only in a hidden chapter; the visible chapter has no
+    # matching uncategorized rows → uc_block is empty → ## Uncategorized must NOT appear
+    assert "Uncategorized" not in output
+    assert "org/repo#2 row" not in output
+
+
+def test_super_chapters_empty_sc_block_printed_when_all_chapters_hidden(mocker, record_stub):
+    """When all chapters are hidden, a super chapter with no visible content renders 'No entries detected.'"""
+    cc = make_super_chapters_cc(
+        mocker,
+        [{"title": "Hidden-Only", "labels": "bug", "hidden": True}],
+        [{"title": "Security", "labels": ["sc-label"]}],
+        print_empty=True,
+    )
+    r1 = record_stub("org/repo#1", ["bug", "sc-label"])
+    cc.populate({"org/repo#1": r1})
+
+    output = cc.to_string()
+
+    assert "## Security" in output
+    assert "No entries detected." in output
+
+
+def test_render_chapter_for_ids_hierarchy_record_no_matching_labels_skipped(mocker, record_stub):
+    """HierarchyIssueRecord whose has_matching_labels returns False is skipped in SC rendering."""
+    cc = make_super_chapters_cc(
+        mocker,
+        [{"title": "Changes", "labels": "sc-label"}],
+        [{"title": "Security", "labels": ["sc-label"]}],
+        print_empty=False,
+    )
+    mock_hi = mocker.create_autospec(HierarchyIssueRecord, instance=True)
+    mock_hi.labels = ["sc-label"]
+    mock_hi.get_labels.return_value = ["sc-label"]
+    mock_hi.contains_change_increment.return_value = True
+    mock_hi.skip = False
+    mock_hi.is_open = True
+    mock_hi.has_matching_labels.return_value = False
+    mock_hi.to_chapter_row.return_value = "hi_row"
+    cc.populate({"org/repo#1": mock_hi})
+
+    output = cc.to_string()
+
+    # The record must NOT appear in Security section because has_matching_labels returned False
+    security_section = output.split("## Security")[1].split("## ")[0] if "## Security" in output else ""
+    assert "hi_row" not in security_section
+
+
+# --- _enforce_coh_constraint via from_yaml_array ---
+
+
+def test_enforce_coh_constraint_no_coh_passes_through(caplog):
+    """Chapter with no catch-open-hierarchy is registered normally (pass-through path)."""
+    caplog.set_level("WARNING", logger="release_notes_generator.chapters.custom_chapters")
+    cc = CustomChapters()
+    cc.from_yaml_array([{"title": "Features", "labels": "feature"}])
+    assert "Features" in cc.chapters
+    assert cc.chapters["Features"].catch_open_hierarchy is False
+    assert not caplog.records
+
+
+def test_enforce_coh_constraint_first_coh_chapter_accepted():
+    """First chapter with catch-open-hierarchy is accepted without warning."""
+    cc = CustomChapters()
+    cc.from_yaml_array([{"title": "Open Issues", "catch-open-hierarchy": True}])
+    assert "Open Issues" in cc.chapters
+    assert cc.chapters["Open Issues"].catch_open_hierarchy is True
+
+
+def test_enforce_coh_constraint_duplicate_different_title_rejected_with_warning(caplog):
+    """Second distinct title with catch-open-hierarchy is demoted and a warning is emitted."""
+    caplog.set_level("WARNING", logger="release_notes_generator.chapters.custom_chapters")
+    cc = CustomChapters()
+    cc.from_yaml_array(
+        [
+            {"title": "First", "catch-open-hierarchy": True},
+            {"title": "Second", "catch-open-hierarchy": True, "labels": "bug"},
+        ]
+    )
+    assert cc.chapters["First"].catch_open_hierarchy is True
+    assert cc.chapters["Second"].catch_open_hierarchy is False
+    assert any("ignoring duplicate" in r.message.lower() for r in caplog.records)
+
+
+def test_enforce_coh_constraint_same_title_repeat_merges_silently(caplog):
+    """Repeating catch-open-hierarchy on the same title merges labels without warning."""
+    caplog.set_level("WARNING", logger="release_notes_generator.chapters.custom_chapters")
+    cc = CustomChapters()
+    cc.from_yaml_array(
+        [
+            {"title": "Open Issues", "catch-open-hierarchy": True, "labels": "epic"},
+            {"title": "Open Issues", "catch-open-hierarchy": True, "labels": "feature"},
+        ]
+    )
+    assert cc.chapters["Open Issues"].catch_open_hierarchy is True
+    assert cc.chapters["Open Issues"].labels == ["epic", "feature"]
+    assert not any("ignoring duplicate" in r.message.lower() for r in caplog.records)
+
+
+# --- _collect_uncategorized_ids via to_string with super chapters ---
+
+
+def test_collect_uncategorized_ids_claimed_hierarchy_with_all_matched_not_in_uncat(mocker, record_stub):
+    """A hierarchy record whose every descendant is SC-matched must not appear in Uncategorized."""
+    cc = make_super_chapters_cc(
+        mocker,
+        [{"title": "Features", "label": "enhancement"}],
+        [{"title": "Security", "labels": ["scope:security"]}],
+    )
+    r1 = record_stub("org/repo#1", ["enhancement", "scope:security"])
+    cc.populate({"org/repo#1": r1})
+    output = cc.to_string()
+    assert "Uncategorized" not in output, f"Claimed record must not appear in Uncategorized; got:\n{output}"
+
+
+def test_collect_uncategorized_ids_no_rows_produces_no_uncat_section(mocker):
+    """When all chapters are empty, no Uncategorized section is rendered."""
+    cc = make_super_chapters_cc(
+        mocker,
+        [{"title": "Features", "label": "feature"}],
+        [{"title": "Security", "labels": ["scope:security"]}],
+        print_empty=False,
+    )
+    output = cc.to_string()
+    assert "Uncategorized" not in output
+
+
+def test_uncategorized_no_empty_sub_chapters_when_print_empty_true(mocker, record_stub):
+    """print-empty-chapters=True must not produce empty ### sub-chapters inside ## Uncategorized."""
+    cc = make_super_chapters_cc(
+        mocker,
+        [
+            {"title": "Bugs", "label": "bug"},
+            {"title": "Features", "label": "feature"},
+        ],
+        [{"title": "Security", "labels": ["scope:security"]}],
+        print_empty=True,
+    )
+    # Only a 'bug' record with no SC label → goes to Uncategorized under Bugs only
+    r1 = record_stub("org/repo#1", ["bug"])
+    cc.populate({"org/repo#1": r1})
+    output = cc.to_string()
+
+    assert "## Uncategorized" in output
+    uncat_section = output.split("## Uncategorized")[1]
+    assert "org/repo#1 row" in uncat_section
+    # Features chapter has no matching records → must NOT appear inside Uncategorized
+    assert "Features" not in uncat_section, (
+        "Empty sub-chapter 'Features' must not appear in Uncategorized regardless of print-empty-chapters setting"
+    )
+
+
+def test_uncategorized_not_emitted_when_only_visible_unclaimed_records_comes_from_empty_chapters(
+    mocker, record_stub
+):
+    """## Uncategorized is not emitted when visible chapters have no matching unclaimed rows.
+
+    Distinct from the hidden-chapter case: here a visible chapter has a record but that
+    record is SC-claimed, so the filtered rows for Uncategorized are empty for every
+    visible chapter → no ## Uncategorized should appear.
+    """
+    cc = make_super_chapters_cc(
+        mocker,
+        [{"title": "Features", "label": "feature"}],
+        [{"title": "Security", "labels": ["feature"]}],
+        print_empty=True,
+    )
+    # r1 matches feature AND the SC label → it is claimed; Uncategorized would be empty
+    r1 = record_stub("org/repo#1", ["feature"])
+    cc.populate({"org/repo#1": r1})
+    output = cc.to_string()
+
+    assert "Uncategorized" not in output, (
+        "## Uncategorized must not appear when all records are SC-claimed"
+    )

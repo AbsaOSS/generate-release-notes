@@ -24,8 +24,6 @@ import json
 import logging
 import time
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Set, Tuple
-
 import requests
 
 from release_notes_generator.utils.record_utils import parse_issue_id, format_issue_id
@@ -66,8 +64,8 @@ class BulkSubIssueCollector:
     def __init__(
         self,
         token: str,
-        cfg: Optional[CollectorConfig] = None,
-        session: Optional[requests.Session] = None,
+        cfg: CollectorConfig | None = None,
+        session: requests.Session | None = None,
     ):
         self._cfg = cfg or CollectorConfig()
         self._session = session or requests.Session()
@@ -89,7 +87,7 @@ class BulkSubIssueCollector:
         if not parents_to_check:
             return []
 
-        new_parents_to_check: Set[str] = set()
+        new_parents_to_check: set[str] = set()
         self.parents_sub_issues = {}
 
         by_repo: dict[tuple[str, str], list[int]] = {}
@@ -106,8 +104,8 @@ class BulkSubIssueCollector:
             repo_chunk = repo_items[i : i + self._cfg.max_repos_per_request]
 
             # Maintain cursors per (org, repo, issue).
-            cursors: Dict[Tuple[str, str, int], Optional[str]] = {}
-            remaining_by_repo: Dict[Tuple[str, str], Set[int]] = {k: set(v) for k, v in repo_chunk}
+            cursors: dict[tuple[str, str, int], str | None] = {}
+            remaining_by_repo: dict[tuple[str, str], set[int]] = {k: set(v) for k, v in repo_chunk}
             for (org, repo), nums in remaining_by_repo.items():
                 for n in nums:
                     cursors[(org, repo, n)] = None
@@ -116,14 +114,14 @@ class BulkSubIssueCollector:
             while any(remaining_by_repo.values()):
                 # Build one GraphQL query with up to max_repos_per_request repos,
                 # each with up to max_parents_per_repo parent issues that still have pages.
-                repo_blocks: List[str] = []
-                alias_maps: Dict[str, Tuple[str, str, int]] = {}  # alias -> (org, repo, parent_num)
+                repo_blocks: list[str] = []
+                alias_maps: dict[str, tuple[str, str, int]] = {}  # alias -> (org, repo, parent_num)
 
                 for r_idx, ((org, repo), parents_rem) in enumerate(remaining_by_repo.items()):
                     if not parents_rem:
                         continue
                     current_parents = list(parents_rem)[: self._cfg.max_parents_per_repo]
-                    issue_blocks: List[str] = []
+                    issue_blocks: list[str] = []
                     for p_idx, parent_num in enumerate(current_parents):
                         alias = f"i{r_idx}_{p_idx}"
                         alias_maps[alias] = (org, repo, parent_num)
@@ -210,7 +208,7 @@ class BulkSubIssueCollector:
     # ---------- internals ----------
 
     def _post_graphql(self, payload: dict) -> dict:
-        last_exc: Optional[Exception] = None
+        last_exc: Exception | None = None
         for attempt in range(1, self._cfg.max_retries + 1):
             try:
                 logger.debug("Posting graphql query")
@@ -230,16 +228,23 @@ class BulkSubIssueCollector:
                 logger.debug("Posted graphql query")
                 return data
             except Exception as e:  # pylint: disable=broad-exception-caught
-                logger.exception("GraphQL query failed")
                 last_exc = e
                 if attempt == self._cfg.max_retries:
+                    logger.exception("GraphQL query failed after %d attempts", self._cfg.max_retries)
                     raise
+                logger.warning(
+                    "GraphQL query failed (attempt %d/%d): %s; retrying in %.1fs",
+                    attempt,
+                    self._cfg.max_retries,
+                    e,
+                    self._cfg.base_backoff * attempt,
+                )
                 time.sleep(self._cfg.base_backoff * attempt)
         if last_exc:
             raise last_exc
         raise RuntimeError("GraphQL POST failed without exception.")
 
-    def _find_alias_node(self, repo_block: dict, alias: str) -> Optional[dict]:
+    def _find_alias_node(self, repo_block: dict, alias: str) -> dict | None:
         """
         Given top-level 'data' (mapping of repo aliases -> repo object),
         return the 'issue' object under whichever repo alias contains our issue alias.

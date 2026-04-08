@@ -19,7 +19,6 @@ A module that defines the HierarchyIssueRecord class for hierarchical issue rend
 """
 
 import logging
-from typing import Optional, Any
 from github.Issue import Issue
 
 from release_notes_generator.action_inputs import ActionInputs
@@ -36,7 +35,7 @@ class HierarchyIssueRecord(IssueRecord):
     Inherits from IssueRecord and provides additional functionality specific to issues.
     """
 
-    def __init__(self, issue: Issue, issue_labels: Optional[list[str]] = None, skip: bool = False):
+    def __init__(self, issue: Issue, issue_labels: list[str] | None = None, skip: bool = False):
         super().__init__(issue, issue_labels, skip)
 
         self._level: int = 0
@@ -56,7 +55,7 @@ class HierarchyIssueRecord(IssueRecord):
         Sets the level of the hierarchy issue.
 
         Parameters:
-            value (int): The level of the hierarchy issue.
+            value: The level of the hierarchy issue.
         """
         self._level = value
 
@@ -93,6 +92,7 @@ class HierarchyIssueRecord(IssueRecord):
 
     @property
     def developers(self) -> list[str]:
+        """Unique, sorted list of developers across this issue and all descendants."""
         issue = self._issue
         if not issue:
             return []
@@ -116,6 +116,7 @@ class HierarchyIssueRecord(IssueRecord):
         return sorted(devs)
 
     def pull_requests_count(self) -> int:
+        """Return the total number of pull requests across this issue and all descendants."""
         count = super().pull_requests_count()
 
         for sub_issue in self._sub_issues.values():
@@ -160,105 +161,194 @@ class HierarchyIssueRecord(IssueRecord):
         return False
 
     def get_labels(self) -> list[str]:
+        """Return all labels from this issue, its sub-issues, sub-hierarchy-issues, and attached PRs."""
         labels: set[str] = set()
-        labels.update(label.name for label in self._issue.get_labels())
+        if self._labels is not None:
+            labels.update(self._labels)
+        else:
+            labels.update(label.name for label in self._issue.get_labels())
 
         for sub_issue in self._sub_issues.values():
             labels.update(sub_issue.labels)
 
         for sub_hierarchy_issue in self._sub_hierarchy_issues.values():
-            labels.update(sub_hierarchy_issue.labels)
+            labels.update(sub_hierarchy_issue.get_labels())
 
         for pull in self._pull_requests.values():
             labels.update(label.name for label in pull.get_labels())
 
         return list(labels)
 
-    # methods - override ancestor methods
-    def to_chapter_row(self, add_into_chapters: bool = True) -> str:
-        logger.debug("Rendering hierarchy issue row for issue #%s", self.issue.number)
-        row_prefix = f"{ActionInputs.get_duplicity_icon()} " if self.chapter_presence_count() > 1 else ""
-        format_values: dict[str, Any] = {}
+    def has_matching_labels(self, label_filter: list[str]) -> bool:
+        """Check if this hierarchy issue or any descendant has labels matching the filter.
 
-        # collect format values
+        Uses the same aggregated label set as get_labels():
+        - own issue labels and PR labels attached directly to this record
+        - issue labels of direct SubIssueRecord children (PR labels on those children are not included)
+        - recursively, all labels (issue and PR) from sub-HierarchyIssueRecord descendants
+
+        Parameters:
+            label_filter: Labels to check against.
+
+        Returns:
+            True if this record or any descendant has at least one matching label.
+        """
+        return any(lbl in label_filter for lbl in self.get_labels())
+
+    def has_unmatched_descendants(self, all_super_labels: list[str]) -> bool:
+        """Check if any descendant does NOT match any label in the combined super-chapter label set.
+
+        Parameters:
+            all_super_labels: Union of all super-chapter labels.
+
+        Returns:
+            True if at least one descendant has no label intersecting *all_super_labels*.
+        """
+        for sub_issue in self._sub_issues.values():
+            if not any(lbl in all_super_labels for lbl in sub_issue.labels):
+                return True
+        for sub_hierarchy_issue in self._sub_hierarchy_issues.values():
+            if sub_hierarchy_issue.has_unmatched_descendants(all_super_labels):
+                return True
+            # A leaf HierarchyIssueRecord (no children of its own) is unmatched if
+            # its aggregated labels (own + PR labels) don't intersect the SC set.
+            # Use has_matching_labels() instead of .labels to include PR labels,
+            # consistent with how has_matching_labels() itself is implemented.
+            # Intermediate nodes are pure containers — their own labels are irrelevant.
+            is_leaf = not sub_hierarchy_issue.sub_issues and not sub_hierarchy_issue.sub_hierarchy_issues
+            if is_leaf and not sub_hierarchy_issue.has_matching_labels(all_super_labels):
+                return True
+        return False
+
+    # methods - override ancestor methods
+
+    def _collect_format_values(self) -> dict[str, str]:
+        """Collect template substitution values for the hierarchy issue row format string."""
+        format_values: dict[str, str] = {}
         format_values["number"] = f"#{self.issue.number}"
         format_values["title"] = self.issue.title
         format_values["author"] = self.author
         format_values["assignees"] = ", ".join(self.assignees)
         format_values["developers"] = ", ".join(self.developers)
-        if self.issue_type is not None:
-            format_values["type"] = self.issue_type
-        else:
-            format_values["type"] = ""
+        format_values["type"] = self.issue_type if self.issue_type is not None else ""
         format_values["progress"] = self.progress
-
         list_pr_links = self.get_pr_links()
-        if len(list_pr_links) > 0:
-            format_values["pull-requests"] = ", ".join(list_pr_links)
+        format_values["pull-requests"] = ", ".join(list_pr_links) if list_pr_links else ""
+        return format_values
+
+    def _append_release_notes_block(self, row: str) -> str:
+        """Append an indented Release Notes section to *row* when present."""
+        if not self.contains_release_notes():
+            return row
+        sub_indent: str = "  " * (self._level + 1)
+        row = f"{row}\n{sub_indent}- _Release Notes_:"
+        rls_block = "\n".join(f"{sub_indent}{line}" if line else "" for line in self.get_rls_notes().splitlines())
+        return f"{row}\n{rls_block}"
+
+    def _build_open_sub_hierarchy_row(
+        self,
+        sub_hierarchy_issue: "HierarchyIssueRecord",
+        label_filter: list[str] | None,
+        exclude_labels: list[str] | None,
+    ) -> str:
+        """Render an open sub-hierarchy issue row and insert the open-hierarchy icon after the list marker.
+
+        Highlight open children under a closed parent to signal incomplete work.
+        Insert icon after the list marker ('- ') to preserve Markdown structure,
+        and skip insertion entirely when the icon is empty.
+        """
+        sub_row = sub_hierarchy_issue.to_chapter_row(label_filter=label_filter, exclude_labels=exclude_labels)
+        icon = ActionInputs.get_open_hierarchy_sub_issue_icon()
+        if not icon:
+            return sub_row
+        header_line, newline, remaining_lines = sub_row.partition("\n")
+        header_text = header_line.lstrip()
+        spaces = header_line[: len(header_line) - len(header_text)]
+        if header_text.startswith("- "):
+            marker, content = "- ", header_text[2:]
         else:
-            format_values["pull-requests"] = ""
+            marker, content = "", header_text
+        return f"{spaces}{marker}{icon} {content}{newline}{remaining_lines}"
 
-        indent: str = "  " * self._level
-        if self._level > 0:
-            indent += "- "
-
-        # create first issue row
-        row = f"{indent}{row_prefix}" + format_row_with_suppression(
-            ActionInputs.get_row_format_hierarchy_issue(), format_values
-        )
-
-        # add extra section with release notes if detected
-        if self.contains_release_notes():
-            sub_indent: str = "  " * (self._level + 1)
-            row = f"{row}\n{sub_indent}- _Release Notes_:"
-            rls_block = "\n".join(f"{sub_indent}{line}" if line else "" for line in self.get_rls_notes().splitlines())
-            row = f"{row}\n{rls_block}"
-
-        # add sub-hierarchy issues
-        for sub_hierarchy_issue in self._sub_hierarchy_issues.values():
+    def _append_sub_hierarchy_rows(
+        self,
+        row: str,
+        label_filter: list[str] | None,
+        exclude_labels: list[str] | None,
+    ) -> str:
+        """Append rendered rows for all qualifying sub-hierarchy issues to *row*."""
+        for sub_hierarchy_issue in sorted(self._sub_hierarchy_issues.values(), key=lambda r: r.issue.number):
             logger.debug("Rendering sub-hierarchy issue row for #%s", sub_hierarchy_issue.issue.number)
-            if self.is_open:
-                if not sub_hierarchy_issue.contains_change_increment():
-                    continue
+            if label_filter and not sub_hierarchy_issue.has_matching_labels(label_filter):
+                continue
+            if (
+                exclude_labels
+                and not sub_hierarchy_issue.has_unmatched_descendants(exclude_labels)
+                and sub_hierarchy_issue.has_matching_labels(exclude_labels)
+            ):
+                continue
+            if self.is_open and not sub_hierarchy_issue.contains_change_increment():
+                continue
             # Closed parent: render all sub-hierarchy issues regardless of state or change increment
             logger.debug("Rendering sub-hierarchy issue #%s", sub_hierarchy_issue.issue.number)
             if self.is_closed and sub_hierarchy_issue.is_open:
-                sub_row = sub_hierarchy_issue.to_chapter_row()
+                sub_row = self._build_open_sub_hierarchy_row(sub_hierarchy_issue, label_filter, exclude_labels)
+            else:
+                sub_row = sub_hierarchy_issue.to_chapter_row(label_filter=label_filter, exclude_labels=exclude_labels)
+            row = f"{row}\n{sub_row}"
+        return row
+
+    def _append_sub_issue_rows(
+        self,
+        row: str,
+        label_filter: list[str] | None,
+        exclude_labels: list[str] | None,
+    ) -> str:
+        """Append rendered rows for all qualifying direct sub-issues to *row*."""
+        if not self._sub_issues:
+            # No sub-issues: violations of hierarchy are reported in service chapters (no data loss)
+            return row
+        sub_indent = "  " * (self._level + 1)
+        for sub_issue in sorted(self._sub_issues.values(), key=lambda r: r.issue.number):
+            logger.debug("Rendering sub-issue row for issue #%s", sub_issue.issue.number)
+            if label_filter and not any(lbl in label_filter for lbl in sub_issue.labels):
+                continue
+            if exclude_labels and any(lbl in exclude_labels for lbl in sub_issue.labels):
+                continue
+            if self.is_open:
+                if sub_issue.is_open:
+                    continue  # only closed issues are reported in release notes
+                if not sub_issue.contains_change_increment():
+                    continue  # skip sub-issues without change increment
+            # Closed parent: render all sub-issues regardless of state or change increment
+            logger.debug("Rendering sub-issue #%s", sub_issue.issue.number)
+            open_icon_prefix = ""
+            if self.is_closed and sub_issue.is_open:
                 # Highlight open children under a closed parent to signal incomplete work
                 icon = ActionInputs.get_open_hierarchy_sub_issue_icon()
-                header_line, newline, remaining_lines = sub_row.partition("\n")
-                header_text = header_line.lstrip()
-                indent = header_line[: len(header_line) - len(header_text)]
-                sub_row = f"{indent}{icon} {header_text}{newline}{remaining_lines}"
-            else:
-                sub_row = sub_hierarchy_issue.to_chapter_row()
-            row = f"{row}\n{sub_row}"
+                open_icon_prefix = (icon + " ") if icon else ""
+            sub_issue_block = "- " + open_icon_prefix + sub_issue.to_chapter_row()
+            ind_child_block = "\n".join(f"{sub_indent}{line}" if line else "" for line in sub_issue_block.splitlines())
+            row = f"{row}\n{ind_child_block}"
+        return row
 
-        # add sub-issues
-        if len(self._sub_issues) > 0:
-            sub_indent = "  " * (self._level + 1)
-            for sub_issue in self._sub_issues.values():
-                logger.debug("Rendering sub-issue row for issue #%s", sub_issue.issue.number)
-                if self.is_open:
-                    if sub_issue.is_open:
-                        continue  # only closed issues are reported in release notes
-                    if not sub_issue.contains_change_increment():
-                        continue  # skip sub-issues without change increment
-                # Closed parent: render all sub-issues regardless of state or change increment
-
-                logger.debug("Rendering sub-issue #%s", sub_issue.issue.number)
-                open_icon_prefix = ""
-                if self.is_closed and sub_issue.is_open:
-                    # Highlight open children under a closed parent to signal incomplete work
-                    open_icon_prefix = ActionInputs.get_open_hierarchy_sub_issue_icon() + " "
-                sub_issue_block = "- " + open_icon_prefix + sub_issue.to_chapter_row()
-                ind_child_block = "\n".join(
-                    f"{sub_indent}{line}" if line else "" for line in sub_issue_block.splitlines()
-                )
-                row = f"{row}\n{ind_child_block}"
-        # else: this will be reported in service chapters as violation of hierarchy in this initial version
-        # No data loss - in service chapter there will be all detail not presented here
-
+    def to_chapter_row(
+        self,
+        add_into_chapters: bool = True,
+        label_filter: list[str] | None = None,
+        exclude_labels: list[str] | None = None,
+    ) -> str:
+        logger.debug("Rendering hierarchy issue row for issue #%s", self.issue.number)
+        row_prefix = f"{ActionInputs.get_duplicity_icon()} " if self.chapter_presence_count() > 1 else ""
+        indent: str = "  " * self._level
+        if self._level > 0:
+            indent += "- "
+        row = f"{indent}{row_prefix}" + format_row_with_suppression(
+            ActionInputs.get_row_format_hierarchy_issue(), self._collect_format_values()
+        )
+        row = self._append_release_notes_block(row)
+        row = self._append_sub_hierarchy_rows(row, label_filter, exclude_labels)
+        row = self._append_sub_issue_rows(row, label_filter, exclude_labels)
         return row
 
     def order_hierarchy_levels(self, level: int = 0) -> None:
@@ -266,10 +356,7 @@ class HierarchyIssueRecord(IssueRecord):
         Orders the hierarchy levels of the issue and its sub-issues recursively.
 
         Parameters:
-            level (int): The starting level for the hierarchy. Default is 0.
-
-        Returns:
-            None
+            level: The starting level for the hierarchy. Default is 0.
         """
         self._level = level
         for sub_hierarchy_record in self.sub_hierarchy_issues.values():

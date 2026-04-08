@@ -21,12 +21,49 @@ This module contains utility functions for generating release notes.
 import logging
 import re
 
-from typing import Optional
+from collections.abc import Iterable
+from typing import Any, Optional
 
 from github.GitRelease import GitRelease
 from github.Repository import Repository
 
 logger = logging.getLogger(__name__)
+
+
+def normalize_labels(raw: Any) -> list[str]:
+    """Normalize a raw labels definition into an ordered, de-duplicated list.
+
+    Parameters:
+        raw: May be a str (newline/comma separated) or list[str]. Any other type returns [].
+
+    Returns:
+        Ordered list preserving first-occurrence order; excludes empty tokens.
+        Invalid (non str/list) input returns an empty list.
+    """
+    if isinstance(raw, list):
+        working: Iterable[Any] = raw
+    elif isinstance(raw, str):
+        parts: list[str] = []
+        for line in raw.splitlines():
+            for token in line.split(","):
+                parts.append(token)
+        working = parts
+    else:
+        return []
+
+    cleaned: list[str] = []
+    seen: set[str] = set()
+    for item in working:
+        if not isinstance(item, str):
+            continue
+        token = item.strip()
+        if not token:
+            continue
+        if token in seen:
+            continue
+        seen.add(token)
+        cleaned.append(token)
+    return cleaned
 
 
 def get_change_url(
@@ -35,10 +72,13 @@ def get_change_url(
     """
     Generates a URL for viewing changes associated with a given tag name in a GitHub repository.
 
-    @param tag_name: The tag name for which the change URL is to be generated.
-    @param repository: An optional Repository. If given, this repository is used instead current one.
-    @param git_release: An Optional GitRelease. If given, URL compares this release with the tag name.
-    @return: An optional string containing the URL to view the changes. Returns a None if the repository is not set.
+    Parameters:
+        tag_name: The tag name for which the change URL is to be generated.
+        repository: An optional Repository. If given, this repository is used instead of the current one.
+        git_release: An optional GitRelease. If given, URL compares this release with the tag name.
+
+    Returns:
+        A string containing the URL to view the changes, or empty string if the repository is not set.
     """
     if not repository:
         logger.error("Get change url failed. Repository is not set.")

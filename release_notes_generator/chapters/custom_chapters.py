@@ -20,60 +20,39 @@ notes.
 """
 
 import logging
-from typing import Any, Iterable
+from dataclasses import dataclass, field
+from typing import Any
 
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.chapters.base_chapters import BaseChapters
 from release_notes_generator.model.chapter import Chapter
+from release_notes_generator.utils.constants import UNCATEGORIZED_CHAPTER_TITLE
 from release_notes_generator.model.record.commit_record import CommitRecord
 from release_notes_generator.model.record.hierarchy_issue_record import HierarchyIssueRecord
 from release_notes_generator.model.record.record import Record
+from release_notes_generator.utils.utils import normalize_labels
 
 logger = logging.getLogger(__name__)
 
 
-def _normalize_labels(raw: Any) -> list[str]:  # helper for multi-label
-    """Normalize a raw labels definition into an ordered, de-duplicated list.
+@dataclass
+class SuperChapter:
+    """A label-based grouping that wraps regular chapters in the rendered output."""
 
-    Parameters:
-        - str: may contain newlines and/or commas
-        - list[str]: already a sequence of labels (will still be trimmed & deduped)
-
-    Returns:
-        Ordered list preserving first occurrence order; excludes empty tokens.
-        Invalid (non str/list) returns empty list to be handled by caller.
-    """
-    if isinstance(raw, list):
-        working: Iterable[Any] = raw
-    elif isinstance(raw, str):
-        # newline first then comma per spec
-        parts: list[str] = []
-        for line in raw.splitlines():
-            for token in line.split(","):
-                parts.append(token)
-        working = parts
-    else:
-        return []
-
-    cleaned: list[str] = []
-    seen: set[str] = set()
-    for item in working:
-        if not isinstance(item, str):  # skip non-string items silently
-            continue
-        token = item.strip()
-        if not token:  # skip empty after trimming
-            continue
-        if token in seen:  # de-duplicate preserving first occurrence
-            continue
-        seen.add(token)
-        cleaned.append(token)
-    return cleaned
+    title: str
+    labels: list[str] = field(default_factory=list)
 
 
 class CustomChapters(BaseChapters):
     """
     A class used to represent the custom chapters in the release notes.
     """
+
+    def __init__(self, sort_ascending: bool = True, print_empty_chapters: bool = True):
+        super().__init__(sort_ascending, print_empty_chapters)
+        self._super_chapters: list[SuperChapter] = []
+        self._record_labels: dict[str, list[str]] = {}
+        self._records: dict[str, Record] = {}
 
     def _find_catch_open_hierarchy_chapter(self) -> Chapter | None:
         """Return the first chapter with catch_open_hierarchy enabled, or None."""
@@ -88,6 +67,7 @@ class CustomChapters(BaseChapters):
             if not chapter.hidden:
                 record.add_to_chapter_presence(chapter.title)
             chapter.add_row(record_id, record.to_chapter_row(not chapter.hidden))
+            self._records[record_id] = record
             if record_id not in self.populated_record_numbers_list:
                 self.populated_record_numbers_list.append(record_id)
             if chapter.hidden and ActionInputs.get_verbose():
@@ -102,6 +82,12 @@ class CustomChapters(BaseChapters):
     ) -> bool:
         """Try to route an open HierarchyIssueRecord to the COH chapter.
 
+        Parameters:
+            record_id: The unique record identifier.
+            record: The record to route.
+            record_labels: Labels attached to the record.
+            coh_chapter: The catch-open-hierarchy chapter to route into.
+
         Returns:
             True if the record was routed to the COH chapter, False if the label filter excluded it.
         """
@@ -115,10 +101,7 @@ class CustomChapters(BaseChapters):
         Populates the custom chapters with records.
 
         Parameters:
-            @param records: A dictionary of records keyed by 'owner/repo#number' and values are Record objects.
-
-        Returns:
-            None
+            records: A dictionary of records keyed by 'owner/repo#number' and values are Record objects.
         """
         hierarchy_enabled = ActionInputs.get_hierarchy()
         coh_chapter = self._find_catch_open_hierarchy_chapter()
@@ -135,6 +118,18 @@ class CustomChapters(BaseChapters):
                 continue
 
             record_labels = getattr(record, "labels", [])
+
+            # Track labels for super-chapter grouping at render time.
+            # Only populated when super chapters are configured; skipped for flat rendering
+            # to avoid the recursive get_labels() cost (including PR API calls) on every
+            # HierarchyIssueRecord when it would never be read.
+            if self._super_chapters:
+                if isinstance(record, HierarchyIssueRecord):
+                    all_labels = record.get_labels()
+                    if all_labels:
+                        self._record_labels[record_id] = list(all_labels)
+                elif record_labels:
+                    self._record_labels[record_id] = list(record_labels)
 
             # Conditional Custom Chapter gate: intercept open hierarchy parents before label routing.
             # Note: precedes the record_labels early-exit so label-less HierarchyIssueRecord
@@ -175,9 +170,21 @@ class CustomChapters(BaseChapters):
         """
         Converts the custom chapters to a string, excluding hidden chapters.
 
+        When super chapters are configured, records are grouped under super-chapter
+        headings (``## Title``) with regular chapters nested inside (``### Title``).
+        A record may appear in multiple super chapters. Chapters with no matching
+        records under a given super chapter are governed by ``print_empty_chapters``.
+
         Returns:
-            str: The chapters as a string with hidden chapters filtered out.
+            The chapters as a string with hidden chapters filtered out.
         """
+        if self._super_chapters:
+            return self._to_string_with_super_chapters()
+
+        return self._to_string_flat()
+
+    def _to_string_flat(self) -> str:
+        """Render chapters without super-chapter grouping (original behaviour)."""
         result = ""
         for chapter in self._sorted_chapters():
             # Skip hidden chapters from output
@@ -196,7 +203,153 @@ class CustomChapters(BaseChapters):
         # Note: strip is required to remove leading newline chars when empty chapters are not printed option
         return result.strip()
 
-    def from_yaml_array(self, chapters: list[dict[str, Any]]) -> "CustomChapters":  # type: ignore[override]
+    def _collect_super_chapter_ids(self, sc: SuperChapter) -> set[str]:
+        """Return record IDs whose labels match the given super chapter."""
+        matching: set[str] = set()
+        for rid, labels in self._record_labels.items():
+            if any(lbl in sc.labels for lbl in labels):
+                matching.add(rid)
+        return matching
+
+    def _render_chapter_for_ids(
+        self,
+        chapter: Chapter,
+        matching_ids: set[str],
+        super_labels: list[str] | None = None,
+        exclude_labels: list[str] | None = None,
+        print_empty_chapters: bool | None = None,
+    ) -> str:
+        """Render a single chapter filtered to matching_ids, delegating to Chapter.to_string.
+
+        Parameters:
+            chapter: The chapter to render.
+            matching_ids: Record IDs to include.
+            super_labels: When set, HierarchyIssueRecords are re-rendered with sub-issues
+                filtered to those whose labels intersect *super_labels*.
+            exclude_labels: When set, HierarchyIssueRecords are re-rendered with sub-issues
+                whose labels intersect *exclude_labels* removed (for Uncategorized fallback).
+            print_empty_chapters: Override for the empty-chapter setting; defaults to
+                ``self.print_empty_chapters`` when ``None``.
+
+        Returns:
+            Rendered chapter string, or empty string if the chapter has no matching rows.
+        """
+        effective_print_empty = self.print_empty_chapters if print_empty_chapters is None else print_empty_chapters
+        original_rows = chapter.rows
+        filtered_rows: dict[int | str, str] = {}
+        for rid, row in original_rows.items():
+            if str(rid) not in matching_ids and rid not in matching_ids:
+                continue
+            record = self._records.get(str(rid))
+            if super_labels and isinstance(record, HierarchyIssueRecord):
+                if not record.has_matching_labels(super_labels):
+                    continue
+                filtered_rows[rid] = record.to_chapter_row(add_into_chapters=False, label_filter=super_labels)
+            elif exclude_labels and isinstance(record, HierarchyIssueRecord):
+                filtered_rows[rid] = record.to_chapter_row(add_into_chapters=False, exclude_labels=exclude_labels)
+            else:
+                filtered_rows[rid] = row
+        chapter.rows = filtered_rows
+        try:
+            return chapter.to_string(sort_ascending=self.sort_ascending, print_empty_chapters=effective_print_empty)
+        finally:
+            chapter.rows = original_rows
+
+    def _collect_claimed_ids(self, all_super_labels: set[str]) -> set[str]:
+        """Return record IDs whose labels intersect any super-chapter label."""
+        return {rid for rid, labels in self._record_labels.items() if any(lbl in all_super_labels for lbl in labels)}
+
+    def _render_super_chapter_block(self, sc: SuperChapter) -> str:
+        """Render all chapters filtered to the given super chapter's matching records."""
+        matching_ids = self._collect_super_chapter_ids(sc)
+        sc_block = ""
+        for chapter in self._sorted_chapters():
+            if chapter.hidden:
+                continue
+            ch_str = self._render_chapter_for_ids(chapter, matching_ids, super_labels=sc.labels)
+            if ch_str:
+                sc_block += ch_str + "\n\n"
+        if sc_block.strip():
+            return f"## {sc.title}\n{sc_block}"
+        if self.print_empty_chapters:
+            return f"## {sc.title}\nNo entries detected.\n\n"
+        return ""
+
+    def _collect_uncategorized_ids(self, claimed_ids: set[str], all_super_labels_list: list[str]) -> set[str]:
+        """Return IDs for records not claimed by any super chapter, plus partially-matched hierarchy IDs."""
+        unclaimed_ids: set[str] = set()
+        partial_hierarchy_ids: set[str] = set()
+        for chapter in self._sorted_chapters():
+            for row_id in chapter.rows:
+                row_id_str = str(row_id)
+                if row_id_str not in claimed_ids:
+                    unclaimed_ids.add(row_id_str)
+                else:
+                    record = self._records.get(row_id_str)
+                    if isinstance(record, HierarchyIssueRecord) and record.has_unmatched_descendants(
+                        all_super_labels_list
+                    ):
+                        partial_hierarchy_ids.add(row_id_str)
+        return unclaimed_ids | partial_hierarchy_ids
+
+    def _render_uncategorized_block(self, all_uncat_ids: set[str], all_super_labels_list: list[str]) -> str:
+        """Render the Uncategorized section for records not claimed by any super chapter."""
+        if not all_uncat_ids:
+            return ""
+        uc_block = ""
+        for chapter in self._sorted_chapters():
+            if chapter.hidden:
+                continue
+            ch_str = self._render_chapter_for_ids(
+                chapter, all_uncat_ids, exclude_labels=all_super_labels_list, print_empty_chapters=False
+            )
+            if ch_str:
+                uc_block += ch_str + "\n\n"
+        if uc_block.strip():
+            return f"## {UNCATEGORIZED_CHAPTER_TITLE}\n{uc_block}"
+        return ""
+
+    def _to_string_with_super_chapters(self) -> str:
+        """Render chapters grouped under super-chapter headings."""
+        all_super_labels: set[str] = {lbl for sc in self._super_chapters for lbl in sc.labels}
+        all_super_labels_list = list(all_super_labels)
+        claimed_ids = self._collect_claimed_ids(all_super_labels)
+        result = "".join(self._render_super_chapter_block(sc) for sc in self._super_chapters)
+        result += self._render_uncategorized_block(
+            self._collect_uncategorized_ids(claimed_ids, all_super_labels_list),
+            all_super_labels_list,
+        )
+        return result.strip()
+
+    @staticmethod
+    def _enforce_coh_constraint(
+        title: str, catch_open_hierarchy: bool, coh_chapter_title: str | None
+    ) -> tuple[bool, str | None]:
+        """Enforce the single catch-open-hierarchy chapter constraint.
+
+        Parameters:
+            title: Chapter title being processed.
+            catch_open_hierarchy: Whether the current entry requests COH.
+            coh_chapter_title: Title of the first COH chapter seen so far, or None.
+
+        Returns:
+            Updated (catch_open_hierarchy, coh_chapter_title) tuple.
+        """
+        if not catch_open_hierarchy:
+            return False, coh_chapter_title
+        if coh_chapter_title is not None and coh_chapter_title != title:
+            logger.warning(
+                "Chapter '%s' has catch-open-hierarchy: true but '%s' already uses it; ignoring duplicate",
+                title,
+                coh_chapter_title,
+            )
+            return False, coh_chapter_title
+        if coh_chapter_title is None:
+            return True, title
+        # else: same title repeating COH — silent merge pass-through
+        return True, coh_chapter_title
+
+    def from_yaml_array(self, chapters: list[dict[str, Any]]) -> "CustomChapters":
         """
         Populate the custom chapters from a list of dict objects.
 
@@ -208,7 +361,7 @@ class CustomChapters(BaseChapters):
         Empty / invalid label definitions are skipped with a warning.
 
         Parameters:
-            @param chapters: A list of dictionaries representing the chapters.
+            chapters: A list of dictionaries representing the chapters.
 
         Returns:
             The CustomChapters instance for chaining.
@@ -228,20 +381,9 @@ class CustomChapters(BaseChapters):
             catch_open_hierarchy = self._parse_bool_flag(
                 title, chapter.get("catch-open-hierarchy", False), "catch-open-hierarchy"
             )
-
-            # Enforce single catch-open-hierarchy chapter constraint.
-            # Same-title repeats are treated as a merge and allowed through.
-            if catch_open_hierarchy:
-                if coh_chapter_title is not None and coh_chapter_title != title:
-                    logger.warning(
-                        "Chapter '%s' has catch-open-hierarchy: true but '%s' already uses it; ignoring duplicate",
-                        title,
-                        coh_chapter_title,
-                    )
-                    catch_open_hierarchy = False
-                elif coh_chapter_title is None:
-                    coh_chapter_title = title
-                # else: same title repeating COH — silent merge pass-through
+            catch_open_hierarchy, coh_chapter_title = self._enforce_coh_constraint(
+                title, catch_open_hierarchy, coh_chapter_title
+            )
 
             unknown = set(chapter.keys()) - allowed_keys
             if unknown:
@@ -262,7 +404,22 @@ class CustomChapters(BaseChapters):
                 parsed_order=parsed_order,
             )
 
+        # Parse super-chapter definitions from action inputs
+        self._super_chapters = self._parse_super_chapters(ActionInputs.get_super_chapters())
+
         return self
+
+    @staticmethod
+    def _parse_super_chapters(validated: list[dict[str, Any]]) -> list[SuperChapter]:
+        """Construct SuperChapter instances from pre-validated ActionInputs dicts.
+
+        Parameters:
+            validated: List of fully-validated super-chapter dicts with 'title' and 'labels' keys.
+
+        Returns:
+            List of SuperChapter instances.
+        """
+        return [SuperChapter(title=e["title"], labels=e["labels"]) for e in validated]
 
     @staticmethod
     def _parse_bool_flag(title: str, raw: Any, key: str) -> bool:
@@ -370,7 +527,7 @@ class CustomChapters(BaseChapters):
             )
             return None
 
-        normalized = _normalize_labels(raw_labels)
+        normalized = normalize_labels(raw_labels)
         if not normalized:
             logger.warning("Chapter '%s' labels definition empty after normalization; skipping", title)
             return None

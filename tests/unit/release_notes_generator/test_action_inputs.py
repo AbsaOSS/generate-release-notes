@@ -15,6 +15,7 @@
 #
 
 import logging
+import yaml
 import pytest
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.utils.constants import (
@@ -61,6 +62,7 @@ failure_cases = [
     ("get_duplicity_icon", "Oj", "Duplicity icon must be a non-empty string and have a length of 1."),
     ("get_row_format_issue", "", "Issue row format must be a non-empty string."),
     ("get_row_format_pr", "", "PR Row format must be a non-empty string."),
+    ("get_row_format_hierarchy_issue", "", "Hierarchy Issue row format must be a non-empty string."),
     ("get_release_notes_title", "", "Release Notes title must be a non-empty string and have non-zero length."),
     (
         "get_coderabbit_release_notes_title",
@@ -200,6 +202,161 @@ def test_get_chapters_yaml_error(mocker):
         "release_notes_generator.action_inputs.get_action_input", return_value='[{"title": "Title" "label": "Label"}]'
     )
     assert [] == ActionInputs.get_chapters()
+
+
+def test_get_super_chapters_success(mocker):
+    mocker.patch(
+        "release_notes_generator.action_inputs.get_action_input",
+        return_value='[{"title": "Module A", "label": "mod-a"}]',
+    )
+    assert ActionInputs.get_super_chapters() == [{"title": "Module A", "labels": ["mod-a"]}]
+
+
+def test_get_super_chapters_empty_input(mocker):
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="")
+    assert ActionInputs.get_super_chapters() == []
+
+
+def test_get_super_chapters_blank_input(mocker):
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="   ")
+    assert ActionInputs.get_super_chapters() == []
+
+
+def test_get_super_chapters_not_a_list(mocker, caplog):
+    caplog.set_level("ERROR")
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="not_a_list: true")
+    result = ActionInputs.get_super_chapters()
+    assert result == []
+    assert any("not a valid YAML list" in r.message for r in caplog.records)
+
+
+def test_get_super_chapters_yaml_error(mocker, caplog):
+    caplog.set_level("ERROR")
+    mocker.patch(
+        "release_notes_generator.action_inputs.get_action_input",
+        return_value='[{"title": "A" "label": "b"}]',
+    )
+    result = ActionInputs.get_super_chapters()
+    assert result == []
+    assert any("Error parsing 'super-chapters'" in r.message for r in caplog.records)
+
+
+def test_get_super_chapters_list_labels_preserved(mocker):
+    mocker.patch(
+        "release_notes_generator.action_inputs.get_action_input",
+        return_value='[{"title": "Module A", "labels": ["mod-a", "mod-b"]}]',
+    )
+    result = ActionInputs.get_super_chapters()
+    assert result == [{"title": "Module A", "labels": ["mod-a", "mod-b"]}]
+
+
+def test_get_super_chapters_comma_separated_labels_string(mocker):
+    """Comma-separated string labels are split into individual label tokens."""
+    mocker.patch(
+        "release_notes_generator.action_inputs.get_action_input",
+        return_value='[{"title": "Module A", "labels": "atum-agent, atum-agent-spark"}]',
+    )
+    result = ActionInputs.get_super_chapters()
+    assert result == [{"title": "Module A", "labels": ["atum-agent", "atum-agent-spark"]}]
+
+
+def test_get_super_chapters_non_dict_entry_skipped(mocker, caplog):
+    caplog.set_level("WARNING")
+    mocker.patch(
+        "release_notes_generator.action_inputs.get_action_input",
+        return_value='["not-a-dict", {"title": "Valid", "label": "ok"}]',
+    )
+    result = ActionInputs.get_super_chapters()
+    assert result == [{"title": "Valid", "labels": ["ok"]}]
+    assert any("invalid type" in r.message for r in caplog.records)
+
+
+def test_get_super_chapters_missing_title_skipped(mocker, caplog):
+    caplog.set_level("WARNING")
+    mocker.patch(
+        "release_notes_generator.action_inputs.get_action_input",
+        return_value='[{"no-title": true}, {"title": "Valid", "label": "v"}]',
+    )
+    result = ActionInputs.get_super_chapters()
+    assert result == [{"title": "Valid", "labels": ["v"]}]
+    assert any("without title key" in r.message for r in caplog.records)
+
+
+def test_get_super_chapters_non_string_title_skipped(mocker, caplog):
+    caplog.set_level("WARNING")
+    mocker.patch(
+        "release_notes_generator.action_inputs.get_action_input",
+        return_value='[{"title": 42, "label": "l"}, {"title": "Valid", "label": "v"}]',
+    )
+    result = ActionInputs.get_super_chapters()
+    assert result == [{"title": "Valid", "labels": ["v"]}]
+    assert any("invalid title value" in r.message for r in caplog.records)
+
+
+def test_get_super_chapters_blank_title_skipped(mocker, caplog):
+    caplog.set_level("WARNING")
+    mocker.patch(
+        "release_notes_generator.action_inputs.get_action_input",
+        return_value='[{"title": "   ", "label": "l"}, {"title": "Valid", "label": "v"}]',
+    )
+    result = ActionInputs.get_super_chapters()
+    assert result == [{"title": "Valid", "labels": ["v"]}]
+    assert any("invalid title value" in r.message for r in caplog.records)
+
+
+def test_get_super_chapters_missing_labels_skipped(mocker, caplog):
+    caplog.set_level("WARNING")
+    mocker.patch(
+        "release_notes_generator.action_inputs.get_action_input",
+        return_value='[{"title": "No labels"}, {"title": "Valid", "label": "v"}]',
+    )
+    result = ActionInputs.get_super_chapters()
+    assert result == [{"title": "Valid", "labels": ["v"]}]
+    assert any("has no 'label' or 'labels' key" in r.message for r in caplog.records)
+
+
+def test_get_super_chapters_empty_labels_after_normalization_skipped(mocker, caplog):
+    caplog.set_level("WARNING")
+    mocker.patch(
+        "release_notes_generator.action_inputs.get_action_input",
+        return_value='[{"title": "Empty", "labels": []}, {"title": "Valid", "label": "v"}]',
+    )
+    result = ActionInputs.get_super_chapters()
+    assert result == [{"title": "Valid", "labels": ["v"]}]
+    assert any("empty after normalization" in r.message for r in caplog.records)
+
+
+def test_get_super_chapters_cached_on_same_raw_input(mocker, monkeypatch):
+    """Parsing and validation run only once when the raw input string has not changed."""
+    monkeypatch.setattr(ActionInputs, "_super_chapters_raw", None)
+    monkeypatch.setattr(ActionInputs, "_super_chapters_cache", None)
+    raw = '[{"title": "Module A", "label": "mod-a"}]'
+    mock_get = mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value=raw)
+    spy = mocker.spy(yaml, "safe_load")
+
+    result1 = ActionInputs.get_super_chapters()
+    result2 = ActionInputs.get_super_chapters()
+
+    assert result1 == result2 == [{"title": "Module A", "labels": ["mod-a"]}]
+    # yaml.safe_load must have been called exactly once despite two get_super_chapters calls
+    assert spy.call_count == 1
+    assert mock_get.call_count == 2  # env is read each time, only parse is skipped
+
+
+def test_get_super_chapters_cache_invalidated_on_new_raw_input(mocker, monkeypatch):
+    """Cache is bypassed and re-parsed when the raw input string changes between calls."""
+    monkeypatch.setattr(ActionInputs, "_super_chapters_raw", None)
+    monkeypatch.setattr(ActionInputs, "_super_chapters_cache", None)
+    raw_a = '[{"title": "Module A", "label": "mod-a"}]'
+    raw_b = '[{"title": "Module B", "label": "mod-b"}]'
+    mock_get = mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value=raw_a)
+
+    result_a = ActionInputs.get_super_chapters()
+    assert result_a == [{"title": "Module A", "labels": ["mod-a"]}]
+
+    mock_get.return_value = raw_b
+    result_b = ActionInputs.get_super_chapters()
+    assert result_b == [{"title": "Module B", "labels": ["mod-b"]}]
 
 
 def test_get_warnings(mocker):
@@ -474,6 +631,62 @@ def test_get_row_format_link_pr_true(mocker):
 def test_get_row_format_link_pr_false(mocker):
     mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="false")
     assert ActionInputs.get_row_format_link_pr() is False
+
+
+def test_get_github_owner_no_slash_in_repository_id(monkeypatch, mocker):
+    """Repository ID without '/' sets owner to the whole string."""
+    monkeypatch.setattr(ActionInputs, "_owner", "")
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="standalone")
+    assert ActionInputs.get_github_owner() == "standalone"
+
+
+def test_get_github_owner_with_slash_in_repository_id(monkeypatch, mocker):
+    """Repository ID with '/' extracts the owner part before the slash."""
+    monkeypatch.setattr(ActionInputs, "_owner", "")
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="my-org/my-repo")
+    assert ActionInputs.get_github_owner() == "my-org"
+
+
+def test_get_github_owner_cache_hit(monkeypatch):
+    """Cached owner value is returned without querying the environment."""
+    monkeypatch.setattr(ActionInputs, "_owner", "primed-org")
+    assert ActionInputs.get_github_owner() == "primed-org"
+
+
+def test_get_github_repo_name_no_slash_in_repository_id(monkeypatch, mocker):
+    """Repository ID without '/' sets repo_name to the whole string."""
+    monkeypatch.setattr(ActionInputs, "_repo_name", "")
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="standalone")
+    assert ActionInputs.get_github_repo_name() == "standalone"
+
+
+def test_get_github_repo_name_with_slash_in_repository_id(monkeypatch, mocker):
+    """Repository ID with '/' extracts the repo name part after the slash."""
+    monkeypatch.setattr(ActionInputs, "_repo_name", "")
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="my-org/my-repo")
+    assert ActionInputs.get_github_repo_name() == "my-repo"
+
+
+def test_get_github_repo_name_cache_hit(monkeypatch):
+    """Cached repo name is returned without querying the environment."""
+    monkeypatch.setattr(ActionInputs, "_repo_name", "primed-repo")
+    assert ActionInputs.get_github_repo_name() == "primed-repo"
+
+
+def test_get_open_hierarchy_sub_issue_icon_default():
+    assert ActionInputs.get_open_hierarchy_sub_issue_icon() == "🟡"
+
+
+def test_get_open_hierarchy_sub_issue_icon_custom(mocker):
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="⚡")
+    assert ActionInputs.get_open_hierarchy_sub_issue_icon() == "⚡"
+
+
+def test_detect_row_format_invalid_keywords_unknown_row_type(caplog):
+    """Unknown row_type logs a warning and defaults to Issue keys."""
+    caplog.set_level("WARNING", logger="release_notes_generator.action_inputs")
+    ActionInputs._detect_row_format_invalid_keywords("{number} {bogus}", row_type="Unknown")
+    assert any("Unknown row_type" in r.message for r in caplog.records)
 
 
 # Mirrored test file for release_notes_generator/generator.py

@@ -35,8 +35,11 @@ from release_notes_generator.model.mined_data import MinedData
 from release_notes_generator.model.record.pull_request_record import PullRequestRecord
 from release_notes_generator.chapters.service_chapters import ServiceChapters
 from release_notes_generator.model.chapter import Chapter
+from typing import Any
+
 from release_notes_generator.chapters.custom_chapters import CustomChapters
 from release_notes_generator.model.record.sub_issue_record import SubIssueRecord
+from release_notes_generator.utils.enums import DuplicityScopeEnum
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
 from release_notes_generator.utils.record_utils import get_id
 
@@ -96,6 +99,38 @@ def custom_chapters_not_print_empty_chapters():
     }
     chapters.print_empty_chapters = False
     return chapters
+
+
+def make_super_chapters_cc(
+    mocker: MockerFixture,
+    chapters_yaml: list[dict[str, Any]],
+    super_chapters_yaml: list[Any],
+    print_empty: bool = True,
+    hierarchy: bool = False,
+) -> CustomChapters:
+    mocker.patch(
+        "release_notes_generator.chapters.custom_chapters.ActionInputs.get_super_chapters",
+        return_value=super_chapters_yaml,
+    )
+    mocker.patch(
+        "release_notes_generator.chapters.custom_chapters.ActionInputs.get_hierarchy",
+        return_value=hierarchy,
+    )
+    mocker.patch(
+        "release_notes_generator.chapters.custom_chapters.ActionInputs.get_verbose",
+        return_value=False,
+    )
+    mocker.patch(
+        "release_notes_generator.chapters.custom_chapters.ActionInputs.get_duplicity_scope",
+        return_value=DuplicityScopeEnum.BOTH,
+    )
+    mocker.patch(
+        "release_notes_generator.chapters.custom_chapters.ActionInputs.get_skip_release_notes_labels",
+        return_value=["skip-release-notes"],
+    )
+    cc = CustomChapters(print_empty_chapters=print_empty)
+    cc.from_yaml_array(chapters_yaml)
+    return cc
 
 
 # Fixtures for Service Chapters
@@ -1260,9 +1295,13 @@ def make_minimal_pr(mocker: MockerFixture, number: int) -> PullRequest:
     return pr
 
 
-def make_closed_sub_issue_record_with_pr(mocker: MockerFixture, number: int) -> SubIssueRecord:
+def make_closed_sub_issue_record_with_pr(
+    mocker: MockerFixture, number: int, issue_labels: list[str] | None = None
+) -> SubIssueRecord:
     """Return a closed SubIssueRecord with one PR (no commits)."""
-    sub_record = SubIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number))
+    sub_record = SubIssueRecord(
+        make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number), issue_labels=issue_labels
+    )
     sub_record.register_pull_request(make_minimal_pr(mocker, number=number + 1000))
     return sub_record
 
@@ -1289,9 +1328,13 @@ def make_open_sub_hierarchy_record_with_pr(mocker: MockerFixture, number: int) -
     return rec
 
 
-def make_closed_sub_hierarchy_record_with_pr(mocker: MockerFixture, number: int) -> HierarchyIssueRecord:
+def make_closed_sub_hierarchy_record_with_pr(
+    mocker: MockerFixture, number: int, issue_labels: list[str] | None = None
+) -> HierarchyIssueRecord:
     """Return a closed HierarchyIssueRecord with one PR (no commits)."""
-    rec = HierarchyIssueRecord(make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number))
+    rec = HierarchyIssueRecord(
+        make_minimal_issue(mocker, IssueRecord.ISSUE_STATE_CLOSED, number), issue_labels=issue_labels
+    )
     rec.register_pull_request(make_minimal_pr(mocker, number=number + 1000))
     return rec
 

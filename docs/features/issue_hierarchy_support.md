@@ -75,6 +75,7 @@ Resulting output (hierarchy issues only — sub-issue rows use `row-format-issue
 - [Custom Row Formats](./custom_row_formats.md) – controls hierarchy line rendering.
 - [Service Chapters](./service_chapters.md) – flags missing change increments if hierarchy parents lack qualifying sub-issues.
 - [Duplicity Handling](./duplicity_handling.md) – duplicate hierarchy items can be icon-prefixed if allowed.
+- [Super Chapters](./custom_chapters.md#super-chapters) – hierarchy records split across super chapters when descendants carry different super-chapter labels.
 
 ← [Back to Feature Tutorials](../../README.md#feature-tutorials)
 

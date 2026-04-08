@@ -24,6 +24,7 @@ GITHUB_TOKEN = "github-token"
 TAG_NAME = "tag-name"
 FROM_TAG_NAME = "from-tag-name"
 CHAPTERS = "chapters"
+SUPER_CHAPTERS = "super-chapters"
 DUPLICITY_SCOPE = "duplicity-scope"
 DUPLICITY_ICON = "duplicity-icon"
 OPEN_HIERARCHY_SUB_ISSUE_ICON = "open-hierarchy-sub-issue-icon"
@@ -48,6 +49,9 @@ WARNINGS = "warnings"
 HIDDEN_SERVICE_CHAPTERS = "hidden-service-chapters"
 SERVICE_CHAPTER_ORDER = "service-chapter-order"
 PRINT_EMPTY_CHAPTERS = "print-empty-chapters"
+
+# Super chapter fallback heading
+UNCATEGORIZED_CHAPTER_TITLE: str = "Uncategorized"
 
 # Release notes comment constants
 RELEASE_NOTE_TITLE_DEFAULT: str = "[Rr]elease [Nn]otes:"

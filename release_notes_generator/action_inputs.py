@@ -22,7 +22,7 @@ import logging
 import os
 import sys
 import re
-
+from typing import Any
 import yaml
 
 from release_notes_generator.utils.constants import (
@@ -30,6 +30,7 @@ from release_notes_generator.utils.constants import (
     GITHUB_TOKEN,
     TAG_NAME,
     CHAPTERS,
+    SUPER_CHAPTERS,
     PUBLISHED_AT,
     VERBOSE,
     WARNINGS,
@@ -59,7 +60,7 @@ from release_notes_generator.utils.constants import (
 )
 from release_notes_generator.utils.enums import DuplicityScopeEnum
 from release_notes_generator.utils.gh_action import get_action_input
-from release_notes_generator.utils.utils import normalize_version_tag
+from release_notes_generator.utils.utils import normalize_labels, normalize_version_tag
 
 logger = logging.getLogger(__name__)
 
@@ -80,6 +81,8 @@ class ActionInputs:
     _row_format_link_pr = None
     _owner = ""
     _repo_name = ""
+    _super_chapters_raw: str | None = None
+    _super_chapters_cache: list[dict[str, Any]] | None = None
 
     @staticmethod
     def get_github_owner() -> str:
@@ -141,7 +144,7 @@ class ActionInputs:
         Get the from-tag name from the action inputs.
         """
         raw = get_action_input(FROM_TAG_NAME, default="")
-        return normalize_version_tag(raw)  # type: ignore[arg-type]
+        return normalize_version_tag(raw)
 
     @staticmethod
     def is_from_tag_name_defined() -> bool:
@@ -166,10 +169,78 @@ class ActionInputs:
                 logger.error("Error: 'chapters' input is not a valid YAML list.")
                 return []
         except yaml.YAMLError as exc:
-            logger.error("Error parsing 'chapters' input: {%s}", exc)
+            logger.error("Error parsing 'chapters' input: %s", exc)
             return []
 
         return chapters
+
+    @staticmethod
+    def get_super_chapters() -> list[dict[str, Any]]:
+        """
+        Get list of validated super-chapter definitions from the action inputs.
+
+        Each returned entry is guaranteed to have:
+          - 'title': str
+          - 'labels': list[str] (non-empty, normalized)
+
+        Invalid entries (non-dict, missing title, missing/empty labels) are skipped
+        with a warning log.
+        """
+        # Get the 'super-chapters' input from environment variables
+        super_chapters_input: str = get_action_input(SUPER_CHAPTERS, default="")
+
+        if (
+            ActionInputs._super_chapters_raw is not None
+            and ActionInputs._super_chapters_raw == super_chapters_input
+            and ActionInputs._super_chapters_cache is not None
+        ):
+            return ActionInputs._super_chapters_cache
+
+        # Parse the received string back to YAML array input.
+        try:
+            raw_list = yaml.safe_load(super_chapters_input)
+            if raw_list is None:
+                ActionInputs._super_chapters_raw = super_chapters_input
+                ActionInputs._super_chapters_cache = []
+                return []
+            if not isinstance(raw_list, list):
+                logger.error("Error: 'super-chapters' input is not a valid YAML list.")
+                ActionInputs._super_chapters_raw = super_chapters_input
+                ActionInputs._super_chapters_cache = []
+                return []
+        except yaml.YAMLError as exc:
+            logger.error("Error parsing 'super-chapters' input: %s", exc)
+            ActionInputs._super_chapters_raw = super_chapters_input
+            ActionInputs._super_chapters_cache = []
+            return []
+
+        result: list[dict[str, Any]] = []
+        for entry in raw_list:
+            if not isinstance(entry, dict):
+                logger.warning("Skipping super-chapter definition with invalid type %s: %s", type(entry), entry)
+                continue
+            if "title" not in entry:
+                logger.warning("Skipping super-chapter without title key: %s", entry)
+                continue
+            title = entry["title"]
+            if not isinstance(title, str) or not title.strip():
+                logger.warning("Skipping super-chapter with invalid title value: %r", title)
+                continue
+
+            raw_labels = entry.get("labels", entry.get("label"))
+            if raw_labels is None:
+                logger.warning("Super-chapter '%s' has no 'label' or 'labels' key; skipping", title)
+                continue
+            normalized = normalize_labels(raw_labels)
+            if not normalized:
+                logger.warning("Super-chapter '%s' labels definition empty after normalization; skipping", title)
+                continue
+
+            result.append({"title": title, "labels": normalized})
+            logger.debug("Validated super-chapter '%s' with labels: %s", title, normalized)
+        ActionInputs._super_chapters_raw = super_chapters_input
+        ActionInputs._super_chapters_cache = result
+        return result
 
     @staticmethod
     def get_hierarchy() -> bool:
@@ -351,19 +422,21 @@ class ActionInputs:
         """
         Get the print empty chapters parameter value from the action inputs.
         """
-        return get_action_input(PRINT_EMPTY_CHAPTERS, "true").lower() == "true"  # type: ignore[union-attr]
-        # mypy: string is returned as default
+        return get_action_input(PRINT_EMPTY_CHAPTERS, "true").lower() == "true"
 
     @staticmethod
     def validate_input(input_value, expected_type: type, error_message: str, error_buffer: list) -> bool:
         """
         Validates the input value against the expected type.
 
-        @param input_value: The input value to validate.
-        @param expected_type: The expected type of the input value.
-        @param error_message: The error message to log if the validation fails.
-        @param error_buffer: The buffer to store the error messages.
-        @return: The boolean result of the validation.
+        Parameters:
+            input_value: The input value to validate.
+            expected_type: The expected type of the input value.
+            error_message: The error message to log if the validation fails.
+            error_buffer: The buffer to store the error messages.
+
+        Returns:
+            The boolean result of the validation.
         """
 
         if not isinstance(input_value, expected_type):
@@ -423,7 +496,6 @@ class ActionInputs:
         """
         Validates the inputs provided for the release notes generator.
         Logs any validation errors and exits if any are found.
-        @return: None
         """
         errors = []
 
@@ -540,15 +612,20 @@ class ActionInputs:
         logger.debug("CodeRabbit summary ignore groups: %s", coderabbit_summary_ignore_groups)
         logger.debug("Hidden service chapters: %s", ActionInputs.get_hidden_service_chapters())
         logger.debug("Service chapter order: %s", ActionInputs.get_service_chapter_order())
+        logger.debug("Super chapters (raw): %s", get_action_input(SUPER_CHAPTERS, default=""))
 
     @staticmethod
     def _detect_row_format_invalid_keywords(row_format: str, row_type: str = "Issue", clean: bool = False) -> str:
         """
         Detects invalid keywords in the row format.
 
-        @param row_format: The row format to be checked for invalid keywords.
-        @param row_type: The type of row format. Default is "Issue".
-        @return: If clean is True, the cleaned row format. Otherwise, the original row format.
+        Parameters:
+            row_format: The row format to be checked for invalid keywords.
+            row_type: The type of row format. Default is "Issue".
+            clean: When True, strip invalid keywords from the returned string.
+
+        Returns:
+            If clean is True, the cleaned row format. Otherwise, the original row format.
         """
         keywords_in_braces = re.findall(r"\{(.*?)\}", row_format)
 
