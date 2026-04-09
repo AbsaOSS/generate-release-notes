@@ -321,9 +321,12 @@ Feature #2 has no `scope:security` label of its own, but its aggregated set incl
 Children within each rendered node are sorted **ascending by issue number**.
 
 ### Validation
-- Entries missing `title` or `label`/`labels` are skipped with a warning.
 - Non-dict entries are skipped with a warning.
-- Empty labels after normalization cause the entry to be skipped with a warning.
+- A missing `title` key causes the entry to be skipped with a warning.
+- A `title` that is not a string or is blank/whitespace-only is skipped with a warning.
+- A missing `label`/`labels` key causes the entry to be skipped with a warning.
+- An invalid `label`/`labels` type (not a string or list) is treated as empty and causes the entry to be skipped with a warning.
+- Labels that are empty after normalization (e.g. only blank tokens) cause the entry to be skipped with a warning.
 
 ## Related Features
 - [Duplicity Handling](./duplicity_handling.md) – governs multi-chapter visibility.
