@@ -76,9 +76,10 @@ https://github.com/org/repo/compare/v1.1.0...v1.2.0
 2. Categorize them by labels.
 3. Extract release note text and contributors.
 4. Output a Markdown section ready for publishing.
+
 ## How Release Notes Are Recognized
 
-The action looks for a section whose heading matches the regex `[Rr]elease [Nn]otes:` (configurable via `release-notes-title`) in the **issue body first**, then in each **linked PR body**. Every bullet line (`-`, `*`, or `+`) immediately below that heading becomes one release note entry.
+The action looks for a section whose heading matches the first regex `[Rr]elease [Nn]otes:` (configurable via `release-notes-title`) in the **issue body**, then in each **linked PR body**. Every bullet line (`-`, `*`, or `+`) immediately below that heading becomes one release note entry.
 
 **Example — issue or PR body:**
 
