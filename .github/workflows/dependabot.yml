@@ -1,9 +1,20 @@
 # NOTE: This workflow expects that branch protection rules require all checks to pass before merging.
 # Auto-merge will only occur if all required status checks and reviews are successful.
+#
+# NOTE: pull_request_target is used instead of pull_request so that GITHUB_TOKEN has write
+# permissions (needed for gh pr review / gh pr merge). Workflows triggered by pull_request from
+# Dependabot run with a read-only token and cannot approve or merge PRs.
+#
+# SECURITY: pull_request_target runs workflow code from the BASE branch (master), not the PR branch,
+# so a malicious PR cannot inject code that runs with the write token. This is safe here because:
+#   - No actions/checkout step exists — PR code is never executed.
+#   - The job is guarded by `if: github.event.pull_request.user.login == 'dependabot[bot]'`.
+# WARNING: Never add actions/checkout (especially with the PR head ref) to this workflow — doing so
+# would create an RCE vector where untrusted code runs with a write-capable token.
 
 name: Dependabot auto-approve and auto-merge
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, synchronize]
 
 permissions:
