@@ -689,6 +689,141 @@ def test_detect_row_format_invalid_keywords_unknown_row_type(caplog):
     assert any("Unknown row_type" in r.message for r in caplog.records)
 
 
+def test_get_service_chapter_exclude_default(mocker):
+    """Empty dict when env var absent."""
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="")
+    assert ActionInputs.get_service_chapter_exclude() == {}
+
+
+def test_get_service_chapter_exclude_single_chapter_single_group(mocker):
+    """One chapter title, one group parsed correctly."""
+    yaml_input = f'{CLOSED_ISSUES_WITHOUT_PULL_REQUESTS}:\n  - [scope:security, type:tech-debt]\n'
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value=yaml_input)
+    result = ActionInputs.get_service_chapter_exclude()
+    assert result == {CLOSED_ISSUES_WITHOUT_PULL_REQUESTS: [["scope:security", "type:tech-debt"]]}
+
+
+def test_get_service_chapter_exclude_single_chapter_multiple_groups(mocker):
+    """Multiple groups for one chapter (OR logic)."""
+    yaml_input = (
+        f'{CLOSED_ISSUES_WITHOUT_PULL_REQUESTS}:\n'
+        f'  - [scope:security, type:tech-debt]\n'
+        f'  - [scope:security, type:false-positive]\n'
+    )
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value=yaml_input)
+    result = ActionInputs.get_service_chapter_exclude()
+    assert result == {
+        CLOSED_ISSUES_WITHOUT_PULL_REQUESTS: [
+            ["scope:security", "type:tech-debt"],
+            ["scope:security", "type:false-positive"],
+        ]
+    }
+
+
+def test_get_service_chapter_exclude_multiple_chapters(mocker):
+    """Multiple chapter titles parsed."""
+    yaml_input = (
+        f'{CLOSED_ISSUES_WITHOUT_PULL_REQUESTS}:\n'
+        f'  - [scope:security]\n'
+        f'{OTHERS_NO_TOPIC}:\n'
+        f'  - [wontfix]\n'
+    )
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value=yaml_input)
+    result = ActionInputs.get_service_chapter_exclude()
+    assert len(result) == 2
+    assert CLOSED_ISSUES_WITHOUT_PULL_REQUESTS in result
+    assert OTHERS_NO_TOPIC in result
+
+
+def test_get_service_chapter_exclude_global_key_single_group(mocker):
+    """Reserved '*' key accepted without title validation."""
+    yaml_input = '"*":\n  - [scope:security, type:tech-debt]\n'
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value=yaml_input)
+    result = ActionInputs.get_service_chapter_exclude()
+    assert result == {"*": [["scope:security", "type:tech-debt"]]}
+
+
+def test_get_service_chapter_exclude_global_key_with_per_chapter(mocker):
+    """'*' key and a chapter title both preserved."""
+    yaml_input = (
+        f'"*":\n'
+        f'  - [scope:security, type:tech-debt]\n'
+        f'{CLOSED_ISSUES_WITHOUT_PULL_REQUESTS}:\n'
+        f'  - [scope:security, type:false-positive]\n'
+    )
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value=yaml_input)
+    result = ActionInputs.get_service_chapter_exclude()
+    assert len(result) == 2
+    assert "*" in result
+    assert CLOSED_ISSUES_WITHOUT_PULL_REQUESTS in result
+
+
+def test_get_service_chapter_exclude_invalid_yaml(mocker):
+    """Parse error returns empty dict, error logged."""
+    mock_log_error = mocker.patch("release_notes_generator.action_inputs.logger.error")
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value=":\n  :\n  - :")
+    result = ActionInputs.get_service_chapter_exclude()
+    assert result == {}
+    mock_log_error.assert_called_once()
+
+
+def test_get_service_chapter_exclude_not_a_mapping(mocker):
+    """Non-dict YAML returns empty dict, error logged."""
+    mock_log_error = mocker.patch("release_notes_generator.action_inputs.logger.error")
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="- item1\n- item2")
+    result = ActionInputs.get_service_chapter_exclude()
+    assert result == {}
+    mock_log_error.assert_called_once()
+
+
+def test_get_service_chapter_exclude_non_string_input(mocker):
+    """Non-string env var returns empty dict, error logged."""
+    mock_log_error = mocker.patch("release_notes_generator.action_inputs.logger.error")
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value=42)
+    result = ActionInputs.get_service_chapter_exclude()
+    assert result == {}
+    mock_log_error.assert_called_once()
+
+
+def test_get_service_chapter_exclude_unknown_chapter_title(mocker):
+    """Unknown title skipped with warning."""
+    mock_log_warning = mocker.patch("release_notes_generator.action_inputs.logger.warning")
+    yaml_input = (
+        f'{CLOSED_ISSUES_WITHOUT_PULL_REQUESTS}:\n'
+        f'  - [scope:security]\n'
+        f'Unknown Chapter Title:\n'
+        f'  - [wontfix]\n'
+    )
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value=yaml_input)
+    result = ActionInputs.get_service_chapter_exclude()
+    assert CLOSED_ISSUES_WITHOUT_PULL_REQUESTS in result
+    assert "Unknown Chapter Title" not in result
+    mock_log_warning.assert_called_once()
+    assert "Unknown service chapter title" in mock_log_warning.call_args[0][0]
+
+
+def test_get_service_chapter_exclude_group_not_a_list(mocker):
+    """Non-list group skipped with warning, valid group kept."""
+    mock_log_warning = mocker.patch("release_notes_generator.action_inputs.logger.warning")
+    yaml_input = (
+        f'{CLOSED_ISSUES_WITHOUT_PULL_REQUESTS}:\n'
+        f'  - [scope:security]\n'
+        f'  - not-a-list\n'
+    )
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value=yaml_input)
+    result = ActionInputs.get_service_chapter_exclude()
+    assert result == {CLOSED_ISSUES_WITHOUT_PULL_REQUESTS: [["scope:security"]]}
+    mock_log_warning.assert_called_once()
+
+
+def test_get_service_chapter_exclude_empty_group_list(mocker):
+    """Empty list value accepted as no-op."""
+    yaml_input = f'{CLOSED_ISSUES_WITHOUT_PULL_REQUESTS}: []\n'
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value=yaml_input)
+    result = ActionInputs.get_service_chapter_exclude()
+    assert result == {CLOSED_ISSUES_WITHOUT_PULL_REQUESTS: []}
+
+
 # Mirrored test file for release_notes_generator/generator.py
 # Extracted from previous aggregated test_release_notes_generator.py
 

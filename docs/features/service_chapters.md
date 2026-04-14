@@ -48,6 +48,7 @@ The service chapters appear in the following order in the generated release note
     warnings: true                     # enable service chapters (default)
     hidden-service-chapters: ''        # hide specific service chapters (default: empty)
     service-chapter-order: ''          # custom display order (default: empty = default order)
+    service-chapter-exclude: ''        # label-exclusion rules per chapter (default: empty)
     print-empty-chapters: true         # show even when empty (default)
     duplicity-scope: "both"            # allow duplicates across custom + service
 ```
@@ -115,6 +116,46 @@ Or use comma-separated format:
 7. `Others - No Topic ⚠️`
 
 **Note:** Title matching is exact and case-sensitive. The `service-chapter-order` input is independent of `hidden-service-chapters`; hidden chapters are still hidden even if listed in the order.
+
+### Label-Based Exclusion Rules
+Use `service-chapter-exclude` to filter out issues from service chapters by label combinations. Each rule is a group of labels that must **all** be present on an issue (AND logic) for the issue to be excluded. Multiple groups per chapter are evaluated with OR logic (any group match excludes the issue).
+
+**Per-chapter exclusion** — excludes a matching record from that chapter only:
+
+```yaml
+- name: Generate Release Notes
+  with:
+    warnings: true
+    service-chapter-exclude: |
+      Closed Issues without Pull Request ⚠️:
+        - [scope:security, type:tech-debt]
+        - [scope:security, type:false-positive]
+      Others - No Topic ⚠️:
+        - [wontfix]
+```
+
+**Global exclusion** — use the reserved key `"*"` to exclude matching records from **all** service chapters:
+
+```yaml
+- name: Generate Release Notes
+  with:
+    warnings: true
+    service-chapter-exclude: |
+      "*":
+        - [scope:security, type:tech-debt]
+      Closed Issues without Pull Request ⚠️:
+        - [scope:security, type:false-positive]
+```
+
+**Behavior:**
+- Within a group, all labels must be present on the issue (AND logic).
+- Across groups, any single match is sufficient to exclude (OR logic).
+- The `"*"` key applies to every service chapter; a matching record is dropped entirely.
+- Per-chapter rules only affect the specified chapter; the record may still appear in other chapters.
+- Global exclusion takes precedence over per-chapter rules.
+- Label strings that do not appear on any record simply prevent the group from matching.
+- Unknown chapter titles are skipped with a warning.
+- If omitted or empty, no exclusion is applied.
 
 ## Example Result
 ```markdown

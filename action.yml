@@ -101,6 +101,20 @@ inputs:
       - "Others - No Topic ⚠️"
     required: false
     default: ''
+  service-chapter-exclude:
+    description: |
+      YAML mapping of service chapter title to label-exclusion groups.
+      Each group is a list of labels (AND logic within a group).
+      Multiple groups per chapter are evaluated with OR logic.
+      Use the reserved key "*" to define global rules that apply to all service chapters.
+      Example:
+        service-chapter-exclude: |
+          "*":
+            - [scope:security, type:tech-debt]
+          Closed Issues without Pull Request ⚠️:
+            - [scope:security, type:false-positive]
+    required: false
+    default: ''
   print-empty-chapters:
     description: 'Print chapters even if they are empty.'
     required: false
