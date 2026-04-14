@@ -212,6 +212,7 @@ runs:
         INPUT_WARNINGS: ${{ inputs.warnings }}
         INPUT_HIDDEN_SERVICE_CHAPTERS: ${{ inputs.hidden-service-chapters }}
         INPUT_SERVICE_CHAPTER_ORDER: ${{ inputs.service-chapter-order }}
+        INPUT_SERVICE_CHAPTER_EXCLUDE: ${{ inputs.service-chapter-exclude }}
         INPUT_PUBLISHED_AT: ${{ inputs.published-at }}
         INPUT_SKIP_RELEASE_NOTES_LABELS: ${{ inputs.skip-release-notes-labels }}
         INPUT_PRINT_EMPTY_CHAPTERS: ${{ inputs.print-empty-chapters }}
