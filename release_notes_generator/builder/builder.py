@@ -72,6 +72,7 @@ class ReleaseNotesBuilder:
                 used_record_numbers=self.custom_chapters.populated_record_numbers_list,
                 hidden_chapters=ActionInputs.get_hidden_service_chapters(),
                 chapter_order=ActionInputs.get_service_chapter_order(),
+                chapter_exclude=ActionInputs.get_service_chapter_exclude(),
             )
             service_chapters.populate(self.records)
 

@@ -36,6 +36,8 @@ from release_notes_generator.utils.constants import (
     WARNINGS,
     HIDDEN_SERVICE_CHAPTERS,
     SERVICE_CHAPTER_ORDER,
+    SERVICE_CHAPTER_EXCLUDE,
+    GLOBAL_EXCLUDE_KEY,
     RUNNER_DEBUG,
     PRINT_EMPTY_CHAPTERS,
     DUPLICITY_SCOPE,
@@ -418,6 +420,68 @@ class ActionInputs:
         return ordered
 
     @staticmethod
+    def get_service_chapter_exclude() -> dict[str, list[list[str]]]:
+        """
+        Get label-exclusion rules for service chapters from the action inputs.
+
+        Returns:
+            Mapping of chapter title (or ``"*"`` for global) to a list of label
+            groups. Each group is a list of label strings (AND logic within a
+            group, OR logic across groups).
+        """
+        valid_titles = set(DEFAULT_SERVICE_CHAPTER_ORDER)
+
+        raw = get_action_input(SERVICE_CHAPTER_EXCLUDE, "")
+        if not isinstance(raw, str):
+            logger.error("Error: 'service-chapter-exclude' is not a valid string.")
+            return {}
+
+        raw = raw.strip()
+        if not raw:
+            return {}
+
+        try:
+            parsed = yaml.safe_load(raw)
+            if parsed is None:
+                return {}
+            if not isinstance(parsed, dict):
+                logger.error("Error: 'service-chapter-exclude' input is not a valid YAML mapping.")
+                return {}
+        except yaml.YAMLError as exc:
+            logger.error("Error parsing 'service-chapter-exclude' input: %s", exc)
+            return {}
+
+        result: dict[str, list[list[str]]] = {}
+        for title, groups in parsed.items():
+            title_str = str(title)
+
+            if title_str != GLOBAL_EXCLUDE_KEY and title_str not in valid_titles:
+                logger.warning("Unknown service chapter title '%s' in 'service-chapter-exclude'. Skipping.", title_str)
+                continue
+
+            if not isinstance(groups, list):
+                logger.warning(
+                    "Value for '%s' in 'service-chapter-exclude' is not a list. Skipping.",
+                    title_str,
+                )
+                continue
+
+            validated_groups: list[list[str]] = []
+            for group in groups:
+                if not isinstance(group, list):
+                    logger.warning(
+                        "Group entry under '%s' in 'service-chapter-exclude' is not a list: %s. Skipping.",
+                        title_str,
+                        group,
+                    )
+                    continue
+                validated_groups.append([str(label) for label in group])
+
+            result[title_str] = validated_groups
+
+        return result
+
+    @staticmethod
     def get_print_empty_chapters() -> bool:
         """
         Get the print empty chapters parameter value from the action inputs.
@@ -612,6 +676,7 @@ class ActionInputs:
         logger.debug("CodeRabbit summary ignore groups: %s", coderabbit_summary_ignore_groups)
         logger.debug("Hidden service chapters: %s", ActionInputs.get_hidden_service_chapters())
         logger.debug("Service chapter order: %s", ActionInputs.get_service_chapter_order())
+        logger.debug("Service chapter exclude: %s", ActionInputs.get_service_chapter_exclude())
         logger.debug("Super chapters (raw): %s", get_action_input(SUPER_CHAPTERS, default=""))
 
     @staticmethod

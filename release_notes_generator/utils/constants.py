@@ -48,6 +48,8 @@ SUPPORTED_ROW_FORMAT_KEYS_PULL_REQUEST = ["number", "title", "author", "assignee
 WARNINGS = "warnings"
 HIDDEN_SERVICE_CHAPTERS = "hidden-service-chapters"
 SERVICE_CHAPTER_ORDER = "service-chapter-order"
+SERVICE_CHAPTER_EXCLUDE = "service-chapter-exclude"
+GLOBAL_EXCLUDE_KEY = "*"
 PRINT_EMPTY_CHAPTERS = "print-empty-chapters"
 
 # Super chapter fallback heading
