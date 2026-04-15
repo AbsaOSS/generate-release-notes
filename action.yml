@@ -142,7 +142,7 @@ inputs:
   row-format-hierarchy-issue:
     description: 'Format of the hierarchy issue in the release notes. Available placeholders: {type}, {number}, {title}, {author}, {assignees}, {developers}. Placeholders are case-insensitive.'
     required: false
-    default: '{type}: _{title}_ {number}'
+    default: '{type}: _{title}_ {number} {progress}'
   row-format-issue:
     description: 'Format of the issue row in the release notes. Available placeholders: {type}, {number}, {title}, {author}, {assignees}, {developers}, {pull-requests}. Placeholders are case-insensitive.'
     required: false

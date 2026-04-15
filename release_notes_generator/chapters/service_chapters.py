@@ -195,7 +195,7 @@ class ServiceChapters(BaseChapters):
                 record.add_to_chapter_presence(CLOSED_ISSUES_WITHOUT_PULL_REQUESTS)
                 self.chapters[CLOSED_ISSUES_WITHOUT_PULL_REQUESTS].add_row(record_id, record.to_chapter_row())
                 self.used_record_numbers.append(record_id)
-                populated = True
+            populated = True
 
         # check record properties if it fits to a chapter: CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS
         if not record.contains_min_one_label(self.user_defined_labels):
@@ -207,7 +207,7 @@ class ServiceChapters(BaseChapters):
                 record.add_to_chapter_presence(CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS)
                 self.chapters[CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS].add_row(record_id, record.to_chapter_row())
                 self.used_record_numbers.append(record_id)
-                populated = True
+            populated = True
 
         if pulls_count > 0:
             # the record looks to be valid closed issue with 1+ pull requests, no reason to report it
@@ -237,6 +237,7 @@ class ServiceChapters(BaseChapters):
             None
         """
         if record.is_merged:
+            consumed = False
             # check record properties if it fits to a chapter: MERGED_PRS_WITHOUT_ISSUE
             if not record.contains_issue_mentions() and not record.contains_min_one_label(self.user_defined_labels):
                 if self.__is_row_present(record_id) and not self.duplicity_allowed():
@@ -248,6 +249,7 @@ class ServiceChapters(BaseChapters):
                         record_id, record.to_chapter_row()
                     )
                     self.used_record_numbers.append(record_id)
+                consumed = True
 
             # check record properties if it fits to a chapter: MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES
             if record.contains_issue_mentions():
@@ -258,8 +260,9 @@ class ServiceChapters(BaseChapters):
                     record.add_to_chapter_presence(MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES)
                     self.chapters[MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES].add_row(record_id, record.to_chapter_row())
                     self.used_record_numbers.append(record_id)
+                consumed = True
 
-            if not record.is_present_in_chapters:
+            if not consumed and not record.is_present_in_chapters:
                 if self.__is_row_present(record_id) and not self.duplicity_allowed():
                     return
 
