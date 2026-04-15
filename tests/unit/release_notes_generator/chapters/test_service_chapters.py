@@ -239,7 +239,7 @@ def test_populate_per_chapter_full_match_excluded(record_with_issue_closed_no_pu
     """AND logic: all labels present -> excluded from that chapter; also covers: chapter isolation (rules for one chapter do not affect others)."""
     sc = ServiceChapters(
         user_defined_labels=["bug", "enhancement"],
-        exclude_rules={CLOSED_ISSUES_WITHOUT_PULL_REQUESTS: [["label1", "label2"]]},
+        chapter_exclude={CLOSED_ISSUES_WITHOUT_PULL_REQUESTS: [["label1", "label2"]]},
     )
     sc.populate({1: record_with_issue_closed_no_pull})
     assert 0 == len(sc.chapters[CLOSED_ISSUES_WITHOUT_PULL_REQUESTS].rows)
@@ -251,7 +251,7 @@ def test_populate_per_chapter_or_logic_second_group_matches(record_with_issue_cl
     """OR logic: second group match is sufficient for exclusion."""
     sc = ServiceChapters(
         user_defined_labels=["bug", "enhancement"],
-        exclude_rules={CLOSED_ISSUES_WITHOUT_PULL_REQUESTS: [["nonexistent"], ["label1", "label2"]]},
+        chapter_exclude={CLOSED_ISSUES_WITHOUT_PULL_REQUESTS: [["nonexistent"], ["label1", "label2"]]},
     )
     sc.populate({1: record_with_issue_closed_no_pull})
     assert 0 == len(sc.chapters[CLOSED_ISSUES_WITHOUT_PULL_REQUESTS].rows)
@@ -261,7 +261,7 @@ def test_populate_per_chapter_partial_and_failure(record_with_issue_closed_no_pu
     """AND failure: missing one label -> not excluded."""
     sc = ServiceChapters(
         user_defined_labels=["bug", "enhancement"],
-        exclude_rules={CLOSED_ISSUES_WITHOUT_PULL_REQUESTS: [["label1", "nonexistent"]]},
+        chapter_exclude={CLOSED_ISSUES_WITHOUT_PULL_REQUESTS: [["label1", "nonexistent"]]},
     )
     sc.populate({1: record_with_issue_closed_no_pull})
     assert 1 == len(sc.chapters[CLOSED_ISSUES_WITHOUT_PULL_REQUESTS].rows)
@@ -271,7 +271,7 @@ def test_populate_per_chapter_no_label_overlap(record_with_issue_closed_no_pull)
     """No match -> not excluded."""
     sc = ServiceChapters(
         user_defined_labels=["bug", "enhancement"],
-        exclude_rules={CLOSED_ISSUES_WITHOUT_PULL_REQUESTS: [["alpha", "beta"]]},
+        chapter_exclude={CLOSED_ISSUES_WITHOUT_PULL_REQUESTS: [["alpha", "beta"]]},
     )
     sc.populate({1: record_with_issue_closed_no_pull})
     assert 1 == len(sc.chapters[CLOSED_ISSUES_WITHOUT_PULL_REQUESTS].rows)
@@ -281,7 +281,7 @@ def test_populate_per_chapter_empty_rules_no_exclusion(record_with_issue_closed_
     """Empty exclusion list -> no-op."""
     sc = ServiceChapters(
         user_defined_labels=["bug", "enhancement"],
-        exclude_rules={CLOSED_ISSUES_WITHOUT_PULL_REQUESTS: []},
+        chapter_exclude={CLOSED_ISSUES_WITHOUT_PULL_REQUESTS: []},
     )
     sc.populate({1: record_with_issue_closed_no_pull})
     assert 1 == len(sc.chapters[CLOSED_ISSUES_WITHOUT_PULL_REQUESTS].rows)
@@ -291,7 +291,7 @@ def test_populate_global_full_match_excluded_from_all(record_with_issue_closed_n
     """'*' match drops record from all chapters."""
     sc = ServiceChapters(
         user_defined_labels=["bug", "enhancement"],
-        exclude_rules={"*": [["label1", "label2"]]},
+        chapter_exclude={"*": [["label1", "label2"]]},
     )
     sc.populate({1: record_with_issue_closed_no_pull})
     for chapter in sc.chapters.values():
@@ -302,7 +302,7 @@ def test_populate_global_partial_and_failure(record_with_issue_closed_no_pull):
     """'*' AND failure -> record not excluded."""
     sc = ServiceChapters(
         user_defined_labels=["bug", "enhancement"],
-        exclude_rules={"*": [["label1", "nonexistent"]]},
+        chapter_exclude={"*": [["label1", "nonexistent"]]},
     )
     sc.populate({1: record_with_issue_closed_no_pull})
     assert 1 == len(sc.chapters[CLOSED_ISSUES_WITHOUT_PULL_REQUESTS].rows)
@@ -312,7 +312,7 @@ def test_populate_global_precedes_per_chapter(record_with_issue_closed_no_pull):
     """Global exclusion takes precedence over per-chapter rules."""
     sc = ServiceChapters(
         user_defined_labels=["bug", "enhancement"],
-        exclude_rules={
+        chapter_exclude={
             "*": [["label1", "label2"]],
             CLOSED_ISSUES_WITHOUT_PULL_REQUESTS: [["label1"]],
         },

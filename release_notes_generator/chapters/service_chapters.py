@@ -61,7 +61,7 @@ class ServiceChapters(BaseChapters):
         used_record_numbers: Optional[list[int | str]] = None,
         hidden_chapters: Optional[list[str]] = None,
         chapter_order: Optional[list[str]] = None,
-        exclude_rules: Optional[dict[str, list[list[str]]]] = None,
+        chapter_exclude: Optional[dict[str, list[list[str]]]] = None,
     ):
         super().__init__(sort_ascending, print_empty_chapters)
 
@@ -110,7 +110,7 @@ class ServiceChapters(BaseChapters):
         self.show_chapter_merged_prs_linked_to_open_issues = True
 
         # Exclude rules: split "*" (global) from per-chapter entries
-        all_rules = exclude_rules if exclude_rules is not None else {}
+        all_rules = chapter_exclude if chapter_exclude is not None else {}
         self._global_exclude_groups: list[list[str]] = all_rules.get(GLOBAL_EXCLUDE_KEY, [])
         self._per_chapter_exclude_groups: dict[str, list[list[str]]] = {
             k: v for k, v in all_rules.items() if k != GLOBAL_EXCLUDE_KEY
