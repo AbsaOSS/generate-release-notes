@@ -14,6 +14,8 @@
 # limitations under the License.
 #
 
+import pytest
+
 from release_notes_generator.model.chapter import Chapter
 from release_notes_generator.chapters.service_chapters import ServiceChapters
 from release_notes_generator.utils.constants import (
@@ -229,62 +231,32 @@ def test_chapter_order_none_uses_default():
     assert sc.chapter_order == DEFAULT_SERVICE_CHAPTER_ORDER
 
 
-def test_populate_per_chapter_no_exclude_rules(service_chapters, record_with_issue_closed_no_pull):
-    """Default behaviour unchanged when no exclude rules; also covers: no '*' global key -> normal routing."""
-    service_chapters.populate({1: record_with_issue_closed_no_pull})
-    assert 1 == len(service_chapters.chapters[CLOSED_ISSUES_WITHOUT_PULL_REQUESTS].rows)
+@pytest.mark.parametrize(
+    "chapter_exclude, expected_rows",
+    [
+        ({CLOSED_ISSUES_WITHOUT_PULL_REQUESTS: [["label1", "label2"]]}, 0),                       # full AND match -> excluded
+        ({CLOSED_ISSUES_WITHOUT_PULL_REQUESTS: [["nonexistent"], ["label1", "label2"]]}, 0),       # OR: second group matches
+        ({CLOSED_ISSUES_WITHOUT_PULL_REQUESTS: [["label1", "nonexistent"]]}, 1),                   # AND failure -> not excluded
+        ({CLOSED_ISSUES_WITHOUT_PULL_REQUESTS: [["alpha", "beta"]]}, 1),                           # no label overlap -> not excluded
+        ({CLOSED_ISSUES_WITHOUT_PULL_REQUESTS: []}, 1),                                            # empty list -> no-op
+    ],
+)
+def test_populate_per_chapter_exclusion(record_with_issue_closed_no_pull, chapter_exclude, expected_rows):
+    """Per-chapter exclusion: AND/OR logic and edge cases for CLOSED_ISSUES_WITHOUT_PULL_REQUESTS."""
+    sc = ServiceChapters(user_defined_labels=["bug", "enhancement"], chapter_exclude=chapter_exclude)
+    sc.populate({1: record_with_issue_closed_no_pull})
+    assert expected_rows == len(sc.chapters[CLOSED_ISSUES_WITHOUT_PULL_REQUESTS].rows)
 
 
-def test_populate_per_chapter_full_match_excluded(record_with_issue_closed_no_pull):
-    """AND logic: all labels present -> excluded from that chapter; also covers: chapter isolation (rules for one chapter do not affect others)."""
+def test_populate_per_chapter_exclusion_chapter_isolation(record_with_issue_closed_no_pull):
+    """Exclusion from one chapter does not affect others the record qualifies for."""
     sc = ServiceChapters(
         user_defined_labels=["bug", "enhancement"],
         chapter_exclude={CLOSED_ISSUES_WITHOUT_PULL_REQUESTS: [["label1", "label2"]]},
     )
     sc.populate({1: record_with_issue_closed_no_pull})
     assert 0 == len(sc.chapters[CLOSED_ISSUES_WITHOUT_PULL_REQUESTS].rows)
-    # still present in the other chapter it qualifies for
     assert 1 == len(sc.chapters[CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS].rows)
-
-
-def test_populate_per_chapter_or_logic_second_group_matches(record_with_issue_closed_no_pull):
-    """OR logic: second group match is sufficient for exclusion."""
-    sc = ServiceChapters(
-        user_defined_labels=["bug", "enhancement"],
-        chapter_exclude={CLOSED_ISSUES_WITHOUT_PULL_REQUESTS: [["nonexistent"], ["label1", "label2"]]},
-    )
-    sc.populate({1: record_with_issue_closed_no_pull})
-    assert 0 == len(sc.chapters[CLOSED_ISSUES_WITHOUT_PULL_REQUESTS].rows)
-
-
-def test_populate_per_chapter_partial_and_failure(record_with_issue_closed_no_pull):
-    """AND failure: missing one label -> not excluded."""
-    sc = ServiceChapters(
-        user_defined_labels=["bug", "enhancement"],
-        chapter_exclude={CLOSED_ISSUES_WITHOUT_PULL_REQUESTS: [["label1", "nonexistent"]]},
-    )
-    sc.populate({1: record_with_issue_closed_no_pull})
-    assert 1 == len(sc.chapters[CLOSED_ISSUES_WITHOUT_PULL_REQUESTS].rows)
-
-
-def test_populate_per_chapter_no_label_overlap(record_with_issue_closed_no_pull):
-    """No match -> not excluded."""
-    sc = ServiceChapters(
-        user_defined_labels=["bug", "enhancement"],
-        chapter_exclude={CLOSED_ISSUES_WITHOUT_PULL_REQUESTS: [["alpha", "beta"]]},
-    )
-    sc.populate({1: record_with_issue_closed_no_pull})
-    assert 1 == len(sc.chapters[CLOSED_ISSUES_WITHOUT_PULL_REQUESTS].rows)
-
-
-def test_populate_per_chapter_empty_rules_no_exclusion(record_with_issue_closed_no_pull):
-    """Empty exclusion list -> no-op."""
-    sc = ServiceChapters(
-        user_defined_labels=["bug", "enhancement"],
-        chapter_exclude={CLOSED_ISSUES_WITHOUT_PULL_REQUESTS: []},
-    )
-    sc.populate({1: record_with_issue_closed_no_pull})
-    assert 1 == len(sc.chapters[CLOSED_ISSUES_WITHOUT_PULL_REQUESTS].rows)
 
 
 def test_populate_global_full_match_excluded_from_all(record_with_issue_closed_no_pull):
