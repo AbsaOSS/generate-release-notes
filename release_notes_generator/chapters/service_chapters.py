@@ -109,11 +109,10 @@ class ServiceChapters(BaseChapters):
 
         self.show_chapter_merged_prs_linked_to_open_issues = True
 
-        # Exclude rules: split "*" (global) from per-chapter entries
-        all_rules = chapter_exclude if chapter_exclude is not None else {}
-        self._global_exclude_groups: list[list[str]] = all_rules.get(GLOBAL_EXCLUDE_KEY, [])
+        chapter_exclude = chapter_exclude if chapter_exclude is not None else {}
+        self._global_exclude_groups: list[list[str]] = chapter_exclude.get(GLOBAL_EXCLUDE_KEY, [])
         self._per_chapter_exclude_groups: dict[str, list[list[str]]] = {
-            k: v for k, v in all_rules.items() if k != GLOBAL_EXCLUDE_KEY
+            k: v for k, v in chapter_exclude.items() if k != GLOBAL_EXCLUDE_KEY
         }
 
     def populate(self, records: dict[str, Record]) -> None:
