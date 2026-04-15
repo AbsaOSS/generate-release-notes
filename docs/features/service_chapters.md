@@ -118,7 +118,7 @@ Or use comma-separated format:
 **Note:** Title matching is exact and case-sensitive. The `service-chapter-order` input is independent of `hidden-service-chapters`; hidden chapters are still hidden even if listed in the order.
 
 ### Label-Based Exclusion Rules
-Use `service-chapter-exclude` to filter out issues from service chapters by label combinations. Each rule is a group of labels that must **all** be present on an issue (AND logic) for the issue to be excluded. Multiple groups per chapter are evaluated with OR logic (any group match excludes the issue).
+Use `service-chapter-exclude` to filter out issues/PRs from service chapters by label combinations. Each rule is a group of labels that must **all** be present on a record (AND logic) for the record to be excluded. Multiple groups per chapter are evaluated with OR logic (any group match excludes the record).
 
 **Per-chapter exclusion** — excludes a matching record from that chapter only:
 
