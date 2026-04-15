@@ -198,7 +198,6 @@ jobs:
 
       - name: Run action against real repository and validate output
         env:
-          INPUT_TAG_NAME: 'v0.2.0'
           INPUT_GITHUB_REPOSITORY: 'AbsaOSS/generate-release-notes'
           INPUT_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           INPUT_CHAPTERS: |
@@ -209,7 +208,7 @@ jobs:
               { title: Bugfixes 🛠, label: bug }
             ]
           INPUT_WARNINGS: 'true'
-          INPUT_PRINT_EMPTY_CHAPTERS: 'false'
+          INPUT_PRINT_EMPTY_CHAPTERS: 'true'
           INPUT_VERBOSE: 'true'
           INPUT_HIERARCHY: 'false'
           INPUT_DUPLICITY_SCOPE: 'both'
