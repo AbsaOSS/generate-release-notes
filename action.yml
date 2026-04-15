@@ -69,6 +69,10 @@ inputs:
     description: 'Print service chapters if true.'
     required: false
     default: 'true'
+  show-stats-chapters:
+    description: 'Print Statistics & Anti-game chapters showing skip-label usage stats.'
+    required: false
+    default: 'true'
   hidden-service-chapters:
     description: |
       List of service chapter titles to hide from output (comma or newline separated).
@@ -196,6 +200,7 @@ runs:
         INPUT_DUPLICITY_ICON: ${{ inputs.duplicity-icon }}
         INPUT_OPEN_HIERARCHY_SUB_ISSUE_ICON: ${{ inputs.open-hierarchy-sub-issue-icon }}
         INPUT_WARNINGS: ${{ inputs.warnings }}
+        INPUT_SHOW_STATS_CHAPTERS: ${{ inputs.show-stats-chapters }}
         INPUT_HIDDEN_SERVICE_CHAPTERS: ${{ inputs.hidden-service-chapters }}
         INPUT_SERVICE_CHAPTER_ORDER: ${{ inputs.service-chapter-order }}
         INPUT_PUBLISHED_AT: ${{ inputs.published-at }}

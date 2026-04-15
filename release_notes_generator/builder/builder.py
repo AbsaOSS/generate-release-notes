@@ -25,6 +25,7 @@ from itertools import chain
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.chapters.custom_chapters import CustomChapters
 from release_notes_generator.chapters.service_chapters import ServiceChapters
+from release_notes_generator.chapters.stats_chapters import StatsChapters
 from release_notes_generator.model.record.record import Record
 
 logger = logging.getLogger(__name__)
@@ -49,6 +50,7 @@ class ReleaseNotesBuilder:
 
         self.warnings = ActionInputs.get_warnings()
         self.print_empty_chapters = ActionInputs.get_print_empty_chapters()
+        self.show_stats_chapters = ActionInputs.get_show_stats_chapters()
 
     def build(self) -> str:
         """
@@ -77,13 +79,19 @@ class ReleaseNotesBuilder:
 
             service_chapters_str = service_chapters.to_string()
             if len(service_chapters_str) > 0:
-                release_notes = (
-                    f"""{user_defined_chapters_str}\n\n{service_chapters_str}\n\n"""
-                    f"""#### Full Changelog\n{self.changelog_url}\n"""
-                )
+                body = f"""{user_defined_chapters_str}\n\n{service_chapters_str}"""
             else:
-                release_notes = f"""{user_defined_chapters_str}\n\n#### Full Changelog\n{self.changelog_url}\n"""
+                body = user_defined_chapters_str
         else:
-            release_notes = f"""{user_defined_chapters_str}\n\n#### Full Changelog\n{self.changelog_url}\n"""
+            body = user_defined_chapters_str
+
+        if self.show_stats_chapters:
+            stats_chapters = StatsChapters(print_empty_chapters=self.print_empty_chapters)
+            stats_chapters.populate(self.records)
+            stats_str = stats_chapters.to_string()
+            if stats_str:
+                body = body.rstrip("\n") + "\n\n" + stats_str
+
+        release_notes = f"""{body}\n\n#### Full Changelog\n{self.changelog_url}\n"""
 
         return release_notes.lstrip()
