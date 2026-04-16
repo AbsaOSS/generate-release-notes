@@ -69,6 +69,10 @@ _BASE_ENV: dict[str, str] = {
     "INPUT_VERBOSE": "false",
     "INPUT_PUBLISHED_AT": "false",
     "INPUT_SERVICE_CHAPTER_EXCLUDE": "",
+    "INPUT_HIDDEN_SERVICE_CHAPTERS": "",
+    "INPUT_SERVICE_CHAPTER_ORDER": "",
+    "INPUT_ROW_FORMAT_LINK_PR": "true",
+    "INPUT_CODERABBIT_SUPPORT_ACTIVE": "false",
 }
 
 

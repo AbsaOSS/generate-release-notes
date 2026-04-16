@@ -2,95 +2,131 @@
 
 ## Scope
 
-These tests verify that multiple real components work together correctly end-to-end by calling
-`main.run()` directly with `INPUT_*` env vars, a mocked GitHub instance, and a controlled
-`MinedData` returned by a patched `DataMiner`.  The GitHub API network layer is never reached.
+These tests verify that multiple real components work together correctly end-to-end.
+The offline suite calls `main.run()` directly with `INPUT_*` env vars, a mocked GitHub
+instance, and a controlled `MinedData` returned by a patched `DataMiner`.
+The GitHub API network layer is never reached.
 
-Call stack exercised: `main.run()` → `ActionInputs` → `ReleaseNotesGenerator.generate()` →
-`FilterByRelease.filter()` → `DefaultRecordFactory.generate()` → `ReleaseNotesBuilder.build()` →
-`CustomChapters.populate()` + `ServiceChapters.populate()` → final markdown string.
+## Architecture — how the offline integration tests work
 
-GitHub model objects (`Issue`, `PullRequest`, `Commit`, `Repository`, `GitRelease`) are mocked
-at the `DataMiner.mine_data()` boundary using `pytest-mock`.  `get_issues_for_pr` (GitHub
-GraphQL call) is patched at its import site in `default_record_factory`.
+### Call stack exercised
+
+```
+main.run()
+  → ActionInputs  (reads INPUT_* env vars)
+  → ReleaseNotesGenerator.generate()
+      → DataMiner.mine_data()          ← MOCKED: returns pre-built MinedData
+      → FilterByRelease.filter()       ← real: time-based record filtering
+      → DefaultRecordFactory.generate()← real: Issue/PR/Commit → Record objects
+      → ReleaseNotesBuilder.build()    ← real: assembles final markdown
+          → CustomChapters.populate()  ← real: label-based routing, COH, hidden
+          → ServiceChapters.populate() ← real: warning chapters, exclusion rules
+```
+
+### Mock boundaries
+
+| Boundary | Technique | Why |
+|---|---|---|
+| GitHub API (`Github`) | `mocker.patch("main.Github")` | Prevents real HTTP calls; rate-limiter wired to never sleep |
+| `DataMiner.mine_data()` | `mocker.patch.object(DataMiner, "mine_data")` | Returns a hand-crafted `MinedData` with mock `Issue`/`PR`/`Commit` objects |
+| `DataMiner.check_repository_exists()` | `mocker.patch.object(…, return_value=True)` | Skips real repo lookup |
+| `get_issues_for_pr` (GraphQL) | `mocker.patch(…, return_value=set())` | Prevents sub-issue API calls; hierarchy tests would override this |
+| `DataMiner.mine_missing_sub_issues()` | Patched in hierarchy tests only | Returns controlled parent→sub-issue mappings |
+
+### Fixture factories (`conftest.py`)
+
+Each factory creates a `pytest-mock` `Mock(spec=<GitHubClass>)` with the minimum
+attributes the pipeline reads.  Tests compose these into `MinedData` via the
+`build_mined_data()` helper.
+
+| Factory | Creates | Key parameters |
+|---|---|---|
+| `make_issue` | `Issue` mock | `number, state, labels, title, body, user_login, closed_at` |
+| `make_pr` | `PullRequest` mock | `number, title, body, user_login, labels, merged, merge_commit_sha` |
+| `make_commit` | `Commit` mock | `sha, message, author_login` |
+| `make_repo` | `Repository` mock | `full_name` |
+| `make_release` | `GitRelease` mock | `tag_name` |
+
+### Capture helper
+
+`_capture_run(patch_env, overrides)` sets env vars, writes `GITHUB_OUTPUT` to a
+temp file, calls `main.run()`, and parses the GitHub Actions multiline output
+format (`release-notes<<EOF … EOF`) back into a plain string.
+
+### Snapshot workflow
+
+Run `WRITE_SNAPSHOTS=1 pytest tests/integration/test_builder_pipeline.py` to
+regenerate `fixtures/test_full_pipeline_snapshot.md`.  Without that env var the
+test performs a byte-for-byte comparison against the stored file.
 
 ## File layout
 
 ```
 tests/integration/
-    SPEC.md
-    conftest.py                    # shared fixtures and build_mined_data helper
+    SPEC.md                              # this file
+    conftest.py                          # shared fixtures and build_mined_data helper
     fixtures/
-        test_full_pipeline_snapshot.md   # golden output for T-INT-01; regenerate with WRITE_SNAPSHOTS=1
-    test_builder_pipeline.py       # T-INT-01 … T-INT-05 (offline)
+        test_full_pipeline_snapshot.md   # golden output for T-INT-01
+    test_builder_pipeline.py             # T-INT-01 … T-INT-29 (offline, no token needed)
     live/
-        test_bulk_sub_issue_collector.py   # T-INT-LIVE-01 (requires GITHUB_TOKEN)
+        test_bulk_sub_issue_collector.py # live smoke test (requires GITHUB_TOKEN)
 ```
-
-> **Snapshot workflow:** Run `WRITE_SNAPSHOTS=1 pytest tests/integration/test_builder_pipeline.py`
-> to (re-)generate `fixtures/test_full_pipeline_snapshot.md`.  Without that env var the test
-> performs a 1:1 string comparison against the stored file.
->
-> **Live tests:** CI runs `pytest tests/integration/live/` only when `GITHUB_TOKEN` is available
-> (non-fork PRs).  The offline suite in `test_builder_pipeline.py` never requires a token.
 
 ---
 
-## Offline test cases (implemented)
+## Test cases
 
-| ID | Name | Status | One-line intent |
+| ID | Name | Intent | Status |
 |---|---|---|---|
-| T-INT-01 | `test_full_pipeline_snapshot` | ✅ Implemented | Full `main.run()` pipeline produces a 1:1 golden snapshot |
-| T-INT-02 | `test_warnings_false_suppresses_service_chapters` | ✅ Implemented | `warnings=false` eliminates all service chapter output |
-| T-INT-03 | `test_print_empty_chapters_false_hides_empty_headings` | ✅ Implemented | Empty custom chapter headings are suppressed when flag is off |
-| T-INT-04 | `test_skip_labels_exclude_record_from_all_chapters` | ✅ Implemented | Skip-labeled records are absent from both custom and service chapters |
-| T-INT-05 | `test_chapter_order_field_governs_output_sequence` | ✅ Implemented | `order` field controls ascending rendering sequence |
+| T-INT-01 | `test_full_pipeline_snapshot` | Full `main.run()` pipeline produces a 1:1 golden snapshot | ✅ |
+| T-INT-02 | `test_warnings_false_suppresses_service_chapters` | `warnings=false` eliminates all service chapter output | ✅ |
+| T-INT-03 | `test_print_empty_chapters_false_hides_empty_headings` | Empty custom chapter headings suppressed when flag is off | ✅ |
+| T-INT-04 | `test_skip_labels_exclude_record_from_all_chapters` | Skip-labeled records absent from both custom and service chapters | ✅ |
+| T-INT-05 | `test_chapter_order_field_governs_output_sequence` | `order` field controls ascending rendering sequence | ✅ |
+| T-INT-06 | `test_duplicity_scope_both_shows_icon_in_two_chapters` | Dual-labeled record appears in both chapters with 🔔 icon | ✅ |
+| T-INT-07 | `test_duplicity_scope_none_record_appears_once` | scope=none prevents service-to-service duplication (record eligible for two service chapters appears in only one) | ✅ |
+| T-INT-08 | `test_hidden_chapter_tracked_but_absent_from_output` | Hidden chapter heading and record content are absent from rendered output; visible chapters unaffected | ✅ |
+| T-INT-09 | `test_service_chapter_global_exclude_drops_record` | Record matching `"*"` exclusion rule is absent from all service chapters | ✅ |
+| T-INT-10 | `test_release_notes_extraction_from_issue_and_pr_body` | Release-notes blocks extracted and rendered under the record row | ✅ |
+| T-INT-11 | `test_duplicity_scope_custom_allows_custom_prevents_service` | scope=custom allows custom-chapter dups but prevents service dups | ✅ |
+| T-INT-12 | `test_per_chapter_service_exclude_rule` | Per-chapter exclude rule hides record from that chapter only | ✅ |
+| T-INT-13 | `test_hidden_service_chapters_selective` | Hidden service chapters are omitted while others remain visible | ✅ |
+| T-INT-14 | `test_multi_label_chapter_matches_any_label` | Chapter with `labels: [a, b]` matches records carrying either label | ✅ |
+| T-INT-15 | `test_no_previous_release_includes_all_records` | No previous release → all records included unfiltered | ✅ |
+| T-INT-16 | `test_custom_row_format_issue` | Custom `row-format-issue` template changes the rendered row | ✅ |
+| T-INT-17 | `test_closed_pr_not_merged_routes_to_service_chapter` | Closed-but-not-merged PR lands in correct service chapter | ✅ |
+| T-INT-18 | `test_open_issue_with_pr_routes_to_merged_prs_linked_open` | Open issue with linked PR routes to service chapter | ✅ |
+| T-INT-19 | `test_service_chapter_ordering` | Reordering service chapters changes their position | ✅ |
+| T-INT-20 | `test_coderabbit_release_notes_extraction` | CodeRabbit summary extracted when active and no explicit release notes | ✅ |
+| T-INT-21 | `test_super_chapters_group_chapters_under_headings` | Super-chapters group custom chapters under level-2 headings | ✅ |
+| T-INT-22 | `test_hierarchy_parent_sub_issue_rendering` | Hierarchy parent renders sub-issues indented beneath it | ✅ |
+| T-INT-23 | `test_duplicity_scope_service_allows_service_prevents_custom` | scope=service allows service-chapter dups; custom chapters always duplicate | ✅ |
+| T-INT-24 | `test_custom_row_format_pr` | Custom `row-format-pr` template changes unlinked PR row | ✅ |
+| T-INT-25 | `test_row_format_link_pr_false` | `row-format-link-pr=false` removes "PR:" prefix | ✅ |
+| T-INT-26 | `test_published_at_true_filters_by_published_timestamp` | `published-at=true` shifts filter boundary to published_at | ✅ |
+| T-INT-27 | `test_coderabbit_summary_ignore_groups` | CodeRabbit ignore-groups filters excluded groups from output | ✅ |
+| T-INT-28 | `test_custom_release_notes_title_regex` | Custom `release-notes-title` regex matches non-default heading | ✅ |
+| T-INT-29 | `test_multiple_skip_release_notes_labels` | Multiple comma-separated skip labels all exclude records | ✅ |
 
 ### T-INT-01 golden snapshot covers
 
-The fixture file `fixtures/test_full_pipeline_snapshot.md` captures all of:
+The fixture `fixtures/test_full_pipeline_snapshot.md` captures:
 
-- Custom chapters (Bugfixes, Features, Enhancements) with rows and extracted release notes
-- Duplicity scope `both` — issue with two labels appears in two chapters; second appearance has 🔔 icon
-- Release notes extraction from issue body (`i2`) and from PR body (`pr10`)
-- Skip label — `i4` and `i4`'s PR are silently absent everywhere
-- Issues with no PR (`i5`, `i6`) routing into service chapters only (not in custom chapters)
-- Unlinked merged PR (`pr40`) in "Merged PRs without Issue and User Defined Labels ⚠️"
-- Direct commit (`c1`) in "Direct commits ⚠️"
-- Empty service chapters rendered with placeholder text (`print_empty_chapters=true`)
+- Custom chapters (Bugfixes, Features, Enhancements) with rows
+- Duplicity scope `both` — issue with two labels in two chapters; 🔔 icon on duplicate
+- Release notes extraction from issue body and PR body
+- Skip label — record silently absent everywhere
+- Issues with no PR routing into service chapters only
+- Unlinked merged PR in its service chapter
+- Direct commit in its service chapter
+- Empty service chapters with placeholder text (`print_empty_chapters=true`)
 - `#### Full Changelog` footer with compare URL
-
-## Remaining scenarios (not yet implemented)
-
-| ID | Name | One-line intent | Input summary | Expected output |
-|---|---|---|---|---|
-| T-INT-01 | `test_full_pipeline_custom_and_service_chapters` | Builder assembles all sections in correct order | 1 closed issue with `feature` label (→ custom chapter); 1 closed issue with no PR & no label (→ two service chapters); 1 direct commit. `warnings=True`, `print_empty_chapters=True` | Markdown: custom chapter first, then service chapter block, then `#### Full Changelog\n<url>` footer |
-| T-INT-02 | `test_duplicity_scope_both_record_in_two_chapters_with_icon` | A dual-labeled record appears in both matching chapters, annotated with the duplicity icon | 1 issue with labels `["feature", "quality"]`; two chapters one per label; `duplicity_scope=both`, `duplicity_icon=🔔` | Issue row appears in **both** chapters; each row starts with `🔔` |
-| T-INT-03 | `test_duplicity_scope_none_record_appears_once_no_icon` | First-match-wins; record absent from service chapters because already counted | Same dual-labeled issue as T-INT-02; `duplicity_scope=none` | Issue row appears in exactly one chapter; no `🔔`; record absent from service chapter output |
-| T-INT-04 | `test_skip_labels_exclude_record_from_all_chapters` | Skipped record is invisible to both custom and service chapters | 1 normal `feature` issue; 1 `internal`-only issue; 1 issue with both `feature` and `internal`; `skip_release_notes_labels=internal` | Only the pure `feature` issue appears anywhere in the output; the other two are absent from all chapter sections |
-| T-INT-05 | `test_hidden_chapter_tracked_but_absent_from_output` | Hidden chapter withholds rows from markdown but still counts the record | 1 issue labeled `wip`; chapter `{"title": "WIP", "label": "wip", "hidden": true}`; `duplicity_scope=both` | `### WIP` heading absent from output; record IS in `populated_record_numbers_list` so it does NOT re-appear in service chapters |
-| T-INT-06 | `test_catch_open_hierarchy_chapter_intercepts_open_hierarchy_parent` | Open `HierarchyIssueRecord` is routed to the COH chapter, bypassing normal label matching | 1 open `HierarchyIssueRecord` labeled `["epic", "feature"]`; `catch_open_hierarchy` chapter for `epic`; separate `feature` chapter; `hierarchy=True` | The record appears in the COH chapter only; `feature` chapter is empty |
-| T-INT-07 | `test_print_empty_chapters_false_suppresses_empty_headings` | Empty chapters are not rendered when flag is off | 2 chapters; only 1 has a matching record; `print_empty_chapters=False` | Output contains the populated chapter heading; empty chapter heading is absent |
-| T-INT-08 | `test_warnings_false_suppresses_entire_service_chapter_block` | The `warnings` flag completely gates service chapter rendering | 1 unlinked merged PR (would normally hit a service chapter); `warnings=False` | No service chapter headings in output; `#### Full Changelog` footer is still present |
-| T-INT-09 | `test_service_chapter_global_exclude_rule_drops_record` | A record matching the global `"*"` exclusion rule is absent from all service chapters | 1 closed issue with no label (hits "Closed Issues Without User Defined Labels"); global exclude rule `{"*": [["no-notes"]]}`, issue carries label `"no-notes"` | The issue does not appear in any service chapter section |
-| T-INT-10 | `test_custom_chapter_order_field_governs_output_sequence` | Chapters render in `order`-ascending sequence regardless of declaration order | 3 chapters declared C→B→A with `order` values 30, 20, 10 respectively; one record per chapter | Output heading sequence is A (order 10), B (order 20), C (order 30) |
-
----
 
 ## Live test cases (require `GITHUB_TOKEN`)
 
-| ID | Name | One-line intent | Input summary | Expected output |
-|---|---|---|---|---|
-| T-INT-LIVE-01 | `test_bulk_sub_issue_collector_smoke` | `BulkSubIssueCollector` can query the real GitHub API and accumulate parent→sub maps | Token from env; 2 fixed parent issue refs from `AbsaOSS/generate-release-notes`; max 2 scan iterations | Collector completes without error; `parents_sub_issues` attribute is a dict (possibly empty) |
-
----
-
-## Fixtures required in `conftest.py`
-
-| Fixture | Signature | Purpose |
+| ID | Name | Intent |
 |---|---|---|
-| `make_issue_record` | `(mocker) -> Callable[[int, str, list[str], bool, int], IssueRecord]` | Factory: `(number, state, labels, skip, pr_count)` |
-| `make_pr_record` | `(mocker) -> Callable[[int, bool, list[str], bool], PullRequestRecord]` | Factory: `(number, merged, labels, skip)` |
-| `make_commit_record` | `(mocker) -> Callable[[str], CommitRecord]` | Factory: `(sha)` |
-| `patch_env` | `(monkeypatch) -> Callable[[dict], None]` | Set `INPUT_*` env vars + required defaults, then reset `ActionInputs` class state |
-| `build_notes` | `(patch_env, make_issue_record, …) -> Callable[[records, chapters_yaml, …], str]` | Compose records dict → `ReleaseNotesBuilder.build()` → return markdown string |
+| LIVE-01 | `test_bulk_sub_issue_collector_smoke` | `BulkSubIssueCollector` queries the real GitHub API against `AbsaOSS/generate-release-notes` |
+
+> CI runs live tests only when `GITHUB_TOKEN` is available (non-fork PRs).
+> The offline suite never requires a token.
