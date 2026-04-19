@@ -11,4 +11,4 @@ mypy==1.20.1
 mypy-extensions==1.1.0
 types-requests==2.33.0.20260408
 types-PyYAML==6.0.12.20260408
-PyGithub==2.9.0
+PyGithub==2.9.1
