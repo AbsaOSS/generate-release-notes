@@ -16,11 +16,8 @@
 import os
 
 import pytest
-import urllib3
 
-from release_notes_generator.data.utils.bulk_sub_issue_collector import BulkSubIssueCollector, CollectorConfig
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+from release_notes_generator.data.utils.bulk_sub_issue_collector import BulkSubIssueCollector
 
 pytestmark = pytest.mark.skipif(not os.getenv("GITHUB_TOKEN"), reason="GITHUB_TOKEN not set")
 
@@ -29,8 +26,7 @@ def test_bulk_sub_issue_collector_smoke():
     """Collector queries real GitHub API and returns a dict-like state."""
     token = os.getenv("GITHUB_TOKEN")
     assert token is not None
-    cfg = CollectorConfig(verify_tls=False)
-    collector = BulkSubIssueCollector(token, cfg=cfg)
+    collector = BulkSubIssueCollector(token)
     new_parents = ["AbsaOSS/generate-release-notes#1"]
     iterations = 0
     while new_parents and iterations < 2:
