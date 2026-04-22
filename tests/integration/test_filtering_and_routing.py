@@ -76,7 +76,7 @@ def test_skip_labels_exclude_record_from_all_chapters(
         return_value=set(),
     )
 
-    actual = capture_run(patch_env)
+    actual = capture_run(patch_env, {"INPUT_SKIP_RELEASE_NOTES_LABELS": "skip-release-notes"})
 
     assert "Normal" in actual
     assert "Skipped" not in actual
@@ -340,10 +340,16 @@ def test_published_at_true_filters_by_published_timestamp(
     make_repo: Callable[..., Repository],
     make_release: Callable[..., GitRelease],
 ) -> None:
-    """With published-at=true, the filter boundary uses the release published_at timestamp.
+    """Verify that the since-boundary in MinedData filters out records closed before it.
+
+    DataMiner.mine_data is fully patched, so the since value is injected directly
+    into MinedData (since=datetime(2023, 6, 1)) rather than derived from the release.
+    This means INPUT_PUBLISHED_AT does not affect the since-derivation path here;
+    that logic (DataMiner selecting release.published_at vs release.created_at) should
+    be covered by dedicated DataMiner unit tests.
 
     Two issues: one closed between created_at and published_at, one closed after published_at.
-    With published-at=true, the first should be filtered out.
+    With the since boundary at published_at, the first should be filtered out.
     """
     repo = make_repo("org/repo")
     release = make_release("v0.9.0")

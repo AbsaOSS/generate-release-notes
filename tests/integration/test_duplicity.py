@@ -126,7 +126,11 @@ def test_duplicity_scope_none_record_appears_once(
 
     actual = capture_run(
         patch_env,
-        {"INPUT_CHAPTERS": "- {title: 'Features', label: feature}", "INPUT_DUPLICITY_SCOPE": "none", "INPUT_WARNINGS": "true"},
+        {
+            "INPUT_CHAPTERS": "- {title: 'Features', label: feature}",
+            "INPUT_DUPLICITY_SCOPE": "none",
+            "INPUT_WARNINGS": "true",
+        },
     )
 
     occurrences = actual.count("Bare issue")

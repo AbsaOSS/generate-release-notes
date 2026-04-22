@@ -45,7 +45,7 @@ This command will also install a Pylint tool, since it is listed in the project 
 ### Run Pylint
 Run Pylint on all files currently tracked by Git in the project.
 ```shell
-pylint --ignore=tests $(git ls-files '*.py')
+pylint --ignore-paths='^tests/.*' $(git ls-files '*.py')
 ```
 
 To run Pylint on a specific file, follow the pattern `pylint <path_to_file>/<name_of_file>.py`.
@@ -147,7 +147,7 @@ Each test calls `main.run()` directly with `INPUT_*` environment variables. The 
 |---|---|---|
 | Fixture factories | `conftest.py` | `make_issue`, `make_pr`, `make_commit`, `make_repo`, `make_release` — typed mocks with minimal required attributes |
 | `build_mined_data()` | `conftest.py` | Assembles a `MinedData` from fixture objects for injection into the pipeline |
-| `_capture_run()` | `test_builder_pipeline.py` | Sets env vars, calls `main.run()`, parses the GitHub Actions output format back to a plain string |
+| `capture_run()` | `conftest.py` | Sets env vars, calls `main.run()`, parses the GitHub Actions output format back to a plain string |
 | Golden snapshot | `fixtures/test_full_pipeline_snapshot.md` | Byte-for-byte reference output for `T-INT-01` |
 
 ### Run offline tests (no token needed)
@@ -159,7 +159,7 @@ pytest tests/integration/ -v
 ### Regenerate golden snapshot
 
 ```shell
-WRITE_SNAPSHOTS=1 pytest tests/integration/test_builder_pipeline.py::test_full_pipeline_snapshot
+WRITE_SNAPSHOTS=1 pytest tests/integration/test_snapshot.py::test_full_pipeline_snapshot
 ```
 
 ### Live smoke test (requires `GITHUB_TOKEN`)

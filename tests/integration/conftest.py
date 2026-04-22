@@ -63,7 +63,11 @@ _BASE_ENV: dict[str, str] = {
     "INPUT_GITHUB_TOKEN": "fake-token",
     "INPUT_TAG_NAME": "v1.0.0",
     "INPUT_FROM_TAG_NAME": "",
-    "INPUT_CHAPTERS": "- {title: 'Bugfixes \U0001f6e0', label: bug}\n- {title: 'Features \U0001f389', label: feature}\n- {title: 'Enhancements \U0001f4a1', label: enhancement}",
+    "INPUT_CHAPTERS": (
+        "- {title: 'Bugfixes \U0001f6e0', label: bug}\n"
+        "- {title: 'Features \U0001f389', label: feature}\n"
+        "- {title: 'Enhancements \U0001f4a1', label: enhancement}"
+    ),
     "INPUT_DUPLICITY_SCOPE": "both",
     "INPUT_DUPLICITY_ICON": "\U0001f514",
     "INPUT_WARNINGS": "true",

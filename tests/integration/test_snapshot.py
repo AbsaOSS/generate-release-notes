@@ -40,34 +40,27 @@ def _snapshot_path(name: str) -> Path:
 
 
 def _assert_snapshot(actual: str, snapshot_name: str) -> None:
-    """Compare actual to stored snapshot, or write snapshot if WRITE_SNAPSHOTS=1."""
+    """Compare actual to stored snapshot, or write snapshot if WRITE_SNAPSHOTS=1.
+
+    Fails explicitly when the snapshot file is missing in normal runs so that
+    accidental deletions are caught rather than silently re-created.
+    """
     FIXTURES_DIR.mkdir(exist_ok=True)
     path = _snapshot_path(snapshot_name)
-    if os.getenv("WRITE_SNAPSHOTS") == "1" or not path.exists():
+    if os.getenv("WRITE_SNAPSHOTS") == "1":
         path.write_text(actual, encoding="utf-8")
         pytest.skip(f"Snapshot written to {path}. Re-run without WRITE_SNAPSHOTS=1 to compare.")
+    if not path.exists():
+        pytest.fail(
+            f"Snapshot file '{path}' does not exist. "
+            "Run with WRITE_SNAPSHOTS=1 to create it."
+        )
     expected = path.read_text(encoding="utf-8")
     assert actual == expected, (
         f"Snapshot mismatch for '{snapshot_name}'.\n"
         f"Run with WRITE_SNAPSHOTS=1 to update the fixture.\n"
         f"--- expected ---\n{expected}\n--- actual ---\n{actual}"
     )
-
-
-# ---------------------------------------------------------------------------
-# Maximal integration snapshot
-#
-# Exercises in a single run:
-#   - Custom chapters (Bugfixes, Features, Enhancements)
-#   - Duplicity scope=both with icon 🔔 (issue with two labels appears in two chapters)
-#   - Release notes extraction from issue body and from PR body
-#   - Skip labels (record absent from all chapters)
-#   - Issues with no PR (land in service chapters only)
-#   - Unlinked merged PR (lands in service chapter)
-#   - Direct commit (lands in service chapter)
-#   - print_empty_chapters=true (empty service chapters show placeholder)
-#   - Full Changelog footer with compare URL
-# ---------------------------------------------------------------------------
 
 
 def test_full_pipeline_snapshot(
@@ -80,7 +73,19 @@ def test_full_pipeline_snapshot(
     make_repo: Callable[..., Repository],
     make_release: Callable[..., GitRelease],
 ) -> None:
-    """Full pipeline from main.run() produces a 1:1 snapshot of the release notes."""
+    """Full pipeline from main.run() produces a 1:1 snapshot of the release notes.
+
+    Exercises in a single run:
+      - Custom chapters (Bugfixes, Features, Enhancements)
+      - Duplicity scope=both with icon 🔔 (issue with two labels appears in two chapters)
+      - Release notes extraction from issue body and from PR body
+      - Skip labels (record absent from all chapters)
+      - Issues with no PR (land in service chapters only)
+      - Unlinked merged PR (lands in service chapter)
+      - Direct commit (lands in service chapter)
+      - print_empty_chapters=true (empty service chapters show placeholder)
+      - Full Changelog footer with compare URL
+    """
     repo = make_repo("org/repo")
     release = make_release("v0.9.0")
 
