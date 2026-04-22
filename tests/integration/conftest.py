@@ -15,9 +15,13 @@
 #
 """Shared fixtures for offline integration tests."""
 
+import main
+import os
+import tempfile
 import time
 from collections.abc import Callable
 from datetime import datetime
+from pathlib import Path
 
 import pytest
 from pytest_mock import MockerFixture
@@ -238,6 +242,40 @@ def mock_github(mocker: MockerFixture) -> object:
     gh.get_rate_limit.return_value = rate_limit_overview
     gh.requester = mocker.Mock()
     return gh
+
+
+# ---------------------------------------------------------------------------
+# Pipeline run helper (shared across all offline integration test modules)
+# ---------------------------------------------------------------------------
+
+
+def capture_run(patch_env: Callable, overrides: dict | None = None) -> str:
+    """Apply env overrides, run main.run() and return the captured release notes string."""
+    patch_env(overrides)
+    with tempfile.NamedTemporaryFile(mode="r", suffix=".txt", delete=False) as tmp:
+        tmp_path = tmp.name
+    try:
+        os.environ["GITHUB_OUTPUT"] = tmp_path
+        main.run()
+        with open(tmp_path, encoding="utf-8") as f:
+            raw = f.read()
+    finally:
+        os.environ.pop("GITHUB_OUTPUT", None)
+        Path(tmp_path).unlink(missing_ok=True)
+
+    # Parse the GitHub Actions output format: "name<<EOF\nvalue\nEOF\n"
+    lines = raw.splitlines()
+    notes_lines: list[str] = []
+    inside = False
+    for line in lines:
+        if line == "release-notes<<EOF":
+            inside = True
+            continue
+        if line == "EOF" and inside:
+            break
+        if inside:
+            notes_lines.append(line)
+    return "\n".join(notes_lines)
 
 
 # ---------------------------------------------------------------------------

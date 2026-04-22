@@ -45,7 +45,7 @@ This command will also install a Pylint tool, since it is listed in the project 
 ### Run Pylint
 Run Pylint on all files currently tracked by Git in the project.
 ```shell
-pylint $(git ls-files '*.py')
+pylint --ignore=tests $(git ls-files '*.py')
 ```
 
 To run Pylint on a specific file, follow the pattern `pylint <path_to_file>/<name_of_file>.py`.
