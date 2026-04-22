@@ -139,8 +139,8 @@ jobs:
         run: |
           mypy .
 
-  snapshot-tests:
-    name: Snapshot Tests (Mocked)
+  offline-integration-tests:
+    name: Offline Integration Tests
     runs-on: ubuntu-latest
 
     defaults:
@@ -165,11 +165,11 @@ jobs:
       - name: Set PYTHONPATH environment variable
         run: echo "PYTHONPATH=${GITHUB_WORKSPACE}" >> $GITHUB_ENV
 
-      - name: Run all integration tests
-        run: pytest -v tests/integration/
+      - name: Run offline integration tests
+        run: pytest -v tests/integration/ --ignore=tests/integration/live
 
   integration-test-real-api:
-    name: Integration Test (Real GitHub API)
+    name: Live Integration Tests
     runs-on: ubuntu-latest
     # Only run on PRs from same repo (not forks)
     if: github.event.pull_request.head.repo.full_name == github.repository
@@ -179,12 +179,12 @@ jobs:
         shell: bash
 
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           fetch-depth: 0
           persist-credentials: false
 
-      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v5
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
         with:
           python-version: '3.14'
           cache: 'pip'
@@ -196,7 +196,12 @@ jobs:
       - name: Set PYTHONPATH environment variable
         run: echo "PYTHONPATH=${GITHUB_WORKSPACE}" >> $GITHUB_ENV
 
-      - name: Run action against real repository and validate output
+      - name: Run live pytest tests (BulkSubIssueCollector smoke)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pytest -v tests/integration/live/
+
+      - name: Validate full pipeline against real repository
         env:
           INPUT_TAG_NAME: 'v0.2.0'
           INPUT_GITHUB_REPOSITORY: 'AbsaOSS/generate-release-notes'

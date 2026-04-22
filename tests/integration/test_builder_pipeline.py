@@ -98,7 +98,7 @@ def _assert_snapshot(actual: str, snapshot_name: str) -> None:
 
 
 # ---------------------------------------------------------------------------
-# T-INT-01 — Maximal integration snapshot
+# Maximal integration snapshot
 #
 # Exercises in a single run:
 #   - Custom chapters (Bugfixes, Features, Enhancements)
@@ -123,7 +123,7 @@ def test_full_pipeline_snapshot(
     make_repo: Callable[..., Repository],
     make_release: Callable[..., GitRelease],
 ) -> None:
-    """T-INT-01: Full pipeline from main.run() produces a 1:1 snapshot of the release notes."""
+    """Full pipeline from main.run() produces a 1:1 snapshot of the release notes."""
     repo = make_repo("org/repo")
     release = make_release("v0.9.0")
 
@@ -165,7 +165,7 @@ def test_full_pipeline_snapshot(
 
 
 # ---------------------------------------------------------------------------
-# T-INT-02 — warnings=False suppresses entire service chapter block
+# warnings=False suppresses entire service chapter block
 # ---------------------------------------------------------------------------
 
 
@@ -179,7 +179,7 @@ def test_warnings_false_suppresses_service_chapters(
     make_release: Callable[..., GitRelease],
     make_commit: Callable[..., Commit],
 ) -> None:
-    """T-INT-02: With warnings=false no service chapter heading appears in the output."""
+    """With warnings=false no service chapter heading appears in the output."""
     repo = make_repo("org/repo")
     release = make_release("v0.9.0")
 
@@ -212,7 +212,7 @@ def test_warnings_false_suppresses_service_chapters(
 
 
 # ---------------------------------------------------------------------------
-# T-INT-03 — print_empty_chapters=False suppresses empty custom chapter headings
+# print_empty_chapters=False suppresses empty custom chapter headings
 # ---------------------------------------------------------------------------
 
 
@@ -225,7 +225,7 @@ def test_print_empty_chapters_false_hides_empty_headings(
     make_repo: Callable[..., Repository],
     make_release: Callable[..., GitRelease],
 ) -> None:
-    """T-INT-03: An unmatched chapter heading is absent when print_empty_chapters=false."""
+    """An unmatched chapter heading is absent when print_empty_chapters=false."""
     repo = make_repo("org/repo")
     release = make_release("v0.9.0")
 
@@ -256,7 +256,7 @@ def test_print_empty_chapters_false_hides_empty_headings(
 
 
 # ---------------------------------------------------------------------------
-# T-INT-04 — skip labels exclude record from all chapters
+# skip labels exclude record from all chapters
 # ---------------------------------------------------------------------------
 
 
@@ -269,7 +269,7 @@ def test_skip_labels_exclude_record_from_all_chapters(
     make_repo: Callable[..., Repository],
     make_release: Callable[..., GitRelease],
 ) -> None:
-    """T-INT-04: Records with skip labels are absent from both custom and service chapters."""
+    """Records with skip labels are absent from both custom and service chapters."""
     repo = make_repo("org/repo")
     release = make_release("v0.9.0")
 
@@ -304,7 +304,7 @@ def test_skip_labels_exclude_record_from_all_chapters(
 
 
 # ---------------------------------------------------------------------------
-# T-INT-05 — chapter order field governs output sequence
+# chapter order field governs output sequence
 # ---------------------------------------------------------------------------
 
 
@@ -317,7 +317,7 @@ def test_chapter_order_field_governs_output_sequence(
     make_repo: Callable[..., Repository],
     make_release: Callable[..., GitRelease],
 ) -> None:
-    """T-INT-05: Chapters with explicit order render in ascending order regardless of declaration order."""
+    """Chapters with explicit order render in ascending order regardless of declaration order."""
     repo = make_repo("org/repo")
     release = make_release("v0.9.0")
 
@@ -358,7 +358,7 @@ def test_chapter_order_field_governs_output_sequence(
 
 
 # ---------------------------------------------------------------------------
-# T-INT-06 — duplicity_scope=both shows icon in two chapters
+# duplicity_scope=both shows icon in two chapters
 # ---------------------------------------------------------------------------
 
 
@@ -371,7 +371,7 @@ def test_duplicity_scope_both_shows_icon_in_two_chapters(
     make_repo: Callable[..., Repository],
     make_release: Callable[..., GitRelease],
 ) -> None:
-    """T-INT-06: A dual-labeled record appears in both matching chapters with the duplicity icon."""
+    """A dual-labeled record appears in both matching chapters with the duplicity icon."""
     repo = make_repo("org/repo")
     release = make_release("v0.9.0")
 
@@ -413,7 +413,7 @@ def test_duplicity_scope_both_shows_icon_in_two_chapters(
 
 
 # ---------------------------------------------------------------------------
-# T-INT-07 — duplicity_scope=none → record appears once, no icon
+# duplicity_scope=none → record appears once, no icon
 # ---------------------------------------------------------------------------
 
 
@@ -425,7 +425,7 @@ def test_duplicity_scope_none_record_appears_once(
     make_repo: Callable[..., Repository],
     make_release: Callable[..., GitRelease],
 ) -> None:
-    """T-INT-07: With scope=none, a record eligible for two service chapters appears in only the first."""
+    """With scope=none, a record eligible for two service chapters appears in only the first."""
     repo = make_repo("org/repo")
     release = make_release("v0.9.0")
 
@@ -459,7 +459,7 @@ def test_duplicity_scope_none_record_appears_once(
 
 
 # ---------------------------------------------------------------------------
-# T-INT-08 — hidden chapter tracked but absent from output
+# hidden chapter tracked but absent from output
 # ---------------------------------------------------------------------------
 
 
@@ -472,7 +472,7 @@ def test_hidden_chapter_tracked_but_absent_from_output(
     make_repo: Callable[..., Repository],
     make_release: Callable[..., GitRelease],
 ) -> None:
-    """T-INT-08: Hidden chapter heading and record content are absent from rendered output.
+    """Hidden chapter heading and record content are absent from rendered output.
 
     A record routed to a hidden chapter does not appear in the output markdown.
     The hidden chapter's label is also included in user_defined_labels, so the record
@@ -528,7 +528,7 @@ def test_hidden_chapter_tracked_but_absent_from_output(
 
 
 # ---------------------------------------------------------------------------
-# T-INT-09 — service chapter global exclude drops record
+# service chapter global exclude drops record
 # ---------------------------------------------------------------------------
 
 
@@ -541,7 +541,7 @@ def test_service_chapter_global_exclude_drops_record(
     make_repo: Callable[..., Repository],
     make_release: Callable[..., GitRelease],
 ) -> None:
-    """T-INT-09: Record matching a global '*' exclusion rule is absent from all service chapters."""
+    """Record matching a global '*' exclusion rule is absent from all service chapters."""
     repo = make_repo("org/repo")
     release = make_release("v0.9.0")
 
@@ -581,7 +581,7 @@ def test_service_chapter_global_exclude_drops_record(
 
 
 # ---------------------------------------------------------------------------
-# T-INT-10 — release notes extraction from issue and PR body
+# release notes extraction from issue and PR body
 # ---------------------------------------------------------------------------
 
 
@@ -594,7 +594,7 @@ def test_release_notes_extraction_from_issue_and_pr_body(
     make_repo: Callable[..., Repository],
     make_release: Callable[..., GitRelease],
 ) -> None:
-    """T-INT-10: Release notes blocks from issue and PR bodies are indented under the record row."""
+    """Release notes blocks from issue and PR bodies are indented under the record row."""
     repo = make_repo("org/repo")
     release = make_release("v0.9.0")
 
@@ -644,7 +644,7 @@ def test_release_notes_extraction_from_issue_and_pr_body(
 
 
 # ---------------------------------------------------------------------------
-# T-INT-11 — duplicity_scope=custom allows custom dups, prevents service dups
+# duplicity_scope=custom allows custom dups, prevents service dups
 # ---------------------------------------------------------------------------
 
 
@@ -657,7 +657,7 @@ def test_duplicity_scope_custom_allows_custom_prevents_service(
     make_repo: Callable[..., Repository],
     make_release: Callable[..., GitRelease],
 ) -> None:
-    """T-INT-11: scope=custom allows duplicate rows in custom chapters but not in service chapters."""
+    """scope=custom allows duplicate rows in custom chapters but not in service chapters."""
     repo = make_repo("org/repo")
     release = make_release("v0.9.0")
 
@@ -699,7 +699,7 @@ def test_duplicity_scope_custom_allows_custom_prevents_service(
 
 
 # ---------------------------------------------------------------------------
-# T-INT-12 — per-chapter service exclude rule
+# per-chapter service exclude rule
 # ---------------------------------------------------------------------------
 
 
@@ -711,7 +711,7 @@ def test_per_chapter_service_exclude_rule(
     make_repo: Callable[..., Repository],
     make_release: Callable[..., GitRelease],
 ) -> None:
-    """T-INT-12: Per-chapter exclude rule hides record from that chapter only."""
+    """Per-chapter exclude rule hides record from that chapter only."""
     repo = make_repo("org/repo")
     release = make_release("v0.9.0")
 
@@ -757,7 +757,7 @@ def test_per_chapter_service_exclude_rule(
 
 
 # ---------------------------------------------------------------------------
-# T-INT-13 — hidden service chapters
+# hidden service chapters
 # ---------------------------------------------------------------------------
 
 
@@ -771,7 +771,7 @@ def test_hidden_service_chapters_selective(
     make_repo: Callable[..., Repository],
     make_release: Callable[..., GitRelease],
 ) -> None:
-    """T-INT-13: Hidden service chapters are omitted while other service chapters remain visible."""
+    """Hidden service chapters are omitted while other service chapters remain visible."""
     repo = make_repo("org/repo")
     release = make_release("v0.9.0")
 
@@ -808,7 +808,7 @@ def test_hidden_service_chapters_selective(
 
 
 # ---------------------------------------------------------------------------
-# T-INT-14 — multi-label chapter (labels array)
+# multi-label chapter (labels array)
 # ---------------------------------------------------------------------------
 
 
@@ -821,7 +821,7 @@ def test_multi_label_chapter_matches_any_label(
     make_repo: Callable[..., Repository],
     make_release: Callable[..., GitRelease],
 ) -> None:
-    """T-INT-14: A chapter with labels: [a, b] matches records carrying either label."""
+    """A chapter with labels: [a, b] matches records carrying either label."""
     repo = make_repo("org/repo")
     release = make_release("v0.9.0")
 
@@ -860,7 +860,7 @@ def test_multi_label_chapter_matches_any_label(
 
 
 # ---------------------------------------------------------------------------
-# T-INT-15 — no previous release (all records pass through)
+# no previous release (all records pass through)
 # ---------------------------------------------------------------------------
 
 
@@ -873,7 +873,7 @@ def test_no_previous_release_includes_all_records(
     make_commit: Callable[..., Commit],
     make_repo: Callable[..., Repository],
 ) -> None:
-    """T-INT-15: When there is no previous release, all records are included unfiltered."""
+    """When there is no previous release, all records are included unfiltered."""
     repo = make_repo("org/repo")
 
     i1 = make_issue(1, "closed", ["bug"], title="Old bug", user_login="dev1")
@@ -902,7 +902,7 @@ def test_no_previous_release_includes_all_records(
 
 
 # ---------------------------------------------------------------------------
-# T-INT-16 — custom row format for issues
+# custom row format for issues
 # ---------------------------------------------------------------------------
 
 
@@ -915,7 +915,7 @@ def test_custom_row_format_issue(
     make_repo: Callable[..., Repository],
     make_release: Callable[..., GitRelease],
 ) -> None:
-    """T-INT-16: Custom row-format-issue template changes the rendered row format."""
+    """Custom row-format-issue template changes the rendered row format."""
     repo = make_repo("org/repo")
     release = make_release("v0.9.0")
 
@@ -950,7 +950,7 @@ def test_custom_row_format_issue(
 
 
 # ---------------------------------------------------------------------------
-# T-INT-17 — closed-but-not-merged PR routes to correct service chapter
+# closed-but-not-merged PR routes to correct service chapter
 # ---------------------------------------------------------------------------
 
 
@@ -963,7 +963,7 @@ def test_closed_pr_not_merged_routes_to_service_chapter(
     make_repo: Callable[..., Repository],
     make_release: Callable[..., GitRelease],
 ) -> None:
-    """T-INT-17: A closed-but-not-merged PR lands in 'Closed PRs without Issue and User Defined Labels'."""
+    """A closed-but-not-merged PR lands in 'Closed PRs without Issue and User Defined Labels'."""
     repo = make_repo("org/repo")
     release = make_release("v0.9.0")
 
@@ -994,7 +994,7 @@ def test_closed_pr_not_merged_routes_to_service_chapter(
 
 
 # ---------------------------------------------------------------------------
-# T-INT-18 — open issue with linked PR routes to service chapter
+# open issue with linked PR routes to service chapter
 # ---------------------------------------------------------------------------
 
 
@@ -1007,7 +1007,7 @@ def test_open_issue_with_pr_routes_to_merged_prs_linked_open(
     make_repo: Callable[..., Repository],
     make_release: Callable[..., GitRelease],
 ) -> None:
-    """T-INT-18: An open issue with a linked PR appears in 'Merged PRs Linked to Not Closed Issue'."""
+    """An open issue with a linked PR appears in 'Merged PRs Linked to Not Closed Issue'."""
     repo = make_repo("org/repo")
     release = make_release("v0.9.0")
 
@@ -1040,7 +1040,7 @@ def test_open_issue_with_pr_routes_to_merged_prs_linked_open(
 
 
 # ---------------------------------------------------------------------------
-# T-INT-19 — service chapter ordering
+# service chapter ordering
 # ---------------------------------------------------------------------------
 
 
@@ -1053,7 +1053,7 @@ def test_service_chapter_ordering(
     make_repo: Callable[..., Repository],
     make_release: Callable[..., GitRelease],
 ) -> None:
-    """T-INT-19: Reordering service chapters changes their position in the output."""
+    """Reordering service chapters changes their position in the output."""
     repo = make_repo("org/repo")
     release = make_release("v0.9.0")
 
@@ -1096,7 +1096,7 @@ def test_service_chapter_ordering(
 
 
 # ---------------------------------------------------------------------------
-# T-INT-20 — CodeRabbit release notes extraction
+# CodeRabbit release notes extraction
 # ---------------------------------------------------------------------------
 
 
@@ -1109,7 +1109,7 @@ def test_coderabbit_release_notes_extraction(
     make_repo: Callable[..., Repository],
     make_release: Callable[..., GitRelease],
 ) -> None:
-    """T-INT-20: CodeRabbit summary is extracted when coderabbit-support-active=true and no explicit release notes."""
+    """CodeRabbit summary is extracted when coderabbit-support-active=true and no explicit release notes."""
     repo = make_repo("org/repo")
     release = make_release("v0.9.0")
 
@@ -1152,7 +1152,7 @@ def test_coderabbit_release_notes_extraction(
 
 
 # ---------------------------------------------------------------------------
-# T-INT-21 — super-chapters group custom chapters under headings
+# super-chapters group custom chapters under headings
 # ---------------------------------------------------------------------------
 
 
@@ -1165,7 +1165,7 @@ def test_super_chapters_group_chapters_under_headings(
     make_repo: Callable[..., Repository],
     make_release: Callable[..., GitRelease],
 ) -> None:
-    """T-INT-21: Super-chapters wrap matching custom chapters under level-2 headings."""
+    """Super-chapters wrap matching custom chapters under level-2 headings."""
     repo = make_repo("org/repo")
     release = make_release("v0.9.0")
 
@@ -1227,7 +1227,7 @@ def test_super_chapters_group_chapters_under_headings(
 
 
 # ---------------------------------------------------------------------------
-# T-INT-22 — hierarchy parent/sub-issue rendering
+# hierarchy parent/sub-issue rendering
 # ---------------------------------------------------------------------------
 
 
@@ -1240,7 +1240,7 @@ def test_hierarchy_parent_sub_issue_rendering(
     make_repo: Callable[..., Repository],
     make_release: Callable[..., GitRelease],
 ) -> None:
-    """T-INT-22: With hierarchy=true, parent issues render sub-issues indented beneath them."""
+    """With hierarchy=true, parent issues render sub-issues indented beneath them."""
     repo = make_repo("org/repo")
     release = make_release("v0.9.0")
 
@@ -1298,7 +1298,7 @@ def test_hierarchy_parent_sub_issue_rendering(
 
 
 # ---------------------------------------------------------------------------
-# T-INT-23 — duplicity_scope=service allows service dups, prevents custom
+# duplicity_scope=service allows service dups, prevents custom
 # ---------------------------------------------------------------------------
 
 
@@ -1311,7 +1311,7 @@ def test_duplicity_scope_service_allows_service_prevents_custom(
     make_repo: Callable[..., Repository],
     make_release: Callable[..., GitRelease],
 ) -> None:
-    """T-INT-23: scope=service allows duplicate rows in service chapters but prevents service-only dedup.
+    """scope=service allows duplicate rows in service chapters but prevents service-only dedup.
 
     Custom chapters always show records in all matching chapters regardless of scope.
     scope=service allows service chapter duplicates (same as both for service),
@@ -1358,7 +1358,7 @@ def test_duplicity_scope_service_allows_service_prevents_custom(
 
 
 # ---------------------------------------------------------------------------
-# T-INT-24 — custom row format for PRs
+# custom row format for PRs
 # ---------------------------------------------------------------------------
 
 
@@ -1370,7 +1370,7 @@ def test_custom_row_format_pr(
     make_repo: Callable[..., Repository],
     make_release: Callable[..., GitRelease],
 ) -> None:
-    """T-INT-24: Custom row-format-pr template changes the rendered row for unlinked PRs."""
+    """Custom row-format-pr template changes the rendered row for unlinked PRs."""
     repo = make_repo("org/repo")
     release = make_release("v0.9.0")
 
@@ -1404,7 +1404,7 @@ def test_custom_row_format_pr(
 
 
 # ---------------------------------------------------------------------------
-# T-INT-25 — row-format-link-pr=false suppresses PR prefix
+# row-format-link-pr=false suppresses PR prefix
 # ---------------------------------------------------------------------------
 
 
@@ -1416,7 +1416,7 @@ def test_row_format_link_pr_false(
     make_repo: Callable[..., Repository],
     make_release: Callable[..., GitRelease],
 ) -> None:
-    """T-INT-25: row-format-link-pr=false removes the 'PR:' prefix from unlinked PR rows."""
+    """row-format-link-pr=false removes the 'PR:' prefix from unlinked PR rows."""
     repo = make_repo("org/repo")
     release = make_release("v0.9.0")
 
@@ -1447,7 +1447,7 @@ def test_row_format_link_pr_false(
 
 
 # ---------------------------------------------------------------------------
-# T-INT-26 — published-at=true affects time-based filtering boundary
+# published-at=true affects time-based filtering boundary
 # ---------------------------------------------------------------------------
 
 
@@ -1460,7 +1460,7 @@ def test_published_at_true_filters_by_published_timestamp(
     make_repo: Callable[..., Repository],
     make_release: Callable[..., GitRelease],
 ) -> None:
-    """T-INT-26: With published-at=true, the filter boundary uses the release published_at timestamp.
+    """With published-at=true, the filter boundary uses the release published_at timestamp.
 
     Two issues: one closed between created_at and published_at, one closed after published_at.
     With published-at=true, the first should be filtered out.
@@ -1512,7 +1512,7 @@ def test_published_at_true_filters_by_published_timestamp(
 
 
 # ---------------------------------------------------------------------------
-# T-INT-27 — coderabbit-summary-ignore-groups filters CR groups
+# coderabbit-summary-ignore-groups filters CR groups
 # ---------------------------------------------------------------------------
 
 
@@ -1525,7 +1525,7 @@ def test_coderabbit_summary_ignore_groups(
     make_repo: Callable[..., Repository],
     make_release: Callable[..., GitRelease],
 ) -> None:
-    """T-INT-27: CodeRabbit summary groups listed in ignore-groups are excluded from output."""
+    """CodeRabbit summary groups listed in ignore-groups are excluded from output."""
     repo = make_repo("org/repo")
     release = make_release("v0.9.0")
 
@@ -1576,7 +1576,7 @@ def test_coderabbit_summary_ignore_groups(
 
 
 # ---------------------------------------------------------------------------
-# T-INT-28 — custom release-notes-title regex
+# custom release-notes-title regex
 # ---------------------------------------------------------------------------
 
 
@@ -1589,7 +1589,7 @@ def test_custom_release_notes_title_regex(
     make_repo: Callable[..., Repository],
     make_release: Callable[..., GitRelease],
 ) -> None:
-    """T-INT-28: Custom release-notes-title regex matches a non-default section heading."""
+    """Custom release-notes-title regex matches a non-default section heading."""
     repo = make_repo("org/repo")
     release = make_release("v0.9.0")
 
@@ -1629,7 +1629,7 @@ def test_custom_release_notes_title_regex(
 
 
 # ---------------------------------------------------------------------------
-# T-INT-29 — multiple custom skip-release-notes-labels
+# multiple custom skip-release-notes-labels
 # ---------------------------------------------------------------------------
 
 
@@ -1642,7 +1642,7 @@ def test_multiple_skip_release_notes_labels(
     make_repo: Callable[..., Repository],
     make_release: Callable[..., GitRelease],
 ) -> None:
-    """T-INT-29: Multiple skip labels all cause records to be excluded from all chapters."""
+    """Multiple skip labels all cause records to be excluded from all chapters."""
     repo = make_repo("org/repo")
     release = make_release("v0.9.0")
 
