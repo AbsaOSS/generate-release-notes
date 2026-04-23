@@ -314,7 +314,7 @@ def test_open_issue_with_pr_routes_to_merged_prs_linked_open(
     mocker.patch.object(DataMiner, "mine_data", return_value=data)
     mocker.patch(
         "release_notes_generator.record.factory.default_record_factory.get_issues_for_pr",
-        return_value=set(),
+        return_value={"org/repo#1"},
     )
 
     actual = capture_run(

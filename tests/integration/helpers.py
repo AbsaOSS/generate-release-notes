@@ -36,24 +36,6 @@ from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.mined_data import MinedData
 
 
-def reset_action_inputs_caches() -> None:
-    """Reset all class-level caches on ActionInputs to their initial state.
-
-    Call this from an autouse fixture so every test starts from a clean slate.
-    Centralised here so that knowledge of ActionInputs internals is confined
-    to one place in the test tree rather than spread across fixtures.
-    """
-    # pylint: disable=protected-access
-    ActionInputs._row_format_hierarchy_issue = None  # type: ignore[attr-defined]
-    ActionInputs._row_format_issue = None  # type: ignore[attr-defined]
-    ActionInputs._row_format_pr = None  # type: ignore[attr-defined]
-    ActionInputs._row_format_link_pr = None  # type: ignore[attr-defined]
-    ActionInputs._owner = ""  # type: ignore[attr-defined]
-    ActionInputs._repo_name = ""  # type: ignore[attr-defined]
-    ActionInputs._super_chapters_raw = None  # type: ignore[attr-defined]
-    ActionInputs._super_chapters_cache = None  # type: ignore[attr-defined]
-
-
 def capture_run(patch_env: Callable, overrides: dict[str, str] | None = None) -> str:
     """Apply env overrides, run main.run() and return the captured release notes string.
 

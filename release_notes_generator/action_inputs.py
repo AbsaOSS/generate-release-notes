@@ -87,6 +87,23 @@ class ActionInputs:
     _super_chapters_cache: list[dict[str, Any]] | None = None
 
     @staticmethod
+    def reset_caches() -> None:
+        """Reset all class-level caches to their initial state.
+
+        Clears all cached parsed inputs so they are re-read from environment
+        variables on next access. Useful in tests and anywhere the environment
+        is reconfigured between calls.
+        """
+        ActionInputs._row_format_hierarchy_issue = None
+        ActionInputs._row_format_issue = None
+        ActionInputs._row_format_pr = None
+        ActionInputs._row_format_link_pr = None
+        ActionInputs._owner = ""
+        ActionInputs._repo_name = ""
+        ActionInputs._super_chapters_raw = None
+        ActionInputs._super_chapters_cache = None
+
+    @staticmethod
     def get_github_owner() -> str:
         """
         Get the GitHub owner from the action inputs.

@@ -79,7 +79,9 @@ def test_release_notes_extraction_from_issue_and_pr_body(
     mocker.patch.object(DataMiner, "mine_data", return_value=data)
     mocker.patch(
         "release_notes_generator.record.factory.default_record_factory.get_issues_for_pr",
-        return_value=set(),
+        side_effect=lambda pull_number, requester: (
+            {"org/repo#1"} if pull_number == 10 else {"org/repo#2"}
+        ),
     )
 
     actual = capture_run(patch_env, {"INPUT_WARNINGS": "false"})
@@ -189,7 +191,7 @@ def test_coderabbit_release_notes_extraction(
     mocker.patch.object(DataMiner, "mine_data", return_value=data)
     mocker.patch(
         "release_notes_generator.record.factory.default_record_factory.get_issues_for_pr",
-        return_value=set(),
+        return_value={"org/repo#1"},
     )
 
     actual = capture_run(

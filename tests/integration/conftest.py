@@ -30,7 +30,6 @@ from github.PullRequest import PullRequest
 from github.Repository import Repository
 
 from release_notes_generator.action_inputs import ActionInputs
-from tests.integration.helpers import reset_action_inputs_caches
 
 
 # ---------------------------------------------------------------------------
@@ -41,7 +40,7 @@ from tests.integration.helpers import reset_action_inputs_caches
 @pytest.fixture(autouse=True)
 def reset_action_inputs_cache() -> None:
     """Reset class-level caches in ActionInputs so each test starts clean."""
-    reset_action_inputs_caches()
+    ActionInputs.reset_caches()
 
 
 # ---------------------------------------------------------------------------
