@@ -146,14 +146,14 @@ Each test calls `main.run()` directly with `INPUT_*` environment variables. The 
 | Component | Location | Role |
 |---|---|---|
 | Fixture factories | `conftest.py` | `make_issue`, `make_pr`, `make_commit`, `make_repo`, `make_release` — typed mocks with minimal required attributes |
-| `build_mined_data()` | `conftest.py` | Assembles a `MinedData` from fixture objects for injection into the pipeline |
-| `capture_run()` | `conftest.py` | Sets env vars, calls `main.run()`, parses the GitHub Actions output format back to a plain string |
+| `build_mined_data()` | `helpers.py` | Assembles a `MinedData` from fixture objects for injection into the pipeline |
+| `capture_run()` | `helpers.py` | Sets env vars, calls `main.run()`, parses the GitHub Actions output format back to a plain string |
 | Golden snapshot | `fixtures/test_full_pipeline_snapshot.md` | Byte-for-byte reference output for `T-INT-01` |
 
 ### Run offline tests (no token needed)
 
 ```shell
-pytest tests/integration/ -v
+pytest tests/integration/ --ignore=tests/integration/live -v
 ```
 
 ### Regenerate golden snapshot
