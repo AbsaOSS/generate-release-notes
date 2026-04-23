@@ -42,16 +42,9 @@ from release_notes_generator.model.mined_data import MinedData
 
 
 @pytest.fixture(autouse=True)
-def reset_action_inputs_cache(monkeypatch: pytest.MonkeyPatch) -> None:  # type: ignore[return]
+def reset_action_inputs_cache() -> None:  # type: ignore[return]
     """Reset class-level caches in ActionInputs so each test starts clean."""
-    monkeypatch.setattr(ActionInputs, "_row_format_issue", None)
-    monkeypatch.setattr(ActionInputs, "_row_format_pr", None)
-    monkeypatch.setattr(ActionInputs, "_row_format_hierarchy_issue", None)
-    monkeypatch.setattr(ActionInputs, "_row_format_link_pr", None)
-    monkeypatch.setattr(ActionInputs, "_owner", "")
-    monkeypatch.setattr(ActionInputs, "_repo_name", "")
-    monkeypatch.setattr(ActionInputs, "_super_chapters_raw", None)
-    monkeypatch.setattr(ActionInputs, "_super_chapters_cache", None)
+    ActionInputs.reset_caches_for_testing()
 
 
 # ---------------------------------------------------------------------------
@@ -261,13 +254,17 @@ def capture_run(patch_env: Callable, overrides: dict | None = None) -> str:
     patch_env(overrides)
     with tempfile.NamedTemporaryFile(mode="r", suffix=".txt", delete=False) as tmp:
         tmp_path = tmp.name
+    previous_github_output = os.environ.get("GITHUB_OUTPUT")
     try:
         os.environ["GITHUB_OUTPUT"] = tmp_path
         main.run()
         with open(tmp_path, encoding="utf-8") as f:
             raw = f.read()
     finally:
-        os.environ.pop("GITHUB_OUTPUT", None)
+        if previous_github_output is None:
+            os.environ.pop("GITHUB_OUTPUT", None)
+        else:
+            os.environ["GITHUB_OUTPUT"] = previous_github_output
         Path(tmp_path).unlink(missing_ok=True)
 
     # Parse the GitHub Actions output format: "name<<EOF\nvalue\nEOF\n"

@@ -327,11 +327,11 @@ def test_open_issue_with_pr_routes_to_merged_prs_linked_open(
 
 
 # ---------------------------------------------------------------------------
-# published-at=true affects time-based filtering boundary
+# since boundary filters records closed before it
 # ---------------------------------------------------------------------------
 
 
-def test_published_at_true_filters_by_published_timestamp(
+def test_since_boundary_filters_records_closed_before_it(
     mocker: MockerFixture,
     patch_env: Callable,
     mock_github: object,
