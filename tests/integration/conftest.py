@@ -42,7 +42,7 @@ from release_notes_generator.model.mined_data import MinedData
 
 
 @pytest.fixture(autouse=True)
-def reset_action_inputs_cache() -> None:  # type: ignore[return]
+def reset_action_inputs_cache() -> None:
     """Reset class-level caches in ActionInputs so each test starts clean."""
     ActionInputs.reset_caches_for_testing()
 
@@ -78,7 +78,7 @@ _BASE_ENV: dict[str, str] = {
 
 
 @pytest.fixture
-def patch_env(monkeypatch: pytest.MonkeyPatch) -> Callable[[dict[str, str]], None]:
+def patch_env(monkeypatch: pytest.MonkeyPatch) -> Callable[[dict[str, str] | None], None]:
     """Return a callable that sets INPUT_* env vars, merging with base defaults."""
 
     def _apply(overrides: dict[str, str] | None = None) -> None:
@@ -249,7 +249,7 @@ def mock_github(mocker: MockerFixture) -> object:
 # ---------------------------------------------------------------------------
 
 
-def capture_run(patch_env: Callable, overrides: dict | None = None) -> str:
+def capture_run(patch_env: Callable, overrides: dict[str, str] | None = None) -> str:
     """Apply env overrides, run main.run() and return the captured release notes string."""
     patch_env(overrides)
     with tempfile.NamedTemporaryFile(mode="r", suffix=".txt", delete=False) as tmp:
