@@ -89,6 +89,9 @@ def patch_env(monkeypatch: pytest.MonkeyPatch) -> Callable[[dict[str, str]], Non
     """Return a callable that sets INPUT_* env vars, merging with base defaults."""
 
     def _apply(overrides: dict[str, str] | None = None) -> None:
+        for key in list(os.environ):
+            if key.startswith("INPUT_"):
+                monkeypatch.delenv(key, raising=False)
         env = {**_BASE_ENV, **(overrides or {})}
         for key, value in env.items():
             monkeypatch.setenv(key, value)
