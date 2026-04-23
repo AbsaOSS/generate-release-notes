@@ -87,18 +87,6 @@ class ActionInputs:
     _super_chapters_cache: list[dict[str, Any]] | None = None
 
     @staticmethod
-    def reset_caches_for_testing() -> None:
-        """Reset all class-level caches to their initial state."""
-        ActionInputs._row_format_hierarchy_issue = None
-        ActionInputs._row_format_issue = None
-        ActionInputs._row_format_pr = None
-        ActionInputs._row_format_link_pr = None
-        ActionInputs._owner = ""
-        ActionInputs._repo_name = ""
-        ActionInputs._super_chapters_raw = None
-        ActionInputs._super_chapters_cache = None
-
-    @staticmethod
     def get_github_owner() -> str:
         """
         Get the GitHub owner from the action inputs.

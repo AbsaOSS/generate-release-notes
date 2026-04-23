@@ -137,6 +137,9 @@ This will execute all tests located in the tests/unit directory.
 
 The integration suite exercises the full pipeline from `main.run()` to final markdown output without reaching the GitHub API.
 
+**Offline tests** (under `tests/integration/`) replace the GitHub API layer with mocks and run in CI on every PR — no token required, fully deterministic.
+**Live tests** (under `tests/integration/live/`) call the real GitHub API against the `AbsaOSS/generate-release-notes` repository. Run these manually to verify network-dependent behaviour such as `BulkSubIssueCollector`, or to confirm that API changes have not broken the integration. They are skipped in CI on fork PRs where the token is unavailable.
+
 ### Design concept
 
 Each test calls `main.run()` directly with `INPUT_*` environment variables. The GitHub API layer is replaced by mocks; `DataMiner.mine_data()` is patched to return a hand-crafted `MinedData`. All other pipeline components — `FilterByRelease`, `DefaultRecordFactory`, `ReleaseNotesBuilder`, `CustomChapters`, and `ServiceChapters` — execute as real code.
@@ -152,11 +155,15 @@ Each test calls `main.run()` directly with `INPUT_*` environment variables. The 
 
 ### Run offline tests (no token needed)
 
+Runs all integration tests except the live suite; safe to run locally and in CI.
+
 ```shell
 pytest tests/integration/ --ignore=tests/integration/live -v
 ```
 
 ### Regenerate golden snapshot
+
+Re-runs the full-pipeline snapshot test and overwrites `fixtures/test_full_pipeline_snapshot.md` with the current output. Use this after intentional output changes to update the baseline.
 
 ```shell
 WRITE_SNAPSHOTS=1 pytest tests/integration/test_snapshot.py::test_full_pipeline_snapshot
@@ -164,11 +171,11 @@ WRITE_SNAPSHOTS=1 pytest tests/integration/test_snapshot.py::test_full_pipeline_
 
 ### Live smoke test (requires `GITHUB_TOKEN`)
 
+Queries the real GitHub API against `AbsaOSS/generate-release-notes` to verify `BulkSubIssueCollector`. Skipped in CI on fork PRs.
+
 ```shell
 pytest tests/integration/live/ -v
 ```
-
-Queries the real GitHub API against `AbsaOSS/generate-release-notes` to verify `BulkSubIssueCollector`. Skipped in CI on fork PRs.
 
 ## Code Coverage
 

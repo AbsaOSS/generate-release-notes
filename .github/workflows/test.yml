@@ -48,7 +48,7 @@ jobs:
       - name: Analyze code with Pylint
         id: analyze-code
         run: |
-          pylint_score=$(pylint --ignore-paths='^tests/.*' $(git ls-files '*.py')| grep 'rated at' | awk '{print $7}' | cut -d'/' -f1)
+          pylint_score=$(pylint $(git ls-files '*.py')| grep 'rated at' | awk '{print $7}' | cut -d'/' -f1)
           echo "score=$pylint_score" >> "$GITHUB_OUTPUT"
 
       - name: Check Pylint score
