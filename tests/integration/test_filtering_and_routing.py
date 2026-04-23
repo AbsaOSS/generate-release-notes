@@ -32,7 +32,7 @@ from github.PullRequest import PullRequest
 from github.Repository import Repository
 
 from release_notes_generator.data.miner import DataMiner
-from tests.integration.conftest import build_mined_data, capture_run
+from tests.integration.helpers import build_mined_data, capture_run
 
 
 # ---------------------------------------------------------------------------

@@ -15,13 +15,10 @@
 #
 """Shared fixtures for offline integration tests."""
 
-import main
 import os
-import tempfile
 import time
 from collections.abc import Callable
 from datetime import datetime
-from pathlib import Path
 
 import pytest
 from pytest_mock import MockerFixture
@@ -33,7 +30,6 @@ from github.PullRequest import PullRequest
 from github.Repository import Repository
 
 from release_notes_generator.action_inputs import ActionInputs
-from release_notes_generator.model.mined_data import MinedData
 
 
 # ---------------------------------------------------------------------------
@@ -244,62 +240,4 @@ def mock_github(mocker: MockerFixture) -> object:
     return gh
 
 
-# ---------------------------------------------------------------------------
-# Pipeline run helper (shared across all offline integration test modules)
-# ---------------------------------------------------------------------------
 
-
-def capture_run(patch_env: Callable, overrides: dict[str, str] | None = None) -> str:
-    """Apply env overrides, run main.run() and return the captured release notes string."""
-    patch_env(overrides)
-    with tempfile.NamedTemporaryFile(mode="r", suffix=".txt", delete=False) as tmp:
-        tmp_path = tmp.name
-    previous_github_output = os.environ.get("GITHUB_OUTPUT")
-    try:
-        os.environ["GITHUB_OUTPUT"] = tmp_path
-        main.run()
-        with open(tmp_path, encoding="utf-8") as f:
-            raw = f.read()
-    finally:
-        if previous_github_output is None:
-            os.environ.pop("GITHUB_OUTPUT", None)
-        else:
-            os.environ["GITHUB_OUTPUT"] = previous_github_output
-        Path(tmp_path).unlink(missing_ok=True)
-
-    # Parse the GitHub Actions output format: "name<<EOF\nvalue\nEOF\n"
-    lines = raw.splitlines()
-    notes_lines: list[str] = []
-    inside = False
-    for line in lines:
-        if line == "release-notes<<EOF":
-            inside = True
-            continue
-        if line == "EOF" and inside:
-            break
-        if inside:
-            notes_lines.append(line)
-    return "\n".join(notes_lines)
-
-
-# ---------------------------------------------------------------------------
-# MinedData builder helper
-# ---------------------------------------------------------------------------
-
-
-def build_mined_data(
-    repo: Repository,
-    issues: list[tuple[Issue, Repository]],
-    pull_requests: list[tuple[PullRequest, Repository]],
-    commits: list[tuple[Commit, Repository]],
-    release: GitRelease | None,
-    since: datetime | None,
-) -> MinedData:
-    """Construct a MinedData instance from explicit lists of mocked objects."""
-    data = MinedData(repo)
-    data.release = release
-    data.since = since
-    data.issues = {issue: r for issue, r in issues}
-    data.pull_requests = {pr: r for pr, r in pull_requests}
-    data.commits = {commit: r for commit, r in commits}
-    return data
