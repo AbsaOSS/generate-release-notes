@@ -45,7 +45,7 @@ This command will also install a Pylint tool, since it is listed in the project 
 ### Run Pylint
 Run Pylint on all files currently tracked by Git in the project.
 ```shell
-pylint $(git ls-files '*.py')
+pylint --ignore-paths='^tests/.*' $(git ls-files '*.py')
 ```
 
 To run Pylint on a specific file, follow the pattern `pylint <path_to_file>/<name_of_file>.py`.
@@ -135,57 +135,46 @@ This will execute all tests located in the tests/unit directory.
 
 ## Running Integration Tests
 
-Integration tests verify the complete action workflow from input to output using real GitHub API data.
+The integration suite exercises the full pipeline from `main.run()` to final markdown output without reaching the GitHub API.
 
-### Snapshot Tests (Mocked)
+**Offline tests** (under `tests/integration/`) replace the GitHub API layer with mocks and run in CI on every PR — no token required, fully deterministic.
+**Live tests** (under `tests/integration/live/`) call the real GitHub API against the `AbsaOSS/generate-release-notes` repository. Run these manually to verify network-dependent behaviour such as `BulkSubIssueCollector`, or to confirm that API changes have not broken the integration. They are skipped in CI on fork PRs where the token is unavailable.
 
-Snapshot tests validate chapter population and markdown generation logic using mock data. They run on all PRs without requiring secrets.
+### Design concept
+
+Each test calls `main.run()` directly with `INPUT_*` environment variables. The GitHub API layer is replaced by mocks; `DataMiner.mine_data()` is patched to return a hand-crafted `MinedData`. All other pipeline components — `FilterByRelease`, `DefaultRecordFactory`, `ReleaseNotesBuilder`, `CustomChapters`, and `ServiceChapters` — execute as real code.
+
+### Key components
+
+| Component | Location | Role |
+|---|---|---|
+| Fixture factories | `conftest.py` | `make_issue`, `make_pr`, `make_commit`, `make_repo`, `make_release` — typed mocks with minimal required attributes |
+| `build_mined_data()` | `helpers.py` | Assembles a `MinedData` from fixture objects for injection into the pipeline |
+| `capture_run()` | `helpers.py` | Sets env vars, calls `main.run()`, parses the GitHub Actions output format back to a plain string |
+| Golden snapshot | `fixtures/test_full_pipeline_snapshot.md` | Byte-for-byte reference output for `T-INT-01` |
+
+### Run offline tests (no token needed)
+
+Runs all integration tests except the live suite; safe to run locally and in CI.
 
 ```shell
-pytest tests/integration/ -v
+pytest tests/integration/ --ignore=tests/integration/live -v
 ```
 
-These tests:
-- Run on all PRs, including from forks
-- Are deterministic and fast (<1 second)
-- Test chapter population and backward compatibility
-- Do not require secrets or network access
+### Regenerate golden snapshot
 
-### Integration Test (Real GitHub API)
-
-The integration test runs the complete action flow against a real GitHub repository to validate end-to-end functionality.
-
-**When it runs:**
-- Automatically on same-repo PRs (NOT on forks for security)
-- Uses the `GITHUB_TOKEN` secret to access the GitHub API
-- Configured in `.github/workflows/test.yml` as the `integration-test-real-api` job
-
-**What it validates:**
-1. Action exits with code 0 (success)
-2. Output contains expected markdown chapter headers (e.g., `### New Features 🎉`)
-3. Output contains issue/PR references (e.g., `#123`)
-4. Output contains developer mentions (e.g., `@username`)
-5. Logs include "completed successfully" message
-6. Verbose logging is working (DEBUG level found)
-7. Output contains "Generated release notes:" marker
-
-**To run locally** (requires `GITHUB_TOKEN` environment variable):
+Re-runs the full-pipeline snapshot test and overwrites `fixtures/test_full_pipeline_snapshot.md` with the current output. Use this after intentional output changes to update the baseline.
 
 ```shell
-export INPUT_TAG_NAME="v0.2.0"
-export INPUT_GITHUB_REPOSITORY="AbsaOSS/generate-release-notes"
-export INPUT_GITHUB_TOKEN="your_github_token"
-export INPUT_CHAPTERS='[{"title": "Features 🎉", "label": "feature"}, {"title": "Bugfixes 🛠", "label": "bug"}]'
-export INPUT_WARNINGS="true"
-export INPUT_PRINT_EMPTY_CHAPTERS="false"
-export INPUT_VERBOSE="true"
-export INPUT_HIERARCHY="false"
-export INPUT_DUPLICITY_SCOPE="both"
-export INPUT_PUBLISHED_AT="false"
-export INPUT_SKIP_RELEASE_NOTES_LABELS="skip-release-notes"
-export PYTHONPATH="${PWD}"
+WRITE_SNAPSHOTS=1 pytest tests/integration/test_snapshot.py::test_full_pipeline_snapshot
+```
 
-python main.py
+### Live smoke test (requires `GITHUB_TOKEN`)
+
+Queries the real GitHub API against `AbsaOSS/generate-release-notes` to verify `BulkSubIssueCollector`. Skipped in CI on fork PRs.
+
+```shell
+pytest tests/integration/live/ -v
 ```
 
 ## Code Coverage

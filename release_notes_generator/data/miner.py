@@ -32,7 +32,7 @@ from github.PullRequest import PullRequest
 from github.Repository import Repository
 
 from release_notes_generator.action_inputs import ActionInputs
-from release_notes_generator.data.utils.bulk_sub_issue_collector import CollectorConfig, BulkSubIssueCollector
+from release_notes_generator.data.utils.bulk_sub_issue_collector import BulkSubIssueCollector
 from release_notes_generator.model.record.issue_record import IssueRecord
 from release_notes_generator.model.mined_data import MinedData
 from release_notes_generator.model.record.pull_request_record import PullRequestRecord
@@ -109,8 +109,7 @@ class DataMiner:
         return fetched_issues, prs_of_fetched_cross_repo_issues
 
     def _make_bulk_sub_issue_collector(self) -> BulkSubIssueCollector:
-        cfg = CollectorConfig(verify_tls=False)
-        return BulkSubIssueCollector(ActionInputs.get_github_token(), cfg)
+        return BulkSubIssueCollector(ActionInputs.get_github_token())
 
     def _scan_sub_issues_for_parents(self, parents_to_check: list[str]) -> dict[str, list[str]]:
         """
