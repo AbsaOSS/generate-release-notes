@@ -40,6 +40,7 @@ from release_notes_generator.utils.constants import (
     GLOBAL_EXCLUDE_KEY,
     RUNNER_DEBUG,
     PRINT_EMPTY_CHAPTERS,
+    SHOW_STATS_CHAPTERS,
     DUPLICITY_SCOPE,
     DUPLICITY_ICON,
     OPEN_HIERARCHY_SUB_ISSUE_ICON,
@@ -506,6 +507,13 @@ class ActionInputs:
         return get_action_input(PRINT_EMPTY_CHAPTERS, "true").lower() == "true"
 
     @staticmethod
+    def get_show_stats_chapters() -> bool:
+        """
+        Get the show stats chapters parameter value from the action inputs.
+        """
+        return get_action_input(SHOW_STATS_CHAPTERS, "true").lower() == "true"
+
+    @staticmethod
     def validate_input(input_value, expected_type: type, error_message: str, error_buffer: list) -> bool:
         """
         Validates the input value against the expected type.
@@ -669,6 +677,9 @@ class ActionInputs:
         print_empty_chapters = ActionInputs.get_print_empty_chapters()
         ActionInputs.validate_input(print_empty_chapters, bool, "Print empty chapters must be a boolean.", errors)
 
+        show_stats_chapters = ActionInputs.get_show_stats_chapters()
+        ActionInputs.validate_input(show_stats_chapters, bool, "Show stats chapters must be a boolean.", errors)
+
         # Log errors if any
         if errors:
             for error in errors:
@@ -687,6 +698,7 @@ class ActionInputs:
         logger.debug("Verbose logging: %s", verbose)
         logger.debug("Warnings: %s", warnings)
         logger.debug("Print empty chapters: %s", print_empty_chapters)
+        logger.debug("Show stats chapters: %s", show_stats_chapters)
         logger.debug("Release notes title: %s", release_notes_title)
         logger.debug("CodeRabbit support active: %s", coderabbit_support_active)
         logger.debug("CodeRabbit release notes title: %s", coderabbit_release_notes_title)

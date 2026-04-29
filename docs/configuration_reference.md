@@ -13,6 +13,7 @@ This page lists all action inputs and outputs with defaults. Grouped for readabi
 | `published-at` | No | `false` | Use previous release `published_at` timestamp instead of `created_at`. |
 | `skip-release-notes-labels` | No | `skip-release-notes` | Comma‑separated labels that fully exclude issues/PRs. |
 | `warnings` | No | `true` | Toggle Service Chapters generation. |
+| `show-stats-chapters` | No | `true` | Toggle Statistics & Anti-game chapters showing skip-label usage stats. When `true` and at least one record was skipped, renders usage tables. Honors `print-empty-chapters` for individual sub-sections. |
 | `hidden-service-chapters` | No | "" | Comma or newline list of service chapter titles to hide from output. Title matching is exact and case-sensitive. Only effective when `warnings: true`. |
 | `service-chapter-order` | No | "" | Comma or newline list of service chapter titles controlling display order. Listed titles render first; unlisted titles appended in default order. Title matching is exact and case-sensitive. Only effective when `warnings: true`. |
 | `service-chapter-exclude` | No | "" | YAML mapping of service chapter title to label-exclusion groups. Each group is a list of labels (AND logic). Multiple groups per chapter use OR logic. Use the reserved key `"*"` for global rules applied to all service chapters. Only effective when `warnings: true`. |
