@@ -47,6 +47,7 @@ class MinedData:
         self.issues: dict[Issue, Repository] = {}
         self.pull_requests: dict[PullRequest, Repository] = {}
         self.commits: dict[Commit, Repository] = {}
+        self.compare_commit_shas: set[str] = set()
 
         self.parents_sub_issues: dict[str, list[str]] = {}  # parent issue id -> list of its sub-issues ids
         # dictionary of fetched cross issues and their pull requests

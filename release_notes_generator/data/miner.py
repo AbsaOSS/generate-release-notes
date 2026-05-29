@@ -19,6 +19,7 @@ This module contains logic for mining data from GitHub, including issues, pull r
 """
 
 import logging
+import re
 import sys
 import traceback
 from concurrent.futures import ThreadPoolExecutor, as_completed, CancelledError
@@ -33,6 +34,9 @@ from github.Repository import Repository
 
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.data.utils.bulk_sub_issue_collector import BulkSubIssueCollector
+from github.Commit import Commit as GithubCommit
+
+_PR_NUMBER_RE = re.compile(r"\(#(\d+)\)|Merge pull request #(\d+)")
 from release_notes_generator.model.record.issue_record import IssueRecord
 from release_notes_generator.model.mined_data import MinedData
 from release_notes_generator.model.record.pull_request_record import PullRequestRecord
@@ -66,16 +70,35 @@ class DataMiner:
 
         self._get_issues(data)
 
-        # pulls and commits, and then reduce them by the latest release since time
-        pull_requests = list(
-            self._safe_call(repo.get_pulls)(state=PullRequestRecord.PR_STATE_CLOSED, base=repo.default_branch)
-        )
-        data.pull_requests = {pr: data.home_repository for pr in pull_requests}
-        if data.since:
-            commits = list(self._safe_call(repo.get_commits)(since=data.since))
+        if ActionInputs.is_from_tag_name_defined():
+            logger.info("Compare mode: using repo.compare('%s', '%s').",
+                        ActionInputs.get_from_tag_name(), ActionInputs.get_tag_name())
+            comparison = self._safe_call(repo.compare)(
+                ActionInputs.get_from_tag_name(), ActionInputs.get_tag_name()
+            )
+            compare_commits: list[GithubCommit] = list(comparison.commits)
+            data.compare_commit_shas = {c.sha for c in compare_commits}
+            data.commits = {c: data.home_repository for c in compare_commits}
+            pr_numbers = self._extract_pr_numbers_from_commits(compare_commits)
+            pulls: dict[PullRequest, Repository] = {}
+            for number in pr_numbers:
+                pr = self._safe_call(repo.get_pull)(number)
+                if pr is not None:
+                    pulls[pr] = data.home_repository
+            data.pull_requests = pulls
+            logger.info("Compare mode: found %d commit(s), %d PR(s).",
+                        len(compare_commits), len(data.pull_requests))
         else:
-            commits = list(self._safe_call(repo.get_commits)())
-        data.commits = {c: data.home_repository for c in commits}
+            # pulls and commits, then reduce them by the latest release since time
+            pull_requests = list(
+                self._safe_call(repo.get_pulls)(state=PullRequestRecord.PR_STATE_CLOSED, base=repo.default_branch)
+            )
+            data.pull_requests = {pr: data.home_repository for pr in pull_requests}
+            if data.since:
+                commits = list(self._safe_call(repo.get_commits)(since=data.since))
+            else:
+                commits = list(self._safe_call(repo.get_commits)())
+            data.commits = {c: data.home_repository for c in commits}
 
         logger.info("Initial data mining from GitHub completed.")
 
@@ -422,6 +445,24 @@ class DataMiner:
                 rls = release
 
         return rls
+
+    @staticmethod
+    def _extract_pr_numbers_from_commits(commits: list[GithubCommit]) -> set[int]:
+        """
+        Extract unique PR numbers from commit messages.
+
+        Parameters:
+            commits: Commit objects whose messages are scanned.
+        Returns:
+            set[int]: Unique PR numbers found across all messages.
+        """
+        pr_numbers: set[int] = set()
+        for commit in commits:
+            message = commit.commit.message
+            for match in _PR_NUMBER_RE.finditer(message):
+                number_str = match.group(1) or match.group(2)
+                pr_numbers.add(int(number_str))
+        return pr_numbers
 
     @staticmethod
     def __filter_duplicated_issues(data: MinedData) -> "MinedData":
