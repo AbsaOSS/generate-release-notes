@@ -95,7 +95,8 @@ class FilterByRelease(Filter):
                             pulls_dict[pull] = repo
                 logger.debug(
                     "Count of pulls reduced from %d to %d",
-                    len(data.pull_requests.items()), len(pulls_dict.items()),
+                    len(data.pull_requests.items()),
+                    len(pulls_dict.items()),
                 )
 
                 commits_dict = {
@@ -105,7 +106,8 @@ class FilterByRelease(Filter):
                 }
                 logger.debug(
                     "Count of commits reduced from %d to %d",
-                    len(data.commits.items()), len(commits_dict.items()),
+                    len(data.commits.items()),
+                    len(commits_dict.items()),
                 )
 
             md.issues = issues_dict

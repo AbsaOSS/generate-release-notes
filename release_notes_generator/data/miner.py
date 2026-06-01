@@ -71,11 +71,12 @@ class DataMiner:
         self._get_issues(data)
 
         if ActionInputs.is_from_tag_name_defined():
-            logger.info("Compare mode: using repo.compare('%s', '%s').",
-                        ActionInputs.get_from_tag_name(), ActionInputs.get_tag_name())
-            comparison = self._safe_call(repo.compare)(
-                ActionInputs.get_from_tag_name(), ActionInputs.get_tag_name()
+            logger.info(
+                "Compare mode: using repo.compare('%s', '%s').",
+                ActionInputs.get_from_tag_name(),
+                ActionInputs.get_tag_name(),
             )
+            comparison = self._safe_call(repo.compare)(ActionInputs.get_from_tag_name(), ActionInputs.get_tag_name())
             compare_commits: list[GithubCommit] = list(comparison.commits)
             data.compare_commit_shas = {c.sha for c in compare_commits}
             data.commits = {c: data.home_repository for c in compare_commits}
@@ -86,8 +87,7 @@ class DataMiner:
                 if pr is not None:
                     pulls[pr] = data.home_repository
             data.pull_requests = pulls
-            logger.info("Compare mode: found %d commit(s), %d PR(s).",
-                        len(compare_commits), len(data.pull_requests))
+            logger.info("Compare mode: found %d commit(s), %d PR(s).", len(compare_commits), len(data.pull_requests))
         else:
             # pulls and commits, then reduce them by the latest release since time
             pull_requests = list(
