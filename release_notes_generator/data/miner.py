@@ -473,6 +473,9 @@ class DataMiner:
         """
         Extract unique PR numbers from commit messages.
 
+        Note: Only the first line (subject) of each commit message is scanned to avoid matching
+        references in the commit body.
+
         Parameters:
             commits: Commit objects whose messages are scanned.
         Returns:
@@ -480,8 +483,8 @@ class DataMiner:
         """
         pr_numbers: set[int] = set()
         for commit in commits:
-            message = commit.commit.message.splitlines()[0] if commit.commit.message else ""
-            for match in _PR_NUMBER_RE.finditer(message):
+            subject = commit.commit.message.splitlines()[0] if commit.commit.message else ""
+            for match in _PR_NUMBER_RE.finditer(subject):
                 number_str = match.group(1) or match.group(2)
                 pr_numbers.add(int(number_str))
         return pr_numbers
