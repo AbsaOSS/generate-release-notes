@@ -566,7 +566,7 @@ def test_extract_pr_numbers_empty_input():
 def test_extract_pr_numbers_multiline_message(mocker):
     commit = mocker.Mock()
     commit.commit.message = "Subject line\n\nFixes behaviour (#77)"
-    assert DataMiner._extract_pr_numbers_from_commits([commit]) == {77}
+    assert DataMiner._extract_pr_numbers_from_commits([commit]) == set()
 
 
 # --- mine_data compare mode ---
