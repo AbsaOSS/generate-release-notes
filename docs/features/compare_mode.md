@@ -13,7 +13,7 @@ moment two release streams run in parallel.
 
 **Concrete example — two active streams:**
 
-```
+```text
 develop:
 *  (tag: v2.7.1) 2026-05-20  Improve Kafka consumer throughput (#1401)
 *  (tag: v2.7.0) 2026-05-14  Fix new service access role (#1363)

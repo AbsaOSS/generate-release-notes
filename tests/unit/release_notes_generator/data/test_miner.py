@@ -574,7 +574,7 @@ def test_extract_pr_numbers_multiline_message(mocker):
 
 def _make_compare_miner(mocker, mock_repo, *, from_tag="v2.6.3", to_tag="v2.6.4",
                         created_at=datetime(2026, 5, 7), published_at=None, prefer_published=False,
-                        compare_commits=None, get_pull_side_effect=None):
+                        compare_commits=None, get_pull_side_effect=None, total_commits=None):
     """Wire a DataMiner for compare-mode mine_data calls."""
     mocker.patch("release_notes_generator.action_inputs.ActionInputs.is_from_tag_name_defined", return_value=True)
     mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_from_tag_name", return_value=from_tag)
@@ -591,6 +591,8 @@ def _make_compare_miner(mocker, mock_repo, *, from_tag="v2.6.3", to_tag="v2.6.4"
 
     comparison_mock = mocker.Mock()
     comparison_mock.commits = compare_commits if compare_commits is not None else []
+    if total_commits is not None:
+        comparison_mock.total_commits = total_commits
     mock_repo.compare.return_value = comparison_mock
 
     if get_pull_side_effect is not None:
@@ -695,6 +697,51 @@ def test_mine_data_compare_mode_no_pr_numbers_in_message(mocker, mock_repo):
 
     assert data.pull_requests == {}
     assert "bumpsha" in data.compare_commit_shas
+
+
+def test_mine_data_compare_mode_warns_on_total_commits_overflow(mocker, mock_repo):
+    commit_mock = mocker.Mock()
+    commit_mock.sha = "abc123"
+    commit_mock.commit.message = "Fix service access role (#1363)"
+    warning_mock = mocker.patch("release_notes_generator.data.miner.logger.warning")
+
+    miner = _make_compare_miner(
+        mocker,
+        mock_repo,
+        compare_commits=[commit_mock],
+        total_commits=10_001,
+    )
+    miner.mine_data()
+
+    warning_mock.assert_called_once_with(
+        "Compare mode: retrieved %d commit(s) but comparison reports %d total; results may be truncated.",
+        1,
+        10_001,
+    )
+
+
+def test_mine_data_compare_mode_warns_on_retrieval_cap_without_total(mocker, mock_repo):
+    commits = []
+    for i in range(10_000):
+        commit_mock = mocker.Mock()
+        commit_mock.sha = f"sha{i}"
+        commit_mock.commit.message = "Commit without PR ref"
+        commits.append(commit_mock)
+
+    warning_mock = mocker.patch("release_notes_generator.data.miner.logger.warning")
+
+    miner = _make_compare_miner(
+        mocker,
+        mock_repo,
+        compare_commits=commits,
+    )
+    miner.mine_data()
+
+    warning_mock.assert_called_once_with(
+        "Compare mode: retrieved %d commit(s); comparison ranges over %d commits may be truncated.",
+        10_000,
+        10_000,
+    )
 
 
 # --- mine_data timestamp mode (regression) ---

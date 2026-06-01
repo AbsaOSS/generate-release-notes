@@ -31,18 +31,20 @@ from github.GitRelease import GitRelease
 from github.Issue import Issue
 from github.PullRequest import PullRequest
 from github.Repository import Repository
+from github.Commit import Commit as GithubCommit
 
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.data.utils.bulk_sub_issue_collector import BulkSubIssueCollector
-from github.Commit import Commit as GithubCommit
 
-_PR_NUMBER_RE = re.compile(r"\(#(\d+)\)|Merge pull request #(\d+)")
 from release_notes_generator.model.record.issue_record import IssueRecord
 from release_notes_generator.model.mined_data import MinedData
 from release_notes_generator.model.record.pull_request_record import PullRequestRecord
 from release_notes_generator.utils.decorators import safe_call_decorator
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
 from release_notes_generator.utils.record_utils import get_id, parse_issue_id
+
+_PR_NUMBER_RE = re.compile(r"\(#(\d+)\)|Merge pull request #(\d+)")
+_COMPARE_COMMITS_MAX_RESULTS = 10_000
 
 logger = logging.getLogger(__name__)
 
@@ -77,12 +79,32 @@ class DataMiner:
                 ActionInputs.get_tag_name(),
             )
             comparison = self._safe_call(repo.compare)(ActionInputs.get_from_tag_name(), ActionInputs.get_tag_name())
+            if comparison is None:
+                logger.error(
+                    "Compare API returned no result for '%s'...'%s'. Ending!",
+                    ActionInputs.get_from_tag_name(),
+                    ActionInputs.get_tag_name(),
+                )
+                sys.exit(1)
             compare_commits: list[GithubCommit] = list(comparison.commits)
+            total_commits = getattr(comparison, "total_commits", None)
+            if isinstance(total_commits, int) and total_commits > len(compare_commits):
+                logger.warning(
+                    "Compare mode: retrieved %d commit(s) but comparison reports %d total; results may be truncated.",
+                    len(compare_commits),
+                    total_commits,
+                )
+            elif len(compare_commits) >= _COMPARE_COMMITS_MAX_RESULTS:
+                logger.warning(
+                    "Compare mode: retrieved %d commit(s); comparison ranges over %d commits may be truncated.",
+                    len(compare_commits),
+                    _COMPARE_COMMITS_MAX_RESULTS,
+                )
             data.compare_commit_shas = {c.sha for c in compare_commits}
             data.commits = {c: data.home_repository for c in compare_commits}
             pr_numbers = self._extract_pr_numbers_from_commits(compare_commits)
             pulls: dict[PullRequest, Repository] = {}
-            for number in pr_numbers:
+            for number in sorted(pr_numbers):
                 pr = self._safe_call(repo.get_pull)(number)
                 if pr is not None:
                     pulls[pr] = data.home_repository
@@ -458,7 +480,7 @@ class DataMiner:
         """
         pr_numbers: set[int] = set()
         for commit in commits:
-            message = commit.commit.message
+            message = commit.commit.message.splitlines()[0] if commit.commit.message else ""
             for match in _PR_NUMBER_RE.finditer(message):
                 number_str = match.group(1) or match.group(2)
                 pr_numbers.add(int(number_str))
