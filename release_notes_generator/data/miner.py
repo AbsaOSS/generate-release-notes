@@ -70,8 +70,6 @@ class DataMiner:
         data = MinedData(repo)
         data.release = self.get_latest_release(repo)
 
-        self._get_issues(data)
-
         if ActionInputs.is_from_tag_name_defined():
             logger.info(
                 "Compare mode: using repo.compare('%s', '%s').",
@@ -109,8 +107,21 @@ class DataMiner:
                 if pr is not None:
                     pulls[pr] = data.home_repository
             data.pull_requests = pulls
-            logger.info("Compare mode: found %d commit(s), %d PR(s).", len(compare_commits), len(data.pull_requests))
+
+            # Only include commits that don't have a PR reference
+            # (commits identified by PR are redundant with the PR itself)
+            commits_without_pr: dict[GithubCommit, Repository] = {}
+            for commit in compare_commits:
+                subject = commit.commit.message.splitlines()[0] if commit.commit.message else ""
+                has_pr_ref = bool(_PR_NUMBER_RE.search(subject))
+                if not has_pr_ref:
+                    commits_without_pr[commit] = data.home_repository
+
+            data.commits = commits_without_pr
+            logger.info("Compare mode: found %d commit(s) without PR, %d PR(s).", len(commits_without_pr), len(data.pull_requests))
         else:
+            self._get_issues(data)
+
             # pulls and commits, then reduce them by the latest release since time
             pull_requests = list(
                 self._safe_call(repo.get_pulls)(state=PullRequestRecord.PR_STATE_CLOSED, base=repo.default_branch)

@@ -73,15 +73,17 @@ class FilterByRelease(Filter):
         if data.release is not None:
             logger.info("Starting issue, prs and commit reduction by the latest release since time.")
 
-            issues_dict = self._filter_issues(data)
-            logger.debug("Count of issues reduced from %d to %d", len(data.issues), len(issues_dict))
-
             if data.compare_commit_shas:
-                # compare mode: PR and commit sets are already exact — pass through unchanged
+                # Compare mode: no time filtering, use exact sets from comparison
+                issues_dict = {}  # No issues in compare mode
                 pulls_dict = dict(data.pull_requests)
                 commits_dict = dict(data.commits)
-                logger.debug("Compare mode: skipping PR/commit timestamp filter.")
+                logger.debug("Compare mode: skipping all timestamp filters (issues, PRs, commits).")
             else:
+                # Timestamp mode: apply time-based filtering
+                issues_dict = self._filter_issues(data)
+                logger.debug("Count of issues reduced from %d to %d", len(data.issues), len(issues_dict))                
+
                 # filter out merged PRs and commits before the date
                 pulls_seen: set[int] = set()
                 pulls_dict = {}

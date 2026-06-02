@@ -84,10 +84,32 @@ class ReleaseNotesGenerator:
         if data.is_empty():
             return None
 
+        # print complex debug data for data - commits, PRS and issues only
+        print("Data mined from GitHub:")
+        print(f"Commits: {len(data.commits)}")
+        print(f"Pull Requests: {len(data.pull_requests)}")
+        print(f"Issues: {len(data.issues)}")
+
+        # print also list of commits, PRs and issues for better visibility
+        print("List of commits:")
+        for commit in data.commits:
+            print(f"- {commit}")
+        print("List of pull requests:")
+        for pr in data.pull_requests:
+            print(f"- {pr}")
+        print("List of issues:")
+        for issue in data.issues:
+            print(f"- {issue}")
+
         self.custom_chapters.since = data.since or datetime.min
 
         filterer = FilterByRelease()
         data_filtered_by_release = filterer.filter(data=data)
+
+        print("Data mined from GitHub - release filtered:")
+        print(f"Commits: {len(data.commits)}")
+        print(f"Pull Requests: {len(data.pull_requests)}")
+        print(f"Issues: {len(data.issues)}")
 
         # data expansion when hierarchy is enabled
         if ActionInputs.get_hierarchy():
@@ -98,6 +120,11 @@ class ReleaseNotesGenerator:
             # fill flat structure with empty lists, no hierarchy
             for i, repo in data_filtered_by_release.issues.items():
                 data_filtered_by_release.parents_sub_issues[get_id(i, repo)] = []
+
+        print("Data mined from GitHub - expanded:")
+        print(f"Commits: {len(data.commits)}")
+        print(f"Pull Requests: {len(data.pull_requests)}")
+        print(f"Issues: {len(data.issues)}")
 
         changelog_url: str = get_change_url(
             tag_name=ActionInputs.get_tag_name(),
