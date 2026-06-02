@@ -700,6 +700,7 @@ def test_mine_data_compare_mode_no_pr_numbers_in_message(mocker, mock_repo):
 
 
 def test_mine_data_compare_mode_warns_on_total_commits_overflow(mocker, mock_repo):
+    """Test that a warning is logged when the compare API returns more commits than it can retrieve (over 10,000)."""
     commit_mock = mocker.Mock()
     commit_mock.sha = "abc123"
     commit_mock.commit.message = "Fix service access role (#1363)"
@@ -721,6 +722,7 @@ def test_mine_data_compare_mode_warns_on_total_commits_overflow(mocker, mock_rep
 
 
 def test_mine_data_compare_mode_warns_on_retrieval_cap_without_total(mocker, mock_repo):
+    """Test that a warning is logged when the compare API reaches the retrieval cap without a total commit count."""
     commits = []
     for i in range(10_000):
         commit_mock = mocker.Mock()
