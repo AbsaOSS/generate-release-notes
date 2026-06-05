@@ -68,34 +68,49 @@ class FilterByRelease(Filter):
         md = MinedData(data.home_repository)
         md.release = data.release
         md.since = data.since
+        md.compare_commit_shas = data.compare_commit_shas
 
         if data.release is not None:
             logger.info("Starting issue, prs and commit reduction by the latest release since time.")
 
-            issues_dict = self._filter_issues(data)
-            logger.debug("Count of issues reduced from %d to %d", len(data.issues), len(issues_dict))
+            if data.compare_commit_shas:
+                # Compare mode: no time filtering, use exact sets from comparison
+                issues_dict = {}  # No issues in compare mode
+                pulls_dict = dict(data.pull_requests)
+                commits_dict = dict(data.commits)
+                logger.debug("Compare mode: skipping all timestamp filters (issues, PRs, commits).")
+            else:
+                # Timestamp mode: apply time-based filtering
+                issues_dict = self._filter_issues(data)
+                logger.debug("Count of issues reduced from %d to %d", len(data.issues), len(issues_dict))
 
-            # filter out merged PRs and commits before the date
-            pulls_seen: set[int] = set()
-            pulls_dict: dict[PullRequest, Repository] = {}
-            for pull, repo in data.pull_requests.items():
-                if data.since and (
-                    (pull.merged_at and pull.merged_at >= data.since)
-                    or (pull.closed_at and pull.closed_at >= data.since)
-                ):
-                    if pull.number not in pulls_seen:
-                        pulls_seen.add(pull.number)
-                        pulls_dict[pull] = repo
-            logger.debug(
-                "Count of pulls reduced from %d to %d", len(data.pull_requests.items()), len(pulls_dict.items())
-            )
+                # filter out merged PRs and commits before the date
+                pulls_seen: set[int] = set()
+                pulls_dict = {}
+                for pull, repo in data.pull_requests.items():
+                    if data.since and (
+                        (pull.merged_at and pull.merged_at >= data.since)
+                        or (pull.closed_at and pull.closed_at >= data.since)
+                    ):
+                        if pull.number not in pulls_seen:
+                            pulls_seen.add(pull.number)
+                            pulls_dict[pull] = repo
+                logger.debug(
+                    "Count of pulls reduced from %d to %d",
+                    len(data.pull_requests.items()),
+                    len(pulls_dict.items()),
+                )
 
-            commits_dict = {
-                commit: repo
-                for commit, repo in data.commits.items()
-                if data.since and commit.commit.author.date > data.since
-            }
-            logger.debug("Count of commits reduced from %d to %d", len(data.commits.items()), len(commits_dict.items()))
+                commits_dict = {
+                    commit: repo
+                    for commit, repo in data.commits.items()
+                    if data.since and commit.commit.author.date > data.since
+                }
+                logger.debug(
+                    "Count of commits reduced from %d to %d",
+                    len(data.commits.items()),
+                    len(commits_dict.items()),
+                )
 
             md.issues = issues_dict
             md.pull_requests = pulls_dict

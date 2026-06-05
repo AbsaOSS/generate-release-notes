@@ -520,3 +520,269 @@ def test_fetch_prs_for_fetched_cross_issues(mocker, mock_repo):
     assert key_ok in result and result[key_ok] == [pr_obj]
     assert key_err in result and result[key_err] == []
     warn_mock.assert_called_once()
+
+
+# --- _extract_pr_numbers_from_commits ---
+
+
+def test_extract_pr_numbers_squash_format(mocker):
+    commit = mocker.Mock()
+    commit.commit.message = "Fix service access role (#1363)"
+    assert DataMiner._extract_pr_numbers_from_commits([commit]) == {1363}
+
+
+def test_extract_pr_numbers_merge_format(mocker):
+    commit = mocker.Mock()
+    commit.commit.message = "Merge pull request #1358 from org/branch"
+    assert DataMiner._extract_pr_numbers_from_commits([commit]) == {1358}
+
+
+def test_extract_pr_numbers_multiple_commits(mocker):
+    c1, c2, c3 = mocker.Mock(), mocker.Mock(), mocker.Mock()
+    c1.commit.message = "Feature A (#10)"
+    c2.commit.message = "Merge pull request #20 from org/feat-b"
+    c3.commit.message = "Hotfix C (#30)"
+    assert DataMiner._extract_pr_numbers_from_commits([c1, c2, c3]) == {10, 20, 30}
+
+
+def test_extract_pr_numbers_deduplicates(mocker):
+    c1, c2 = mocker.Mock(), mocker.Mock()
+    c1.commit.message = "Fix A (#42)"
+    c2.commit.message = "Follow-up for #42 (#42)"
+    assert DataMiner._extract_pr_numbers_from_commits([c1, c2]) == {42}
+
+
+def test_extract_pr_numbers_no_references(mocker):
+    c1, c2 = mocker.Mock(), mocker.Mock()
+    c1.commit.message = "Initial commit"
+    c2.commit.message = "Fix typo in README"
+    assert DataMiner._extract_pr_numbers_from_commits([c1, c2]) == set()
+
+
+def test_extract_pr_numbers_empty_input():
+    assert DataMiner._extract_pr_numbers_from_commits([]) == set()
+
+
+def test_extract_pr_numbers_multiline_message(mocker):
+    commit = mocker.Mock()
+    commit.commit.message = "Subject line\n\nFixes behaviour (#77)"
+    assert DataMiner._extract_pr_numbers_from_commits([commit]) == set()
+
+
+# --- mine_data compare mode ---
+
+
+def _make_compare_miner(mocker, mock_repo, *, from_tag="v2.6.3", to_tag="v2.6.4",
+                        created_at=datetime(2026, 5, 7), published_at=None, prefer_published=False,
+                        compare_commits=None, get_pull_side_effect=None, total_commits=None):
+    """Wire a DataMiner for compare-mode mine_data calls."""
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.is_from_tag_name_defined", return_value=True)
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_from_tag_name", return_value=from_tag)
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_tag_name", return_value=to_tag)
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_github_repository", return_value="org/repo")
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_published_at", return_value=prefer_published)
+
+    release_mock = mocker.Mock(spec=GitRelease)
+    release_mock.created_at = created_at
+    release_mock.published_at = published_at
+    release_mock.tag_name = from_tag
+    mock_repo.get_release.return_value = release_mock
+    mock_repo.get_issues.return_value = []
+
+    comparison_mock = mocker.Mock()
+    comparison_mock.commits = compare_commits if compare_commits is not None else []
+    if total_commits is not None:
+        comparison_mock.total_commits = total_commits
+    mock_repo.compare.return_value = comparison_mock
+
+    if get_pull_side_effect is not None:
+        mock_repo.get_pull.side_effect = get_pull_side_effect
+    else:
+        mock_repo.get_pull.return_value = mocker.Mock(spec=PullRequest)
+
+    github_mock = mocker.Mock(spec=Github)
+    github_mock.get_repo.return_value = mock_repo
+
+    miner = DataMiner(github_mock, mocker.Mock())
+    miner._safe_call = decorator_mock
+    return miner
+
+
+def test_mine_data_compare_mode_uses_compare_api(mocker, mock_repo):
+    commit_mock = mocker.Mock()
+    commit_mock.sha = "abc123"
+    commit_mock.commit.message = "Fix service access role (#1363)"
+
+    miner = _make_compare_miner(mocker, mock_repo, compare_commits=[commit_mock])
+    data = miner.mine_data()
+
+    mock_repo.compare.assert_called_once_with("v2.6.3", "v2.6.4")
+    mock_repo.get_commits.assert_not_called()
+    assert data.compare_commit_shas == {"abc123"}
+
+
+def test_mine_data_compare_mode_fetches_prs_by_number(mocker, mock_repo):
+    commit_mock = mocker.Mock()
+    commit_mock.sha = "abc123"
+    commit_mock.commit.message = "Fix service access role (#42)"
+    pr_mock = mocker.Mock(spec=PullRequest)
+    pr_mock.number = 42
+
+    miner = _make_compare_miner(mocker, mock_repo, compare_commits=[commit_mock],
+                                get_pull_side_effect=lambda n: pr_mock if n == 42 else None)
+    data = miner.mine_data()
+
+    mock_repo.get_pull.assert_called_once_with(42)
+    assert pr_mock in data.pull_requests
+    assert data.pull_requests[pr_mock] == mock_repo
+
+
+def test_mine_data_compare_mode_multiple_prs(mocker, mock_repo):
+    c1, c2 = mocker.Mock(), mocker.Mock()
+    c1.sha, c2.sha = "sha1", "sha2"
+    c1.commit.message = "Feature A (#10)"
+    c2.commit.message = "Fix B (#20)"
+    pr10 = mocker.Mock(spec=PullRequest)
+    pr10.number = 10
+    pr20 = mocker.Mock(spec=PullRequest)
+    pr20.number = 20
+
+    miner = _make_compare_miner(mocker, mock_repo, compare_commits=[c1, c2],
+                                get_pull_side_effect=lambda n: pr10 if n == 10 else pr20)
+    data = miner.mine_data()
+
+    assert len(data.pull_requests) == 2
+
+
+def test_mine_data_compare_mode_leaves_issues_empty(mocker, mock_repo):
+    miner = _make_compare_miner(mocker, mock_repo, compare_commits=[])
+    data = miner.mine_data()
+    assert data.issues == {}
+
+
+def test_mine_data_compare_mode_sets_data_since(mocker, mock_repo):
+    miner = _make_compare_miner(mocker, mock_repo, created_at=datetime(2026, 5, 7), prefer_published=False)
+    data = miner.mine_data()
+    assert data.since == datetime(2026, 5, 7)
+
+
+def test_mine_data_compare_mode_sets_data_since_published_at(mocker, mock_repo):
+    miner = _make_compare_miner(mocker, mock_repo,
+                                created_at=datetime(2026, 5, 7),
+                                published_at=datetime(2026, 5, 8),
+                                prefer_published=True)
+    data = miner.mine_data()
+    assert data.since == datetime(2026, 5, 8)
+
+
+def test_mine_data_compare_mode_skips_none_prs(mocker, mock_repo):
+    commit_mock = mocker.Mock()
+    commit_mock.sha = "dead99"
+    commit_mock.commit.message = "Fix something (#99)"
+
+    miner = _make_compare_miner(mocker, mock_repo, compare_commits=[commit_mock],
+                                get_pull_side_effect=lambda _: None)
+    data = miner.mine_data()
+
+    assert data.pull_requests == {}
+
+
+def test_mine_data_compare_mode_no_pr_numbers_in_message(mocker, mock_repo):
+    commit_mock = mocker.Mock()
+    commit_mock.sha = "bumpsha"
+    commit_mock.commit.message = "Bump version to 2.6.4"
+
+    miner = _make_compare_miner(mocker, mock_repo, compare_commits=[commit_mock])
+    data = miner.mine_data()
+
+    assert data.pull_requests == {}
+    assert "bumpsha" in data.compare_commit_shas
+
+
+def test_mine_data_compare_mode_warns_on_total_commits_overflow(mocker, mock_repo):
+    """Test that a warning is logged when the compare API returns more commits than it can retrieve (over 10,000)."""
+    commit_mock = mocker.Mock()
+    commit_mock.sha = "abc123"
+    commit_mock.commit.message = "Fix service access role (#1363)"
+    warning_mock = mocker.patch("release_notes_generator.data.miner.logger.warning")
+
+    miner = _make_compare_miner(
+        mocker,
+        mock_repo,
+        compare_commits=[commit_mock],
+        total_commits=10_001,
+    )
+    miner.mine_data()
+
+    warning_mock.assert_called_once_with(
+        "Compare mode: retrieved %d commit(s) but comparison reports %d total; results may be truncated.",
+        1,
+        10_001,
+    )
+
+
+def test_mine_data_compare_mode_warns_on_retrieval_cap_without_total(mocker, mock_repo):
+    """Test that a warning is logged when the compare API reaches the retrieval cap without a total commit count."""
+    commits = []
+    for i in range(10_000):
+        commit_mock = mocker.Mock()
+        commit_mock.sha = f"sha{i}"
+        commit_mock.commit.message = "Commit without PR ref"
+        commits.append(commit_mock)
+
+    warning_mock = mocker.patch("release_notes_generator.data.miner.logger.warning")
+
+    miner = _make_compare_miner(
+        mocker,
+        mock_repo,
+        compare_commits=commits,
+    )
+    miner.mine_data()
+
+    warning_mock.assert_called_once_with(
+        "Compare mode: retrieved %d commit(s); comparison ranges over %d commits may be truncated.",
+        10_000,
+        10_000,
+    )
+
+
+# --- mine_data timestamp mode (regression) ---
+
+
+def test_mine_data_timestamp_mode_uses_get_commits(mocker, mock_repo):
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.is_from_tag_name_defined", return_value=False)
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_github_repository", return_value="org/repo")
+    mock_repo.get_issues.return_value = []
+    mock_repo.get_pulls.return_value = []
+    mock_repo.get_commits.return_value = []
+
+    github_mock = mocker.Mock(spec=Github)
+    github_mock.get_repo.return_value = mock_repo
+
+    miner = DataMiner(github_mock, mocker.Mock())
+    miner._safe_call = decorator_mock
+    mocker.patch.object(miner, "get_latest_release", return_value=None)
+
+    miner.mine_data()
+
+    mock_repo.get_commits.assert_called_once()
+    mock_repo.compare.assert_not_called()
+
+
+def test_mine_data_timestamp_mode_compare_shas_empty(mocker, mock_repo):
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.is_from_tag_name_defined", return_value=False)
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_github_repository", return_value="org/repo")
+    mock_repo.get_issues.return_value = []
+    mock_repo.get_pulls.return_value = []
+    mock_repo.get_commits.return_value = []
+
+    github_mock = mocker.Mock(spec=Github)
+    github_mock.get_repo.return_value = mock_repo
+
+    miner = DataMiner(github_mock, mocker.Mock())
+    miner._safe_call = decorator_mock
+    mocker.patch.object(miner, "get_latest_release", return_value=None)
+
+    data = miner.mine_data()
+
+    assert data.compare_commit_shas == set()

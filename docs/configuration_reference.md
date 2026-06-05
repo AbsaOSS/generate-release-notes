@@ -80,6 +80,8 @@ A chapter with `catch-open-hierarchy: true` intercepts **open** `HierarchyIssueR
 - **Optional label filter**: add `labels` alongside `catch-open-hierarchy` to restrict interception to matching labels only. Open hierarchy parents that carry none of those labels fall through to normal routing.
 - Can be combined with `hidden: true` to silently track in-progress hierarchy work without printing it.
 
+Note: When `hierarchy: true` is enabled the generator may discover and fetch missing parent/sub-issues that were not returned by the initial issues query. This fetch is performed after `FilterByRelease` has reduced records by the latest release timestamp and immediately before records are expanded and passed to the record factory: `DataMiner.mine_missing_sub_issues` is invoked and any fetched issues are merged into the `MinedData` used to create records. This ensures parent/sub-issue rendering is complete even when sub-issues live in other repositories or were omitted from the initial query.
+
 ```yaml
 chapters: |
   - title: "New Features 🎉"

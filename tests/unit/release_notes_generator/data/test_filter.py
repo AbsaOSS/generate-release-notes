@@ -15,7 +15,7 @@
 
 
 from unittest.mock import MagicMock
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from github.Repository import Repository
 
@@ -32,6 +32,7 @@ def test_filter_no_release(mocker):
     data.home_repository = MagicMock(spec=Repository)
     data.since = datetime(2023, 1, 1)
     data.release = None
+    data.compare_commit_shas = set()
     data.issues = [MagicMock(closed_at=None), MagicMock(closed_at=None)]
     data.pull_requests = [MagicMock(merged_at=None), MagicMock(merged_at=None)]
     data.commits = [MagicMock(commit=MagicMock(author=MagicMock(date=None)))]
@@ -57,6 +58,7 @@ def test_filter_with_release(mocker):
     data.home_repository = MagicMock(spec=Repository)
     data.release = MagicMock()
     data.since = datetime(2023, 1, 1)
+    data.compare_commit_shas = set()
 
     # Mock issues, pull requests, and commits
     data.issues = {
@@ -89,3 +91,108 @@ def test_filter_with_release(mocker):
     assert ("Count of issues reduced from %d to %d", 2, 1) == mock_log_debug.call_args_list[1][0]
     assert ("Count of pulls reduced from %d to %d", 2, 1) == mock_log_debug.call_args_list[2][0]
     assert ("Count of commits reduced from %d to %d", 2, 1) == mock_log_debug.call_args_list[3][0]
+
+
+# --- FilterByRelease compare mode guard ---
+
+
+def test_filter_compare_mode_passes_prs_through():
+    """PRs retained regardless of merged_at when compare_commit_shas is non-empty."""
+    data = MagicMock(spec=MinedData)
+    data.home_repository = MagicMock(spec=Repository)
+    data.release = MagicMock()
+    data.since = datetime(2026, 5, 14)
+    data.compare_commit_shas = {"sha_abc"}
+    data.issues = {}
+    data.commits = {}
+    old_pr = MagicMock()
+    old_pr.number = 1
+    old_pr.merged_at = datetime(2026, 5, 14) - timedelta(days=30)
+    old_pr.closed_at = old_pr.merged_at
+    data.pull_requests = {old_pr: data.home_repository}
+
+    filtered = FilterByRelease().filter(data)
+
+    assert old_pr in filtered.pull_requests
+
+
+def test_filter_compare_mode_passes_commits_through():
+    """Commits retained regardless of author date when compare_commit_shas is non-empty."""
+    data = MagicMock(spec=MinedData)
+    data.home_repository = MagicMock(spec=Repository)
+    data.release = MagicMock()
+    data.since = datetime(2026, 5, 14)
+    data.compare_commit_shas = {"sha_abc"}
+    data.issues = {}
+    data.pull_requests = {}
+    old_commit = MagicMock()
+    old_commit.commit.author.date = datetime(2026, 5, 14) - timedelta(days=30)
+    data.commits = {old_commit: data.home_repository}
+
+    filtered = FilterByRelease().filter(data)
+
+    assert old_commit in filtered.commits
+
+
+def test_filter_compare_mode_passes_multiple_prs_and_commits():
+    """All PRs and commits pass through unfiltered in compare mode."""
+    data = MagicMock(spec=MinedData)
+    data.home_repository = MagicMock(spec=Repository)
+    data.release = MagicMock()
+    data.since = datetime(2026, 5, 14)
+    data.compare_commit_shas = {"sha1", "sha2"}
+    data.issues = {}
+    old_date = datetime(2026, 5, 14) - timedelta(days=30)
+    data.pull_requests = {
+        MagicMock(number=i, merged_at=old_date, closed_at=old_date): data.home_repository
+        for i in range(3)
+    }
+    data.commits = {
+        MagicMock(commit=MagicMock(author=MagicMock(date=old_date))): data.home_repository
+        for _ in range(2)
+    }
+
+    filtered = FilterByRelease().filter(data)
+
+    assert len(filtered.pull_requests) == 3
+    assert len(filtered.commits) == 2
+
+
+def test_filter_timestamp_mode_filters_old_prs():
+    """PR before since excluded in timestamp mode (compare_commit_shas empty)."""
+    data = MagicMock(spec=MinedData)
+    data.home_repository = MagicMock(spec=Repository)
+    data.release = MagicMock()
+    data.since = datetime(2026, 5, 14)
+    data.compare_commit_shas = set()
+    data.issues = {}
+    data.commits = {}
+    old_pr = MagicMock()
+    old_pr.number = 1
+    old_pr.merged_at = datetime(2026, 5, 14) - timedelta(days=30)
+    old_pr.closed_at = old_pr.merged_at
+    data.pull_requests = {old_pr: data.home_repository}
+
+    filtered = FilterByRelease().filter(data)
+
+    assert old_pr not in filtered.pull_requests
+
+
+def test_filter_timestamp_mode_keeps_recent_prs():
+    """PR after since retained in timestamp mode (regression guard)."""
+    data = MagicMock(spec=MinedData)
+    data.home_repository = MagicMock(spec=Repository)
+    data.release = MagicMock()
+    data.since = datetime(2026, 5, 14)
+    data.compare_commit_shas = set()
+    data.issues = {}
+    data.commits = {}
+    new_pr = MagicMock()
+    new_pr.number = 2
+    new_pr.merged_at = datetime(2026, 5, 15)
+    new_pr.closed_at = datetime(2026, 5, 15)
+    data.pull_requests = {new_pr: data.home_repository}
+
+    filtered = FilterByRelease().filter(data)
+
+    assert new_pr in filtered.pull_requests

@@ -38,6 +38,7 @@ https://github.com/org/repo/compare/v1.5.0...v1.6.0
 (The compare URL reflects both `from-tag-name` and `tag-name`.)
 
 ## Related Features
+- [Compare Mode](./compare_mode.md) – activated automatically when `from-tag-name` is set; explains why graph-based selection is needed for branching histories and how it works internally.
 - [Date Selection](./date_selection.md) – defines which timestamp of the previous release becomes the cutoff.
 - [Service Chapters](./service_chapters.md) – uses the same time window to assess gaps.
 - [Release Notes Extraction](./release_notes_extraction.md) – only processes PRs/issues within the computed window.

@@ -19,6 +19,7 @@ This module contains logic for mining data from GitHub, including issues, pull r
 """
 
 import logging
+import re
 import sys
 import traceback
 from concurrent.futures import ThreadPoolExecutor, as_completed, CancelledError
@@ -30,15 +31,20 @@ from github.GitRelease import GitRelease
 from github.Issue import Issue
 from github.PullRequest import PullRequest
 from github.Repository import Repository
+from github.Commit import Commit as GithubCommit
 
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.data.utils.bulk_sub_issue_collector import BulkSubIssueCollector
+
 from release_notes_generator.model.record.issue_record import IssueRecord
 from release_notes_generator.model.mined_data import MinedData
 from release_notes_generator.model.record.pull_request_record import PullRequestRecord
 from release_notes_generator.utils.decorators import safe_call_decorator
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
 from release_notes_generator.utils.record_utils import get_id, parse_issue_id
+
+_PR_NUMBER_RE = re.compile(r"\(#(\d+)\)|Merge pull request #(\d+)")
+_COMPARE_COMMITS_MAX_RESULTS = 10_000
 
 logger = logging.getLogger(__name__)
 
@@ -64,9 +70,106 @@ class DataMiner:
         data = MinedData(repo)
         data.release = self.get_latest_release(repo)
 
+        # Ensure `since` is derived from resolved release when running in compare mode
+        if data.release is not None:
+            prefer_published = ActionInputs.get_published_at()
+            if prefer_published and getattr(data.release, "published_at", None) is not None:
+                data.since = data.release.published_at  # type: ignore[assignment]
+            elif getattr(data.release, "created_at", None) is not None:
+                data.since = data.release.created_at  # type: ignore[assignment]
+            else:
+                data.since = None
+
+        if ActionInputs.is_from_tag_name_defined():
+            self._handle_compare_mode(repo, data)
+        else:
+            self._handle_since_time_mode(repo, data)
+
+        logger.info("Initial data mining from GitHub completed.")
+
+        logger.info("Filtering duplicated issues from the list of issues...")
+        de_duplicated_data = self.__filter_duplicated_issues(data)
+        logger.info("Filtering duplicated issues from the list of issues finished.")
+
+        return de_duplicated_data
+
+    def _handle_compare_mode(self, repo: Repository, data: MinedData) -> None:
+        """
+        Handle comparison mode: mine commits and PRs between two tags.
+
+        Logic:
+          - Fetch commits between from_tag and to_tag using repo.compare().
+          - Extract PR numbers from commit messages and fetch those PRs.
+          - Filter out commits that already have a PR reference to avoid duplication.
+        """
+        logger.info(
+            "Compare mode: using repo.compare('%s', '%s').",
+            ActionInputs.get_from_tag_name(),
+            ActionInputs.get_tag_name(),
+        )
+        comparison = self._safe_call(repo.compare)(ActionInputs.get_from_tag_name(), ActionInputs.get_tag_name())
+        if comparison is None:
+            logger.error(
+                "Compare API returned no result for '%s'...'%s'. Ending!",
+                ActionInputs.get_from_tag_name(),
+                ActionInputs.get_tag_name(),
+            )
+            sys.exit(1)
+        compare_commits: list[GithubCommit] = list(comparison.commits)
+        total_commits = getattr(comparison, "total_commits", None)
+        if isinstance(total_commits, int) and total_commits > len(compare_commits):
+            logger.warning(
+                "Compare mode: retrieved %d commit(s) but comparison reports %d total; results may be truncated.",
+                len(compare_commits),
+                total_commits,
+            )
+        elif len(compare_commits) >= _COMPARE_COMMITS_MAX_RESULTS:
+            logger.warning(
+                "Compare mode: retrieved %d commit(s); comparison ranges over %d commits may be truncated.",
+                len(compare_commits),
+                _COMPARE_COMMITS_MAX_RESULTS,
+            )
+        data.compare_commit_shas = {c.sha for c in compare_commits}
+        data.commits = {c: data.home_repository for c in compare_commits}
+        pr_numbers = self._extract_pr_numbers_from_commits(compare_commits)
+        pulls: dict[PullRequest, Repository] = {}
+        for number in sorted(pr_numbers):
+            pr = self._safe_call(repo.get_pull)(number)
+            if pr is not None:
+                # Store each PR with its source repository for downstream filtering and processing.
+                # In compare mode, all PRs come from home_repository; cross-repo is handled elsewhere.
+                pulls[pr] = data.home_repository
+        data.pull_requests = pulls
+
+        # Only include commits that don't have a PR reference
+        # (commits identified by PR are redundant with the PR itself)
+        commits_without_pr: dict[GithubCommit, Repository] = {}
+        for commit in compare_commits:
+            subject = commit.commit.message.splitlines()[0] if commit.commit.message else ""
+            has_pr_ref = bool(_PR_NUMBER_RE.search(subject))
+            if not has_pr_ref:
+                commits_without_pr[commit] = data.home_repository
+
+        data.commits = commits_without_pr
+        logger.info(
+            "Compare mode: found %d commit(s) without PR, %d PR(s).",
+            len(commits_without_pr),
+            len(data.pull_requests),
+        )
+
+    def _handle_since_time_mode(self, repo: Repository, data: MinedData) -> None:
+        """
+        Handle since-time mode: mine issues, PRs, and commits based on release timestamp.
+
+        Logic:
+          - Fetch all issues and open issues since the release timestamp.
+          - De-duplicate by issue number to include long-lived open issues.
+          - Fetch all closed PRs on default branch.
+          - Fetch commits since the release timestamp (or all commits if no release).
+        """
         self._get_issues(data)
 
-        # pulls and commits, and then reduce them by the latest release since time
+        # Fetch closed PRs and commits, then reduce them by the latest release since time
         pull_requests = list(
             self._safe_call(repo.get_pulls)(state=PullRequestRecord.PR_STATE_CLOSED, base=repo.default_branch)
         )
@@ -76,14 +179,6 @@ class DataMiner:
         else:
             commits = list(self._safe_call(repo.get_commits)())
         data.commits = {c: data.home_repository for c in commits}
-
-        logger.info("Initial data mining from GitHub completed.")
-
-        logger.info("Filtering duplicated issues from the list of issues...")
-        de_duplicated_data = self.__filter_duplicated_issues(data)
-        logger.info("Filtering duplicated issues from the list of issues finished.")
-
-        return de_duplicated_data
 
     def mine_missing_sub_issues(self, data: MinedData) -> tuple[dict[Issue, Repository], dict[str, list[PullRequest]]]:
         """
@@ -422,6 +517,27 @@ class DataMiner:
                 rls = release
 
         return rls
+
+    @staticmethod
+    def _extract_pr_numbers_from_commits(commits: list[GithubCommit]) -> set[int]:
+        """
+        Extract unique PR numbers from commit messages.
+
+        Note: Only the first line (subject) of each commit message is scanned to avoid matching
+        references in the commit body.
+
+        Parameters:
+            commits: Commit objects whose messages are scanned.
+        Returns:
+            set[int]: Unique PR numbers found across all messages.
+        """
+        pr_numbers: set[int] = set()
+        for commit in commits:
+            subject = commit.commit.message.splitlines()[0] if commit.commit.message else ""
+            for match in _PR_NUMBER_RE.finditer(subject):
+                number_str = match.group(1) or match.group(2)
+                pr_numbers.add(int(number_str))
+        return pr_numbers
 
     @staticmethod
     def __filter_duplicated_issues(data: MinedData) -> "MinedData":
