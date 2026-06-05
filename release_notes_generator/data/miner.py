@@ -136,6 +136,8 @@ class DataMiner:
         for number in sorted(pr_numbers):
             pr = self._safe_call(repo.get_pull)(number)
             if pr is not None:
+                # Store each PR with its source repository for downstream filtering and processing.
+                # In compare mode, all PRs come from home_repository; cross-repo is handled elsewhere.
                 pulls[pr] = data.home_repository
         data.pull_requests = pulls
 

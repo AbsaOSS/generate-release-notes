@@ -127,8 +127,8 @@ from-tag-name provided?
   env:
     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   with:
-    tag-name: "v2.6.5"       # the release being generated
-    from-tag-name: "v2.6.4"  # providing this activates compare mode
+    tag-name: ${{ github.event.inputs.tag-name }}           # the release being generated
+    from-tag-name: ${{ github.event.inputs.from-tag-name }} # the previous release, activates compare mode when supplied
     chapters: |
       - {"title": "Bugfixes 🛠", "label": "bug"}
       - {"title": "Features 🎉", "label": "feature"}
