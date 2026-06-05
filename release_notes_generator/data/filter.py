@@ -82,7 +82,7 @@ class FilterByRelease(Filter):
             else:
                 # Timestamp mode: apply time-based filtering
                 issues_dict = self._filter_issues(data)
-                logger.debug("Count of issues reduced from %d to %d", len(data.issues), len(issues_dict))                
+                logger.debug("Count of issues reduced from %d to %d", len(data.issues), len(issues_dict))
 
                 # filter out merged PRs and commits before the date
                 pulls_seen: set[int] = set()

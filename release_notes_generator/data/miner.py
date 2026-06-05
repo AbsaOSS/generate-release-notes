@@ -70,6 +70,16 @@ class DataMiner:
         data = MinedData(repo)
         data.release = self.get_latest_release(repo)
 
+        # Ensure `since` is derived from resolved release when running in compare mode
+        if data.release is not None:
+            prefer_published = ActionInputs.get_published_at()
+            if prefer_published and getattr(data.release, "published_at", None) is not None:
+                data.since = data.release.published_at  # type: ignore[assignment]
+            elif getattr(data.release, "created_at", None) is not None:
+                data.since = data.release.created_at  # type: ignore[assignment]
+            else:
+                data.since = None
+
         if ActionInputs.is_from_tag_name_defined():
             logger.info(
                 "Compare mode: using repo.compare('%s', '%s').",
@@ -118,7 +128,11 @@ class DataMiner:
                     commits_without_pr[commit] = data.home_repository
 
             data.commits = commits_without_pr
-            logger.info("Compare mode: found %d commit(s) without PR, %d PR(s).", len(commits_without_pr), len(data.pull_requests))
+            logger.info(
+                "Compare mode: found %d commit(s) without PR, %d PR(s).",
+                len(commits_without_pr),
+                len(data.pull_requests),
+            )
         else:
             self._get_issues(data)
 
