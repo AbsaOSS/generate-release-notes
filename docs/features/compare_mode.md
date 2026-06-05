@@ -119,7 +119,7 @@ from-tag-name provided?
 
 ---
 
-## Configuration
+## Activation
 
 ```yaml
 - name: Generate Release Notes
