@@ -81,71 +81,9 @@ class DataMiner:
                 data.since = None
 
         if ActionInputs.is_from_tag_name_defined():
-            logger.info(
-                "Compare mode: using repo.compare('%s', '%s').",
-                ActionInputs.get_from_tag_name(),
-                ActionInputs.get_tag_name(),
-            )
-            comparison = self._safe_call(repo.compare)(ActionInputs.get_from_tag_name(), ActionInputs.get_tag_name())
-            if comparison is None:
-                logger.error(
-                    "Compare API returned no result for '%s'...'%s'. Ending!",
-                    ActionInputs.get_from_tag_name(),
-                    ActionInputs.get_tag_name(),
-                )
-                sys.exit(1)
-            compare_commits: list[GithubCommit] = list(comparison.commits)
-            total_commits = getattr(comparison, "total_commits", None)
-            if isinstance(total_commits, int) and total_commits > len(compare_commits):
-                logger.warning(
-                    "Compare mode: retrieved %d commit(s) but comparison reports %d total; results may be truncated.",
-                    len(compare_commits),
-                    total_commits,
-                )
-            elif len(compare_commits) >= _COMPARE_COMMITS_MAX_RESULTS:
-                logger.warning(
-                    "Compare mode: retrieved %d commit(s); comparison ranges over %d commits may be truncated.",
-                    len(compare_commits),
-                    _COMPARE_COMMITS_MAX_RESULTS,
-                )
-            data.compare_commit_shas = {c.sha for c in compare_commits}
-            data.commits = {c: data.home_repository for c in compare_commits}
-            pr_numbers = self._extract_pr_numbers_from_commits(compare_commits)
-            pulls: dict[PullRequest, Repository] = {}
-            for number in sorted(pr_numbers):
-                pr = self._safe_call(repo.get_pull)(number)
-                if pr is not None:
-                    pulls[pr] = data.home_repository
-            data.pull_requests = pulls
-
-            # Only include commits that don't have a PR reference
-            # (commits identified by PR are redundant with the PR itself)
-            commits_without_pr: dict[GithubCommit, Repository] = {}
-            for commit in compare_commits:
-                subject = commit.commit.message.splitlines()[0] if commit.commit.message else ""
-                has_pr_ref = bool(_PR_NUMBER_RE.search(subject))
-                if not has_pr_ref:
-                    commits_without_pr[commit] = data.home_repository
-
-            data.commits = commits_without_pr
-            logger.info(
-                "Compare mode: found %d commit(s) without PR, %d PR(s).",
-                len(commits_without_pr),
-                len(data.pull_requests),
-            )
+            self._handle_compare_mode(repo, data)
         else:
-            self._get_issues(data)
-
-            # pulls and commits, then reduce them by the latest release since time
-            pull_requests = list(
-                self._safe_call(repo.get_pulls)(state=PullRequestRecord.PR_STATE_CLOSED, base=repo.default_branch)
-            )
-            data.pull_requests = {pr: data.home_repository for pr in pull_requests}
-            if data.since:
-                commits = list(self._safe_call(repo.get_commits)(since=data.since))
-            else:
-                commits = list(self._safe_call(repo.get_commits)())
-            data.commits = {c: data.home_repository for c in commits}
+            self._handle_since_time_mode(repo, data)
 
         logger.info("Initial data mining from GitHub completed.")
 
@@ -154,6 +92,91 @@ class DataMiner:
         logger.info("Filtering duplicated issues from the list of issues finished.")
 
         return de_duplicated_data
+
+    def _handle_compare_mode(self, repo: Repository, data: MinedData) -> None:
+        """
+        Handle comparison mode: mine commits and PRs between two tags.
+
+        Logic:
+          - Fetch commits between from_tag and to_tag using repo.compare().
+          - Extract PR numbers from commit messages and fetch those PRs.
+          - Filter out commits that already have a PR reference to avoid duplication.
+        """
+        logger.info(
+            "Compare mode: using repo.compare('%s', '%s').",
+            ActionInputs.get_from_tag_name(),
+            ActionInputs.get_tag_name(),
+        )
+        comparison = self._safe_call(repo.compare)(ActionInputs.get_from_tag_name(), ActionInputs.get_tag_name())
+        if comparison is None:
+            logger.error(
+                "Compare API returned no result for '%s'...'%s'. Ending!",
+                ActionInputs.get_from_tag_name(),
+                ActionInputs.get_tag_name(),
+            )
+            sys.exit(1)
+        compare_commits: list[GithubCommit] = list(comparison.commits)
+        total_commits = getattr(comparison, "total_commits", None)
+        if isinstance(total_commits, int) and total_commits > len(compare_commits):
+            logger.warning(
+                "Compare mode: retrieved %d commit(s) but comparison reports %d total; results may be truncated.",
+                len(compare_commits),
+                total_commits,
+            )
+        elif len(compare_commits) >= _COMPARE_COMMITS_MAX_RESULTS:
+            logger.warning(
+                "Compare mode: retrieved %d commit(s); comparison ranges over %d commits may be truncated.",
+                len(compare_commits),
+                _COMPARE_COMMITS_MAX_RESULTS,
+            )
+        data.compare_commit_shas = {c.sha for c in compare_commits}
+        data.commits = {c: data.home_repository for c in compare_commits}
+        pr_numbers = self._extract_pr_numbers_from_commits(compare_commits)
+        pulls: dict[PullRequest, Repository] = {}
+        for number in sorted(pr_numbers):
+            pr = self._safe_call(repo.get_pull)(number)
+            if pr is not None:
+                pulls[pr] = data.home_repository
+        data.pull_requests = pulls
+
+        # Only include commits that don't have a PR reference
+        # (commits identified by PR are redundant with the PR itself)
+        commits_without_pr: dict[GithubCommit, Repository] = {}
+        for commit in compare_commits:
+            subject = commit.commit.message.splitlines()[0] if commit.commit.message else ""
+            has_pr_ref = bool(_PR_NUMBER_RE.search(subject))
+            if not has_pr_ref:
+                commits_without_pr[commit] = data.home_repository
+
+        data.commits = commits_without_pr
+        logger.info(
+            "Compare mode: found %d commit(s) without PR, %d PR(s).",
+            len(commits_without_pr),
+            len(data.pull_requests),
+        )
+
+    def _handle_since_time_mode(self, repo: Repository, data: MinedData) -> None:
+        """
+        Handle since-time mode: mine issues, PRs, and commits based on release timestamp.
+
+        Logic:
+          - Fetch all issues and open issues since the release timestamp.
+          - De-duplicate by issue number to include long-lived open issues.
+          - Fetch all closed PRs on default branch.
+          - Fetch commits since the release timestamp (or all commits if no release).
+        """
+        self._get_issues(data)
+
+        # Fetch closed PRs and commits, then reduce them by the latest release since time
+        pull_requests = list(
+            self._safe_call(repo.get_pulls)(state=PullRequestRecord.PR_STATE_CLOSED, base=repo.default_branch)
+        )
+        data.pull_requests = {pr: data.home_repository for pr in pull_requests}
+        if data.since:
+            commits = list(self._safe_call(repo.get_commits)(since=data.since))
+        else:
+            commits = list(self._safe_call(repo.get_commits)())
+        data.commits = {c: data.home_repository for c in commits}
 
     def mine_missing_sub_issues(self, data: MinedData) -> tuple[dict[Issue, Repository], dict[str, list[PullRequest]]]:
         """
