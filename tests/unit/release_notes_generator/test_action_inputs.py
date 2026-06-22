@@ -398,6 +398,18 @@ def test_get_print_empty_chapters(mocker):
     assert ActionInputs.get_print_empty_chapters() is True
 
 
+def test_get_show_stats_chapters_default_true(mocker):
+    """show-stats-chapters defaults to True when the input is absent (default 'true')."""
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="true")
+    assert ActionInputs.get_show_stats_chapters() is True
+
+
+def test_get_show_stats_chapters_explicitly_false(mocker):
+    """show-stats-chapters returns False when explicitly set to 'false'."""
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="false")
+    assert ActionInputs.get_show_stats_chapters() is False
+
+
 def test_get_verbose_verbose_by_action_input(mocker):
     mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="true")
     mocker.patch("os.getenv", return_value=0)
