@@ -51,23 +51,6 @@ _COMPARE_COMMITS_MAX_RESULTS = 10_000
 logger = logging.getLogger(__name__)
 
 
-class _MinimalComparison:  # pylint: disable=too-few-public-methods
-    """Fallback comparison object when compare API fails (e.g., 404).
-
-    Used when repo.compare() cannot resolve a comparison (e.g., compare endpoint
-    transient failure); provides a minimal interface compatible with
-    github.Comparison.Comparison by wrapping a single resolved commit.
-    """
-
-    def __init__(self, commit: GithubCommit) -> None:
-        """Initialize with a single commit.
-
-        Parameters:
-            commit: The commit to use as the fallback baseline.
-        """
-        self.commits: list[GithubCommit] = [commit]
-
-
 class DataMiner:
     """
     Class responsible for mining data from GitHub.
@@ -119,10 +102,10 @@ class DataMiner:
 
         Logic:
           - Fetch commits between from_tag and to_tag using repo.compare().
-          - If compare fails with 404 (e.g. eventual-consistency: target ref not yet visible),
-            attempt to fall back by resolving the target ref via get_commit().
+          - If compare fails with 404 (target tag does not exist yet),
+            fall back to the latest commit on the default branch.
           - If compare fails with other errors (auth, rate-limit, transient), log and exit.
-          - If fallback resolve succeeds, use the resolved commit as baseline.
+          - If fallback resolve succeeds, use the latest commit on default branch as baseline.
           - If fallback resolve also fails, log and exit.
           - Extract PR numbers from commit messages and fetch those PRs.
           - Filter out commits that already have a PR reference to avoid duplication.
@@ -146,10 +129,9 @@ class DataMiner:
         except GithubException as e:
             if e.status == 404:
                 logger.warning(
-                    "Compare API returned 404 for '%s'...'%s'. "
-                    "Attempting to resolve target ref '%s' via get_commit().",
+                    "Compare API returned 404 for '%s'...'%s': target tag does not exist. "
+                    "Falling back to latest commit on default branch.",
                     ActionInputs.get_from_tag_name(),
-                    ActionInputs.get_tag_name(),
                     ActionInputs.get_tag_name(),
                 )
             else:
@@ -163,17 +145,25 @@ class DataMiner:
                 sys.exit(1)
 
         if comparison is None:
-            # Fall back: fetch the latest commit of the target tag/ref
-            target_commit = self._safe_call(repo.get_commit)(ActionInputs.get_tag_name())
+            # Fall back: target tag does not exist; use the latest commit on the default branch
+            branch = self._safe_call(repo.get_branch)(repo.default_branch)
+            target_commit = branch.commit if branch is not None else None
             if target_commit is None:
                 logger.error(
-                    "Could not retrieve commit for '%s'. Ending!",
-                    ActionInputs.get_tag_name(),
+                    "Could not retrieve latest commit on default branch '%s'. Ending!",
+                    repo.default_branch,
                 )
                 sys.exit(1)
-            # Create a minimal comparison object with just the target commit
-            comparison = _MinimalComparison(target_commit)  # type: ignore[assignment]
-        compare_commits: list[GithubCommit] = list(comparison.commits)  # type: ignore[union-attr]
+            # Retry compare using the resolved commit SHA as the target
+            comparison = self._rate_limiter(repo.compare)(ActionInputs.get_from_tag_name(), target_commit.sha)
+            if comparison is None:
+                logger.error(
+                    "Compare API returned no result for '%s'...'%s'. Ending!",
+                    ActionInputs.get_from_tag_name(),
+                    target_commit.sha,
+                )
+                sys.exit(1)
+        compare_commits: list[GithubCommit] = list(comparison.commits)
         total_commits = getattr(comparison, "total_commits", None)
         if isinstance(total_commits, int) and total_commits > len(compare_commits):
             logger.warning(

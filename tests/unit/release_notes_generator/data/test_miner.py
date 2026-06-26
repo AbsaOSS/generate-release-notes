@@ -749,10 +749,10 @@ def test_mine_data_compare_mode_warns_on_retrieval_cap_without_total(mocker, moc
 
 
 def test_mine_data_compare_mode_fallback_to_target_sha_on_404(mocker, mock_repo):
-    """Test that when compare API raises 404, fallback to target tag's latest commit SHA."""
+    """Test that when compare API raises 404, fallback resolves the latest commit on the default branch and retries compare."""
     target_commit = mocker.Mock()
     target_commit.sha = "targetsha123"
-    target_commit.commit.message = "Latest commit on target tag (no PR ref)"
+    target_commit.commit.message = "Latest commit on default branch (no PR ref)"
 
     mocker.patch("release_notes_generator.action_inputs.ActionInputs.is_from_tag_name_defined", return_value=True)
     mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_from_tag_name", return_value="v2.6.3")
@@ -765,11 +765,21 @@ def test_mine_data_compare_mode_fallback_to_target_sha_on_404(mocker, mock_repo)
     release_mock.published_at = None
     release_mock.tag_name = "v2.6.3"
     mock_repo.get_release.return_value = release_mock
+    mock_repo.default_branch = "main"
 
-    # Compare API raises 404 exception
-    mock_repo.compare.side_effect = GithubException(404, {"message": "Comparison failed"})
-    # Fall back to fetching the target commit
-    mock_repo.get_commit.return_value = target_commit
+    branch_mock = mocker.Mock()
+    branch_mock.commit = target_commit
+    mock_repo.get_branch.return_value = branch_mock
+
+    fallback_comparison = mocker.Mock()
+    fallback_comparison.commits = [target_commit]
+    fallback_comparison.total_commits = 1
+
+    # First compare raises 404; second (with resolved SHA) succeeds
+    mock_repo.compare.side_effect = [
+        GithubException(404, {"message": "Comparison failed"}),
+        fallback_comparison,
+    ]
     mock_repo.get_issues.return_value = []
 
     warning_mock = mocker.patch("release_notes_generator.data.miner.logger.warning")
@@ -782,23 +792,25 @@ def test_mine_data_compare_mode_fallback_to_target_sha_on_404(mocker, mock_repo)
     miner._rate_limiter = decorator_mock
     data = miner.mine_data()
 
-    # Verify warning was logged with expected message
-    warning_mock.assert_called_once()
-    call_args = warning_mock.call_args[0]
-    assert "Compare API returned 404" in call_args[0]
-    assert "Attempting to resolve target ref" in call_args[0]
+    # Verify 404 warning was logged
+    first_warning = warning_mock.call_args_list[0]
+    assert "Compare API returned 404" in first_warning[0][0]
+    assert "Falling back to latest commit on default branch" in first_warning[0][0]
 
-    # Verify the fallback actually queried the target ref via get_commit()
-    mock_repo.get_commit.assert_called_once_with("v2.6.4")
+    # Verify fallback fetched the default branch (not the tag directly)
+    mock_repo.get_branch.assert_called_once_with("main")
 
-    # Verify the fallback commit was used
+    # Verify second compare call used from_tag and resolved SHA
+    assert mock_repo.compare.call_count == 2
+    mock_repo.compare.assert_called_with("v2.6.3", "targetsha123")
+
+    # Verify the fallback commit was included in the result
     assert "targetsha123" in data.compare_commit_shas, "Target commit SHA must be in compare_commit_shas"
-    # Commit is included since message has no PR reference, so no filtering
     assert len(data.commits) == 1, "Fallback commit should be included in data.commits"
 
 
-def test_mine_data_compare_mode_exits_when_fallback_fails(mocker, mock_repo):
-    """Test that action exits when both compare API and fallback commit fetch fail."""
+def test_mine_data_compare_mode_exits_when_fallback_branch_not_found(mocker, mock_repo):
+    """Test that action exits when compare API raises 404 and get_branch returns None."""
     mocker.patch("release_notes_generator.action_inputs.ActionInputs.is_from_tag_name_defined", return_value=True)
     mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_from_tag_name", return_value="v2.6.3")
     mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_tag_name", return_value="v2.6.4")
@@ -810,10 +822,51 @@ def test_mine_data_compare_mode_exits_when_fallback_fails(mocker, mock_repo):
     release_mock.published_at = None
     release_mock.tag_name = "v2.6.3"
     mock_repo.get_release.return_value = release_mock
+    mock_repo.default_branch = "main"
 
-    # Both compare and get_commit fail
+    # compare raises 404; get_branch returns None (branch not resolvable)
     mock_repo.compare.side_effect = GithubException(404, {"message": "Not Found"})
-    mock_repo.get_commit.return_value = None
+    mock_repo.get_branch.return_value = None
+    mock_repo.get_issues.return_value = []
+
+    github_mock = mocker.Mock(spec=Github)
+    github_mock.get_repo.return_value = mock_repo
+
+    miner = DataMiner(github_mock, mocker.Mock())
+    miner._safe_call = decorator_mock
+    miner._rate_limiter = decorator_mock
+
+    with pytest.raises(SystemExit):
+        miner.mine_data()
+
+
+def test_mine_data_compare_mode_exits_when_fallback_compare_returns_none(mocker, mock_repo):
+    """Test that action exits when compare API raises 404 and the fallback compare call returns None."""
+    target_commit = mocker.Mock()
+    target_commit.sha = "targetsha123"
+
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.is_from_tag_name_defined", return_value=True)
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_from_tag_name", return_value="v2.6.3")
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_tag_name", return_value="v2.6.4")
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_github_repository", return_value="org/repo")
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_published_at", return_value=False)
+
+    release_mock = mocker.Mock(spec=GitRelease)
+    release_mock.created_at = datetime(2026, 5, 7)
+    release_mock.published_at = None
+    release_mock.tag_name = "v2.6.3"
+    mock_repo.get_release.return_value = release_mock
+    mock_repo.default_branch = "main"
+
+    branch_mock = mocker.Mock()
+    branch_mock.commit = target_commit
+    mock_repo.get_branch.return_value = branch_mock
+
+    # First compare raises 404; second (fallback) returns None
+    mock_repo.compare.side_effect = [
+        GithubException(404, {"message": "Not Found"}),
+        None,
+    ]
     mock_repo.get_issues.return_value = []
 
     github_mock = mocker.Mock(spec=Github)
@@ -856,8 +909,8 @@ def test_mine_data_compare_mode_exits_on_non_404_github_exception(mocker, mock_r
     with pytest.raises(SystemExit):
         miner.mine_data()
 
-    # Fallback (get_commit) must NOT have been attempted
-    mock_repo.get_commit.assert_not_called()
+    # Fallback (get_branch) must NOT have been attempted
+    mock_repo.get_branch.assert_not_called()
     # Error must have been logged with the non-404 status
     assert any("500" in str(call) for call in error_mock.call_args_list)
 
