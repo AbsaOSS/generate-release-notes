@@ -145,17 +145,35 @@ class DataMiner:
                 sys.exit(1)
 
         if comparison is None:
-            # Fall back: target tag does not exist; use the latest commit on the default branch
-            branch = self._safe_call(repo.get_branch)(repo.default_branch)
-            target_commit = branch.commit if branch is not None else None
+            # Fall back: target tag/ref does not exist yet; resolve it directly
+            target_commit = self._safe_call(repo.get_commit)(ActionInputs.get_tag_name())
             if target_commit is None:
                 logger.error(
-                    "Could not retrieve latest commit on default branch '%s'. Ending!",
-                    repo.default_branch,
+                    "Could not retrieve commit for target ref '%s'. Ending!",
+                    ActionInputs.get_tag_name(),
                 )
                 sys.exit(1)
             # Retry compare using the resolved commit SHA as the target
-            comparison = self._rate_limiter(repo.compare)(ActionInputs.get_from_tag_name(), target_commit.sha)
+            try:
+                comparison = self._rate_limiter(repo.compare)(ActionInputs.get_from_tag_name(), target_commit.sha)
+            except (RequestsConnectionError, Timeout, RequestException) as e:
+                logger.error(
+                    "Network error during retry compare API call for '%s'...'%s': %s",
+                    ActionInputs.get_from_tag_name(),
+                    target_commit.sha,
+                    e,
+                )
+                sys.exit(1)
+            except GithubException as e:
+                logger.error(
+                    "Retry compare API failed for '%s'...'%s' with status %d: %s",
+                    ActionInputs.get_from_tag_name(),
+                    target_commit.sha,
+                    e.status,
+                    e.data.get("message", str(e)) if isinstance(e.data, dict) else str(e),
+                )
+                sys.exit(1)
+
             if comparison is None:
                 logger.error(
                     "Compare API returned no result for '%s'...'%s'. Ending!",

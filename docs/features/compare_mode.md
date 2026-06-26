@@ -107,12 +107,13 @@ and is technically resolvable via the API.
 **Fallback strategy:**
 
 If the compare API fails with a 404, the action performs the following:
-1. Resolves the latest commit on the repository's default branch via `get_branch()`
+1. Resolves the requested target ref (tag/branch/SHA) directly via `repo.get_commit()`
 2. Retries the compare operation using the from-tag name and the resolved commit's SHA: `repo.compare(from_tag, commit_sha)`
 3. A warning is logged to indicate the fallback occurred
-4. If the default branch cannot be resolved or the retry returns no result, the action exits with a non-zero code
+4. If the target ref cannot be resolved, the action exits with a non-zero code
+5. If the retry compare call fails (network error, GithubException), it is treated the same as the first call: errors are logged and the action exits
 
-For non-404 errors (auth failures, rate limits, server errors) the action logs the error and exits immediately.
+For non-404 errors on the initial compare (auth failures, rate limits, server errors) the action logs the error and exits immediately without attempting fallback.
 
 This scenario is handled gracefully when tags are created in a sequence:
 
@@ -153,7 +154,7 @@ from-tag-name provided?
     API fails (404)?           FilterByRelease drops
      │                         PRs/commits before since
      ├─ YES: Fallback to
-     │       get_branch(default)
+     │       get_commit(target)
      │       retry compare with
      │       resolved SHA
      │       (log warning)
