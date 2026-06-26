@@ -750,7 +750,7 @@ def test_mine_data_compare_mode_fallback_to_target_sha_on_404(mocker, mock_repo)
     """Test that when compare API returns None (404), fallback to target tag's latest commit SHA."""
     target_commit = mocker.Mock()
     target_commit.sha = "targetsha123"
-    target_commit.commit.message = "Latest commit on target tag (#99)"
+    target_commit.commit.message = "Latest commit on target tag (no PR ref)"
 
     mocker.patch("release_notes_generator.action_inputs.ActionInputs.is_from_tag_name_defined", return_value=True)
     mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_from_tag_name", return_value="v2.6.3")
@@ -769,7 +769,6 @@ def test_mine_data_compare_mode_fallback_to_target_sha_on_404(mocker, mock_repo)
     # Fall back to fetching the target commit
     mock_repo.get_commit.return_value = target_commit
     mock_repo.get_issues.return_value = []
-    mock_repo.get_pull.return_value = mocker.Mock(spec=PullRequest)
 
     warning_mock = mocker.patch("release_notes_generator.data.miner.logger.warning")
 
@@ -781,15 +780,16 @@ def test_mine_data_compare_mode_fallback_to_target_sha_on_404(mocker, mock_repo)
     miner._safe_call = decorator_mock
     data = miner.mine_data()
 
-    # Verify warning was logged
+    # Verify warning was logged with expected message
     warning_mock.assert_called_once()
     call_args = warning_mock.call_args[0]
     assert "Compare API failed" in call_args[0]
     assert "Falling back to the latest commit SHA" in call_args[0]
 
-    # Verify the target commit was used
-    assert "targetsha123" in data.compare_commit_shas
-    assert len(data.commits) <= 1  # May be 0 if PR number found and filtered
+    # Verify the fallback commit was used
+    assert "targetsha123" in data.compare_commit_shas, "Target commit SHA must be in compare_commit_shas"
+    # Commit is included since message has no PR reference, so no filtering
+    assert len(data.commits) == 1, "Fallback commit should be included in data.commits"
 
 
 def test_mine_data_compare_mode_exits_when_fallback_fails(mocker, mock_repo):

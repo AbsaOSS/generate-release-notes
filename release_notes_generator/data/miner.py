@@ -28,6 +28,7 @@ from typing import Optional, Callable
 import semver
 from github import Github
 from github.GitRelease import GitRelease
+from github.GithubException import GithubException
 from github.Issue import Issue
 from github.PullRequest import PullRequest
 from github.Repository import Repository
@@ -47,6 +48,23 @@ _PR_NUMBER_RE = re.compile(r"\(#(\d+)\)|Merge pull request #(\d+)")
 _COMPARE_COMMITS_MAX_RESULTS = 10_000
 
 logger = logging.getLogger(__name__)
+
+
+class _MinimalComparison:  # pylint: disable=too-few-public-methods
+    """Fallback comparison object when compare API fails (e.g., 404).
+
+    Used when repo.compare() cannot resolve a comparison (e.g., compare endpoint
+    transient failure); provides a minimal interface compatible with
+    github.Comparison.Comparison by wrapping a single resolved commit.
+    """
+
+    def __init__(self, commit: GithubCommit) -> None:
+        """Initialize with a single commit.
+
+        Parameters:
+            commit: The commit to use as the fallback baseline.
+        """
+        self.commits: list[GithubCommit] = [commit]
 
 
 class DataMiner:
@@ -99,7 +117,9 @@ class DataMiner:
 
         Logic:
           - Fetch commits between from_tag and to_tag using repo.compare().
-          - If compare fails (404), fall back to the latest commit SHA of to_tag.
+          - If compare fails with 404, attempt to fall back by resolving the target ref via get_commit().
+          - If compare fails with other errors (auth, rate-limit, transient), propagate the error.
+          - If fallback resolve fails or succeeds, use resolved commit as baseline.
           - Extract PR numbers from commit messages and fetch those PRs.
           - Filter out commits that already have a PR reference to avoid duplication.
         """
@@ -108,15 +128,29 @@ class DataMiner:
             ActionInputs.get_from_tag_name(),
             ActionInputs.get_tag_name(),
         )
-        comparison = self._safe_call(repo.compare)(ActionInputs.get_from_tag_name(), ActionInputs.get_tag_name())
+        comparison = None
+        try:
+            comparison = repo.compare(ActionInputs.get_from_tag_name(), ActionInputs.get_tag_name())
+        except GithubException as e:
+            if e.status == 404:
+                logger.warning(
+                    "Compare API returned 404 for '%s'...'%s'. "
+                    "Attempting to resolve target ref '%s' via get_commit().",
+                    ActionInputs.get_from_tag_name(),
+                    ActionInputs.get_tag_name(),
+                    ActionInputs.get_tag_name(),
+                )
+            else:
+                logger.error(
+                    "Compare API failed for '%s'...'%s' with status %d: %s",
+                    ActionInputs.get_from_tag_name(),
+                    ActionInputs.get_tag_name(),
+                    e.status,
+                    e.data.get("message", str(e)) if isinstance(e.data, dict) else str(e),
+                )
+                raise
+        
         if comparison is None:
-            logger.warning(
-                "Compare API failed for '%s'...'%s' (target tag may not exist yet). "
-                "Falling back to the latest commit SHA of '%s'.",
-                ActionInputs.get_from_tag_name(),
-                ActionInputs.get_tag_name(),
-                ActionInputs.get_tag_name(),
-            )
             # Fall back: fetch the latest commit of the target tag/ref
             target_commit = self._safe_call(repo.get_commit)(ActionInputs.get_tag_name())
             if target_commit is None:
@@ -126,10 +160,7 @@ class DataMiner:
                 )
                 sys.exit(1)
             # Create a minimal comparison object with just the target commit
-            class MinimalComparison:
-                def __init__(self, commit):
-                    self.commits = [commit]
-            comparison = MinimalComparison(target_commit)
+            comparison = _MinimalComparison(target_commit)
         compare_commits: list[GithubCommit] = list(comparison.commits)
         total_commits = getattr(comparison, "total_commits", None)
         if isinstance(total_commits, int) and total_commits > len(compare_commits):

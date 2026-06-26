@@ -128,7 +128,7 @@ This ensures the action completes gracefully even when tags are created in a seq
 
 **Log output when fallback is triggered:**
 
-```
+```log
 2026-06-25 12:22:27 - INFO - Compare mode: using repo.compare('v2.6.3', 'v2.6.4').
 2026-06-25 12:22:27 - WARNING - Compare API failed for 'v2.6.3'...'v2.6.4' (target tag may not exist yet). Falling back to the latest commit SHA of 'v2.6.4'.
 ```
