@@ -574,7 +574,8 @@ def test_extract_pr_numbers_multiline_message(mocker):
 
 def _make_compare_miner(mocker, mock_repo, *, from_tag="v2.6.3", to_tag="v2.6.4",
                         created_at=datetime(2026, 5, 7), published_at=None, prefer_published=False,
-                        compare_commits=None, get_pull_side_effect=None, total_commits=None):
+                        compare_commits=None, get_pull_side_effect=None, total_commits=None,
+                        from_tag_ref_exists=True, to_tag_ref_exists=True):
     """Wire a DataMiner for compare-mode mine_data calls."""
     mocker.patch("release_notes_generator.action_inputs.ActionInputs.is_from_tag_name_defined", return_value=True)
     mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_from_tag_name", return_value=from_tag)
@@ -588,6 +589,13 @@ def _make_compare_miner(mocker, mock_repo, *, from_tag="v2.6.3", to_tag="v2.6.4"
     release_mock.tag_name = from_tag
     mock_repo.get_release.return_value = release_mock
     mock_repo.get_issues.return_value = []
+
+    # Simulate git-ref existence for each tag in call order (from_tag first, to_tag second)
+    _ref_results = [
+        mocker.Mock() if from_tag_ref_exists else None,
+        mocker.Mock() if to_tag_ref_exists else None,
+    ]
+    mock_repo.get_git_ref.side_effect = _ref_results
 
     comparison_mock = mocker.Mock()
     comparison_mock.commits = compare_commits if compare_commits is not None else []
@@ -786,3 +794,105 @@ def test_mine_data_timestamp_mode_compare_shas_empty(mocker, mock_repo):
     data = miner.mine_data()
 
     assert data.compare_commit_shas == set()
+
+
+# --- tag existence validation ---
+
+
+def test_validate_tag_exists_returns_true_when_ref_found(mocker, mock_repo):
+    """get_git_ref returns an object → tag exists."""
+    gh = mocker.Mock(spec=Github)
+    miner = DataMiner(gh, mocker.Mock())
+    miner._safe_call = decorator_mock
+    mock_repo.get_git_ref.return_value = mocker.Mock()
+
+    assert miner._validate_tag_exists(mock_repo, "v1.0.0") is True
+    mock_repo.get_git_ref.assert_called_once_with("tags/v1.0.0")
+
+
+def test_validate_tag_exists_returns_false_when_ref_not_found(mocker, mock_repo):
+    """get_git_ref returns None (404 swallowed by safe_call) → tag absent."""
+    gh = mocker.Mock(spec=Github)
+    miner = DataMiner(gh, mocker.Mock())
+    miner._safe_call = decorator_mock
+    mock_repo.get_git_ref.return_value = None
+
+    assert miner._validate_tag_exists(mock_repo, "v9.9.9") is False
+
+
+def test_validate_compare_mode_tags_exits_on_missing_from_tag(mocker, mock_repo):
+    """from-tag missing → sys.exit(1) with error."""
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_from_tag_name", return_value="v1.0.0")
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_tag_name", return_value="v1.1.0")
+
+    gh = mocker.Mock(spec=Github)
+    miner = DataMiner(gh, mocker.Mock())
+    miner._safe_call = decorator_mock
+    # from-tag (first call) → missing; to-tag (second call) → exists
+    mock_repo.get_git_ref.side_effect = [None, mocker.Mock()]
+
+    mock_exit = mocker.patch("sys.exit")
+    error_mock = mocker.patch("release_notes_generator.data.miner.logger.error")
+
+    miner._validate_compare_mode_tags(mock_repo)
+
+    mock_exit.assert_called_once_with(1)
+    assert any("v1.0.0" in str(call) for call in error_mock.call_args_list)
+
+
+def test_validate_compare_mode_tags_exits_on_missing_to_tag(mocker, mock_repo):
+    """to-tag missing → sys.exit(1) with error."""
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_from_tag_name", return_value="v1.0.0")
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_tag_name", return_value="v1.1.0")
+
+    gh = mocker.Mock(spec=Github)
+    miner = DataMiner(gh, mocker.Mock())
+    miner._safe_call = decorator_mock
+    # from-tag → exists; to-tag (second call) → missing
+    mock_repo.get_git_ref.side_effect = [mocker.Mock(), None]
+
+    mock_exit = mocker.patch("sys.exit")
+    error_mock = mocker.patch("release_notes_generator.data.miner.logger.error")
+
+    miner._validate_compare_mode_tags(mock_repo)
+
+    mock_exit.assert_called_once_with(1)
+    assert any("v1.1.0" in str(call) for call in error_mock.call_args_list)
+
+
+def test_validate_compare_mode_tags_passes_when_both_exist(mocker, mock_repo):
+    """Both tags exist → no exit, no error logged."""
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_from_tag_name", return_value="v1.0.0")
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_tag_name", return_value="v1.1.0")
+
+    gh = mocker.Mock(spec=Github)
+    miner = DataMiner(gh, mocker.Mock())
+    miner._safe_call = decorator_mock
+    mock_repo.get_git_ref.return_value = mocker.Mock()
+
+    mock_exit = mocker.patch("sys.exit")
+    miner._validate_compare_mode_tags(mock_repo)
+
+    mock_exit.assert_not_called()
+
+
+def test_mine_data_compare_mode_exits_when_target_tag_missing(mocker, mock_repo):
+    """End-to-end: mine_data exits when tag-name does not exist as a git tag."""
+    miner = _make_compare_miner(mocker, mock_repo, to_tag_ref_exists=False)
+    mocker.patch("sys.exit", side_effect=SystemExit(1))
+
+    with pytest.raises(SystemExit):
+        miner.mine_data()
+
+    mock_repo.compare.assert_not_called()
+
+
+def test_mine_data_compare_mode_exits_when_from_tag_missing(mocker, mock_repo):
+    """End-to-end: mine_data exits when from-tag-name does not exist as a git tag."""
+    miner = _make_compare_miner(mocker, mock_repo, from_tag_ref_exists=False)
+    mocker.patch("sys.exit", side_effect=SystemExit(1))
+
+    with pytest.raises(SystemExit):
+        miner.mine_data()
+
+    mock_repo.compare.assert_not_called()

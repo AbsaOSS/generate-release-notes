@@ -35,6 +35,7 @@ from github.Commit import Commit as GithubCommit
 
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.data.utils.bulk_sub_issue_collector import BulkSubIssueCollector
+from release_notes_generator.utils.constants import COMPARE_MODE_TAG_MISSING_ERROR
 
 from release_notes_generator.model.record.issue_record import IssueRecord
 from release_notes_generator.model.mined_data import MinedData
@@ -93,28 +94,44 @@ class DataMiner:
 
         return de_duplicated_data
 
+    def _validate_tag_exists(self, repo: Repository, tag_name: str) -> bool:
+        """
+        Return True if *tag_name* exists as a git tag in *repo*, False otherwise.
+
+        Uses the safe_call wrapper so any 404 / GithubException is caught and
+        converted to a None return value, which is treated as "not found".
+        """
+        ref = self._safe_call(repo.get_git_ref)(f"tags/{tag_name}")
+        return ref is not None
+
+    def _validate_compare_mode_tags(self, repo: Repository) -> None:
+        """
+        Validate that both from-tag-name and tag-name exist as git tags.
+
+        Exits with code 1 on the first missing tag, logging a clear error message.
+        """
+        for tag_name in (ActionInputs.get_from_tag_name(), ActionInputs.get_tag_name()):
+            if not self._validate_tag_exists(repo, tag_name):
+                logger.error(COMPARE_MODE_TAG_MISSING_ERROR, tag_name, repo.full_name)
+                sys.exit(1)
+
     def _handle_compare_mode(self, repo: Repository, data: MinedData) -> None:
         """
         Handle comparison mode: mine commits and PRs between two tags.
 
         Logic:
+          - Validate both from_tag and to_tag exist as git tags (fail fast).
           - Fetch commits between from_tag and to_tag using repo.compare().
           - Extract PR numbers from commit messages and fetch those PRs.
           - Filter out commits that already have a PR reference to avoid duplication.
         """
+        self._validate_compare_mode_tags(repo)
         logger.info(
             "Compare mode: using repo.compare('%s', '%s').",
             ActionInputs.get_from_tag_name(),
             ActionInputs.get_tag_name(),
         )
         comparison = self._safe_call(repo.compare)(ActionInputs.get_from_tag_name(), ActionInputs.get_tag_name())
-        if comparison is None:
-            logger.error(
-                "Compare API returned no result for '%s'...'%s'. Ending!",
-                ActionInputs.get_from_tag_name(),
-                ActionInputs.get_tag_name(),
-            )
-            sys.exit(1)
         compare_commits: list[GithubCommit] = list(comparison.commits)
         total_commits = getattr(comparison, "total_commits", None)
         if isinstance(total_commits, int) and total_commits > len(compare_commits):

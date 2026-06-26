@@ -174,6 +174,24 @@ class ActionInputs:
         return value.strip() != ""
 
     @staticmethod
+    def validate_compare_mode_tag_names() -> None:
+        """
+        Validate that both tag-name and from-tag-name are non-empty strings.
+
+        Logs an error and exits if either is empty. Called before GitHub tag-existence
+        checks so callers receive a clear input-level error before any API call.
+        Both 'tag-name' and 'from-tag-name' must be non-empty when running in compare mode.
+        """
+        tag = ActionInputs.get_tag_name()
+        if not tag.strip():
+            logger.error("'tag-name' must not be empty when running in compare mode. Ending!")
+            sys.exit(1)
+        from_tag = ActionInputs.get_from_tag_name()
+        if not from_tag.strip():
+            logger.error("'from-tag-name' must not be empty when running in compare mode. Ending!")
+            sys.exit(1)
+
+    @staticmethod
     def get_chapters() -> list[dict[str, str]]:
         """
         Get list of the chapters from the action inputs. Each chapter is a dict.
@@ -668,6 +686,11 @@ class ActionInputs:
         # Features
         print_empty_chapters = ActionInputs.get_print_empty_chapters()
         ActionInputs.validate_input(print_empty_chapters, bool, "Print empty chapters must be a boolean.", errors)
+
+        # Compare mode: validate both tag names are non-empty strings.
+        # Only runs when all prior validations passed to avoid cascading errors.
+        if not errors and isinstance(from_tag_name, str) and from_tag_name.strip():
+            ActionInputs.validate_compare_mode_tag_names()
 
         # Log errors if any
         if errors:

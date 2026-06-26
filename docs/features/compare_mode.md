@@ -43,6 +43,11 @@ Generating release notes for **`v2.6.5`** (previous: `v2.6.4`):
 Compare mode is active **when `from-tag-name` is explicitly provided**. When it is absent
 the existing timestamp path runs unchanged.
 
+> **Prerequisite — both tags must exist:**  Before the compare API is called, the action
+> validates that **both `from-tag-name` and `tag-name` exist as git tags** in the repository.
+> If either tag is absent the action exits immediately with a clear error message and a
+> list of the most-recent tags to help diagnose the problem.
+
 ### Step 1 — Graph-based commit selection
 
 Instead of asking "what happened after time T?", the action asks GitHub: *"what commits
@@ -106,11 +111,14 @@ from-tag-name provided?
      ┌──┴──────────────────────┐
     YES (compare mode)         NO (timestamp mode)
      │                         │
-  GitHub Compare API:          get_commits(since=data.since)
-  commits unique to to-tag     get_pulls(state=closed)
+  Validate both tags exist      get_commits(since=data.since)
+  (exit with error if missing)  get_pulls(state=closed)
      │                              │
-  extract PR numbers           FilterByRelease drops
-  from commit messages         PRs/commits before since
+  GitHub Compare API:          FilterByRelease drops
+  commits unique to to-tag     PRs/commits before since
+     │
+  extract PR numbers
+  from commit messages
      │
   fetch each PR by number
      │

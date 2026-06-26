@@ -25,6 +25,13 @@
     * Ensure the Pull Request description clearly outlines your solution.
     * Link your PR to the relevant _Issue_.
 
+## Compare Mode Contract
+
+When contributing changes that touch compare mode (the `from-tag-name` path):
+- Both `tag-name` and `from-tag-name` must exist as git tags before the compare API is called.
+- The action validates this via `DataMiner._validate_compare_mode_tags()` and exits with code 1 if either tag is absent.
+- Any change to this validation logic must update `docs/features/compare_mode.md` and the tests in `tests/unit/release_notes_generator/data/test_miner.py`.
+
 ## Branch Naming (PID:H-1)
 Branches MUST start with one of the allowed prefixes: `feature/`, `fix/`, `docs/`, `chore/`
 Examples:

@@ -185,6 +185,46 @@ def test_get_from_tag_name_invalid_format(mocker):
     )
 
 
+# --- validate_compare_mode_tag_names ---
+
+
+def test_validate_compare_mode_tag_names_both_set(mocker):
+    """Both tag-name and from-tag-name non-empty → no exit, no error."""
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_tag_name", return_value="v1.1.0")
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_from_tag_name", return_value="v1.0.0")
+    mock_exit = mocker.patch("sys.exit")
+
+    ActionInputs.validate_compare_mode_tag_names()
+
+    mock_exit.assert_not_called()
+
+
+def test_validate_compare_mode_tag_names_empty_tag_name_exits(mocker):
+    """Empty tag-name → sys.exit(1)."""
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_tag_name", return_value="")
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_from_tag_name", return_value="v1.0.0")
+    mock_exit = mocker.patch("sys.exit")
+    error_mock = mocker.patch("release_notes_generator.action_inputs.logger.error")
+
+    ActionInputs.validate_compare_mode_tag_names()
+
+    mock_exit.assert_called_once_with(1)
+    assert any("tag-name" in str(c) for c in error_mock.call_args_list)
+
+
+def test_validate_compare_mode_tag_names_empty_from_tag_name_exits(mocker):
+    """Empty from-tag-name → sys.exit(1)."""
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_tag_name", return_value="v1.1.0")
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_from_tag_name", return_value="")
+    mock_exit = mocker.patch("sys.exit")
+    error_mock = mocker.patch("release_notes_generator.action_inputs.logger.error")
+
+    ActionInputs.validate_compare_mode_tag_names()
+
+    mock_exit.assert_called_once_with(1)
+    assert any("from-tag-name" in str(c) for c in error_mock.call_args_list)
+
+
 def test_get_chapters_success(mocker):
     mocker.patch(
         "release_notes_generator.action_inputs.get_action_input", return_value='[{"title": "Title", "label": "Label"}]'

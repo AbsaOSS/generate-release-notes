@@ -122,7 +122,10 @@ Only a few inputs are required to get started:
 For the full input and output reference, see [Configuration reference](docs/configuration_reference.md).  
 For how label → chapter mapping and aggregation works, see [Custom Chapters Behavior](docs/configuration_reference.md#custom-chapters-behavior).
 
-> **Important**: tag defined by `tag-name` must exist in the repository; otherwise, the action fails.
+> **Important**: In compare mode (`from-tag-name` provided), **both** `tag-name` and
+> `from-tag-name` must exist as git tags in the repository. The action validates this
+> before calling the compare API and exits with a clear error and a list of recent tags
+> if either is absent.
 
 ## Example Workflow
 

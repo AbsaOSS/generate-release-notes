@@ -82,6 +82,12 @@ DEFAULT_SERVICE_CHAPTER_ORDER: list[str] = [
     OTHERS_NO_TOPIC,
 ]
 
+# Compare mode tag validation
+COMPARE_MODE_TAG_MISSING_ERROR: str = (
+    "Compare mode requires both tags to exist. Tag '%s' not found in repository '%s'."
+    " Both 'tag-name' and 'from-tag-name' must exist as git tags. Ending!"
+)
+
 LINKED_ISSUES_MAX = 10
 ISSUES_FOR_PRS: str = """
 query {{
