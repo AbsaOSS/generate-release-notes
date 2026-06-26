@@ -102,15 +102,15 @@ Issues are always filtered by timestamp regardless of mode.
 
 In CI/CD pipelines it is common to call the release notes generator immediately after pushing a new tag.
 Due to eventual consistency, GitHub's compare endpoint may return a 404 even for a tag that was just pushed
-and is technically resolvable via the commits API.
+and is technically resolvable via the API.
 
 **Fallback strategy:**
 
-If the compare API fails with a 404, the action attempts to resolve the target ref via `get_commit()`:
-1. The action falls back to fetching the latest commit SHA of the target tag/ref via the commits API
-2. A warning is logged to indicate the fallback occurred
-3. Processing continues with just that single commit as the comparison baseline
-4. If the ref still cannot be resolved, the action exits with a non-zero code
+If the compare API fails with a 404, the action performs the following:
+1. Resolves the latest commit on the repository's default branch via `get_branch()`
+2. Retries the compare operation using the from-tag name and the resolved commit's SHA: `repo.compare(from_tag, commit_sha)`
+3. A warning is logged to indicate the fallback occurred
+4. If the default branch cannot be resolved or the retry returns no result, the action exits with a non-zero code
 
 For non-404 errors (auth failures, rate limits, server errors) the action logs the error and exits immediately.
 
@@ -134,7 +134,7 @@ This scenario is handled gracefully when tags are created in a sequence:
 
 ```log
 2026-06-25 12:22:27 - INFO - Compare mode: using repo.compare('v2.6.3', 'v2.6.4').
-2026-06-25 12:22:27 - WARNING - Compare API returned 404 for 'v2.6.3'...'v2.6.4'. Attempting to resolve target ref 'v2.6.4' via get_commit().
+2026-06-25 12:22:27 - WARNING - Compare API returned 404 for 'v2.6.3'...'v2.6.4': target tag does not exist. Falling back to latest commit on default branch.
 ```
 
 ---
@@ -153,7 +153,9 @@ from-tag-name provided?
     API fails (404)?           FilterByRelease drops
      │                         PRs/commits before since
      ├─ YES: Fallback to
-     │       target ref SHA
+     │       get_branch(default)
+     │       retry compare with
+     │       resolved SHA
      │       (log warning)
      │
   extract PR numbers
