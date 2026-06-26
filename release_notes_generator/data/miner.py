@@ -75,6 +75,7 @@ class DataMiner:
 
     def __init__(self, github_instance: Github, rate_limiter: GithubRateLimiter):
         self.github_instance = github_instance
+        self._rate_limiter = rate_limiter
         self._safe_call = safe_call_decorator(rate_limiter)
 
     def mine_data(self) -> MinedData:
@@ -133,7 +134,7 @@ class DataMiner:
         )
         comparison = None
         try:
-            comparison = repo.compare(ActionInputs.get_from_tag_name(), ActionInputs.get_tag_name())
+            comparison = self._rate_limiter(repo.compare)(ActionInputs.get_from_tag_name(), ActionInputs.get_tag_name())
         except (RequestsConnectionError, Timeout, RequestException) as e:
             logger.error(
                 "Network error during compare API call for '%s'...'%s': %s",

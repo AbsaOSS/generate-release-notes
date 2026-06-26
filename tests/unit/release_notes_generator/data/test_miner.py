@@ -306,7 +306,7 @@ def test_mine_data_commits_without_since(mocker, mock_repo):
     miner = DataMiner(gh, mocker.Mock())
 
     # Bypass safe_call wrapper
-    miner._safe_call = lambda f: f
+    miner._safe_call = decorator_mock
 
     # Inputs / release behavior
     mocker.patch(
@@ -333,7 +333,7 @@ def test_scan_sub_issues_for_parents(mocker, mock_repo, mined_data_simple):
 
     # miner setup
     miner = DataMiner(gh, mocker.Mock())
-    miner._safe_call = lambda f: f
+    miner._safe_call = decorator_mock
     mocker.patch.object(miner, "_make_bulk_sub_issue_collector", return_value=ChildBulkSubIssueCollector())
 
     mocker.patch.object(miner, "_fetch_all_repositories_in_cache", return_value=None)
@@ -356,7 +356,7 @@ def test_fetch_all_repositories_in_cache(mocker, mock_repo, mined_data_simple):
 
     # miner setup
     miner = DataMiner(gh, mocker.Mock())
-    miner._safe_call = lambda f: f
+    miner._safe_call = decorator_mock
 
     patch_parents_sub_issues: dict[str, list[str]] = {}
     patch_parents_sub_issues["org_1/another_repo#122"] = ["org_2/another_repo#122", "org_3/another_repo#122", "o/r#1"]
@@ -405,7 +405,7 @@ def test_fetch_missing_issues(mocker, mock_repo, mined_data_simple, mock_issue_c
 
     # miner setup
     miner = DataMiner(gh, mocker.Mock())
-    miner._safe_call = lambda f: f
+    miner._safe_call = decorator_mock
 
     patch_parents_sub_issues: dict[str, list[str]] = {}
     patch_parents_sub_issues["org/repo#1"] = [
@@ -455,7 +455,7 @@ def test_fetch_missing_issues_no_fetch(mocker, mock_repo, mined_data_simple, moc
 
     # miner setup
     miner = DataMiner(gh, mocker.Mock())
-    miner._safe_call = lambda f: f
+    miner._safe_call = decorator_mock
 
     patch_parents_sub_issues: dict[str, list[str]] = {}
 
@@ -478,7 +478,7 @@ def test_fetch_prs_for_fetched_cross_issues(mocker, mock_repo):
     # Miner with safe_call bypassed
     gh = mocker.Mock()
     miner = DataMiner(gh, mocker.Mock())
-    miner._safe_call = lambda f: f  # no decorator wrapping
+    miner._safe_call = decorator_mock
 
     # PR object returned by as_pull_request()
     pr_obj = mocker.Mock(spec=PullRequest)
@@ -606,6 +606,7 @@ def _make_compare_miner(mocker, mock_repo, *, from_tag="v2.6.3", to_tag="v2.6.4"
 
     miner = DataMiner(github_mock, mocker.Mock())
     miner._safe_call = decorator_mock
+    miner._rate_limiter = decorator_mock
     return miner
 
 
@@ -778,6 +779,7 @@ def test_mine_data_compare_mode_fallback_to_target_sha_on_404(mocker, mock_repo)
 
     miner = DataMiner(github_mock, mocker.Mock())
     miner._safe_call = decorator_mock
+    miner._rate_limiter = decorator_mock
     data = miner.mine_data()
 
     # Verify warning was logged with expected message
@@ -819,6 +821,7 @@ def test_mine_data_compare_mode_exits_when_fallback_fails(mocker, mock_repo):
 
     miner = DataMiner(github_mock, mocker.Mock())
     miner._safe_call = decorator_mock
+    miner._rate_limiter = decorator_mock
 
     with pytest.raises(SystemExit):
         miner.mine_data()
@@ -847,7 +850,8 @@ def test_mine_data_compare_mode_exits_on_non_404_github_exception(mocker, mock_r
     github_mock.get_repo.return_value = mock_repo
 
     miner = DataMiner(github_mock, mocker.Mock())
-    miner._safe_call = lambda f: f
+    miner._safe_call = decorator_mock
+    miner._rate_limiter = decorator_mock
 
     with pytest.raises(SystemExit):
         miner.mine_data()
