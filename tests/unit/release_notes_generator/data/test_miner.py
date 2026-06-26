@@ -776,7 +776,6 @@ def test_mine_data_compare_mode_fallback_to_target_sha_on_404(mocker, mock_repo)
     github_mock = mocker.Mock(spec=Github)
     github_mock.get_repo.return_value = mock_repo
 
-    decorator_mock = lambda f: f
     miner = DataMiner(github_mock, mocker.Mock())
     miner._safe_call = decorator_mock
     data = miner.mine_data()
@@ -818,7 +817,6 @@ def test_mine_data_compare_mode_exits_when_fallback_fails(mocker, mock_repo):
     github_mock = mocker.Mock(spec=Github)
     github_mock.get_repo.return_value = mock_repo
 
-    decorator_mock = lambda f: f
     miner = DataMiner(github_mock, mocker.Mock())
     miner._safe_call = decorator_mock
 

@@ -30,6 +30,7 @@ from github import Github
 from github.GitRelease import GitRelease
 from github import GithubException
 from github.Issue import Issue
+from requests.exceptions import ConnectionError as RequestsConnectionError, Timeout, RequestException
 from github.PullRequest import PullRequest
 from github.Repository import Repository
 from github.Commit import Commit as GithubCommit
@@ -133,6 +134,14 @@ class DataMiner:
         comparison = None
         try:
             comparison = repo.compare(ActionInputs.get_from_tag_name(), ActionInputs.get_tag_name())
+        except (RequestsConnectionError, Timeout, RequestException) as e:
+            logger.error(
+                "Network error during compare API call for '%s'...'%s': %s",
+                ActionInputs.get_from_tag_name(),
+                ActionInputs.get_tag_name(),
+                e,
+            )
+            sys.exit(1)
         except GithubException as e:
             if e.status == 404:
                 logger.warning(
