@@ -60,7 +60,7 @@ jobs:
 
       - name: Generate Release Notes
         id: generate_release_notes
-        uses: AbsaOSS/generate-release-notes@B90223510d1704301a36a36f0d86a72a0e72f0cf # v1.0.0
+        uses: AbsaOSS/generate-release-notes@bugfix/322-Compare-Mode-Fails-with-404-When-Target-Tag-Not-Yet-Created
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
