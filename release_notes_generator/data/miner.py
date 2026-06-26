@@ -28,7 +28,7 @@ from typing import Optional, Callable
 import semver
 from github import Github
 from github.GitRelease import GitRelease
-from github.GithubException import GithubException
+from github import GithubException
 from github.Issue import Issue
 from github.PullRequest import PullRequest
 from github.Repository import Repository
@@ -117,9 +117,11 @@ class DataMiner:
 
         Logic:
           - Fetch commits between from_tag and to_tag using repo.compare().
-          - If compare fails with 404, attempt to fall back by resolving the target ref via get_commit().
-          - If compare fails with other errors (auth, rate-limit, transient), propagate the error.
-          - If fallback resolve fails or succeeds, use resolved commit as baseline.
+          - If compare fails with 404 (e.g. eventual-consistency: target ref not yet visible),
+            attempt to fall back by resolving the target ref via get_commit().
+          - If compare fails with other errors (auth, rate-limit, transient), log and exit.
+          - If fallback resolve succeeds, use the resolved commit as baseline.
+          - If fallback resolve also fails, log and exit.
           - Extract PR numbers from commit messages and fetch those PRs.
           - Filter out commits that already have a PR reference to avoid duplication.
         """
@@ -130,7 +132,7 @@ class DataMiner:
         )
         comparison = None
         try:
-            comparison = repo.compare(ActionInputs.get_from_tag_name(), ActionInputs.get_tag_name())
+            comparison = self._safe_call(repo.compare)(ActionInputs.get_from_tag_name(), ActionInputs.get_tag_name())
         except GithubException as e:
             if e.status == 404:
                 logger.warning(
@@ -148,7 +150,7 @@ class DataMiner:
                     e.status,
                     e.data.get("message", str(e)) if isinstance(e.data, dict) else str(e),
                 )
-                raise
+                sys.exit(1)
 
         if comparison is None:
             # Fall back: fetch the latest commit of the target tag/ref

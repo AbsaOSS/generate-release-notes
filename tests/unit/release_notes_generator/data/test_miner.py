@@ -21,9 +21,9 @@ from datetime import datetime
 from typing import Optional
 
 from github import Github
+from github import GithubException
 from github.Commit import Commit
 from github.GitRelease import GitRelease
-from github.GithubException import GithubException
 from github.Issue import Issue
 from github.PullRequest import PullRequest
 from github.Repository import Repository
@@ -787,6 +787,9 @@ def test_mine_data_compare_mode_fallback_to_target_sha_on_404(mocker, mock_repo)
     assert "Compare API returned 404" in call_args[0]
     assert "Attempting to resolve target ref" in call_args[0]
 
+    # Verify the fallback actually queried the target ref via get_commit()
+    mock_repo.get_commit.assert_called_once_with("v2.6.4")
+
     # Verify the fallback commit was used
     assert "targetsha123" in data.compare_commit_shas, "Target commit SHA must be in compare_commit_shas"
     # Commit is included since message has no PR reference, so no filtering
@@ -808,7 +811,7 @@ def test_mine_data_compare_mode_exits_when_fallback_fails(mocker, mock_repo):
     mock_repo.get_release.return_value = release_mock
 
     # Both compare and get_commit fail
-    mock_repo.compare.return_value = None
+    mock_repo.compare.side_effect = GithubException(404, {"message": "Not Found"})
     mock_repo.get_commit.return_value = None
     mock_repo.get_issues.return_value = []
 

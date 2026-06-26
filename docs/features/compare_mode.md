@@ -98,19 +98,23 @@ Issues are always filtered by timestamp regardless of mode.
 
 ---
 
-## Fallback Behavior — When the Target Tag Doesn't Exist Yet
+## Fallback Behavior — Compare-Endpoint 404 / Eventual Consistency
 
-In CI/CD pipelines, it's common to call the release notes generator *before* the target tag is created.
-When the compare API receives a request for a non-existent tag, it returns a 404 error.
+In CI/CD pipelines it is common to call the release notes generator immediately after pushing a new tag.
+Due to eventual consistency, GitHub's compare endpoint may return a 404 even for a tag that was just pushed
+and is technically resolvable via the commits API.
 
 **Fallback strategy:**
 
-If the compare API fails with a 404 or any other error:
-1. The action falls back to fetching the latest commit SHA of the target tag/ref
+If the compare API fails with a 404, the action attempts to resolve the target ref via `get_commit()`:
+1. The action falls back to fetching the latest commit SHA of the target tag/ref via the commits API
 2. A warning is logged to indicate the fallback occurred
 3. Processing continues with just that single commit as the comparison baseline
+4. If the ref still cannot be resolved, the action exits with a non-zero code
 
-This ensures the action completes gracefully even when tags are created in a sequence:
+For non-404 errors (auth failures, rate limits, server errors) the action logs the error and exits immediately.
+
+This scenario is handled gracefully when tags are created in a sequence:
 
 ```yaml
 - name: Build & Tag Release
@@ -130,7 +134,7 @@ This ensures the action completes gracefully even when tags are created in a seq
 
 ```log
 2026-06-25 12:22:27 - INFO - Compare mode: using repo.compare('v2.6.3', 'v2.6.4').
-2026-06-25 12:22:27 - WARNING - Compare API failed for 'v2.6.3'...'v2.6.4' (target tag may not exist yet). Falling back to the latest commit SHA of 'v2.6.4'.
+2026-06-25 12:22:27 - WARNING - Compare API returned 404 for 'v2.6.3'...'v2.6.4'. Attempting to resolve target ref 'v2.6.4' via get_commit().
 ```
 
 ---
