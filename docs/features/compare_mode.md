@@ -98,6 +98,43 @@ Issues are always filtered by timestamp regardless of mode.
 
 ---
 
+## Fallback Behavior — When the Target Tag Doesn't Exist Yet
+
+In CI/CD pipelines, it's common to call the release notes generator *before* the target tag is created.
+When the compare API receives a request for a non-existent tag, it returns a 404 error.
+
+**Fallback strategy:**
+
+If the compare API fails with a 404 or any other error:
+1. The action falls back to fetching the latest commit SHA of the target tag/ref
+2. A warning is logged to indicate the fallback occurred
+3. Processing continues with just that single commit as the comparison baseline
+
+This ensures the action completes gracefully even when tags are created in a sequence:
+
+```yaml
+- name: Build & Tag Release
+  run: |
+    ./scripts/build.sh
+    git tag v2.6.4
+    git push origin v2.6.4
+
+- name: Generate Release Notes  # Runs immediately after tagging
+  uses: AbsaOSS/generate-release-notes@v1
+  with:
+    tag-name: v2.6.4
+    from-tag-name: v2.6.3
+```
+
+**Log output when fallback is triggered:**
+
+```
+2026-06-25 12:22:27 - INFO - Compare mode: using repo.compare('v2.6.3', 'v2.6.4').
+2026-06-25 12:22:27 - WARNING - Compare API failed for 'v2.6.3'...'v2.6.4' (target tag may not exist yet). Falling back to the latest commit SHA of 'v2.6.4'.
+```
+
+---
+
 ## Data Flow
 
 ```
@@ -109,8 +146,14 @@ from-tag-name provided?
   GitHub Compare API:          get_commits(since=data.since)
   commits unique to to-tag     get_pulls(state=closed)
      │                              │
-  extract PR numbers           FilterByRelease drops
-  from commit messages         PRs/commits before since
+    API fails (404)?           FilterByRelease drops
+     │                         PRs/commits before since
+     ├─ YES: Fallback to
+     │       target ref SHA
+     │       (log warning)
+     │
+  extract PR numbers
+  from commit messages
      │
   fetch each PR by number
      │

@@ -99,6 +99,7 @@ class DataMiner:
 
         Logic:
           - Fetch commits between from_tag and to_tag using repo.compare().
+          - If compare fails (404), fall back to the latest commit SHA of to_tag.
           - Extract PR numbers from commit messages and fetch those PRs.
           - Filter out commits that already have a PR reference to avoid duplication.
         """
@@ -109,12 +110,26 @@ class DataMiner:
         )
         comparison = self._safe_call(repo.compare)(ActionInputs.get_from_tag_name(), ActionInputs.get_tag_name())
         if comparison is None:
-            logger.error(
-                "Compare API returned no result for '%s'...'%s'. Ending!",
+            logger.warning(
+                "Compare API failed for '%s'...'%s' (target tag may not exist yet). "
+                "Falling back to the latest commit SHA of '%s'.",
                 ActionInputs.get_from_tag_name(),
                 ActionInputs.get_tag_name(),
+                ActionInputs.get_tag_name(),
             )
-            sys.exit(1)
+            # Fall back: fetch the latest commit of the target tag/ref
+            target_commit = self._safe_call(repo.get_commit)(ActionInputs.get_tag_name())
+            if target_commit is None:
+                logger.error(
+                    "Could not retrieve commit for '%s'. Ending!",
+                    ActionInputs.get_tag_name(),
+                )
+                sys.exit(1)
+            # Create a minimal comparison object with just the target commit
+            class MinimalComparison:
+                def __init__(self, commit):
+                    self.commits = [commit]
+            comparison = MinimalComparison(target_commit)
         compare_commits: list[GithubCommit] = list(comparison.commits)
         total_commits = getattr(comparison, "total_commits", None)
         if isinstance(total_commits, int) and total_commits > len(compare_commits):
