@@ -45,8 +45,7 @@ the existing timestamp path runs unchanged.
 
 > **Prerequisite — both tags must exist:**  Before the compare API is called, the action
 > validates that **both `from-tag-name` and `tag-name` exist as git tags** in the repository.
-> If either tag is absent the action exits immediately with a clear error message and a
-> list of the most-recent tags to help diagnose the problem.
+> If either tag is absent the action exits immediately with a clear error message.
 
 ### Step 1 — Graph-based commit selection
 

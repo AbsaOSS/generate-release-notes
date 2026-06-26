@@ -132,6 +132,13 @@ class DataMiner:
             ActionInputs.get_tag_name(),
         )
         comparison = self._safe_call(repo.compare)(ActionInputs.get_from_tag_name(), ActionInputs.get_tag_name())
+        if comparison is None:
+            logger.error(
+                "Compare API returned no result for '%s'...'%s'. Ending!",
+                ActionInputs.get_from_tag_name(),
+                ActionInputs.get_tag_name(),
+            )
+            sys.exit(1)
         compare_commits: list[GithubCommit] = list(comparison.commits)
         total_commits = getattr(comparison, "total_commits", None)
         if isinstance(total_commits, int) and total_commits > len(compare_commits):

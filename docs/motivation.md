@@ -14,7 +14,7 @@ Release documentation often drifts: missing PR summaries, unlabeled issues, or m
 |-----------|-------------|
 | Determinism | Same inputs produce the same release notes; no hidden heuristics. |
 | Explicit Configuration | Chapters defined in YAML; no magic label groupings. |
-| Fail Safe | If explicit notes missing, optionally fall back to CodeRabbit; never silently fabricate content. In compare mode, both tags must exist before any API call — the action exits immediately with a clear error and a list of recent tags rather than confusing 404 responses. |
+| Fail Safe | If explicit notes missing, optionally fall back to CodeRabbit; never silently fabricate content. In compare mode, both tags must exist before any API call — the action exits immediately with a clear error rather than confusing 404 responses. |
 | Transparency | Service Chapters surface hygiene issues instead of hiding them. |
 | Extensibility | Row formats, hierarchy, and duplicity policy are pluggable via inputs. |
 | Minimal Boilerplate | Only a tag and basic chapters required for first adoption. |

@@ -124,8 +124,7 @@ For how label → chapter mapping and aggregation works, see [Custom Chapters Be
 
 > **Important**: In compare mode (`from-tag-name` provided), **both** `tag-name` and
 > `from-tag-name` must exist as git tags in the repository. The action validates this
-> before calling the compare API and exits with a clear error and a list of recent tags
-> if either is absent.
+> before calling the compare API and exits with a clear error if either is absent.
 
 ## Example Workflow
 
