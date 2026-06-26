@@ -590,7 +590,6 @@ def _make_compare_miner(mocker, mock_repo, *, from_tag="v2.6.3", to_tag="v2.6.4"
     mock_repo.get_release.return_value = release_mock
     mock_repo.get_issues.return_value = []
 
-    # Simulate git-ref existence for each tag in call order (from_tag first, to_tag second)
     _ref_results = [
         mocker.Mock() if from_tag_ref_exists else GithubException(404, "Not Found"),
         mocker.Mock() if to_tag_ref_exists else GithubException(404, "Not Found"),

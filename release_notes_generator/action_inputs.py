@@ -174,6 +174,17 @@ class ActionInputs:
         return value.strip() != ""
 
     @staticmethod
+    def is_from_tag_name_provided() -> bool:
+        """
+        Check whether the from-tag-name input was explicitly provided with a non-blank value.
+
+        Reads the raw env var (before normalization) so that whitespace-only values are
+        still treated as provided, routing them to the fail-fast compare-mode validation
+        in validate_inputs() rather than silently skipping it.
+        """
+        return os.getenv(f'INPUT_{FROM_TAG_NAME.replace("-", "_").upper()}', "") != ""
+
+    @staticmethod
     def validate_compare_mode_tag_names() -> None:
         """
         Validate that both tag-name and from-tag-name are non-empty strings.
@@ -689,7 +700,7 @@ class ActionInputs:
 
         # Compare mode: validate both tag names are non-empty strings.
         # Only runs when all prior validations passed to avoid cascading errors.
-        if not errors and isinstance(from_tag_name, str) and from_tag_name.strip():
+        if not errors and ActionInputs.is_from_tag_name_provided():
             ActionInputs.validate_compare_mode_tag_names()
 
         # Log errors if any
