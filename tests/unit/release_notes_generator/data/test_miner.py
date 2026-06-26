@@ -23,6 +23,7 @@ from typing import Optional
 from github import Github
 from github.Commit import Commit
 from github.GitRelease import GitRelease
+from github.GithubException import GithubException
 from github.Issue import Issue
 from github.PullRequest import PullRequest
 from github.Repository import Repository
@@ -747,7 +748,7 @@ def test_mine_data_compare_mode_warns_on_retrieval_cap_without_total(mocker, moc
 
 
 def test_mine_data_compare_mode_fallback_to_target_sha_on_404(mocker, mock_repo):
-    """Test that when compare API returns None (404), fallback to target tag's latest commit SHA."""
+    """Test that when compare API raises 404, fallback to target tag's latest commit SHA."""
     target_commit = mocker.Mock()
     target_commit.sha = "targetsha123"
     target_commit.commit.message = "Latest commit on target tag (no PR ref)"
@@ -764,8 +765,8 @@ def test_mine_data_compare_mode_fallback_to_target_sha_on_404(mocker, mock_repo)
     release_mock.tag_name = "v2.6.3"
     mock_repo.get_release.return_value = release_mock
 
-    # Compare API returns None (404)
-    mock_repo.compare.return_value = None
+    # Compare API raises 404 exception
+    mock_repo.compare.side_effect = GithubException(404, {"message": "Comparison failed"})
     # Fall back to fetching the target commit
     mock_repo.get_commit.return_value = target_commit
     mock_repo.get_issues.return_value = []
@@ -783,8 +784,8 @@ def test_mine_data_compare_mode_fallback_to_target_sha_on_404(mocker, mock_repo)
     # Verify warning was logged with expected message
     warning_mock.assert_called_once()
     call_args = warning_mock.call_args[0]
-    assert "Compare API failed" in call_args[0]
-    assert "Falling back to the latest commit SHA" in call_args[0]
+    assert "Compare API returned 404" in call_args[0]
+    assert "Attempting to resolve target ref" in call_args[0]
 
     # Verify the fallback commit was used
     assert "targetsha123" in data.compare_commit_shas, "Target commit SHA must be in compare_commit_shas"

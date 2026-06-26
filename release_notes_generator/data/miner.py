@@ -149,7 +149,7 @@ class DataMiner:
                     e.data.get("message", str(e)) if isinstance(e.data, dict) else str(e),
                 )
                 raise
-        
+
         if comparison is None:
             # Fall back: fetch the latest commit of the target tag/ref
             target_commit = self._safe_call(repo.get_commit)(ActionInputs.get_tag_name())
@@ -160,8 +160,8 @@ class DataMiner:
                 )
                 sys.exit(1)
             # Create a minimal comparison object with just the target commit
-            comparison = _MinimalComparison(target_commit)
-        compare_commits: list[GithubCommit] = list(comparison.commits)
+            comparison = _MinimalComparison(target_commit)  # type: ignore[assignment]
+        compare_commits: list[GithubCommit] = list(comparison.commits)  # type: ignore[union-attr]
         total_commits = getattr(comparison, "total_commits", None)
         if isinstance(total_commits, int) and total_commits > len(compare_commits):
             logger.warning(
