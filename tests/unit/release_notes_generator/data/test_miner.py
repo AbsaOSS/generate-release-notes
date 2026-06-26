@@ -826,6 +826,40 @@ def test_mine_data_compare_mode_exits_when_fallback_fails(mocker, mock_repo):
         miner.mine_data()
 
 
+def test_mine_data_compare_mode_exits_on_non_404_github_exception(mocker, mock_repo):
+    """Non-404 GithubException from compare API must exit immediately without falling back."""
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.is_from_tag_name_defined", return_value=True)
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_from_tag_name", return_value="v2.6.3")
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_tag_name", return_value="v2.6.4")
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_github_repository", return_value="org/repo")
+    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_published_at", return_value=False)
+
+    release_mock = mocker.Mock(spec=GitRelease)
+    release_mock.created_at = datetime(2026, 5, 7)
+    release_mock.published_at = None
+    release_mock.tag_name = "v2.6.3"
+    mock_repo.get_release.return_value = release_mock
+
+    mock_repo.compare.side_effect = GithubException(500, {"message": "Internal Server Error"})
+    mock_repo.get_issues.return_value = []
+
+    error_mock = mocker.patch("release_notes_generator.data.miner.logger.error")
+
+    github_mock = mocker.Mock(spec=Github)
+    github_mock.get_repo.return_value = mock_repo
+
+    miner = DataMiner(github_mock, mocker.Mock())
+    miner._safe_call = lambda f: f
+
+    with pytest.raises(SystemExit):
+        miner.mine_data()
+
+    # Fallback (get_commit) must NOT have been attempted
+    mock_repo.get_commit.assert_not_called()
+    # Error must have been logged with the non-404 status
+    assert any("500" in str(call) for call in error_mock.call_args_list)
+
+
 # --- mine_data timestamp mode (regression) ---
 
 

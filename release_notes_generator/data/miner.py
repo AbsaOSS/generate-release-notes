@@ -132,7 +132,7 @@ class DataMiner:
         )
         comparison = None
         try:
-            comparison = self._safe_call(repo.compare)(ActionInputs.get_from_tag_name(), ActionInputs.get_tag_name())
+            comparison = repo.compare(ActionInputs.get_from_tag_name(), ActionInputs.get_tag_name())
         except GithubException as e:
             if e.status == 404:
                 logger.warning(
