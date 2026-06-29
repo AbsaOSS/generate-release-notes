@@ -107,7 +107,26 @@ class DataMiner:
             ActionInputs.get_from_tag_name(),
             ActionInputs.get_tag_name(),
         )
-        comparison = self._safe_call(repo.compare)(ActionInputs.get_from_tag_name(), ActionInputs.get_tag_name())
+        from_tag = ActionInputs.get_from_tag_name()
+        to_tag = ActionInputs.get_tag_name()
+
+        ref = self._safe_call(repo.get_git_ref)(f"tags/{from_tag}")
+        if ref is None:
+            logger.error(
+                "Tag '%s' does not exist in the repository. Ending!",
+                from_tag,
+            )
+            sys.exit(1)
+
+        ref = self._safe_call(repo.get_git_ref)(f"tags/{to_tag}")
+        if ref is None:
+            logger.error(
+                "Tag '%s' does not exist in the repository. Ending!",
+                to_tag,
+            )
+            sys.exit(1)
+
+        comparison = self._safe_call(repo.compare)(from_tag, to_tag)
         if comparison is None:
             logger.error(
                 "Compare API returned no result for '%s'...'%s'. Ending!",

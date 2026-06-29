@@ -123,8 +123,9 @@ For the full input and output reference, see [Configuration reference](docs/conf
 For how label → chapter mapping and aggregation works, see [Custom Chapters Behavior](docs/configuration_reference.md#custom-chapters-behavior).
 
 > **Important**: In compare mode (`from-tag-name` provided), **both** `tag-name` and
-> `from-tag-name` must exist as git tags in the repository. The action validates this
-> before calling the compare API and exits with a clear error if either is absent.
+> `from-tag-name` must exist as git tags in the repository. The action checks each tag
+> via the GitHub API before calling compare and exits with a tag-specific error if either
+> is absent.
 
 ## Example Workflow
 

@@ -44,8 +44,8 @@ Compare mode is active **when `from-tag-name` is explicitly provided**. When it 
 the existing timestamp path runs unchanged.
 
 > **Prerequisite — both tags must exist:**  Before the compare API is called, the action
-> validates that **both `from-tag-name` and `tag-name` exist as git tags** in the repository.
-> If either tag is absent the action exits immediately with a clear error message.
+> looks up each tag via `get_git_ref("tags/<tag>")`. If either tag is absent the action
+> exits immediately with a tag-specific error message naming the missing tag.
 
 ### Step 1 — Graph-based commit selection
 
