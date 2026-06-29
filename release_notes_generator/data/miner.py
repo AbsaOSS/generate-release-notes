@@ -26,7 +26,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed, CancelledError
 from typing import Optional, Callable
 
 import semver
-from github import Github, GithubException
+from github import Github
 from github.GitRelease import GitRelease
 from github.Issue import Issue
 from github.PullRequest import PullRequest
@@ -35,9 +35,6 @@ from github.Commit import Commit as GithubCommit
 
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.data.utils.bulk_sub_issue_collector import BulkSubIssueCollector
-from requests.exceptions import ConnectionError as RequestsConnectionError, RequestException, Timeout
-
-from release_notes_generator.utils.constants import COMPARE_MODE_TAG_API_ERROR, COMPARE_MODE_TAG_MISSING_ERROR
 
 from release_notes_generator.model.record.issue_record import IssueRecord
 from release_notes_generator.model.mined_data import MinedData
@@ -96,49 +93,15 @@ class DataMiner:
 
         return de_duplicated_data
 
-    def _validate_tag_exists(self, repo: Repository, tag_name: str) -> bool:
-        """
-        Return True if *tag_name* exists as a git tag in *repo*, False otherwise.
-
-        Calls repo.get_git_ref directly (not via _safe_call) so that a 404 can be
-        distinguished from other API or network failures. Raises any non-404
-        GithubException or network error for the caller to handle.
-        """
-        try:
-            repo.get_git_ref(f"tags/{tag_name}")
-            return True
-        except GithubException as exc:
-            if exc.status == 404:
-                return False
-            raise
-
-    def _validate_compare_mode_tags(self, repo: Repository) -> None:
-        """
-        Validate that both from-tag-name and tag-name exist as git tags.
-
-        Exits with code 1 on the first missing tag (404) or on any API/network
-        error, logging a distinct message for each failure mode.
-        """
-        for tag_name in (ActionInputs.get_from_tag_name(), ActionInputs.get_tag_name()):
-            try:
-                if not self._validate_tag_exists(repo, tag_name):
-                    logger.error(COMPARE_MODE_TAG_MISSING_ERROR, tag_name, repo.full_name)
-                    sys.exit(1)
-            except (GithubException, RequestsConnectionError, Timeout, RequestException) as exc:
-                logger.error(COMPARE_MODE_TAG_API_ERROR, tag_name, repo.full_name, exc)
-                sys.exit(1)
-
     def _handle_compare_mode(self, repo: Repository, data: MinedData) -> None:
         """
         Handle comparison mode: mine commits and PRs between two tags.
 
         Logic:
-          - Validate both from_tag and to_tag exist as git tags (fail fast).
           - Fetch commits between from_tag and to_tag using repo.compare().
           - Extract PR numbers from commit messages and fetch those PRs.
           - Filter out commits that already have a PR reference to avoid duplication.
         """
-        self._validate_compare_mode_tags(repo)
         logger.info(
             "Compare mode: using repo.compare('%s', '%s').",
             ActionInputs.get_from_tag_name(),

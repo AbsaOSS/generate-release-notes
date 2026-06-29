@@ -20,7 +20,7 @@ import pytest
 from datetime import datetime
 from typing import Optional
 
-from github import Github, GithubException
+from github import Github
 from github.Commit import Commit
 from github.GitRelease import GitRelease
 from github.Issue import Issue
@@ -574,8 +574,7 @@ def test_extract_pr_numbers_multiline_message(mocker):
 
 def _make_compare_miner(mocker, mock_repo, *, from_tag="v2.6.3", to_tag="v2.6.4",
                         created_at=datetime(2026, 5, 7), published_at=None, prefer_published=False,
-                        compare_commits=None, get_pull_side_effect=None, total_commits=None,
-                        from_tag_ref_exists=True, to_tag_ref_exists=True):
+                        compare_commits=None, get_pull_side_effect=None, total_commits=None):
     """Wire a DataMiner for compare-mode mine_data calls."""
     mocker.patch("release_notes_generator.action_inputs.ActionInputs.is_from_tag_name_defined", return_value=True)
     mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_from_tag_name", return_value=from_tag)
@@ -589,12 +588,6 @@ def _make_compare_miner(mocker, mock_repo, *, from_tag="v2.6.3", to_tag="v2.6.4"
     release_mock.tag_name = from_tag
     mock_repo.get_release.return_value = release_mock
     mock_repo.get_issues.return_value = []
-
-    _ref_results = [
-        mocker.Mock() if from_tag_ref_exists else GithubException(404, "Not Found"),
-        mocker.Mock() if to_tag_ref_exists else GithubException(404, "Not Found"),
-    ]
-    mock_repo.get_git_ref.side_effect = _ref_results
 
     comparison_mock = mocker.Mock()
     comparison_mock.commits = compare_commits if compare_commits is not None else []
@@ -795,26 +788,4 @@ def test_mine_data_timestamp_mode_compare_shas_empty(mocker, mock_repo):
     assert data.compare_commit_shas == set()
 
 
-# --- compare mode tag validation (end-to-end via mine_data) ---
 
-
-def test_mine_data_compare_mode_exits_when_target_tag_missing(mocker, mock_repo):
-    """End-to-end: mine_data exits when tag-name does not exist as a git tag."""
-    miner = _make_compare_miner(mocker, mock_repo, to_tag_ref_exists=False)
-    mocker.patch("sys.exit", side_effect=SystemExit(1))
-
-    with pytest.raises(SystemExit):
-        miner.mine_data()
-
-    mock_repo.compare.assert_not_called()
-
-
-def test_mine_data_compare_mode_exits_when_from_tag_missing(mocker, mock_repo):
-    """End-to-end: mine_data exits when from-tag-name does not exist as a git tag."""
-    miner = _make_compare_miner(mocker, mock_repo, from_tag_ref_exists=False)
-    mocker.patch("sys.exit", side_effect=SystemExit(1))
-
-    with pytest.raises(SystemExit):
-        miner.mine_data()
-
-    mock_repo.compare.assert_not_called()
