@@ -836,5 +836,3 @@ def test_mine_data_compare_mode_both_tags_exist_calls_compare(mocker, mock_repo)
     miner.mine_data()
 
     mock_repo.compare.assert_called_once_with("v2.6.3", "v2.6.4")
-
-

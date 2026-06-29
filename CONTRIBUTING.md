@@ -29,7 +29,8 @@
 
 When contributing changes that touch compare mode (the `from-tag-name` path):
 - Both `tag-name` and `from-tag-name` must exist as git tags before the compare API is called.
-- The action validates this via `DataMiner._validate_compare_mode_tags()` and exits with code 1 if either tag is absent.
+- Input-level check: `ActionInputs.validate_compare_mode_tag_names()` (called from `validate_inputs()`) exits with code 1 if either input string is empty.
+- Tag-existence check: `DataMiner._handle_compare_mode()` calls `repo.get_git_ref("tags/<tag>")` for both tags and exits with code 1 naming the absent tag if either lookup fails.
 - Any change to this validation logic must update `docs/features/compare_mode.md` and the tests in `tests/unit/release_notes_generator/data/test_miner.py`.
 
 ## Branch Naming (PID:H-1)
