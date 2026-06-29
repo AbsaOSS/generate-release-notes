@@ -182,7 +182,7 @@ class ActionInputs:
         treated as provided and routed to the fail-fast compare-mode validation in
         validate_inputs() rather than silently skipping it.
         """
-        return os.getenv(f'INPUT_{FROM_TAG_NAME.replace("-", "_").upper()}', "") != ""
+        return get_action_input(FROM_TAG_NAME, default="") != ""
 
     @staticmethod
     def validate_compare_mode_tag_names() -> None:

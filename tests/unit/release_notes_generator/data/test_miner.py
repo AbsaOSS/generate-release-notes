@@ -855,3 +855,19 @@ def test_mine_data_compare_mode_both_tags_exist_calls_compare(mocker, mock_repo)
     miner.mine_data()
 
     mock_repo.compare.assert_called_once_with("v2.6.3", "v2.6.4")
+
+
+def test_mine_data_compare_mode_network_error_on_tag_validation_exits(mocker, mock_repo):
+    """Network-layer exception (non-GithubException) on tag ref lookup → error logged and sys.exit(1)."""
+    mock_repo.get_git_ref.side_effect = OSError("Connection timed out")
+    error_mock = mocker.patch("release_notes_generator.data.miner.logger.error")
+
+    miner = _make_compare_miner(mocker, mock_repo)
+
+    with pytest.raises(SystemExit) as exc_info:
+        miner.mine_data()
+
+    assert exc_info.value.code == 1
+    logged_messages = " ".join(str(call) for call in error_mock.call_args_list)
+    assert "Connection timed out" in logged_messages
+    mock_repo.compare.assert_not_called()

@@ -182,6 +182,14 @@ class DataMiner:
                     e.data,
                 )
             sys.exit(1)
+        except Exception as exc:
+            logger.error(
+                "Unexpected error validating tag '%s' in repository '%s': %s. Ending!",
+                tag,
+                repo.full_name,
+                exc,
+            )
+            sys.exit(1)
 
     def _handle_since_time_mode(self, repo: Repository, data: MinedData) -> None:
         """
