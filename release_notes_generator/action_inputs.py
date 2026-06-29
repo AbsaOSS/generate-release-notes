@@ -176,11 +176,11 @@ class ActionInputs:
     @staticmethod
     def is_from_tag_name_provided() -> bool:
         """
-        Check whether the from-tag-name input was explicitly provided with a non-blank value.
+        Check whether the from-tag-name input was explicitly provided (even if whitespace-only).
 
-        Reads the raw env var (before normalization) so that whitespace-only values are
-        still treated as provided, routing them to the fail-fast compare-mode validation
-        in validate_inputs() rather than silently skipping it.
+        Reads the raw env var before normalization, so a whitespace-only value is still
+        treated as provided and routed to the fail-fast compare-mode validation in
+        validate_inputs() rather than silently skipping it.
         """
         return os.getenv(f'INPUT_{FROM_TAG_NAME.replace("-", "_").upper()}', "") != ""
 
