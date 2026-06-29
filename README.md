@@ -139,14 +139,26 @@ on:
   workflow_dispatch:
     inputs:
       tag-name:
-        description: 'Existing git tag to use for this draft release. Syntax: "v[0-9]+.[0-9]+.[0-9]+". Ensure the tag is created and pushed before running.'
+        description: 'Tag name to create and use for this draft release. Syntax: "v[0-9]+.[0-9]+.[0-9]+".'
         required: true
+      from-tag-name:
+        description: 'Existing tag to use as the start of the release range (compare mode). Syntax: "v[0-9]+.[0-9]+.[0-9]+". Must already exist in the repository.'
+        required: false
 
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create and push tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag ${{ github.event.inputs.tag-name }}
+          git push origin ${{ github.event.inputs.tag-name }}
 
       - name: Generate Release Notes
         id: notes
@@ -155,6 +167,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag-name: ${{ github.event.inputs.tag-name }}
+          from-tag-name: ${{ github.event.inputs.from-tag-name }}
           chapters: |
             - {"title": "New Features 🎉", "labels": "enhancement, feature", "order": 10}
             - {"title": "Bugfixes 🛠", "labels": "error, bug", "order": 20}

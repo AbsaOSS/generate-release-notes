@@ -166,41 +166,19 @@ class ActionInputs:
         return normalize_version_tag(raw)
 
     @staticmethod
-    def is_from_tag_name_defined() -> bool:
+    def is_from_tag_name_defined(*, use_raw: bool = False) -> bool:
         """
         Check if the from-tag name is defined in the action inputs.
-        """
-        value = ActionInputs.get_from_tag_name()
-        return value.strip() != ""
 
-    @staticmethod
-    def is_from_tag_name_provided() -> bool:
+        Parameters:
+            use_raw: When True, reads the raw env var before normalization so a
+                     whitespace-only value is still treated as defined (used during
+                     validation to route it to a fail-fast error). When False
+                     (default), checks the normalized, stripped value.
         """
-        Check whether the from-tag-name input was explicitly provided (even if whitespace-only).
-
-        Reads the raw env var before normalization, so a whitespace-only value is still
-        treated as provided and routed to the fail-fast compare-mode validation in
-        validate_inputs() rather than silently skipping it.
-        """
-        return get_action_input(FROM_TAG_NAME, default="") != ""
-
-    @staticmethod
-    def validate_compare_mode_tag_names() -> None:
-        """
-        Validate that both tag-name and from-tag-name are non-empty strings.
-
-        Logs an error and exits if either is empty. Called before GitHub tag-existence
-        checks so callers receive a clear input-level error before any API call.
-        Both 'tag-name' and 'from-tag-name' must be non-empty when running in compare mode.
-        """
-        tag = ActionInputs.get_tag_name()
-        if not tag.strip():
-            logger.error("'tag-name' must not be empty when running in compare mode. Ending!")
-            sys.exit(1)
-        from_tag = ActionInputs.get_from_tag_name()
-        if not from_tag.strip():
-            logger.error("'from-tag-name' must not be empty when running in compare mode. Ending!")
-            sys.exit(1)
+        if use_raw:
+            return get_action_input(FROM_TAG_NAME, default="") != ""
+        return ActionInputs.get_from_tag_name().strip() != ""
 
     @staticmethod
     def get_chapters() -> list[dict[str, str]]:
@@ -633,6 +611,11 @@ class ActionInputs:
         from_tag_name = ActionInputs.get_from_tag_name()
         if not isinstance(from_tag_name, str):
             errors.append("From tag name must be a string.")
+        elif ActionInputs.is_from_tag_name_defined(use_raw=True) and not from_tag_name.strip():
+            errors.append(
+                "'from-tag-name' must not be empty when running in compare mode. "
+                "Both 'tag-name' and 'from-tag-name' must refer to existing tags in the repository."
+            )
 
         chapters = ActionInputs.get_chapters()
         if len(chapters) == 0:
@@ -697,11 +680,6 @@ class ActionInputs:
         # Features
         print_empty_chapters = ActionInputs.get_print_empty_chapters()
         ActionInputs.validate_input(print_empty_chapters, bool, "Print empty chapters must be a boolean.", errors)
-
-        # Compare mode: validate both tag names are non-empty strings.
-        # Only runs when all prior validations passed to avoid cascading errors.
-        if not errors and ActionInputs.is_from_tag_name_provided():
-            ActionInputs.validate_compare_mode_tag_names()
 
         # Log errors if any
         if errors:

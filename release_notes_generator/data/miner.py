@@ -102,13 +102,10 @@ class DataMiner:
           - Extract PR numbers from commit messages and fetch those PRs.
           - Filter out commits that already have a PR reference to avoid duplication.
         """
-        logger.info(
-            "Compare mode: using repo.compare('%s', '%s').",
-            ActionInputs.get_from_tag_name(),
-            ActionInputs.get_tag_name(),
-        )
         from_tag = ActionInputs.get_from_tag_name()
         to_tag = ActionInputs.get_tag_name()
+
+        logger.info("Compare mode: using repo.compare('%s', '%s').", from_tag, to_tag)
 
         self._validate_tag_exists(repo, from_tag)
         self._validate_tag_exists(repo, to_tag)
@@ -117,8 +114,8 @@ class DataMiner:
         if comparison is None:
             logger.error(
                 "Compare API returned no result for '%s'...'%s'. Ending!",
-                ActionInputs.get_from_tag_name(),
-                ActionInputs.get_tag_name(),
+                from_tag,
+                to_tag,
             )
             sys.exit(1)
         compare_commits: list[GithubCommit] = list(comparison.commits)
@@ -169,7 +166,8 @@ class DataMiner:
         except GithubException as e:
             if e.status == 404:
                 logger.error(
-                    "Tag '%s' does not exist in repository '%s'. Ending!",
+                    "Tag '%s' does not exist in repository '%s'. "
+                    "Both 'tag-name' and 'from-tag-name' must exist as git tags before compare mode is used. Ending!",
                     tag,
                     repo.full_name,
                 )

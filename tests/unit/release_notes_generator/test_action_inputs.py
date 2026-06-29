@@ -176,31 +176,31 @@ def test_get_from_tag_name_empty(mocker):
     assert ActionInputs.get_from_tag_name() == ""
 
 
-# --- is_from_tag_name_provided ---
+# --- is_from_tag_name_defined (use_raw=True) ---
 
 
-def test_is_from_tag_name_provided_when_env_var_set(monkeypatch):
+def test_is_from_tag_name_defined_raw_when_env_var_set(monkeypatch):
     """Env var present with a valid tag → True."""
     monkeypatch.setenv("INPUT_FROM_TAG_NAME", "v1.0.0")
-    assert ActionInputs.is_from_tag_name_provided() is True
+    assert ActionInputs.is_from_tag_name_defined(use_raw=True) is True
 
 
-def test_is_from_tag_name_provided_when_env_var_whitespace_only(monkeypatch):
+def test_is_from_tag_name_defined_raw_when_env_var_whitespace_only(monkeypatch):
     """Env var present but whitespace-only → True (user provided a value, even if invalid)."""
     monkeypatch.setenv("INPUT_FROM_TAG_NAME", "   ")
-    assert ActionInputs.is_from_tag_name_provided() is True
+    assert ActionInputs.is_from_tag_name_defined(use_raw=True) is True
 
 
-def test_is_from_tag_name_provided_when_env_var_empty(monkeypatch):
+def test_is_from_tag_name_defined_raw_when_env_var_empty(monkeypatch):
     """Env var empty string (action.yml default) → False (compare mode not requested)."""
     monkeypatch.setenv("INPUT_FROM_TAG_NAME", "")
-    assert ActionInputs.is_from_tag_name_provided() is False
+    assert ActionInputs.is_from_tag_name_defined(use_raw=True) is False
 
 
-def test_is_from_tag_name_provided_when_env_var_absent(monkeypatch):
+def test_is_from_tag_name_defined_raw_when_env_var_absent(monkeypatch):
     """Env var absent → False."""
     monkeypatch.delenv("INPUT_FROM_TAG_NAME", raising=False)
-    assert ActionInputs.is_from_tag_name_provided() is False
+    assert ActionInputs.is_from_tag_name_defined(use_raw=True) is False
 
 
 def test_get_from_tag_name_invalid_format(mocker):
@@ -212,46 +212,23 @@ def test_get_from_tag_name_invalid_format(mocker):
     )
 
 
-# --- validate_compare_mode_tag_names ---
-
-
-def test_validate_compare_mode_tag_names_both_set(mocker):
-    """Both tag-name and from-tag-name non-empty → no exit, no error."""
-    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_tag_name", return_value="v1.1.0")
-    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_from_tag_name", return_value="v1.0.0")
-    mock_exit = mocker.patch("sys.exit")
-    mock_error = mocker.patch("release_notes_generator.action_inputs.logger.error")
-
-    ActionInputs.validate_compare_mode_tag_names()
-
-    mock_exit.assert_not_called()
-    mock_error.assert_not_called()
-
-
-def test_validate_compare_mode_tag_names_empty_tag_name_exits(mocker):
-    """Empty tag-name → sys.exit(1)."""
-    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_tag_name", return_value="")
-    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_from_tag_name", return_value="v1.0.0")
-    mock_exit = mocker.patch("sys.exit")
-    error_mock = mocker.patch("release_notes_generator.action_inputs.logger.error")
-
-    ActionInputs.validate_compare_mode_tag_names()
-
-    mock_exit.assert_called_once_with(1)
-    assert any("tag-name" in str(c) for c in error_mock.call_args_list)
-
-
-def test_validate_compare_mode_tag_names_empty_from_tag_name_exits(mocker):
-    """Empty from-tag-name → sys.exit(1)."""
-    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_tag_name", return_value="v1.1.0")
-    mocker.patch("release_notes_generator.action_inputs.ActionInputs.get_from_tag_name", return_value="")
-    mock_exit = mocker.patch("sys.exit")
-    error_mock = mocker.patch("release_notes_generator.action_inputs.logger.error")
-
-    ActionInputs.validate_compare_mode_tag_names()
-
-    mock_exit.assert_called_once_with(1)
-    assert any("from-tag-name" in str(c) for c in error_mock.call_args_list)
+def test_validate_inputs_compare_mode_whitespace_from_tag_name_fails(mocker):
+    """from-tag-name provided as whitespace-only in compare mode → error in buffer and sys.exit(1)."""
+    case = success_case.copy()
+    case["get_from_tag_name"] = ""
+    patchers = apply_mocks(case, mocker)
+    mocker.patch(
+        "release_notes_generator.action_inputs.ActionInputs.is_from_tag_name_defined",
+        return_value=True,
+    )
+    try:
+        mock_error = mocker.patch("release_notes_generator.action_inputs.logger.error")
+        mock_exit = mocker.patch("sys.exit")
+        ActionInputs.validate_inputs()
+        assert any("from-tag-name" in str(c) for c in mock_error.call_args_list)
+        mock_exit.assert_called_once_with(1)
+    finally:
+        stop_mocks(patchers)
 
 
 def test_get_chapters_success(mocker):
