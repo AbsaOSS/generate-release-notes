@@ -26,7 +26,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed, CancelledError
 from typing import Optional, Callable
 
 import semver
-from github import Github
+from github import Github, GithubException
 from github.GitRelease import GitRelease
 from github.Issue import Issue
 from github.PullRequest import PullRequest
@@ -110,21 +110,8 @@ class DataMiner:
         from_tag = ActionInputs.get_from_tag_name()
         to_tag = ActionInputs.get_tag_name()
 
-        ref = self._safe_call(repo.get_git_ref)(f"tags/{from_tag}")
-        if ref is None:
-            logger.error(
-                "Tag '%s' does not exist in the repository. Ending!",
-                from_tag,
-            )
-            sys.exit(1)
-
-        ref = self._safe_call(repo.get_git_ref)(f"tags/{to_tag}")
-        if ref is None:
-            logger.error(
-                "Tag '%s' does not exist in the repository. Ending!",
-                to_tag,
-            )
-            sys.exit(1)
+        self._validate_tag_exists(repo, from_tag)
+        self._validate_tag_exists(repo, to_tag)
 
         comparison = self._safe_call(repo.compare)(from_tag, to_tag)
         if comparison is None:
@@ -175,6 +162,26 @@ class DataMiner:
             len(commits_without_pr),
             len(data.pull_requests),
         )
+
+    def _validate_tag_exists(self, repo: Repository, tag: str) -> None:
+        try:
+            repo.get_git_ref(f"tags/{tag}")
+        except GithubException as e:
+            if e.status == 404:
+                logger.error(
+                    "Tag '%s' does not exist in repository '%s'. Ending!",
+                    tag,
+                    repo.full_name,
+                )
+            else:
+                logger.error(
+                    "GitHub API error validating tag '%s' in repository '%s' (HTTP %s): %s. Ending!",
+                    tag,
+                    repo.full_name,
+                    e.status,
+                    e.data,
+                )
+            sys.exit(1)
 
     def _handle_since_time_mode(self, repo: Repository, data: MinedData) -> None:
         """
