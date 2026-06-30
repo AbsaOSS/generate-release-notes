@@ -217,7 +217,7 @@ def test_validate_inputs_compare_mode_whitespace_from_tag_name_fails(mocker):
     case = success_case.copy()
     case["get_from_tag_name"] = ""
     patchers = apply_mocks(case, mocker)
-    mocker.patch(
+    mock_is_from_tag_name_defined = mocker.patch(
         "release_notes_generator.action_inputs.ActionInputs.is_from_tag_name_defined",
         return_value=True,
     )
@@ -225,6 +225,7 @@ def test_validate_inputs_compare_mode_whitespace_from_tag_name_fails(mocker):
         mock_error = mocker.patch("release_notes_generator.action_inputs.logger.error")
         mock_exit = mocker.patch("sys.exit")
         ActionInputs.validate_inputs()
+        mock_is_from_tag_name_defined.assert_called_once_with(use_raw=True)
         assert any("from-tag-name" in str(c) for c in mock_error.call_args_list)
         mock_exit.assert_called_once_with(1)
     finally:
