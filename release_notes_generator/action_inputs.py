@@ -166,16 +166,10 @@ class ActionInputs:
         return normalize_version_tag(raw)
 
     @staticmethod
-    def is_from_tag_name_defined(use_raw: bool = False) -> bool:
+    def is_from_tag_name_defined() -> bool:
         """
-        Check if the from-tag name is defined.
-
-        Parameters:
-            use_raw: When True, checks the raw env var value (non-empty, including whitespace).
-                     When False (default), normalizes the tag first and checks if non-empty.
+        Check if the from-tag name is defined (normalizes to a non-empty tag).
         """
-        if use_raw:
-            return get_action_input(FROM_TAG_NAME, default="") != ""
         return ActionInputs.get_from_tag_name() != ""
 
     @staticmethod
@@ -607,9 +601,10 @@ class ActionInputs:
             errors.append("Tag name must be a non-empty string.")
 
         from_tag_name = ActionInputs.get_from_tag_name()
+        raw_from_tag_name = get_action_input(FROM_TAG_NAME, default="")
         if not isinstance(from_tag_name, str):
             errors.append("From tag name must be a string.")
-        elif ActionInputs.is_from_tag_name_defined(use_raw=True) and from_tag_name == "":
+        elif raw_from_tag_name != "" and from_tag_name == "":
             errors.append(
                 "'from-tag-name' must not be empty when running in compare mode. "
                 "Both 'tag-name' and 'from-tag-name' must refer to existing tags in the repository."
