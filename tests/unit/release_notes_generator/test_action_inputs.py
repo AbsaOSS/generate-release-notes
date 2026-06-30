@@ -176,31 +176,31 @@ def test_get_from_tag_name_empty(mocker):
     assert ActionInputs.get_from_tag_name() == ""
 
 
-# --- is_from_tag_name_defined (use_raw=True) ---
+# --- is_from_tag_name_defined ---
 
 
 def test_is_from_tag_name_defined_raw_when_env_var_set(monkeypatch):
     """Env var present with a valid tag → True."""
     monkeypatch.setenv("INPUT_FROM_TAG_NAME", "v1.0.0")
-    assert ActionInputs.is_from_tag_name_defined(use_raw=True) is True
+    assert ActionInputs.is_from_tag_name_defined() is True
 
 
 def test_is_from_tag_name_defined_raw_when_env_var_whitespace_only(monkeypatch):
-    """Env var present but whitespace-only → True (user provided a value, even if invalid)."""
+    """Env var present but whitespace-only → False (normalizes to empty string)."""
     monkeypatch.setenv("INPUT_FROM_TAG_NAME", "   ")
-    assert ActionInputs.is_from_tag_name_defined(use_raw=True) is True
+    assert ActionInputs.is_from_tag_name_defined() is False
 
 
 def test_is_from_tag_name_defined_raw_when_env_var_empty(monkeypatch):
     """Env var empty string (action.yml default) → False (compare mode not requested)."""
     monkeypatch.setenv("INPUT_FROM_TAG_NAME", "")
-    assert ActionInputs.is_from_tag_name_defined(use_raw=True) is False
+    assert ActionInputs.is_from_tag_name_defined() is False
 
 
 def test_is_from_tag_name_defined_raw_when_env_var_absent(monkeypatch):
     """Env var absent → False."""
     monkeypatch.delenv("INPUT_FROM_TAG_NAME", raising=False)
-    assert ActionInputs.is_from_tag_name_defined(use_raw=True) is False
+    assert ActionInputs.is_from_tag_name_defined() is False
 
 
 def test_get_from_tag_name_invalid_format(mocker):
@@ -217,15 +217,11 @@ def test_validate_inputs_compare_mode_whitespace_from_tag_name_fails(mocker):
     case = success_case.copy()
     case["get_from_tag_name"] = ""
     patchers = apply_mocks(case, mocker)
-    mock_is_from_tag_name_defined = mocker.patch(
-        "release_notes_generator.action_inputs.ActionInputs.is_from_tag_name_defined",
-        return_value=True,
-    )
     try:
+        mocker.patch.dict("os.environ", {"INPUT_FROM_TAG_NAME": "   "})
         mock_error = mocker.patch("release_notes_generator.action_inputs.logger.error")
         mock_exit = mocker.patch("sys.exit")
         ActionInputs.validate_inputs()
-        mock_is_from_tag_name_defined.assert_called_once_with(use_raw=True)
         assert any("from-tag-name" in str(c) for c in mock_error.call_args_list)
         mock_exit.assert_called_once_with(1)
     finally:
