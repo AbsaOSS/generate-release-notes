@@ -26,7 +26,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed, CancelledError
 from typing import Optional, Callable
 
 import semver
-from github import Github
+from github import Github, GithubException
 from github.GitRelease import GitRelease
 from github.Issue import Issue
 from github.PullRequest import PullRequest
@@ -102,17 +102,20 @@ class DataMiner:
           - Extract PR numbers from commit messages and fetch those PRs.
           - Filter out commits that already have a PR reference to avoid duplication.
         """
-        logger.info(
-            "Compare mode: using repo.compare('%s', '%s').",
-            ActionInputs.get_from_tag_name(),
-            ActionInputs.get_tag_name(),
-        )
-        comparison = self._safe_call(repo.compare)(ActionInputs.get_from_tag_name(), ActionInputs.get_tag_name())
+        from_tag = ActionInputs.get_from_tag_name()
+        to_tag = ActionInputs.get_tag_name()
+
+        logger.info("Compare mode: using repo.compare('%s', '%s').", from_tag, to_tag)
+
+        self._validate_tag_exists(repo, from_tag)
+        self._validate_tag_exists(repo, to_tag)
+
+        comparison = self._safe_call(repo.compare)(from_tag, to_tag)
         if comparison is None:
             logger.error(
                 "Compare API returned no result for '%s'...'%s'. Ending!",
-                ActionInputs.get_from_tag_name(),
-                ActionInputs.get_tag_name(),
+                from_tag,
+                to_tag,
             )
             sys.exit(1)
         compare_commits: list[GithubCommit] = list(comparison.commits)
@@ -156,6 +159,35 @@ class DataMiner:
             len(commits_without_pr),
             len(data.pull_requests),
         )
+
+    def _validate_tag_exists(self, repo: Repository, tag: str) -> None:
+        try:
+            repo.get_git_ref(f"tags/{tag}")
+        except GithubException as e:
+            if e.status == 404:
+                logger.error(
+                    "Tag '%s' does not exist in repository '%s'. "
+                    "Both 'tag-name' and 'from-tag-name' must exist as git tags before compare mode is used. Ending!",
+                    tag,
+                    repo.full_name,
+                )
+            else:
+                logger.error(
+                    "GitHub API error validating tag '%s' in repository '%s' (HTTP %s): %s. Ending!",
+                    tag,
+                    repo.full_name,
+                    e.status,
+                    e.data,
+                )
+            sys.exit(1)
+        except Exception as exc:
+            logger.error(
+                "Unexpected error validating tag '%s' in repository '%s': %s. Ending!",
+                tag,
+                repo.full_name,
+                exc,
+            )
+            sys.exit(1)
 
     def _handle_since_time_mode(self, repo: Repository, data: MinedData) -> None:
         """

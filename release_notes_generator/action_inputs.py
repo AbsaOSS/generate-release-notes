@@ -168,10 +168,9 @@ class ActionInputs:
     @staticmethod
     def is_from_tag_name_defined() -> bool:
         """
-        Check if the from-tag name is defined in the action inputs.
+        Check if the from-tag name is defined (normalizes to a non-empty tag).
         """
-        value = ActionInputs.get_from_tag_name()
-        return value.strip() != ""
+        return ActionInputs.get_from_tag_name() != ""
 
     @staticmethod
     def get_chapters() -> list[dict[str, str]]:
@@ -602,8 +601,14 @@ class ActionInputs:
             errors.append("Tag name must be a non-empty string.")
 
         from_tag_name = ActionInputs.get_from_tag_name()
+        raw_from_tag_name = get_action_input(FROM_TAG_NAME, default="")
         if not isinstance(from_tag_name, str):
             errors.append("From tag name must be a string.")
+        elif raw_from_tag_name != "" and from_tag_name == "":
+            errors.append(
+                "'from-tag-name' must not be empty when running in compare mode. "
+                "Both 'tag-name' and 'from-tag-name' must refer to existing tags in the repository."
+            )
 
         chapters = ActionInputs.get_chapters()
         if len(chapters) == 0:

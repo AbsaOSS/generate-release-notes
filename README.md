@@ -122,7 +122,10 @@ Only a few inputs are required to get started:
 For the full input and output reference, see [Configuration reference](docs/configuration_reference.md).  
 For how label → chapter mapping and aggregation works, see [Custom Chapters Behavior](docs/configuration_reference.md#custom-chapters-behavior).
 
-> **Important**: tag defined by `tag-name` must exist in the repository; otherwise, the action fails.
+> **Important**: In compare mode (`from-tag-name` provided), **both** `tag-name` and
+> `from-tag-name` must exist as git tags in the repository. The action checks each tag
+> via the GitHub API before calling compare and exits with a tag-specific error if either
+> is absent.
 
 ## Example Workflow
 
@@ -136,14 +139,26 @@ on:
   workflow_dispatch:
     inputs:
       tag-name:
-        description: 'Existing git tag to use for this draft release. Syntax: "v[0-9]+.[0-9]+.[0-9]+". Ensure the tag is created and pushed before running.'
+        description: 'Tag name to create and use for this draft release. Syntax: "v[0-9]+.[0-9]+.[0-9]+".'
         required: true
+      from-tag-name:
+        description: 'Existing tag to use as the start of the release range (compare mode). Syntax: "v[0-9]+.[0-9]+.[0-9]+". Must already exist in the repository.'
+        required: false
 
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create and push tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag ${{ github.event.inputs.tag-name }}
+          git push origin ${{ github.event.inputs.tag-name }}
 
       - name: Generate Release Notes
         id: notes
@@ -152,6 +167,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag-name: ${{ github.event.inputs.tag-name }}
+          from-tag-name: ${{ github.event.inputs.from-tag-name }}
           chapters: |
             - {"title": "New Features 🎉", "labels": "enhancement, feature", "order": 10}
             - {"title": "Bugfixes 🛠", "labels": "error, bug", "order": 20}

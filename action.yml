@@ -42,7 +42,9 @@ inputs:
     required: false
     default: 'both'
   from-tag-name:
-    description: 'The tag name of the previous release to use as a start reference point for the current release notes.'
+    description: |
+      The tag name of the previous release to use as a start reference point for the current release notes.
+      When provided, activates compare mode. Both this tag and 'tag-name' must exist as git tags.
     required: false
     default: ''
   hierarchy:

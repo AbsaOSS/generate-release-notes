@@ -20,7 +20,7 @@ import pytest
 from datetime import datetime
 from typing import Optional
 
-from github import Github
+from github import Github, GithubException
 from github.Commit import Commit
 from github.GitRelease import GitRelease
 from github.Issue import Issue
@@ -587,6 +587,7 @@ def _make_compare_miner(mocker, mock_repo, *, from_tag="v2.6.3", to_tag="v2.6.4"
     release_mock.published_at = published_at
     release_mock.tag_name = from_tag
     mock_repo.get_release.return_value = release_mock
+    mock_repo.get_git_ref.return_value = mocker.Mock()
     mock_repo.get_issues.return_value = []
 
     comparison_mock = mocker.Mock()
@@ -786,3 +787,87 @@ def test_mine_data_timestamp_mode_compare_shas_empty(mocker, mock_repo):
     data = miner.mine_data()
 
     assert data.compare_commit_shas == set()
+
+
+# --- compare mode tag-ref existence validation ---
+
+
+def test_mine_data_compare_mode_from_tag_not_found_exits(mocker, mock_repo):
+    """from-tag-name absent as git ref → specific error logged and sys.exit(1)."""
+    not_found = GithubException(404, {"message": "Not Found"}, {})
+    mock_repo.get_git_ref.side_effect = lambda ref: (_ for _ in ()).throw(not_found) if ref == "tags/v2.6.3" else None
+    error_mock = mocker.patch("release_notes_generator.data.miner.logger.error")
+
+    miner = _make_compare_miner(mocker, mock_repo)
+
+    with pytest.raises(SystemExit) as exc_info:
+        miner.mine_data()
+
+    assert exc_info.value.code == 1
+    logged_messages = " ".join(str(call) for call in error_mock.call_args_list)
+    assert "v2.6.3" in logged_messages
+    mock_repo.compare.assert_not_called()
+
+
+def test_mine_data_compare_mode_to_tag_not_found_exits(mocker, mock_repo):
+    """tag-name absent as git ref → specific error logged and sys.exit(1)."""
+    not_found = GithubException(404, {"message": "Not Found"}, {})
+    mock_repo.get_git_ref.side_effect = lambda ref: (_ for _ in ()).throw(not_found) if ref == "tags/v2.6.4" else None
+    error_mock = mocker.patch("release_notes_generator.data.miner.logger.error")
+
+    miner = _make_compare_miner(mocker, mock_repo)
+
+    with pytest.raises(SystemExit) as exc_info:
+        miner.mine_data()
+
+    assert exc_info.value.code == 1
+    logged_messages = " ".join(str(call) for call in error_mock.call_args_list)
+    assert "v2.6.4" in logged_messages
+    mock_repo.compare.assert_not_called()
+
+
+def test_mine_data_compare_mode_from_tag_api_error_exits(mocker, mock_repo):
+    """Non-404 GitHub error on from-tag validation → API failure logged and sys.exit(1)."""
+    api_error = GithubException(503, {"message": "Service Unavailable"}, {})
+    mock_repo.get_git_ref.side_effect = api_error
+    error_mock = mocker.patch("release_notes_generator.data.miner.logger.error")
+
+    miner = _make_compare_miner(mocker, mock_repo)
+
+    with pytest.raises(SystemExit) as exc_info:
+        miner.mine_data()
+
+    assert exc_info.value.code == 1
+    logged_messages = " ".join(str(call) for call in error_mock.call_args_list)
+    assert "503" in logged_messages
+    mock_repo.compare.assert_not_called()
+
+
+def test_mine_data_compare_mode_both_tags_exist_calls_compare(mocker, mock_repo):
+    """Both tags exist as git refs → repo.compare() is called normally."""
+    mock_repo.get_git_ref.return_value = None  # no exception = tag exists
+
+    commit_mock = mocker.Mock()
+    commit_mock.sha = "abc123"
+    commit_mock.commit.message = "Fix something (#1)"
+
+    miner = _make_compare_miner(mocker, mock_repo, compare_commits=[commit_mock])
+    miner.mine_data()
+
+    mock_repo.compare.assert_called_once_with("v2.6.3", "v2.6.4")
+
+
+def test_mine_data_compare_mode_network_error_on_tag_validation_exits(mocker, mock_repo):
+    """Network-layer exception (non-GithubException) on tag ref lookup → error logged and sys.exit(1)."""
+    mock_repo.get_git_ref.side_effect = OSError("Connection timed out")
+    error_mock = mocker.patch("release_notes_generator.data.miner.logger.error")
+
+    miner = _make_compare_miner(mocker, mock_repo)
+
+    with pytest.raises(SystemExit) as exc_info:
+        miner.mine_data()
+
+    assert exc_info.value.code == 1
+    logged_messages = " ".join(str(call) for call in error_mock.call_args_list)
+    assert "Connection timed out" in logged_messages
+    mock_repo.compare.assert_not_called()
