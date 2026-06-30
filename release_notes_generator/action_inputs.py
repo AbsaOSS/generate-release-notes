@@ -166,19 +166,17 @@ class ActionInputs:
         return normalize_version_tag(raw)
 
     @staticmethod
-    def is_from_tag_name_defined(*, use_raw: bool = False) -> bool:
+    def is_from_tag_name_defined(use_raw: bool = False) -> bool:
         """
-        Check if the from-tag name is defined in the action inputs.
+        Check if the from-tag name is defined.
 
         Parameters:
-            use_raw: When True, reads the raw env var before normalization so a
-                     whitespace-only value is still treated as defined (used during
-                     validation to route it to a fail-fast error). When False
-                     (default), checks the normalized, stripped value.
+            use_raw: When True, checks the raw env var value (non-empty, including whitespace).
+                     When False (default), normalizes the tag first and checks if non-empty.
         """
         if use_raw:
             return get_action_input(FROM_TAG_NAME, default="") != ""
-        return ActionInputs.get_from_tag_name().strip() != ""
+        return ActionInputs.get_from_tag_name() != ""
 
     @staticmethod
     def get_chapters() -> list[dict[str, str]]:
@@ -611,7 +609,7 @@ class ActionInputs:
         from_tag_name = ActionInputs.get_from_tag_name()
         if not isinstance(from_tag_name, str):
             errors.append("From tag name must be a string.")
-        elif ActionInputs.is_from_tag_name_defined(use_raw=True) and not from_tag_name.strip():
+        elif ActionInputs.is_from_tag_name_defined(use_raw=True) and from_tag_name == "":
             errors.append(
                 "'from-tag-name' must not be empty when running in compare mode. "
                 "Both 'tag-name' and 'from-tag-name' must refer to existing tags in the repository."
