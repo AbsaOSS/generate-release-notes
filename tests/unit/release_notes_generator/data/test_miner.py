@@ -615,6 +615,7 @@ def _make_compare_miner(mocker, mock_repo, *, from_tag="v2.6.3", to_tag="v2.6.4"
     else:
         default_pr = mocker.Mock(spec=PullRequest)
         default_pr.get_commits.return_value = []
+        default_pr.merge_commit_sha = None
         mock_repo.get_pull.return_value = default_pr
 
     github_mock = mocker.Mock(spec=Github)
@@ -645,6 +646,7 @@ def test_mine_data_compare_mode_fetches_prs_by_number(mocker, mock_repo):
     pr_mock = mocker.Mock(spec=PullRequest)
     pr_mock.number = 42
     pr_mock.get_commits.return_value = []
+    pr_mock.merge_commit_sha = None
 
     miner = _make_compare_miner(mocker, mock_repo, compare_commits=[commit_mock],
                                 get_pull_side_effect=lambda n: pr_mock if n == 42 else None)
@@ -663,9 +665,11 @@ def test_mine_data_compare_mode_multiple_prs(mocker, mock_repo):
     pr10 = mocker.Mock(spec=PullRequest)
     pr10.number = 10
     pr10.get_commits.return_value = []
+    pr10.merge_commit_sha = None
     pr20 = mocker.Mock(spec=PullRequest)
     pr20.number = 20
     pr20.get_commits.return_value = []
+    pr20.merge_commit_sha = None
 
     miner = _make_compare_miner(mocker, mock_repo, compare_commits=[c1, c2],
                                 get_pull_side_effect=lambda n: pr10 if n == 10 else pr20)
@@ -707,6 +711,23 @@ def test_mine_data_compare_mode_skips_none_prs(mocker, mock_repo):
     assert data.pull_requests == {}
 
 
+def test_mine_data_compare_mode_bare_hash_ref_to_unresolved_pr_stays_direct_commit(mocker, mock_repo):
+    """A bare leading "#N" is a common convention for referencing an issue, not proof the commit
+    belongs to a real merged PR. If #N can't be resolved to a merged PR, the commit must remain a
+    direct commit rather than silently vanishing from the release notes."""
+    commit_mock = mocker.Mock()
+    commit_mock.sha = "dead450"
+    commit_mock.commit.message = "#450 Fix typo in docs"
+    commit_mock.get_pulls.return_value = []
+
+    miner = _make_compare_miner(mocker, mock_repo, compare_commits=[commit_mock],
+                                get_pull_side_effect=lambda _: None)
+    data = miner.mine_data()
+
+    assert data.pull_requests == {}
+    assert "dead450" in {c.sha for c in data.commits}
+
+
 def test_mine_data_compare_mode_no_pr_numbers_in_message(mocker, mock_repo):
     commit_mock = mocker.Mock()
     commit_mock.sha = "bumpsha"
@@ -737,6 +758,7 @@ def test_mine_data_compare_mode_excludes_sync_merge_commit_belonging_to_pr(
     pr7 = mocker.Mock(spec=PullRequest)
     pr7.number = 7
     pr7.get_commits.return_value = [sync_merge_commit, squash_commit]
+    pr7.merge_commit_sha = None
 
     miner = _make_compare_miner(
         mocker,

@@ -43,12 +43,21 @@ from release_notes_generator.utils.decorators import safe_call_decorator
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
 from release_notes_generator.utils.record_utils import get_id, parse_issue_id
 
+# dev note: these are GitHub-generated merge artifacts, so a match is a reliable signal that a commit
+#   is a PR merge/squash commit even if the PR itself couldn't be fetched (e.g. transient API error).
+_PR_MERGE_ARTIFACT_RE = re.compile(r"\(#(\d+)\)|Merge pull request #(\d+)")
 # dev note: 3rd alternative catches commits whose subject leads with a bare "#N" reference
 #   (e.g. "#1403 Fix thing"), a message style left as-is by some merge strategies (e.g. rebase-merge)
 #   that don't append GitHub's "(#N)"/"Merge pull request #N" boilerplate. Without it, such PRs are
 #   never looked up at all, so their commits can't be excluded as duplicates of the PR.
+#   Unlike _PR_MERGE_ARTIFACT_RE, this is only a candidate to try fetching - #N is a common commit
+#   convention for referencing an issue and is not proof the commit belongs to a real merged PR, so it
+#   must not by itself exclude a commit (see the SHA-based check in _handle_compare_mode).
 _PR_NUMBER_RE = re.compile(r"\(#(\d+)\)|Merge pull request #(\d+)|^#(\d+)\b")
 _COMPARE_COMMITS_MAX_RESULTS = 10_000
+# dev note: cap on how many PR-associated commit SHAs are logged at debug level, to keep verbose logs
+#   readable for large comparisons.
+_MAX_LOGGED_PR_COMMIT_SHAS = 50
 # dev note: cap on the per-commit "commit -> associated PRs" fallback lookup (see _handle_compare_mode)
 #   so a large batch of genuine direct commits can't trigger thousands of extra API calls.
 _MAX_DIRECT_COMMIT_PR_LOOKUPS = 200
@@ -172,7 +181,7 @@ class DataMiner:
             if commit.sha in pr_commit_shas:
                 logger.debug("Compare mode: commit %s ('%s') excluded, matched PR commit SHA.", commit.sha, subject)
                 continue
-            has_pr_ref = bool(_PR_NUMBER_RE.search(subject))
+            has_pr_ref = bool(_PR_MERGE_ARTIFACT_RE.search(subject))
             if has_pr_ref:
                 logger.debug("Compare mode: commit %s ('%s') excluded, subject references a PR.", commit.sha, subject)
                 continue
@@ -215,8 +224,12 @@ class DataMiner:
             logger.debug("Compare mode: commit %s ('%s') classified as direct commit.", commit.sha, subject)
 
         data.pull_requests = pulls
+        sorted_pr_commit_shas = sorted(pr_commit_shas)
         logger.debug(
-            "Compare mode: total %d unique PR-associated commit SHA(s): %s", len(pr_commit_shas), list(pr_commit_shas)
+            "Compare mode: total %d unique PR-associated commit SHA(s) (showing up to %d): %s",
+            len(sorted_pr_commit_shas),
+            _MAX_LOGGED_PR_COMMIT_SHAS,
+            sorted_pr_commit_shas[:_MAX_LOGGED_PR_COMMIT_SHAS],
         )
 
         data.commits = commits_without_pr
