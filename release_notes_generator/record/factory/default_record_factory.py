@@ -120,13 +120,21 @@ class DefaultRecordFactory(RecordFactory):
         self._records[iid] = IssueRecord(issue=issue, skip=skip_record, issue_labels=issue_labels)
         self.__registered_issues.add(iid)
 
-    # pylint: disable=too-many-statements
+    # pylint: disable=too-many-statements,too-many-locals
     def _register_pull_and_its_commits_to_issue(
         self, pull: PullRequest, pid: str, data: MinedData, target_repository: Optional[Repository] = None
     ) -> None:
         pull_labels = [label.name for label in pull.get_labels()]
         skip_record: bool = any(item in pull_labels for item in ActionInputs.get_skip_release_notes_labels())
-        related_commits = [c for c in data.commits if c.sha == pull.merge_commit_sha]
+
+        # dev note: pull.get_commits() returns all commits GitHub associates with the PR, including
+        #   sync-merge commits (base branch merged back into the PR branch). Without this, such commits
+        #   fall through and get misclassified as stand-alone "direct commits".
+        pr_commits = self._safe_call(lambda: list(pull.get_commits()))()
+        pr_commit_shas: set[str] = {c.sha for c in pr_commits} if pr_commits is not None else set()
+        if pull.merge_commit_sha:
+            pr_commit_shas.add(pull.merge_commit_sha)
+        related_commits = [c for c in data.commits if c.sha in pr_commit_shas]
         self.__registered_commits.update(c.sha for c in related_commits)
 
         pr_repo = target_repository if target_repository is not None else data.home_repository

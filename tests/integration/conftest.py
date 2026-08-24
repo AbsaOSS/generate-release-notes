@@ -161,6 +161,7 @@ def make_pr(mocker: MockerFixture, make_label: Callable[[str], object]) -> Calla
         pr.user = user
         pr.assignees = []
         pr.get_labels = mocker.Mock(return_value=[make_label(lbl) for lbl in (labels or [])])
+        pr.get_commits = mocker.Mock(return_value=[])
         return pr
 
     return _factory

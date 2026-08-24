@@ -21,6 +21,7 @@ This module contains data class MinedData, which is used to store the mined data
 import logging
 
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Optional
 
 from github.GitRelease import GitRelease
@@ -41,7 +42,7 @@ class MinedData:
         self._repositories: dict[str, Repository] = {repository.full_name: repository}
 
         self.release: Optional[GitRelease] = None
-        self.since = None
+        self.since: Optional[datetime] = None
         # self.since = datetime(1970, 1, 1)  # Default to epoch start
 
         self.issues: dict[Issue, Repository] = {}

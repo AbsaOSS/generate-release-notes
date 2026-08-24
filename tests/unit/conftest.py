@@ -58,7 +58,7 @@ class FakeRepo:
 
 def mock_safe_call_decorator(_rate_limiter):
     def wrapper(fn):
-        if fn.__name__ == "get_issues_for_pr":
+        if getattr(fn, "__name__", None) == "get_issues_for_pr":
             return mock_get_issues_for_pr
         return fn
 
@@ -567,6 +567,7 @@ def mock_pull_closed(mocker, mock_user):
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
     pull.get_labels.return_value = [label1]
+    pull.get_commits.return_value = []
 
     return pull
 
@@ -590,6 +591,7 @@ def mock_pull_closed_with_skip_label(mocker):
     label2 = mocker.Mock(spec=MockLabel)
     label2.name = "another-skip-label"
     pull.get_labels.return_value = [label1, label2]
+    pull.get_commits.return_value = []
 
     return pull
 
@@ -618,6 +620,7 @@ def mock_pull_closed_with_rls_notes_101(mocker, mock_user):
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
     pull.get_labels.return_value = [label1]
+    pull.get_commits.return_value = []
 
     return pull
 
@@ -646,6 +649,7 @@ def mock_pull_closed_with_rls_notes_102(mocker, mock_user):
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
     pull.get_labels.return_value = [label1]
+    pull.get_commits.return_value = []
 
     return pull
 
@@ -667,6 +671,7 @@ def mock_pull_merged_with_rls_notes_101(mocker):
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
     pull.get_labels.return_value = [label1]
+    pull.get_commits.return_value = []
 
     return pull
 
@@ -688,6 +693,7 @@ def mock_pull_merged_with_rls_notes_102(mocker):
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
     pull.get_labels.return_value = [label1]
+    pull.get_commits.return_value = []
 
     return pull
 
@@ -715,6 +721,7 @@ def mock_pull_merged(mocker, mock_user):
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
     pull.get_labels.return_value = [label1]
+    pull.get_commits.return_value = []
 
     return pull
 
@@ -742,6 +749,7 @@ def mock_pull_open(mocker, mock_user):
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
     pull.get_labels.return_value = [label1]
+    pull.get_commits.return_value = []
 
     return pull
 
@@ -757,6 +765,7 @@ def mock_pull_no_rls_notes(mocker):
     label1 = mocker.Mock(spec=MockLabel)
     label1.name = "label1"
     pull.get_labels.return_value = [label1]
+    pull.get_commits.return_value = []
 
     return pull
 
@@ -1292,6 +1301,7 @@ def make_minimal_pr(mocker: MockerFixture, number: int) -> PullRequest:
     pr.user = None
     pr.assignees = []
     pr.get_labels.return_value = []
+    pr.get_commits.return_value = []
     return pr
 
 
