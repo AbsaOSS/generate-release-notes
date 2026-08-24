@@ -486,8 +486,6 @@ class DataMiner:
 
         else:
             logger.info("Getting latest release by semantic ordering (could not be the last one by time).")
-            # dev note: the list() materialization is done inside the safe-call so that pagination errors
-            #   (raised while iterating the paginated result, not at call time) are also caught.
             gh_releases: list = self._safe_call(lambda: list(repository.get_releases()))() or []
             rls = self.__get_latest_semantic_release(gh_releases)
 
@@ -517,8 +515,6 @@ class DataMiner:
         assert data.home_repository is not None, "Repository must not be None"
         logger.info("Fetching issues from repository...")
 
-        # dev note: the list() materialization is done inside the safe-call so that pagination errors
-        #   (raised while iterating the paginated result, not at call time) are also caught.
         if data.release is None:
             issues = (
                 self._safe_call(lambda: list(data.home_repository.get_issues(state=IssueRecord.ISSUE_STATE_ALL)))()
