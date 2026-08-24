@@ -210,13 +210,14 @@ class DataMiner:
                     )
                     del commits_without_pr[commit]
 
-
         for commit in commits_without_pr:
             subject = commit.commit.message.splitlines()[0] if commit.commit.message else ""
             logger.debug("Compare mode: commit %s ('%s') classified as direct commit.", commit.sha, subject)
 
         data.pull_requests = pulls
-        logger.debug("Compare mode: total %d unique PR-associated commit SHA(s): %s", len(pr_commit_shas), list(pr_commit_shas))
+        logger.debug(
+            "Compare mode: total %d unique PR-associated commit SHA(s): %s", len(pr_commit_shas), list(pr_commit_shas)
+        )
 
         data.commits = commits_without_pr
         logger.info(
