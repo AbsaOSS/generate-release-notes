@@ -816,6 +816,42 @@ def test_mine_data_compare_mode_ignores_unmerged_pr_from_association_fallback(
     assert "directsha" in {c.sha for c in data.commits}
 
 
+def test_mine_data_compare_mode_association_fallback_dedupes_by_pr_number(
+    mocker: MockerFixture, mock_repo: Repository
+) -> None:
+    """The commit -> PRs association endpoint can return a fresh PullRequest instance for a PR already
+    discovered (e.g. via another commit's association lookup), distinct by object identity from that
+    prior instance even though it's the same real PR. Dedup must be by PR number, not object identity,
+    or the same PR ends up registered twice in data.pull_requests."""
+    commit_a = mocker.Mock()
+    commit_a.sha = "shaA"
+    commit_a.commit.message = "Part of a PR but message doesn't say so (A)"
+
+    commit_b = mocker.Mock()
+    commit_b.sha = "shaB"
+    commit_b.commit.message = "Part of a PR but message doesn't say so (B)"
+
+    pr99_via_a = mocker.Mock(spec=PullRequest)
+    pr99_via_a.number = 99
+    pr99_via_a.merged = True
+    pr99_via_a.merge_commit_sha = None
+    pr99_via_a.get_commits.return_value = [commit_a, commit_b]
+    commit_a.get_pulls.return_value = [pr99_via_a]
+
+    pr99_via_b = mocker.Mock(spec=PullRequest)
+    pr99_via_b.number = 99
+    pr99_via_b.merged = True
+    pr99_via_b.merge_commit_sha = None
+    pr99_via_b.get_commits.return_value = [commit_a, commit_b]
+    commit_b.get_pulls.return_value = [pr99_via_b]
+
+    miner = _make_compare_miner(mocker, mock_repo, compare_commits=[commit_a, commit_b])
+    data = miner.mine_data()
+
+    assert len(data.pull_requests) == 1
+    assert data.commits == {}
+
+
 def test_mine_data_compare_mode_skips_association_fallback_above_cap(mocker, mock_repo):
     """When too many commits lack a detected PR, the per-commit association fallback is skipped
     rather than issuing one API call per commit."""

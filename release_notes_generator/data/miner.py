@@ -199,10 +199,15 @@ class DataMiner:
                 _MAX_DIRECT_COMMIT_PR_LOOKUPS,
             )
         else:
+            registered_pr_numbers = {p.number for p in pulls}
             for commit in list(commits_without_pr):
                 associated_prs = self._safe_call(lambda c=commit: list(c.get_pulls()))()
                 for pr in associated_prs or []:
-                    if not pr.merged or pr in pulls:
+                    # dev note: the association endpoint returns a "simple" PR representation without
+                    #   `merged`, so reading it lazily completes the object via a real API call - route
+                    #   it through _safe_call like every other GitHub-hitting call in this method.
+                    is_merged = self._safe_call(lambda p=pr: p.merged)()
+                    if not is_merged or pr.number in registered_pr_numbers:
                         continue
                     logger.debug(
                         "Compare mode: commit %s is associated with merged PR #%d not found via commit subjects.",
@@ -210,6 +215,7 @@ class DataMiner:
                         pr.number,
                     )
                     self._register_pr_commit_shas(pr, pulls, pr_commit_shas, data.home_repository)
+                    registered_pr_numbers.add(pr.number)
                 if commit.sha in pr_commit_shas:
                     subject = commit.commit.message.splitlines()[0] if commit.commit.message else ""
                     logger.debug(
@@ -265,10 +271,11 @@ class DataMiner:
         if pr.merge_commit_sha:
             pr_commit_shas.add(pr.merge_commit_sha)
         logger.debug(
-            "Compare mode: PR #%d has %d commit(s) via get_commits() %s, merge_commit_sha=%s.",
+            "Compare mode: PR #%d has %d commit(s) via get_commits() (showing up to %d) %s, merge_commit_sha=%s.",
             pr.number,
             len(pr_commit_sha_list),
-            pr_commit_sha_list,
+            _MAX_LOGGED_PR_COMMIT_SHAS,
+            pr_commit_sha_list[:_MAX_LOGGED_PR_COMMIT_SHAS],
             pr.merge_commit_sha,
         )
 

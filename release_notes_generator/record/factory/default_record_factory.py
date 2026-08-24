@@ -44,6 +44,10 @@ from release_notes_generator.utils.record_utils import get_id, parse_issue_id
 
 logger = logging.getLogger(__name__)
 
+# dev note: cap on how many matched commit SHAs are logged at debug level, to keep verbose logs
+#   readable for PRs with many commits.
+_MAX_LOGGED_COMMIT_SHAS = 50
+
 
 class DefaultRecordFactory(RecordFactory):
     """
@@ -138,12 +142,15 @@ class DefaultRecordFactory(RecordFactory):
             pr_commit_shas.add(pull.merge_commit_sha)
         related_commits = [c for c in data.commits if c.sha in pr_commit_shas]
         self.__registered_commits.update(c.sha for c in related_commits)
+        related_commit_shas = [c.sha for c in related_commits]
         logger.debug(
-            "PR #%d: %d commit SHA(s) via get_commits() + merge_commit_sha, %d matched against mined commits: %s",
+            "PR #%d: %d commit SHA(s) via get_commits() + merge_commit_sha, %d matched against mined commits "
+            "(showing up to %d): %s",
             pull.number,
             len(pr_commit_shas),
             len(related_commits),
-            [c.sha for c in related_commits],
+            _MAX_LOGGED_COMMIT_SHAS,
+            related_commit_shas[:_MAX_LOGGED_COMMIT_SHAS],
         )
 
         pr_repo = target_repository if target_repository is not None else data.home_repository
