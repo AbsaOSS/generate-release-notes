@@ -56,6 +56,10 @@ class DataMiner:
 
     def __init__(self, github_instance: Github, rate_limiter: GithubRateLimiter):
         self.github_instance = github_instance
+        # dev note: PyGithub paginated results are lazy - the HTTP requests happen while iterating,
+        #   not on the initial call. Call sites that need a list must materialize it (e.g. via
+        #   `self._safe_call(lambda: list(x.get_foo()))()`) inside the safe-call, otherwise pagination
+        #   errors are raised outside of it and go uncaught.
         self._safe_call = safe_call_decorator(rate_limiter)
 
     def mine_data(self) -> MinedData:
@@ -74,9 +78,9 @@ class DataMiner:
         if data.release is not None:
             prefer_published = ActionInputs.get_published_at()
             if prefer_published and getattr(data.release, "published_at", None) is not None:
-                data.since = data.release.published_at  # type: ignore[assignment]
+                data.since = data.release.published_at
             elif getattr(data.release, "created_at", None) is not None:
-                data.since = data.release.created_at  # type: ignore[assignment]
+                data.since = data.release.created_at
             else:
                 data.since = None
 
@@ -118,7 +122,15 @@ class DataMiner:
                 to_tag,
             )
             sys.exit(1)
-        compare_commits: list[GithubCommit] = list(comparison.commits)
+        compare_commits_result = self._safe_call(lambda: list(comparison.commits))()
+        if compare_commits_result is None:
+            logger.error(
+                "Compare API failed while retrieving commits for '%s'...'%s'. Ending!",
+                from_tag,
+                to_tag,
+            )
+            sys.exit(1)
+        compare_commits: list[GithubCommit] = compare_commits_result
         total_commits = getattr(comparison, "total_commits", None)
         if isinstance(total_commits, int) and total_commits > len(compare_commits):
             logger.warning(
@@ -149,7 +161,7 @@ class DataMiner:
                 #   pattern) prevents them being misclassified as stand-alone "direct commits".
                 #   merge_commit_sha is added separately: for a rebase-merge, get_commits() still
                 #   reports the pre-rebase SHAs, not the new SHA(s) landed on the base branch.
-                pr_commits = self._safe_call(pr.get_commits)()
+                pr_commits = self._safe_call(lambda p=pr: list(p.get_commits()))()
                 if pr_commits is not None:
                     pr_commit_shas.update(c.sha for c in pr_commits)
                 if pr.merge_commit_sha:
@@ -216,14 +228,18 @@ class DataMiner:
         self._get_issues(data)
 
         # Fetch closed PRs and commits, then reduce them by the latest release since time
-        pull_requests = list(
-            self._safe_call(repo.get_pulls)(state=PullRequestRecord.PR_STATE_CLOSED, base=repo.default_branch)
+        pull_requests = (
+            self._safe_call(
+                lambda: list(repo.get_pulls(state=PullRequestRecord.PR_STATE_CLOSED, base=repo.default_branch))
+            )()
+            or []
         )
         data.pull_requests = {pr: data.home_repository for pr in pull_requests}
         if data.since:
-            commits = list(self._safe_call(repo.get_commits)(since=data.since))
+            since = data.since
+            commits = self._safe_call(lambda: list(repo.get_commits(since=since)))() or []
         else:
-            commits = list(self._safe_call(repo.get_commits)())
+            commits = self._safe_call(lambda: list(repo.get_commits()))() or []
         data.commits = {c: data.home_repository for c in commits}
 
     def mine_missing_sub_issues(self, data: MinedData) -> tuple[dict[Issue, Repository], dict[str, list[PullRequest]]]:
@@ -470,7 +486,9 @@ class DataMiner:
 
         else:
             logger.info("Getting latest release by semantic ordering (could not be the last one by time).")
-            gh_releases: list = list(self._safe_call(repository.get_releases)())
+            # dev note: the list() materialization is done inside the safe-call so that pagination errors
+            #   (raised while iterating the paginated result, not at call time) are also caught.
+            gh_releases: list = self._safe_call(lambda: list(repository.get_releases()))() or []
             rls = self.__get_latest_semantic_release(gh_releases)
 
             if rls is None:
@@ -499,8 +517,13 @@ class DataMiner:
         assert data.home_repository is not None, "Repository must not be None"
         logger.info("Fetching issues from repository...")
 
+        # dev note: the list() materialization is done inside the safe-call so that pagination errors
+        #   (raised while iterating the paginated result, not at call time) are also caught.
         if data.release is None:
-            issues = list(self._safe_call(data.home_repository.get_issues)(state=IssueRecord.ISSUE_STATE_ALL))
+            issues = (
+                self._safe_call(lambda: list(data.home_repository.get_issues(state=IssueRecord.ISSUE_STATE_ALL)))()
+                or []
+            )
             data.issues = {i: data.home_repository for i in issues}
 
             logger.info("Fetched %d issues", len(data.issues.items()))
@@ -511,20 +534,23 @@ class DataMiner:
         # Ensure data.since is only set if a valid datetime is available
         data.since = None
         if prefer_published and getattr(data.release, "published_at", None) is not None:
-            data.since = data.release.published_at  # type: ignore[assignment]
+            data.since = data.release.published_at
         elif getattr(data.release, "created_at", None) is not None:
-            data.since = data.release.created_at  # type: ignore[assignment]
+            data.since = data.release.created_at
 
-        issues_since = self._safe_call(data.home_repository.get_issues)(
-            state=IssueRecord.ISSUE_STATE_ALL,
-            since=data.since,
-        )
-        open_issues = self._safe_call(data.home_repository.get_issues)(
-            state=IssueRecord.ISSUE_STATE_OPEN,
-        )
+        since = data.since
 
-        issues_since = list(issues_since or [])
-        open_issues = list(open_issues or [])
+        def _fetch_issues_since() -> list[Issue]:
+            return list(
+                data.home_repository.get_issues(
+                    state=IssueRecord.ISSUE_STATE_ALL, since=since  # type: ignore[arg-type]
+                )
+            )
+
+        issues_since = self._safe_call(_fetch_issues_since)() or []
+        open_issues = (
+            self._safe_call(lambda: list(data.home_repository.get_issues(state=IssueRecord.ISSUE_STATE_OPEN)))() or []
+        )
 
         by_number = {}
         for issue in issues_since:

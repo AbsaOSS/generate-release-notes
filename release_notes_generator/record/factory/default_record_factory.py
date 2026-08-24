@@ -130,7 +130,9 @@ class DefaultRecordFactory(RecordFactory):
         # dev note: pull.get_commits() returns all commits GitHub associates with the PR, including
         #   sync-merge commits (base branch merged back into the PR branch). Without this, such commits
         #   fall through and get misclassified as stand-alone "direct commits".
-        pr_commits = self._safe_call(pull.get_commits)()
+        #   The list() materialization is done inside the safe-call so that pagination errors (raised
+        #   while iterating the paginated result, not at call time) are also caught and handled.
+        pr_commits = self._safe_call(lambda: list(pull.get_commits()))()
         pr_commit_shas: set[str] = {c.sha for c in pr_commits} if pr_commits is not None else set()
         if pull.merge_commit_sha:
             pr_commit_shas.add(pull.merge_commit_sha)
