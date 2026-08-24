@@ -198,6 +198,7 @@ def test_generate_with_issues_and_pulls_and_commits(mocker, mock_repo):
     data.pull_requests = {pr1: mock_repo}
     commit3 = mocker.Mock(spec=Commit)
     commit3.sha = "ghi789"
+    commit3.commit.message = "Direct commit ghi789"
     commit3.repository = mock_repo
     data.commits = {commit1: mock_repo, commit2: mock_repo, commit3: mock_repo}
 
@@ -282,6 +283,7 @@ def test_generate_with_issues_and_pulls_and_commits_with_skip_labels(mocker, moc
 
     commit3 = mocker.Mock(spec=Commit)
     commit3.sha = "ghi789"
+    commit3.commit.message = "Direct commit ghi789"
     commit3.repository.full_name = "org/repo"
 
     data = MinedData(mock_repo)
