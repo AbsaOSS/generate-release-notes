@@ -534,19 +534,16 @@ class DataMiner:
         elif getattr(data.release, "created_at", None) is not None:
             data.since = data.release.created_at
 
-        since = data.since
-
-        def _fetch_issues_since() -> list[Issue]:
-            return list(
-                data.home_repository.get_issues(
-                    state=IssueRecord.ISSUE_STATE_ALL, since=since  # type: ignore[arg-type]
-                )
-            )
-
-        issues_since = self._safe_call(_fetch_issues_since)() or []
-        open_issues = (
-            self._safe_call(lambda: list(data.home_repository.get_issues(state=IssueRecord.ISSUE_STATE_OPEN)))() or []
+        issues_since = self._safe_call(data.home_repository.get_issues)(
+            state=IssueRecord.ISSUE_STATE_ALL,
+            since=data.since,
         )
+        open_issues = self._safe_call(data.home_repository.get_issues)(
+            state=IssueRecord.ISSUE_STATE_OPEN,
+        )
+
+        issues_since = list(issues_since or [])
+        open_issues = list(open_issues or [])
 
         by_number = {}
         for issue in issues_since:
