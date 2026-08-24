@@ -147,7 +147,13 @@ class DataMiner:
                 #   including sync-merge commits (base branch merged back into the PR branch) whose
                 #   messages don't match _PR_NUMBER_RE. Excluding them by SHA (rather than by message
                 #   pattern) prevents them being misclassified as stand-alone "direct commits".
-                pr_commit_shas.update(c.sha for c in self._safe_call(pr.get_commits)() or [])
+                #   merge_commit_sha is added separately: for a rebase-merge, get_commits() still
+                #   reports the pre-rebase SHAs, not the new SHA(s) landed on the base branch.
+                pr_commits = self._safe_call(pr.get_commits)()
+                if pr_commits is not None:
+                    pr_commit_shas.update(c.sha for c in pr_commits)
+                if pr.merge_commit_sha:
+                    pr_commit_shas.add(pr.merge_commit_sha)
         data.pull_requests = pulls
 
         # Only include commits that aren't already accounted for by a PR

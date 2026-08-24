@@ -26,6 +26,7 @@ from github.GitRelease import GitRelease
 from github.Issue import Issue
 from github.PullRequest import PullRequest
 from github.Repository import Repository
+from pytest_mock import MockerFixture
 
 from release_notes_generator.data.miner import DataMiner
 from release_notes_generator.data.utils.bulk_sub_issue_collector import BulkSubIssueCollector
@@ -705,7 +706,9 @@ def test_mine_data_compare_mode_no_pr_numbers_in_message(mocker, mock_repo):
     assert "bumpsha" in data.compare_commit_shas
 
 
-def test_mine_data_compare_mode_excludes_sync_merge_commit_belonging_to_pr(mocker, mock_repo):
+def test_mine_data_compare_mode_excludes_sync_merge_commit_belonging_to_pr(
+    mocker: MockerFixture, mock_repo: Repository
+) -> None:
     """A sync-merge commit (base branch merged back into the PR branch) has no PR-number reference in its
     message, but it's still returned by pull.get_commits() for the PR it belongs to. It must not be
     misclassified as a stand-alone direct commit (issue #335)."""

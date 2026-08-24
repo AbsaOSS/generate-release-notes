@@ -21,7 +21,9 @@ from github import Github
 from github.Commit import Commit
 from github.Issue import Issue
 from github.PullRequest import PullRequest
+from github.Repository import Repository
 from github.Requester import Requester
+from pytest_mock import MockerFixture
 
 from release_notes_generator.model.record.commit_record import CommitRecord
 from release_notes_generator.model.record.hierarchy_issue_record import HierarchyIssueRecord
@@ -219,7 +221,9 @@ def test_generate_with_issues_and_pulls_and_commits(mocker, mock_repo):
     assert commit1 == rec_i1.get_commit(101, "abc123")
 
 
-def test_generate_registers_sync_merge_commit_to_pr_not_as_direct_commit(mocker, mock_repo):
+def test_generate_registers_sync_merge_commit_to_pr_not_as_direct_commit(
+    mocker: MockerFixture, mock_repo: Repository
+) -> None:
     """A sync-merge commit (base branch merged back into the PR branch) is present in the base branch's
     commit history but isn't pull.merge_commit_sha. pull.get_commits() still reports it as belonging to
     the PR, so it must be registered to the PR/issue rather than misclassified as a direct commit
