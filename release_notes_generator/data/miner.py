@@ -136,18 +136,26 @@ class DataMiner:
         data.commits = {c: data.home_repository for c in compare_commits}
         pr_numbers = self._extract_pr_numbers_from_commits(compare_commits)
         pulls: dict[PullRequest, Repository] = {}
+        pr_commit_shas: set[str] = set()
         for number in sorted(pr_numbers):
             pr = self._safe_call(repo.get_pull)(number)
             if pr is not None:
                 # Store each PR with its source repository for downstream filtering and processing.
                 # In compare mode, all PRs come from home_repository; cross-repo is handled elsewhere.
                 pulls[pr] = data.home_repository
+                # dev note: pull.get_commits() returns all commits GitHub associates with the PR,
+                #   including sync-merge commits (base branch merged back into the PR branch) whose
+                #   messages don't match _PR_NUMBER_RE. Excluding them by SHA (rather than by message
+                #   pattern) prevents them being misclassified as stand-alone "direct commits".
+                pr_commit_shas.update(c.sha for c in self._safe_call(pr.get_commits)() or [])
         data.pull_requests = pulls
 
-        # Only include commits that don't have a PR reference
-        # (commits identified by PR are redundant with the PR itself)
+        # Only include commits that aren't already accounted for by a PR
+        # (commits identified by PR, or belonging to a PR's commit list, are redundant with the PR itself)
         commits_without_pr: dict[GithubCommit, Repository] = {}
         for commit in compare_commits:
+            if commit.sha in pr_commit_shas:
+                continue
             subject = commit.commit.message.splitlines()[0] if commit.commit.message else ""
             has_pr_ref = bool(_PR_NUMBER_RE.search(subject))
             if not has_pr_ref:

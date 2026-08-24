@@ -48,6 +48,7 @@ def setup_no_issues_pulls_commits(mocker):
     mock_git_pr1.assignee = None
     mock_git_pr1.merge_commit_sha = "abc123"
     mock_git_pr1.get_labels.return_value = []
+    mock_git_pr1.get_commits.return_value = []
 
     mock_git_pr2 = mocker.Mock(spec=PullRequest)
     mock_git_pr2.id = 102
@@ -62,6 +63,7 @@ def setup_no_issues_pulls_commits(mocker):
     mock_git_pr2.assignee = None
     mock_git_pr2.merge_commit_sha = "def456"
     mock_git_pr2.get_labels.return_value = []
+    mock_git_pr2.get_commits.return_value = []
 
     mock_git_commit1 = mocker.Mock(spec=Commit)
     mock_git_commit1.sha = "abc123"
@@ -136,6 +138,7 @@ def setup_issues_pulls_commits(mocker, mock_repo):
     mock_git_pr1.assignee = None
     mock_git_pr1.merge_commit_sha = "abc123"
     mock_git_pr1.get_labels.return_value = []
+    mock_git_pr1.get_commits.return_value = []
 
     mock_git_pr2 = mocker.Mock(spec=PullRequest)
     mock_git_pr2.id = 102
@@ -150,6 +153,7 @@ def setup_issues_pulls_commits(mocker, mock_repo):
     mock_git_pr2.assignee = None
     mock_git_pr2.merge_commit_sha = "def456"
     mock_git_pr2.get_labels.return_value = []
+    mock_git_pr2.get_commits.return_value = []
 
     mock_git_commit1 = mocker.Mock(spec=Commit)
     mock_git_commit1.sha = "abc123"
@@ -213,6 +217,45 @@ def test_generate_with_issues_and_pulls_and_commits(mocker, mock_repo):
 
     # Verify that commits are registered
     assert commit1 == rec_i1.get_commit(101, "abc123")
+
+
+def test_generate_registers_sync_merge_commit_to_pr_not_as_direct_commit(mocker, mock_repo):
+    """A sync-merge commit (base branch merged back into the PR branch) is present in the base branch's
+    commit history but isn't pull.merge_commit_sha. pull.get_commits() still reports it as belonging to
+    the PR, so it must be registered to the PR/issue rather than misclassified as a direct commit
+    (issue #335)."""
+    mocker.patch(
+        "release_notes_generator.record.factory.default_record_factory.safe_call_decorator",
+        side_effect=mock_safe_call_decorator,
+    )
+    mock_github_client = mocker.Mock(spec=Github)
+    issue1, _issue2, pr1, _pr2, commit1, commit2 = setup_issues_pulls_commits(mocker, mock_repo)
+
+    sync_merge_commit = mocker.Mock(spec=Commit)
+    sync_merge_commit.sha = "syncmergesha"
+    sync_merge_commit.commit.message = "Merge branch 'main' into feature-x"
+    sync_merge_commit.author.login = "author1"
+    sync_merge_commit.repository = mock_repo
+
+    pr1.get_commits.return_value = [commit1, sync_merge_commit]
+
+    mock_rate_limit = mocker.Mock()
+    mock_rate_limit.rate.remaining = 10
+    mock_rate_limit.rate.reset.timestamp.return_value = time.time() + 3600
+    mock_github_client.get_rate_limit.return_value = mock_rate_limit
+
+    data = MinedData(mock_repo)
+    data.issues = {issue1: mock_repo}
+    data.pull_requests = {pr1: mock_repo}
+    data.commits = {commit1: mock_repo, commit2: mock_repo, sync_merge_commit: mock_repo}
+
+    records = DefaultRecordFactory(mock_github_client, mock_repo).generate(data)
+
+    # The sync-merge commit must not appear as a stand-alone direct-commit record.
+    assert "syncmergesha" not in records
+
+    rec_i1 = cast(IssueRecord, records["org/repo#1"])
+    assert sync_merge_commit == rec_i1.get_commit(101, "syncmergesha")
 
 
 def test_generate_with_issues_and_pulls_and_commits_with_skip_labels(mocker, mock_repo):

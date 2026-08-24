@@ -599,7 +599,9 @@ def _make_compare_miner(mocker, mock_repo, *, from_tag="v2.6.3", to_tag="v2.6.4"
     if get_pull_side_effect is not None:
         mock_repo.get_pull.side_effect = get_pull_side_effect
     else:
-        mock_repo.get_pull.return_value = mocker.Mock(spec=PullRequest)
+        default_pr = mocker.Mock(spec=PullRequest)
+        default_pr.get_commits.return_value = []
+        mock_repo.get_pull.return_value = default_pr
 
     github_mock = mocker.Mock(spec=Github)
     github_mock.get_repo.return_value = mock_repo
@@ -628,6 +630,7 @@ def test_mine_data_compare_mode_fetches_prs_by_number(mocker, mock_repo):
     commit_mock.commit.message = "Fix service access role (#42)"
     pr_mock = mocker.Mock(spec=PullRequest)
     pr_mock.number = 42
+    pr_mock.get_commits.return_value = []
 
     miner = _make_compare_miner(mocker, mock_repo, compare_commits=[commit_mock],
                                 get_pull_side_effect=lambda n: pr_mock if n == 42 else None)
@@ -645,8 +648,10 @@ def test_mine_data_compare_mode_multiple_prs(mocker, mock_repo):
     c2.commit.message = "Fix B (#20)"
     pr10 = mocker.Mock(spec=PullRequest)
     pr10.number = 10
+    pr10.get_commits.return_value = []
     pr20 = mocker.Mock(spec=PullRequest)
     pr20.number = 20
+    pr20.get_commits.return_value = []
 
     miner = _make_compare_miner(mocker, mock_repo, compare_commits=[c1, c2],
                                 get_pull_side_effect=lambda n: pr10 if n == 10 else pr20)
@@ -698,6 +703,34 @@ def test_mine_data_compare_mode_no_pr_numbers_in_message(mocker, mock_repo):
 
     assert data.pull_requests == {}
     assert "bumpsha" in data.compare_commit_shas
+
+
+def test_mine_data_compare_mode_excludes_sync_merge_commit_belonging_to_pr(mocker, mock_repo):
+    """A sync-merge commit (base branch merged back into the PR branch) has no PR-number reference in its
+    message, but it's still returned by pull.get_commits() for the PR it belongs to. It must not be
+    misclassified as a stand-alone direct commit (issue #335)."""
+    sync_merge_commit = mocker.Mock()
+    sync_merge_commit.sha = "syncmergesha"
+    sync_merge_commit.commit.message = "Merge branch 'main' into feature-x"
+
+    squash_commit = mocker.Mock()
+    squash_commit.sha = "squashsha"
+    squash_commit.commit.message = "Feature X done (#7)"
+
+    pr7 = mocker.Mock(spec=PullRequest)
+    pr7.number = 7
+    pr7.get_commits.return_value = [sync_merge_commit, squash_commit]
+
+    miner = _make_compare_miner(
+        mocker,
+        mock_repo,
+        compare_commits=[sync_merge_commit, squash_commit],
+        get_pull_side_effect=lambda n: pr7 if n == 7 else None,
+    )
+    data = miner.mine_data()
+
+    assert pr7 in data.pull_requests
+    assert data.commits == {}
 
 
 def test_mine_data_compare_mode_warns_on_total_commits_overflow(mocker, mock_repo):
