@@ -20,7 +20,7 @@ import pytest
 from datetime import datetime
 from typing import Optional
 
-from github import Github, GithubException
+from github import Github, GithubException, UnknownObjectException
 from github.Commit import Commit
 from github.GitRelease import GitRelease
 from github.Issue import Issue
@@ -521,6 +521,28 @@ def test_fetch_prs_for_fetched_cross_issues(mocker, mock_repo):
     assert key_ok in result and result[key_ok] == [pr_obj]
     assert key_err in result and result[key_err] == []
     warn_mock.assert_called_once()
+
+
+# --- _get_pull_ignoring_not_found ---
+
+
+def test_get_pull_ignoring_not_found_returns_none_on_404(mocker, mock_repo):
+    """A bare `#N` commit reference is as likely to point at an issue as at a PR; a 404 for it is
+    expected and must not surface as an error-level traceback."""
+    mock_repo.get_pull.side_effect = UnknownObjectException(404, {"message": "Not Found"}, None)
+    error_mock = mocker.patch("release_notes_generator.data.miner.logger.error")
+
+    result = DataMiner._get_pull_ignoring_not_found(mock_repo, 1384)
+
+    assert result is None
+    error_mock.assert_not_called()
+
+
+def test_get_pull_ignoring_not_found_propagates_other_errors(mock_repo):
+    mock_repo.get_pull.side_effect = GithubException(403, {"message": "rate limited"}, None)
+
+    with pytest.raises(GithubException):
+        DataMiner._get_pull_ignoring_not_found(mock_repo, 1384)
 
 
 # --- _extract_pr_numbers_from_commits ---

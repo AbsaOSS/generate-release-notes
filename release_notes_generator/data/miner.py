@@ -26,7 +26,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed, CancelledError
 from typing import Optional, Callable
 
 import semver
-from github import Github, GithubException
+from github import Github, GithubException, UnknownObjectException
 from github.GitRelease import GitRelease
 from github.Issue import Issue
 from github.PullRequest import PullRequest
@@ -167,7 +167,7 @@ class DataMiner:
         pulls: dict[PullRequest, Repository] = {}
         pr_commit_shas: set[str] = set()
         for number in sorted(pr_numbers):
-            pr = self._safe_call(repo.get_pull)(number)
+            pr = self._safe_call(lambda n=number: self._get_pull_ignoring_not_found(repo, n))()
             if pr is None:
                 logger.debug("Compare mode: PR #%d could not be fetched; skipping.", number)
                 continue
@@ -278,6 +278,18 @@ class DataMiner:
             pr_commit_sha_list[:_MAX_LOGGED_PR_COMMIT_SHAS],
             pr.merge_commit_sha,
         )
+
+    @staticmethod
+    def _get_pull_ignoring_not_found(repo: Repository, number: int) -> Optional[PullRequest]:
+        """
+        Fetch a PR by number, treating "not found" as an expected outcome (bare `#N` commit
+        references are as likely to point at an issue as at a PR) rather than an error worth a
+        full traceback in the logs.
+        """
+        try:
+            return repo.get_pull(number)
+        except UnknownObjectException:
+            return None
 
     def _validate_tag_exists(self, repo: Repository, tag: str) -> None:
         try:
