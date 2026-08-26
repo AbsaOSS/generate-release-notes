@@ -41,7 +41,7 @@ from release_notes_generator.model.mined_data import MinedData
 from release_notes_generator.model.record.pull_request_record import PullRequestRecord
 from release_notes_generator.utils.decorators import safe_call_decorator
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
-from release_notes_generator.utils.record_utils import get_id, parse_issue_id
+from release_notes_generator.utils.record_utils import get_id, parse_issue_id, get_commit_subject
 
 # GitHub PR references: merge/squash markers and bare #N from rebase-merge commits
 _PR_MERGE_ARTIFACT_RE = re.compile(r"\(#(\d+)\)|Merge pull request #(\d+)")
@@ -161,7 +161,7 @@ class DataMiner:
         # (commits identified by PR, or belonging to a PR's commit list, are redundant with the PR itself)
         commits_without_pr: dict[GithubCommit, Repository] = {}
         for commit in compare_commits:
-            subject = self._get_commit_subject(commit)
+            subject = get_commit_subject(commit)
             if commit.sha in pr_commit_shas:
                 logger.debug("Compare mode: commit %s ('%s') excluded, matched PR commit SHA.", commit.sha, subject)
                 continue
@@ -196,7 +196,7 @@ class DataMiner:
                     self._register_pr_commit_shas(pr, pulls, pr_commit_shas, data.home_repository)
                     registered_pr_numbers.add(pr.number)
                 if commit.sha in pr_commit_shas:
-                    subject = self._get_commit_subject(commit)
+                    subject = get_commit_subject(commit)
                     logger.debug(
                         "Compare mode: commit %s ('%s') excluded, matched PR commit SHA via association fallback.",
                         commit.sha,
@@ -205,7 +205,7 @@ class DataMiner:
                     del commits_without_pr[commit]
 
         for commit in commits_without_pr:
-            subject = self._get_commit_subject(commit)
+            subject = get_commit_subject(commit)
             logger.debug("Compare mode: commit %s ('%s') classified as direct commit.", commit.sha, subject)
 
         data.pull_requests = pulls
@@ -679,16 +679,11 @@ class DataMiner:
         """
         pr_numbers: set[int] = set()
         for commit in commits:
-            subject = DataMiner._get_commit_subject(commit)
+            subject = get_commit_subject(commit)
             for match in _PR_NUMBER_RE.finditer(subject):
                 number_str = match.group(1) or match.group(2) or match.group(3)
                 pr_numbers.add(int(number_str))
         return pr_numbers
-
-    @staticmethod
-    def _get_commit_subject(commit: GithubCommit) -> str:
-        """Extract the first line (subject) of a commit message, or empty string if message is None."""
-        return commit.commit.message.splitlines()[0] if commit.commit.message else ""
 
     @staticmethod
     def __filter_duplicated_issues(data: MinedData) -> "MinedData":

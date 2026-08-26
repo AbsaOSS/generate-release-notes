@@ -40,7 +40,7 @@ from release_notes_generator.utils.decorators import safe_call_decorator
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
 
 from release_notes_generator.utils.pull_request_utils import get_issues_for_pr, extract_issue_numbers_from_body
-from release_notes_generator.utils.record_utils import get_id, parse_issue_id
+from release_notes_generator.utils.record_utils import get_id, parse_issue_id, get_commit_subject
 
 logger = logging.getLogger(__name__)
 
@@ -92,7 +92,7 @@ class DefaultRecordFactory(RecordFactory):
         logger.info("Registering direct commits to records...")
         for commit, repo in data.commits.items():
             if commit.sha not in self.__registered_commits:
-                subject = self._miner._get_commit_subject(commit)
+                subject = get_commit_subject(commit)
                 logger.debug("Direct commit registered: %s ('%s')", commit.sha, subject)
                 self._records[get_id(commit, repo)] = CommitRecord(commit)
 
