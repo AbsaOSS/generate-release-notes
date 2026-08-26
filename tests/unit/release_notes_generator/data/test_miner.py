@@ -20,7 +20,7 @@ import pytest
 from datetime import datetime
 from typing import Optional
 
-from github import Github, GithubException
+from github import Github, GithubException, UnknownObjectException
 from github.Commit import Commit
 from github.GitRelease import GitRelease
 from github.Issue import Issue
@@ -523,6 +523,28 @@ def test_fetch_prs_for_fetched_cross_issues(mocker, mock_repo):
     warn_mock.assert_called_once()
 
 
+# --- _get_pull_ignoring_not_found ---
+
+
+def test_get_pull_ignoring_not_found_returns_none_on_404(mocker, mock_repo):
+    """A bare `#N` commit reference is as likely to point at an issue as at a PR; a 404 for it is
+    expected and must not surface as an error-level traceback."""
+    mock_repo.get_pull.side_effect = UnknownObjectException(404, {"message": "Not Found"}, None)
+    error_mock = mocker.patch("release_notes_generator.data.miner.logger.error")
+
+    result = DataMiner._get_pull_ignoring_not_found(mock_repo, 1384)
+
+    assert result is None
+    error_mock.assert_not_called()
+
+
+def test_get_pull_ignoring_not_found_propagates_other_errors(mock_repo):
+    mock_repo.get_pull.side_effect = GithubException(403, {"message": "rate limited"}, None)
+
+    with pytest.raises(GithubException):
+        DataMiner._get_pull_ignoring_not_found(mock_repo, 1384)
+
+
 # --- _extract_pr_numbers_from_commits ---
 
 
@@ -570,6 +592,19 @@ def test_extract_pr_numbers_multiline_message(mocker):
     assert DataMiner._extract_pr_numbers_from_commits([commit]) == set()
 
 
+def test_extract_pr_numbers_leading_bare_hash_format(mocker):
+    commit = mocker.Mock()
+    commit.commit.message = "#1403 Investigate and fix omd dockerfile certificate issue"
+    assert DataMiner._extract_pr_numbers_from_commits([commit]) == {1403}
+
+
+def test_extract_pr_numbers_leading_bare_hash_not_matched_mid_subject(mocker):
+    commit = mocker.Mock()
+    commit.commit.message = "Feature/#1366 prebuild kerberos dependencies"
+    assert DataMiner._extract_pr_numbers_from_commits([commit]) == set()
+
+
+
 # --- mine_data compare mode ---
 
 
@@ -602,6 +637,7 @@ def _make_compare_miner(mocker, mock_repo, *, from_tag="v2.6.3", to_tag="v2.6.4"
     else:
         default_pr = mocker.Mock(spec=PullRequest)
         default_pr.get_commits.return_value = []
+        default_pr.merge_commit_sha = None
         mock_repo.get_pull.return_value = default_pr
 
     github_mock = mocker.Mock(spec=Github)
@@ -632,6 +668,7 @@ def test_mine_data_compare_mode_fetches_prs_by_number(mocker, mock_repo):
     pr_mock = mocker.Mock(spec=PullRequest)
     pr_mock.number = 42
     pr_mock.get_commits.return_value = []
+    pr_mock.merge_commit_sha = None
 
     miner = _make_compare_miner(mocker, mock_repo, compare_commits=[commit_mock],
                                 get_pull_side_effect=lambda n: pr_mock if n == 42 else None)
@@ -650,9 +687,11 @@ def test_mine_data_compare_mode_multiple_prs(mocker, mock_repo):
     pr10 = mocker.Mock(spec=PullRequest)
     pr10.number = 10
     pr10.get_commits.return_value = []
+    pr10.merge_commit_sha = None
     pr20 = mocker.Mock(spec=PullRequest)
     pr20.number = 20
     pr20.get_commits.return_value = []
+    pr20.merge_commit_sha = None
 
     miner = _make_compare_miner(mocker, mock_repo, compare_commits=[c1, c2],
                                 get_pull_side_effect=lambda n: pr10 if n == 10 else pr20)
@@ -694,10 +733,28 @@ def test_mine_data_compare_mode_skips_none_prs(mocker, mock_repo):
     assert data.pull_requests == {}
 
 
+def test_mine_data_compare_mode_bare_hash_ref_to_unresolved_pr_stays_direct_commit(mocker, mock_repo):
+    """A bare leading "#N" is a common convention for referencing an issue, not proof the commit
+    belongs to a real merged PR. If #N can't be resolved to a merged PR, the commit must remain a
+    direct commit rather than silently vanishing from the release notes."""
+    commit_mock = mocker.Mock()
+    commit_mock.sha = "dead450"
+    commit_mock.commit.message = "#450 Fix typo in docs"
+    commit_mock.get_pulls.return_value = []
+
+    miner = _make_compare_miner(mocker, mock_repo, compare_commits=[commit_mock],
+                                get_pull_side_effect=lambda _: None)
+    data = miner.mine_data()
+
+    assert data.pull_requests == {}
+    assert "dead450" in {c.sha for c in data.commits}
+
+
 def test_mine_data_compare_mode_no_pr_numbers_in_message(mocker, mock_repo):
     commit_mock = mocker.Mock()
     commit_mock.sha = "bumpsha"
     commit_mock.commit.message = "Bump version to 2.6.4"
+    commit_mock.get_pulls.return_value = []
 
     miner = _make_compare_miner(mocker, mock_repo, compare_commits=[commit_mock])
     data = miner.mine_data()
@@ -723,6 +780,7 @@ def test_mine_data_compare_mode_excludes_sync_merge_commit_belonging_to_pr(
     pr7 = mocker.Mock(spec=PullRequest)
     pr7.number = 7
     pr7.get_commits.return_value = [sync_merge_commit, squash_commit]
+    pr7.merge_commit_sha = None
 
     miner = _make_compare_miner(
         mocker,
@@ -734,6 +792,104 @@ def test_mine_data_compare_mode_excludes_sync_merge_commit_belonging_to_pr(
 
     assert pr7 in data.pull_requests
     assert data.commits == {}
+
+
+def test_mine_data_compare_mode_finds_pr_via_commit_association_fallback(
+    mocker: MockerFixture, mock_repo: Repository
+) -> None:
+    """A merged PR's commit message may never reference the PR number at all (e.g. "Set project
+    version to 1.8.0"). Such commits must still be excluded via the commit -> PRs association
+    fallback, not left as misclassified direct commits (issue #337 follow-up)."""
+    commit_mock = mocker.Mock()
+    commit_mock.sha = "versionbumpsha"
+    commit_mock.commit.message = "Set project version to 1.8.0"
+
+    pr1430 = mocker.Mock(spec=PullRequest)
+    pr1430.number = 1430
+    pr1430.merged = True
+    pr1430.merge_commit_sha = "mergeshaxyz"
+    pr1430.get_commits.return_value = [commit_mock]
+    commit_mock.get_pulls.return_value = [pr1430]
+
+    miner = _make_compare_miner(mocker, mock_repo, compare_commits=[commit_mock])
+    data = miner.mine_data()
+
+    assert pr1430 in data.pull_requests
+    assert data.commits == {}
+
+
+def test_mine_data_compare_mode_ignores_unmerged_pr_from_association_fallback(
+    mocker: MockerFixture, mock_repo: Repository
+) -> None:
+    """An open (not-yet-merged) PR returned by the commit association endpoint must not suppress
+    a direct commit."""
+    commit_mock = mocker.Mock()
+    commit_mock.sha = "directsha"
+    commit_mock.commit.message = "Quick fix"
+
+    open_pr = mocker.Mock(spec=PullRequest)
+    open_pr.number = 55
+    open_pr.merged = False
+    commit_mock.get_pulls.return_value = [open_pr]
+
+    miner = _make_compare_miner(mocker, mock_repo, compare_commits=[commit_mock])
+    data = miner.mine_data()
+
+    assert "directsha" in {c.sha for c in data.commits}
+
+
+def test_mine_data_compare_mode_association_fallback_dedupes_by_pr_number(
+    mocker: MockerFixture, mock_repo: Repository
+) -> None:
+    """The commit -> PRs association endpoint can return a fresh PullRequest instance for a PR already
+    discovered (e.g. via another commit's association lookup), distinct by object identity from that
+    prior instance even though it's the same real PR. Dedup must be by PR number, not object identity,
+    or the same PR ends up registered twice in data.pull_requests."""
+    commit_a = mocker.Mock()
+    commit_a.sha = "shaA"
+    commit_a.commit.message = "Part of a PR but message doesn't say so (A)"
+
+    commit_b = mocker.Mock()
+    commit_b.sha = "shaB"
+    commit_b.commit.message = "Part of a PR but message doesn't say so (B)"
+
+    pr99_via_a = mocker.Mock(spec=PullRequest)
+    pr99_via_a.number = 99
+    pr99_via_a.merged = True
+    pr99_via_a.merge_commit_sha = None
+    pr99_via_a.get_commits.return_value = [commit_a, commit_b]
+    commit_a.get_pulls.return_value = [pr99_via_a]
+
+    pr99_via_b = mocker.Mock(spec=PullRequest)
+    pr99_via_b.number = 99
+    pr99_via_b.merged = True
+    pr99_via_b.merge_commit_sha = None
+    pr99_via_b.get_commits.return_value = [commit_a, commit_b]
+    commit_b.get_pulls.return_value = [pr99_via_b]
+
+    miner = _make_compare_miner(mocker, mock_repo, compare_commits=[commit_a, commit_b])
+    data = miner.mine_data()
+
+    assert len(data.pull_requests) == 1
+    assert data.commits == {}
+
+
+def test_mine_data_compare_mode_skips_association_fallback_above_cap(mocker, mock_repo):
+    """When too many commits lack a detected PR, the per-commit association fallback is skipped
+    rather than issuing one API call per commit."""
+    commits = []
+    for i in range(201):
+        commit_mock = mocker.Mock()
+        commit_mock.sha = f"sha{i}"
+        commit_mock.commit.message = "Direct change"
+        commits.append(commit_mock)
+
+    miner = _make_compare_miner(mocker, mock_repo, compare_commits=commits)
+    data = miner.mine_data()
+
+    assert len(data.commits) == 201
+    for commit_mock in commits:
+        commit_mock.get_pulls.assert_not_called()
 
 
 def test_mine_data_compare_mode_warns_on_total_commits_overflow(mocker, mock_repo):

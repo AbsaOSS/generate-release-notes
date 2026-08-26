@@ -228,3 +228,16 @@ def format_row_with_suppression(template: str, values: dict[str, Any]) -> str:
         result = re.sub(placeholder(key), str(value), result, flags=re.IGNORECASE)
 
     return re.sub(r"\s+", " ", result).strip()
+
+
+def get_commit_subject(commit: Commit) -> str:
+    """
+    Extract the first line (subject) of a commit message.
+
+    Parameters:
+        commit: A GitHub commit object.
+
+    Returns:
+        The first line of the commit message, or empty string if message is None.
+    """
+    return commit.commit.message.splitlines()[0] if commit.commit.message else ""

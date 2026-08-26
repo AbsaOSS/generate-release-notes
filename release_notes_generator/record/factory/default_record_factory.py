@@ -40,7 +40,7 @@ from release_notes_generator.utils.decorators import safe_call_decorator
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
 
 from release_notes_generator.utils.pull_request_utils import get_issues_for_pr, extract_issue_numbers_from_body
-from release_notes_generator.utils.record_utils import get_id, parse_issue_id
+from release_notes_generator.utils.record_utils import get_id, parse_issue_id, get_commit_subject
 
 logger = logging.getLogger(__name__)
 
@@ -92,6 +92,8 @@ class DefaultRecordFactory(RecordFactory):
         logger.info("Registering direct commits to records...")
         for commit, repo in data.commits.items():
             if commit.sha not in self.__registered_commits:
+                subject = get_commit_subject(commit)
+                logger.debug("Direct commit registered: %s ('%s')", commit.sha, subject)
                 self._records[get_id(commit, repo)] = CommitRecord(commit)
 
         # dev note: now we have all PRs and commits registered to issues or as stand-alone records
@@ -136,6 +138,14 @@ class DefaultRecordFactory(RecordFactory):
             pr_commit_shas.add(pull.merge_commit_sha)
         related_commits = [c for c in data.commits if c.sha in pr_commit_shas]
         self.__registered_commits.update(c.sha for c in related_commits)
+        related_commit_shas = [c.sha for c in related_commits]
+        logger.debug(
+            "PR #%d: %d commit SHA(s) via get_commits() + merge_commit_sha, %d matched against mined commits: %s",
+            pull.number,
+            len(pr_commit_shas),
+            len(related_commits),
+            related_commit_shas,
+        )
 
         pr_repo = target_repository if target_repository is not None else data.home_repository
 

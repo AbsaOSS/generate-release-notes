@@ -26,7 +26,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed, CancelledError
 from typing import Optional, Callable
 
 import semver
-from github import Github, GithubException
+from github import Github, GithubException, UnknownObjectException
 from github.GitRelease import GitRelease
 from github.Issue import Issue
 from github.PullRequest import PullRequest
@@ -41,10 +41,13 @@ from release_notes_generator.model.mined_data import MinedData
 from release_notes_generator.model.record.pull_request_record import PullRequestRecord
 from release_notes_generator.utils.decorators import safe_call_decorator
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
-from release_notes_generator.utils.record_utils import get_id, parse_issue_id
+from release_notes_generator.utils.record_utils import get_id, parse_issue_id, get_commit_subject
 
-_PR_NUMBER_RE = re.compile(r"\(#(\d+)\)|Merge pull request #(\d+)")
+# GitHub PR references: merge/squash markers and bare #N from rebase-merge commits
+_PR_MERGE_ARTIFACT_RE = re.compile(r"\(#(\d+)\)|Merge pull request #(\d+)")
+_PR_NUMBER_RE = re.compile(r"\(#(\d+)\)|Merge pull request #(\d+)|^#(\d+)\b")
 _COMPARE_COMMITS_MAX_RESULTS = 10_000
+_MAX_DIRECT_COMMIT_PR_LOOKUPS = 200  # Prevent API call explosion from large commit batches
 
 logger = logging.getLogger(__name__)
 
@@ -56,10 +59,7 @@ class DataMiner:
 
     def __init__(self, github_instance: Github, rate_limiter: GithubRateLimiter):
         self.github_instance = github_instance
-        # dev note: PyGithub paginated results are lazy - the HTTP requests happen while iterating,
-        #   not on the initial call. Call sites that need a list must materialize it (e.g. via
-        #   `self._safe_call(lambda: list(x.get_foo()))()`) inside the safe-call, otherwise pagination
-        #   errors are raised outside of it and go uncaught.
+        # Lazy pagination errors must be caught inside safe_call, not propagated
         self._safe_call = safe_call_decorator(rate_limiter)
 
     def mine_data(self) -> MinedData:
@@ -147,37 +147,74 @@ class DataMiner:
         data.compare_commit_shas = {c.sha for c in compare_commits}
         data.commits = {c: data.home_repository for c in compare_commits}
         pr_numbers = self._extract_pr_numbers_from_commits(compare_commits)
+        logger.debug("Compare mode: PR number(s) extracted from commit subjects: %s", sorted(pr_numbers))
         pulls: dict[PullRequest, Repository] = {}
         pr_commit_shas: set[str] = set()
         for number in sorted(pr_numbers):
-            pr = self._safe_call(repo.get_pull)(number)
-            if pr is not None:
-                # Store each PR with its source repository for downstream filtering and processing.
-                # In compare mode, all PRs come from home_repository; cross-repo is handled elsewhere.
-                pulls[pr] = data.home_repository
-                # dev note: pull.get_commits() returns all commits GitHub associates with the PR,
-                #   including sync-merge commits (base branch merged back into the PR branch) whose
-                #   messages don't match _PR_NUMBER_RE. Excluding them by SHA (rather than by message
-                #   pattern) prevents them being misclassified as stand-alone "direct commits".
-                #   merge_commit_sha is added separately: for a rebase-merge, get_commits() still
-                #   reports the pre-rebase SHAs, not the new SHA(s) landed on the base branch.
-                pr_commits = self._safe_call(lambda p=pr: list(p.get_commits()))()
-                if pr_commits is not None:
-                    pr_commit_shas.update(c.sha for c in pr_commits)
-                if pr.merge_commit_sha:
-                    pr_commit_shas.add(pr.merge_commit_sha)
-        data.pull_requests = pulls
+            pr = self._safe_call(lambda n=number: self._get_pull_ignoring_not_found(repo, n))()
+            if pr is None:
+                logger.debug("Compare mode: PR #%d could not be fetched; skipping.", number)
+                continue
+            self._register_pr_commit_shas(pr, pulls, pr_commit_shas, data.home_repository)
 
         # Only include commits that aren't already accounted for by a PR
         # (commits identified by PR, or belonging to a PR's commit list, are redundant with the PR itself)
         commits_without_pr: dict[GithubCommit, Repository] = {}
         for commit in compare_commits:
+            subject = get_commit_subject(commit)
             if commit.sha in pr_commit_shas:
+                logger.debug("Compare mode: commit %s ('%s') excluded, matched PR commit SHA.", commit.sha, subject)
                 continue
-            subject = commit.commit.message.splitlines()[0] if commit.commit.message else ""
-            has_pr_ref = bool(_PR_NUMBER_RE.search(subject))
-            if not has_pr_ref:
-                commits_without_pr[commit] = data.home_repository
+            has_pr_ref = bool(_PR_MERGE_ARTIFACT_RE.search(subject))
+            if has_pr_ref:
+                logger.debug("Compare mode: commit %s ('%s') excluded, subject references a PR.", commit.sha, subject)
+                continue
+            commits_without_pr[commit] = data.home_repository
+
+        # Fallback: query GitHub's commit→PR association for candidates without explicit PR refs
+        if len(commits_without_pr) > _MAX_DIRECT_COMMIT_PR_LOOKUPS:
+            logger.debug(
+                "Compare mode: %d commit(s) without a detected PR exceed the fallback lookup cap of %d; "
+                "skipping commit -> PR association fallback, some may still belong to a PR.",
+                len(commits_without_pr),
+                _MAX_DIRECT_COMMIT_PR_LOOKUPS,
+            )
+        else:
+            registered_pr_numbers = {p.number for p in pulls}
+            for commit in list(commits_without_pr):
+                associated_prs = self._safe_call(lambda c=commit: list(c.get_pulls()))()
+                for pr in associated_prs or []:
+                    # Simple PR objects need lazy-loading via _safe_call to access `merged` attribute
+                    is_merged = self._safe_call(lambda p=pr: p.merged)()
+                    if not is_merged or pr.number in registered_pr_numbers:
+                        continue
+                    logger.debug(
+                        "Compare mode: commit %s is associated with merged PR #%d not found via commit subjects.",
+                        commit.sha,
+                        pr.number,
+                    )
+                    self._register_pr_commit_shas(pr, pulls, pr_commit_shas, data.home_repository)
+                    registered_pr_numbers.add(pr.number)
+                if commit.sha in pr_commit_shas:
+                    subject = get_commit_subject(commit)
+                    logger.debug(
+                        "Compare mode: commit %s ('%s') excluded, matched PR commit SHA via association fallback.",
+                        commit.sha,
+                        subject,
+                    )
+                    del commits_without_pr[commit]
+
+        for commit in commits_without_pr:
+            subject = get_commit_subject(commit)
+            logger.debug("Compare mode: commit %s ('%s') classified as direct commit.", commit.sha, subject)
+
+        data.pull_requests = pulls
+        sorted_pr_commit_shas = sorted(pr_commit_shas)
+        logger.debug(
+            "Compare mode: total %d unique PR-associated commit SHA(s): %s",
+            len(sorted_pr_commit_shas),
+            sorted_pr_commit_shas,
+        )
 
         data.commits = commits_without_pr
         logger.info(
@@ -185,6 +222,50 @@ class DataMiner:
             len(commits_without_pr),
             len(data.pull_requests),
         )
+
+    def _register_pr_commit_shas(
+        self,
+        pr: PullRequest,
+        pulls: dict[PullRequest, Repository],
+        pr_commit_shas: set[str],
+        home_repository: Repository,
+    ) -> None:
+        """
+        Store `pr` alongside its home repository and add all commit SHAs GitHub associates with it.
+
+        Notes:
+            - Uses `get_commits()` plus `merge_commit_sha` to cover both regular and rebase-merge SHAs.
+            - Sync-merge commits (base branch merged back into PR branch) are captured by SHA,
+              preventing misclassification as "direct commits".
+            - For rebase-merge, `get_commits()` returns pre-rebase SHAs; `merge_commit_sha` has the
+              new SHA(s) that landed on the base branch.
+            - In compare mode, all PRs come from home_repository; cross-repo handled elsewhere.
+        """
+        pulls[pr] = home_repository
+        pr_commits = self._safe_call(lambda p=pr: list(p.get_commits()))()
+        pr_commit_sha_list = [c.sha for c in pr_commits] if pr_commits is not None else []
+        pr_commit_shas.update(pr_commit_sha_list)
+        if pr.merge_commit_sha:
+            pr_commit_shas.add(pr.merge_commit_sha)
+        logger.debug(
+            "Compare mode: PR #%d has %d commit(s) via get_commits(): %s, merge_commit_sha=%s.",
+            pr.number,
+            len(pr_commit_sha_list),
+            pr_commit_sha_list,
+            pr.merge_commit_sha,
+        )
+
+    @staticmethod
+    def _get_pull_ignoring_not_found(repo: Repository, number: int) -> Optional[PullRequest]:
+        """
+        Fetch a PR by number, treating "not found" as an expected outcome (bare `#N` commit
+        references are as likely to point at an issue as at a PR) rather than an error worth a
+        full traceback in the logs.
+        """
+        try:
+            return repo.get_pull(number)
+        except UnknownObjectException:
+            return None
 
     def _validate_tag_exists(self, repo: Repository, tag: str) -> None:
         try:
@@ -598,9 +679,9 @@ class DataMiner:
         """
         pr_numbers: set[int] = set()
         for commit in commits:
-            subject = commit.commit.message.splitlines()[0] if commit.commit.message else ""
+            subject = get_commit_subject(commit)
             for match in _PR_NUMBER_RE.finditer(subject):
-                number_str = match.group(1) or match.group(2)
+                number_str = match.group(1) or match.group(2) or match.group(3)
                 pr_numbers.add(int(number_str))
         return pr_numbers
 
