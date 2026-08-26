@@ -43,24 +43,11 @@ from release_notes_generator.utils.decorators import safe_call_decorator
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
 from release_notes_generator.utils.record_utils import get_id, parse_issue_id
 
-# dev note: these are GitHub-generated merge artifacts, so a match is a reliable signal that a commit
-#   is a PR merge/squash commit even if the PR itself couldn't be fetched (e.g. transient API error).
+# GitHub PR references: merge/squash markers and bare #N from rebase-merge commits
 _PR_MERGE_ARTIFACT_RE = re.compile(r"\(#(\d+)\)|Merge pull request #(\d+)")
-# dev note: 3rd alternative catches commits whose subject leads with a bare "#N" reference
-#   (e.g. "#1403 Fix thing"), a message style left as-is by some merge strategies (e.g. rebase-merge)
-#   that don't append GitHub's "(#N)"/"Merge pull request #N" boilerplate. Without it, such PRs are
-#   never looked up at all, so their commits can't be excluded as duplicates of the PR.
-#   Unlike _PR_MERGE_ARTIFACT_RE, this is only a candidate to try fetching - #N is a common commit
-#   convention for referencing an issue and is not proof the commit belongs to a real merged PR, so it
-#   must not by itself exclude a commit (see the SHA-based check in _handle_compare_mode).
 _PR_NUMBER_RE = re.compile(r"\(#(\d+)\)|Merge pull request #(\d+)|^#(\d+)\b")
 _COMPARE_COMMITS_MAX_RESULTS = 10_000
-# dev note: cap on how many PR-associated commit SHAs are logged at debug level, to keep verbose logs
-#   readable for large comparisons.
-_MAX_LOGGED_PR_COMMIT_SHAS = 50
-# dev note: cap on the per-commit "commit -> associated PRs" fallback lookup (see _handle_compare_mode)
-#   so a large batch of genuine direct commits can't trigger thousands of extra API calls.
-_MAX_DIRECT_COMMIT_PR_LOOKUPS = 200
+_MAX_DIRECT_COMMIT_PR_LOOKUPS = 200  # Prevent API call explosion from large commit batches
 
 logger = logging.getLogger(__name__)
 
@@ -72,10 +59,7 @@ class DataMiner:
 
     def __init__(self, github_instance: Github, rate_limiter: GithubRateLimiter):
         self.github_instance = github_instance
-        # dev note: PyGithub paginated results are lazy - the HTTP requests happen while iterating,
-        #   not on the initial call. Call sites that need a list must materialize it (e.g. via
-        #   `self._safe_call(lambda: list(x.get_foo()))()`) inside the safe-call, otherwise pagination
-        #   errors are raised outside of it and go uncaught.
+        # Lazy pagination errors must be caught inside safe_call, not propagated
         self._safe_call = safe_call_decorator(rate_limiter)
 
     def mine_data(self) -> MinedData:
@@ -177,7 +161,7 @@ class DataMiner:
         # (commits identified by PR, or belonging to a PR's commit list, are redundant with the PR itself)
         commits_without_pr: dict[GithubCommit, Repository] = {}
         for commit in compare_commits:
-            subject = commit.commit.message.splitlines()[0] if commit.commit.message else ""
+            subject = self._get_commit_subject(commit)
             if commit.sha in pr_commit_shas:
                 logger.debug("Compare mode: commit %s ('%s') excluded, matched PR commit SHA.", commit.sha, subject)
                 continue
@@ -187,10 +171,7 @@ class DataMiner:
                 continue
             commits_without_pr[commit] = data.home_repository
 
-        # dev note: some merged PR's commits never reference the PR number in any commit message at all
-        #   (e.g. "Set project version to 1.8.0") so they can't be found via _extract_pr_numbers_from_commits.
-        #   As a last-resort fallback, ask GitHub directly which merged PR(s) contain each remaining
-        #   candidate "direct commit" via the commit -> PRs association endpoint.
+        # Fallback: query GitHub's commit→PR association for candidates without explicit PR refs
         if len(commits_without_pr) > _MAX_DIRECT_COMMIT_PR_LOOKUPS:
             logger.debug(
                 "Compare mode: %d commit(s) without a detected PR exceed the fallback lookup cap of %d; "
@@ -203,9 +184,7 @@ class DataMiner:
             for commit in list(commits_without_pr):
                 associated_prs = self._safe_call(lambda c=commit: list(c.get_pulls()))()
                 for pr in associated_prs or []:
-                    # dev note: the association endpoint returns a "simple" PR representation without
-                    #   `merged`, so reading it lazily completes the object via a real API call - route
-                    #   it through _safe_call like every other GitHub-hitting call in this method.
+                    # Simple PR objects need lazy-loading via _safe_call to access `merged` attribute
                     is_merged = self._safe_call(lambda p=pr: p.merged)()
                     if not is_merged or pr.number in registered_pr_numbers:
                         continue
@@ -217,7 +196,7 @@ class DataMiner:
                     self._register_pr_commit_shas(pr, pulls, pr_commit_shas, data.home_repository)
                     registered_pr_numbers.add(pr.number)
                 if commit.sha in pr_commit_shas:
-                    subject = commit.commit.message.splitlines()[0] if commit.commit.message else ""
+                    subject = self._get_commit_subject(commit)
                     logger.debug(
                         "Compare mode: commit %s ('%s') excluded, matched PR commit SHA via association fallback.",
                         commit.sha,
@@ -226,16 +205,15 @@ class DataMiner:
                     del commits_without_pr[commit]
 
         for commit in commits_without_pr:
-            subject = commit.commit.message.splitlines()[0] if commit.commit.message else ""
+            subject = self._get_commit_subject(commit)
             logger.debug("Compare mode: commit %s ('%s') classified as direct commit.", commit.sha, subject)
 
         data.pull_requests = pulls
         sorted_pr_commit_shas = sorted(pr_commit_shas)
         logger.debug(
-            "Compare mode: total %d unique PR-associated commit SHA(s) (showing up to %d): %s",
+            "Compare mode: total %d unique PR-associated commit SHA(s): %s",
             len(sorted_pr_commit_shas),
-            _MAX_LOGGED_PR_COMMIT_SHAS,
-            sorted_pr_commit_shas[:_MAX_LOGGED_PR_COMMIT_SHAS],
+            sorted_pr_commit_shas,
         )
 
         data.commits = commits_without_pr
@@ -253,17 +231,16 @@ class DataMiner:
         home_repository: Repository,
     ) -> None:
         """
-        Store `pr` alongside its home repository and add all commit SHAs GitHub associates with it
-        (via `get_commits()` plus `merge_commit_sha`) to `pr_commit_shas`.
+        Store `pr` alongside its home repository and add all commit SHAs GitHub associates with it.
 
-        dev note: `pull.get_commits()` returns all commits GitHub associates with the PR, including
-        sync-merge commits (base branch merged back into the PR branch) whose messages don't match
-        `_PR_NUMBER_RE`. Excluding them by SHA (rather than by message pattern) prevents them being
-        misclassified as stand-alone "direct commits". `merge_commit_sha` is added separately: for a
-        rebase-merge, `get_commits()` still reports the pre-rebase SHAs, not the new SHA(s) landed on
-        the base branch.
+        Notes:
+            - Uses `get_commits()` plus `merge_commit_sha` to cover both regular and rebase-merge SHAs.
+            - Sync-merge commits (base branch merged back into PR branch) are captured by SHA,
+              preventing misclassification as "direct commits".
+            - For rebase-merge, `get_commits()` returns pre-rebase SHAs; `merge_commit_sha` has the
+              new SHA(s) that landed on the base branch.
+            - In compare mode, all PRs come from home_repository; cross-repo handled elsewhere.
         """
-        # In compare mode, all PRs come from home_repository; cross-repo is handled elsewhere.
         pulls[pr] = home_repository
         pr_commits = self._safe_call(lambda p=pr: list(p.get_commits()))()
         pr_commit_sha_list = [c.sha for c in pr_commits] if pr_commits is not None else []
@@ -271,11 +248,10 @@ class DataMiner:
         if pr.merge_commit_sha:
             pr_commit_shas.add(pr.merge_commit_sha)
         logger.debug(
-            "Compare mode: PR #%d has %d commit(s) via get_commits() (showing up to %d) %s, merge_commit_sha=%s.",
+            "Compare mode: PR #%d has %d commit(s) via get_commits(): %s, merge_commit_sha=%s.",
             pr.number,
             len(pr_commit_sha_list),
-            _MAX_LOGGED_PR_COMMIT_SHAS,
-            pr_commit_sha_list[:_MAX_LOGGED_PR_COMMIT_SHAS],
+            pr_commit_sha_list,
             pr.merge_commit_sha,
         )
 
@@ -703,11 +679,16 @@ class DataMiner:
         """
         pr_numbers: set[int] = set()
         for commit in commits:
-            subject = commit.commit.message.splitlines()[0] if commit.commit.message else ""
+            subject = DataMiner._get_commit_subject(commit)
             for match in _PR_NUMBER_RE.finditer(subject):
                 number_str = match.group(1) or match.group(2) or match.group(3)
                 pr_numbers.add(int(number_str))
         return pr_numbers
+
+    @staticmethod
+    def _get_commit_subject(commit: GithubCommit) -> str:
+        """Extract the first line (subject) of a commit message, or empty string if message is None."""
+        return commit.commit.message.splitlines()[0] if commit.commit.message else ""
 
     @staticmethod
     def __filter_duplicated_issues(data: MinedData) -> "MinedData":

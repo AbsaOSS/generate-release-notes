@@ -44,10 +44,6 @@ from release_notes_generator.utils.record_utils import get_id, parse_issue_id
 
 logger = logging.getLogger(__name__)
 
-# dev note: cap on how many matched commit SHAs are logged at debug level, to keep verbose logs
-#   readable for PRs with many commits.
-_MAX_LOGGED_COMMIT_SHAS = 50
-
 
 class DefaultRecordFactory(RecordFactory):
     """
@@ -96,7 +92,7 @@ class DefaultRecordFactory(RecordFactory):
         logger.info("Registering direct commits to records...")
         for commit, repo in data.commits.items():
             if commit.sha not in self.__registered_commits:
-                subject = commit.commit.message.splitlines()[0] if commit.commit.message else ""
+                subject = self._miner._get_commit_subject(commit)
                 logger.debug("Direct commit registered: %s ('%s')", commit.sha, subject)
                 self._records[get_id(commit, repo)] = CommitRecord(commit)
 
@@ -144,13 +140,11 @@ class DefaultRecordFactory(RecordFactory):
         self.__registered_commits.update(c.sha for c in related_commits)
         related_commit_shas = [c.sha for c in related_commits]
         logger.debug(
-            "PR #%d: %d commit SHA(s) via get_commits() + merge_commit_sha, %d matched against mined commits "
-            "(showing up to %d): %s",
+            "PR #%d: %d commit SHA(s) via get_commits() + merge_commit_sha, %d matched against mined commits: %s",
             pull.number,
             len(pr_commit_shas),
             len(related_commits),
-            _MAX_LOGGED_COMMIT_SHAS,
-            related_commit_shas[:_MAX_LOGGED_COMMIT_SHAS],
+            related_commit_shas,
         )
 
         pr_repo = target_repository if target_repository is not None else data.home_repository
