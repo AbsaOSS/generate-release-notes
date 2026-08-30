@@ -125,6 +125,10 @@ Learned rules
 - Must not change externally-visible output strings without updating the contract.
 
 Repo additions
+- Test conftest files:
+  - tests/unit/conftest.py — shared fixtures for all unit tests
+  - tests/unit/release_notes_generator/builder/conftest.py — builder-scoped fixtures (e.g. autouse mocks that must not bleed into other test packages)
+  - Must not place a builder-only autouse fixture in the global conftest.
 - Project name: generate-release-notes
 - Entry points: action.yml, main.py
 - Core package: release_notes_generator/

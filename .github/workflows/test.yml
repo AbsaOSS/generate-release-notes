@@ -203,7 +203,6 @@ jobs:
 
       - name: Validate full pipeline against real repository
         env:
-          INPUT_TAG_NAME: 'v0.2.0'
           INPUT_GITHUB_REPOSITORY: 'AbsaOSS/generate-release-notes'
           INPUT_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           INPUT_CHAPTERS: |
