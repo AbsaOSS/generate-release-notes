@@ -51,6 +51,7 @@ SERVICE_CHAPTER_ORDER = "service-chapter-order"
 SERVICE_CHAPTER_EXCLUDE = "service-chapter-exclude"
 GLOBAL_EXCLUDE_KEY = "*"
 PRINT_EMPTY_CHAPTERS = "print-empty-chapters"
+SHOW_STATS_CHAPTERS = "show-stats-chapters"
 
 # Super chapter fallback heading
 UNCATEGORIZED_CHAPTER_TITLE: str = "Uncategorized"
@@ -71,6 +72,9 @@ MERGED_PRS_LINKED_TO_NOT_CLOSED_ISSUES: str = "Merged PRs Linked to 'Not Closed'
 DIRECT_COMMITS: str = "Direct commits ⚠️"
 
 OTHERS_NO_TOPIC: str = "Others - No Topic ⚠️"
+
+# Stats chapters titles
+SKIP_RELEASE_NOTES_LABEL_STATS: str = "Skip Release Notes Label Usage ⚠️"
 
 DEFAULT_SERVICE_CHAPTER_ORDER: list[str] = [
     CLOSED_ISSUES_WITHOUT_USER_DEFINED_LABELS,
