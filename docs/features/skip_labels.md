@@ -47,6 +47,7 @@ https://github.com/org/repo/compare/v1.5.0...v2.0.0
 > (Internal / skipped items not shown.)
 
 ## Related Features
-- [Service Chapters](./service_chapters.md) – skipped items don’t appear as warnings.
+- [Service Chapters](./service_chapters.md) – skipped items don't appear as warnings.
+- [Statistics & Anti-game Chapters](./stats_chapters.md) – surfaces skip-label usage statistics per author, type, and label.
 
 ← [Back to Feature Tutorials](../../README.md#feature-tutorials)
