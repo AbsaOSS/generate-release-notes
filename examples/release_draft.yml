@@ -20,6 +20,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      # generate-release-notes requires Python 3.11 or newer
       - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548
         with:
           python-version: '3.11'

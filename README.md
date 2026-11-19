@@ -42,7 +42,7 @@ This Action was created to make structured release documentation effortless and 
 Add the following steps to your workflow to start generating release notes. The action uses the job's Python interpreter, so set up Python 3.11 or newer before calling it.
 
 ```yaml
-- uses: actions/setup-python@v5
+- uses: actions/setup-python@v7  # the action requires Python 3.11+
   with:
     python-version: '3.11'
 
@@ -108,7 +108,7 @@ To run this action successfully, make sure your environment meets the following 
 | Requirement                | Description                                                                                                                     |
 |----------------------------|---------------------------------------------------------------------------------------------------------------------------------|
 | **GitHub Token**           | A GitHub token with permission to read issues, pull requests, and releases. Usually available as `${{ secrets.GITHUB_TOKEN }}`. |
-| **Python 3.11+**           | The action runs on the Python interpreter already set up in the job and requires 3.11 or higher. Set it explicitly with `actions/setup-python` (see the examples below), because the runner's default Python may differ. |
+| **Python 3.11+**           | The action runs on the Python interpreter set up in the job and supports Python 3.11 and newer (CI tests 3.11 and 3.14). Set it explicitly with `actions/setup-python` (see the examples below), because the runner's default Python may differ. |
 | **Repository Permissions** | The action needs at least `read` access to issues and pull requests, and `write` access to create or update release drafts.     |
 | **YAML Chapters Config**   | Each chapter must have a `title`, and a `label` or `labels`. Example: `{"title": "Bugfixes 🛠", "labels": "bug, fix"}`.         |
 
@@ -164,7 +164,7 @@ jobs:
           git tag ${{ github.event.inputs.tag-name }}
           git push origin ${{ github.event.inputs.tag-name }}
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7  # the action requires Python 3.11+
         with:
           python-version: '3.11'
 

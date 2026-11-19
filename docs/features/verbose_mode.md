@@ -11,6 +11,10 @@ Provide detailed debug logging to troubleshoot configuration, data mining bounda
 
 ## Configuration
 ```yaml
+- uses: actions/setup-python@v7  # the action requires Python 3.11+
+  with:
+    python-version: '3.11'
+
 - name: Generate Release Notes
   id: release_notes_scrapper
   uses: AbsaOSS/generate-release-notes@v1

@@ -2,6 +2,10 @@
 
 This page lists all action inputs and outputs with defaults. Grouped for readability.
 
+> **Python requirement:** the action runs on the Python interpreter set up earlier in the job and supports
+> **Python 3.11 and newer** (CI tests 3.11 and 3.14). Add an `actions/setup-python` step with
+> `python-version: '3.11'` or newer before calling the action.
+
 ## Inputs
 
 | Name | Required | Default | Description |
