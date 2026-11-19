@@ -45,7 +45,8 @@ Inputs
 - Prefer documenting required vs optional inputs with defaults.
 
 Language and style
-- Must target Python 3.14+.
+- Must target Python 3.11+ (minimum supported version; CI also validates 3.14).
+- Must not use syntax or standard-library APIs introduced after Python 3.11.
 - Must add type hints for new public functions and classes.
 - Must use logging, not print.
 - Must use lazy % formatting for logs.
@@ -54,9 +55,10 @@ Language and style
 - Must use the project first-copyright year.
 
 String formatting
-- Prefer t-strings for non-logging templates.
+- Prefer str.format() for non-logging templates.
+- Must not use t-strings (they require Python 3.14).
 - Avoid f-strings for user-facing text unless needed for clarity.
-- Must not use f-strings or t-strings in logging calls.
+- Must not use f-strings in logging calls.
 
 Docstrings and comments
 - Docstrings:

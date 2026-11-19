@@ -39,9 +39,13 @@ This Action was created to make structured release documentation effortless and 
 
 ## Quick Start
 
-Add the following step to your workflow to start generating release notes.
+Add the following steps to your workflow to start generating release notes. The action uses the job's Python interpreter, so set up Python 3.11 or newer before calling it.
 
 ```yaml
+- uses: actions/setup-python@v5
+  with:
+    python-version: '3.11'
+
 - name: Generate Release Notes
   id: release_notes_scrapper
   uses: AbsaOSS/generate-release-notes@v1
@@ -104,7 +108,7 @@ To run this action successfully, make sure your environment meets the following 
 | Requirement                | Description                                                                                                                     |
 |----------------------------|---------------------------------------------------------------------------------------------------------------------------------|
 | **GitHub Token**           | A GitHub token with permission to read issues, pull requests, and releases. Usually available as `${{ secrets.GITHUB_TOKEN }}`. |
-| **Python 3.14+**           | The action internally runs on Python 3.14 or higher. If you’re developing locally or testing, ensure this version is available. |
+| **Python 3.11+**           | The action runs on the Python interpreter already set up in the job and requires 3.11 or higher. Set it explicitly with `actions/setup-python` (see the examples below), because the runner's default Python may differ. |
 | **Repository Permissions** | The action needs at least `read` access to issues and pull requests, and `write` access to create or update release drafts.     |
 | **YAML Chapters Config**   | Each chapter must have a `title`, and a `label` or `labels`. Example: `{"title": "Bugfixes 🛠", "labels": "bug, fix"}`.         |
 
@@ -159,6 +163,10 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag ${{ github.event.inputs.tag-name }}
           git push origin ${{ github.event.inputs.tag-name }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
       - name: Generate Release Notes
         id: notes

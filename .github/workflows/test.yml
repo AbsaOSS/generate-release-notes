@@ -88,8 +88,14 @@ jobs:
           black --check $(git ls-files '*.py')
 
   unit-test:
-    name: Unit Tests
+    name: Unit Tests (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # 3.11 = minimum supported version, 3.14 = current runtime
+        python-version: [ '3.11', '3.14' ]
 
     defaults:
       run:
@@ -103,7 +109,7 @@ jobs:
 
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v5
         with:
-          python-version: '3.14'
+          python-version: ${{ matrix.python-version }}
           cache: 'pip'
 
       - name: Install Python dependencies
@@ -140,8 +146,14 @@ jobs:
           mypy .
 
   offline-integration-tests:
-    name: Offline Integration Tests
+    name: Offline Integration Tests (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # 3.11 = minimum supported version, 3.14 = current runtime
+        python-version: [ '3.11', '3.14' ]
 
     defaults:
       run:
@@ -155,7 +167,7 @@ jobs:
 
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v5
         with:
-          python-version: '3.14'
+          python-version: ${{ matrix.python-version }}
           cache: 'pip'
 
       - name: Install Python dependencies
