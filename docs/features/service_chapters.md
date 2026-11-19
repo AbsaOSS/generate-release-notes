@@ -35,6 +35,10 @@ The service chapters appear in the following order in the generated release note
 
 ## Configuration
 ```yaml
+- uses: actions/setup-python@v7  # the action requires Python 3.11+
+  with:
+    python-version: '3.11'
+
 - name: Generate Release Notes
   id: release_notes_scrapper
   uses: AbsaOSS/generate-release-notes@v1

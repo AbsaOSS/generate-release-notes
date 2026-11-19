@@ -19,6 +19,13 @@ git clone https://github.com/AbsaOSS/generate-release-notes.git
 cd generate-release-notes
 ```
 
+Python versions:
+- **Runtime:** the action supports Python 3.11 and newer; `action.yml` rejects older interpreters.
+- **Local development and testing:** Python 3.14 is fine and matches the CI lint, format and type-check jobs.
+  CI runs the unit and offline integration tests on both 3.11 and 3.14.
+- Pylint (`py-version`), mypy (`python_version`) and Black (`target-version`) are configured for 3.11,
+  so code that needs a newer Python is reported even when you run them on 3.14.
+
 Install the dependencies:
 
 ```shell
@@ -195,7 +202,7 @@ open htmlcov/index.html
 ```
 
 ## Run Action Locally
-Create run_locally.sh file and place it in the project root.
+Create run_locally.sh file and place it in the project root. Use Python 3.11 or newer.
 
 ```bash
 #!/bin/bash
