@@ -90,3 +90,49 @@ def test_pull_request_record_number_is_full_markdown_link(mocker, mock_pull_clos
     row = PullRequestRecord(pull, repo).to_chapter_row()
 
     assert PR_LINK in row, f"Row should contain the full PR link, got: {row}"
+
+
+def test_cross_repo_pr_link_points_to_pr_home_repository(mocker, mock_issue_closed, mock_pull_closed, row_format):
+    issue = mock_issue_closed
+    issue.number = 231
+    issue.title = "Dependency Dashboard"
+    issue.type = None
+    issue.repository.full_name = "org/tracker"
+
+    pull = mock_pull_closed
+    pull.title = "Fixed bug"
+    pull.base.repo.full_name = "org/app"
+
+    record = IssueRecord(issue)
+    record.register_pull_request(pull)
+
+    row = record.to_chapter_row()
+
+    # the PR lives in org/app even though the issue is in org/tracker
+    assert "[#123](https://github.com/org/app/pull/123)" in row, (
+        f"PR link should use the PR's home repository, got: {row}"
+    )
+    assert "https://github.com/org/tracker/pull/123" not in row, (
+        f"PR link must not point to the issue's repository, got: {row}"
+    )
+
+
+def test_pr_link_falls_back_to_issue_repository_without_base_repo(
+    mocker, mock_issue_closed, mock_pull_closed, row_format
+):
+    issue = mock_issue_closed
+    issue.number = 231
+    issue.title = "Dependency Dashboard"
+    issue.type = None
+    issue.repository.full_name = "org/repo"
+
+    pull = mock_pull_closed
+    pull.title = "Fixed bug"
+    pull.base = None
+
+    record = IssueRecord(issue)
+    record.register_pull_request(pull)
+
+    row = record.to_chapter_row()
+
+    assert PR_LINK in row, f"Row should contain the full PR link, got: {row}"

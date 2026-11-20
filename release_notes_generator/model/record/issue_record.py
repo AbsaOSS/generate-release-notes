@@ -283,7 +283,13 @@ class IssueRecord(Record):
         if not self._pull_requests:
             return []
 
-        full_name = self._issue.repository.full_name
-        res = [markdown_number_link(full_name, pull.number, is_pull=True) for pull in self._pull_requests.values()]
+        res = []
+        for pull in self._pull_requests.values():
+            # an issue can collect PRs opened in another repository (cross-repo references),
+            # so each link must be built from the PR's home repository, not the issue's
+            pr_full_name = self._issue.repository.full_name
+            if pull.base is not None and pull.base.repo is not None:
+                pr_full_name = pull.base.repo.full_name
+            res.append(markdown_number_link(pr_full_name, pull.number, is_pull=True))
 
         return res
