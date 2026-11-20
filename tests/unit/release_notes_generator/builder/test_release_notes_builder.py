@@ -137,7 +137,7 @@ http://example.com/changelog
 RELEASE_NOTES_NO_DATA_NO_EMPTY_CHAPTERS = RELEASE_NOTES_NO_DATA_NO_WARNING_NO_EMPTY_CHAPTERS
 
 RELEASE_NOTES_DATA_CUSTOM_CHAPTERS_ONE_LABEL = """### Chapter 1 🛠
-- #122 _I1+bug_ developed by @pr_author_101, @pr_author_102, @user in #101, #102
+- [#122](https://github.com/org/repo/issues/122) _I1+bug_ developed by @pr_author_101, @pr_author_102, @user in [#101](https://github.com/org/repo/pull/101), [#102](https://github.com/org/repo/pull/102)
   - Fixed bug
   - Improved performance
   + More nice code
@@ -152,51 +152,51 @@ http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_HIERARCHY_NO_LABELS_NO_TYPE = """### Closed Issues without User Defined Labels ⚠️
-- 🔔 #121 _Fix the bug_ developed by @user
+- 🔔 [#121](https://github.com/org/repo/issues/121) _Fix the bug_ developed by @user
   - Solo issue release note
 
 ### Closed Issues without Pull Request ⚠️
-- #121 _Fix the bug_ developed by @user
+- [#121](https://github.com/org/repo/issues/121) _Fix the bug_ developed by @user
   - Solo issue release note
 
 ### Merged PRs without Issue and User Defined Labels ⚠️
-- PR: #124 _Fixed bug_ developed by @user
+- PR: [#124](https://github.com/org/repo/pull/124) _Fixed bug_ developed by @user
   - Fixed bug
   - Improved performance
 
 ### Closed PRs without Issue and User Defined Labels ⚠️
-- PR: #123 _Fixed bug_ developed by @user
+- PR: [#123](https://github.com/org/repo/pull/123) _Fixed bug_ developed by @user
   - Fixed bug
   - Improved performance
   + More nice code
     * Awesome architecture
 
 ### Merged PRs Linked to 'Not Closed' Issue ⚠️
-- _HI302 open_ #302
+- _HI302 open_ [#302](https://github.com/org/repo/issues/302)
   - _Release Notes_:
     - Hierarchy level release note
-  - #451 _SI451 closed_ developed by @pr_author_101, @user in #150
+  - [#451](https://github.com/org/repo/issues/451) _SI451 closed_ developed by @pr_author_101, @user in [#150](https://github.com/org/repo/pull/150)
     - Hierarchy level release note
     - Fixed bug
     - Improved performance
     + More nice code
       * Awesome architecture
-- _HI303 open_ #303
+- _HI303 open_ [#303](https://github.com/org/repo/issues/303)
   - _Release Notes_:
     - Hierarchy level release note
-  - #452 _SI452 closed_ developed by @author, @pr_author_101, @user in #151
+  - [#452](https://github.com/org/repo/issues/452) _SI452 closed_ developed by @author, @pr_author_101, @user in [#151](https://github.com/org/repo/pull/151)
     - Hierarchy level release note
     - Fixed bug
     - Improved performance
     + More nice code
       * Awesome architecture
-- _HI304 open_ #304
+- _HI304 open_ [#304](https://github.com/org/repo/issues/304)
   - _Release Notes_:
     - Hierarchy level release note
-  - _HI350 open_ #350
+  - _HI350 open_ [#350](https://github.com/org/repo/issues/350)
     - _Release Notes_:
       - Sub-hierarchy level release note
-    - #453 _SI453 closed_ developed by @author, @pr_author_101, @user in #152
+    - [#453](https://github.com/org/repo/issues/453) _SI453 closed_ developed by @author, @pr_author_101, @user in [#152](https://github.com/org/repo/pull/152)
       - Hierarchy level release note
       - Fixed bug
       - Improved performance
@@ -215,31 +215,31 @@ http://example.com/changelog
 
 
 RELEASE_NOTES_DATA_HIERARCHY_WITH_LABELS_NO_TYPE = """### Epics
-- _HI302 open_ #302
+- _HI302 open_ [#302](https://github.com/org/repo/issues/302)
   - _Release Notes_:
     - Hierarchy level release note
-  - #451 _SI451 closed_ developed by @pr_author_101, @user in #150
+  - [#451](https://github.com/org/repo/issues/451) _SI451 closed_ developed by @pr_author_101, @user in [#150](https://github.com/org/repo/pull/150)
     - Hierarchy level release note
     - Fixed bug
     - Improved performance
     + More nice code
       * Awesome architecture
-- _HI303 open_ #303
+- _HI303 open_ [#303](https://github.com/org/repo/issues/303)
   - _Release Notes_:
     - Hierarchy level release note
-  - #452 _SI452 closed_ developed by @author, @pr_author_101, @user in #151
+  - [#452](https://github.com/org/repo/issues/452) _SI452 closed_ developed by @author, @pr_author_101, @user in [#151](https://github.com/org/repo/pull/151)
     - Hierarchy level release note
     - Fixed bug
     - Improved performance
     + More nice code
       * Awesome architecture
-- _HI304 open_ #304
+- _HI304 open_ [#304](https://github.com/org/repo/issues/304)
   - _Release Notes_:
     - Hierarchy level release note
-  - _HI350 open_ #350
+  - _HI350 open_ [#350](https://github.com/org/repo/issues/350)
     - _Release Notes_:
       - Sub-hierarchy level release note
-    - #453 _SI453 closed_ developed by @author, @pr_author_101, @user in #152
+    - [#453](https://github.com/org/repo/issues/453) _SI453 closed_ developed by @author, @pr_author_101, @user in [#152](https://github.com/org/repo/pull/152)
       - Hierarchy level release note
       - Fixed bug
       - Improved performance
@@ -247,7 +247,7 @@ RELEASE_NOTES_DATA_HIERARCHY_WITH_LABELS_NO_TYPE = """### Epics
         * Awesome architecture
 
 ### Chapter 1 🛠
-- PR: #123 _Fixed bug_ developed by @user
+- PR: [#123](https://github.com/org/repo/pull/123) _Fixed bug_ developed by @user
   - Fixed bug
   - Improved performance
   + More nice code
@@ -257,11 +257,11 @@ RELEASE_NOTES_DATA_HIERARCHY_WITH_LABELS_NO_TYPE = """### Epics
 All closed issues contain at least one of user defined labels.
 
 ### Closed Issues without Pull Request ⚠️
-- #121 _Fix the bug_ developed by @user
+- [#121](https://github.com/org/repo/issues/121) _Fix the bug_ developed by @user
   - Solo issue release note
 
 ### Merged PRs without Issue and User Defined Labels ⚠️
-- PR: #124 _Fixed bug_ developed by @user
+- PR: [#124](https://github.com/org/repo/pull/124) _Fixed bug_ developed by @user
   - Fixed bug
   - Improved performance
 
@@ -282,31 +282,31 @@ http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_HIERARCHY_NO_LABELS_WITH_TYPE = """### Epics
-- Epic: _HI302 open_ #302
+- Epic: _HI302 open_ [#302](https://github.com/org/repo/issues/302)
   - _Release Notes_:
     - Hierarchy level release note
-  - Task: #451 _SI451 closed_ developed by @pr_author_101, @user in #150
+  - Task: [#451](https://github.com/org/repo/issues/451) _SI451 closed_ developed by @pr_author_101, @user in [#150](https://github.com/org/repo/pull/150)
     - Hierarchy level release note
     - Fixed bug
     - Improved performance
     + More nice code
       * Awesome architecture
-- Epic: _HI303 open_ #303
+- Epic: _HI303 open_ [#303](https://github.com/org/repo/issues/303)
   - _Release Notes_:
     - Hierarchy level release note
-  - Task: #452 _SI452 closed_ developed by @author, @pr_author_101, @user in #151
+  - Task: [#452](https://github.com/org/repo/issues/452) _SI452 closed_ developed by @author, @pr_author_101, @user in [#151](https://github.com/org/repo/pull/151)
     - Hierarchy level release note
     - Fixed bug
     - Improved performance
     + More nice code
       * Awesome architecture
-- Epic: _HI304 open_ #304
+- Epic: _HI304 open_ [#304](https://github.com/org/repo/issues/304)
   - _Release Notes_:
     - Hierarchy level release note
-  - Feature: _HI350 open_ #350
+  - Feature: _HI350 open_ [#350](https://github.com/org/repo/issues/350)
     - _Release Notes_:
       - Sub-hierarchy level release note
-    - Task: #453 _SI453 closed_ developed by @author, @pr_author_101, @user in #152
+    - Task: [#453](https://github.com/org/repo/issues/453) _SI453 closed_ developed by @author, @pr_author_101, @user in [#152](https://github.com/org/repo/pull/152)
       - Hierarchy level release note
       - Fixed bug
       - Improved performance
@@ -317,16 +317,16 @@ RELEASE_NOTES_DATA_HIERARCHY_NO_LABELS_WITH_TYPE = """### Epics
 All closed issues contain at least one of user defined labels.
 
 ### Closed Issues without Pull Request ⚠️
-- Feature: #121 _Fix the bug_ developed by @user
+- Feature: [#121](https://github.com/org/repo/issues/121) _Fix the bug_ developed by @user
   - Solo issue release note
 
 ### Merged PRs without Issue and User Defined Labels ⚠️
-- PR: #124 _Fixed bug_ developed by @user
+- PR: [#124](https://github.com/org/repo/pull/124) _Fixed bug_ developed by @user
   - Fixed bug
   - Improved performance
 
 ### Closed PRs without Issue and User Defined Labels ⚠️
-- PR: #123 _Fixed bug_ developed by @user
+- PR: [#123](https://github.com/org/repo/pull/123) _Fixed bug_ developed by @user
   - Fixed bug
   - Improved performance
   + More nice code
@@ -346,31 +346,31 @@ http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_HIERARCHY_WITH_LABELS_WITH_TYPE = """### Epics
-- Epic: _HI302 open_ #302
+- Epic: _HI302 open_ [#302](https://github.com/org/repo/issues/302)
   - _Release Notes_:
     - Hierarchy level release note
-  - Task: #451 _SI451 closed_ developed by @pr_author_101, @user in #150
+  - Task: [#451](https://github.com/org/repo/issues/451) _SI451 closed_ developed by @pr_author_101, @user in [#150](https://github.com/org/repo/pull/150)
     - Hierarchy level release note
     - Fixed bug
     - Improved performance
     + More nice code
       * Awesome architecture
-- Epic: _HI303 open_ #303
+- Epic: _HI303 open_ [#303](https://github.com/org/repo/issues/303)
   - _Release Notes_:
     - Hierarchy level release note
-  - Task: #452 _SI452 closed_ developed by @author, @pr_author_101, @user in #151
+  - Task: [#452](https://github.com/org/repo/issues/452) _SI452 closed_ developed by @author, @pr_author_101, @user in [#151](https://github.com/org/repo/pull/151)
     - Hierarchy level release note
     - Fixed bug
     - Improved performance
     + More nice code
       * Awesome architecture
-- Epic: _HI304 open_ #304
+- Epic: _HI304 open_ [#304](https://github.com/org/repo/issues/304)
   - _Release Notes_:
     - Hierarchy level release note
-  - Feature: _HI350 open_ #350
+  - Feature: _HI350 open_ [#350](https://github.com/org/repo/issues/350)
     - _Release Notes_:
       - Sub-hierarchy level release note
-    - Task: #453 _SI453 closed_ developed by @author, @pr_author_101, @user in #152
+    - Task: [#453](https://github.com/org/repo/issues/453) _SI453 closed_ developed by @author, @pr_author_101, @user in [#152](https://github.com/org/repo/pull/152)
       - Hierarchy level release note
       - Fixed bug
       - Improved performance
@@ -378,7 +378,7 @@ RELEASE_NOTES_DATA_HIERARCHY_WITH_LABELS_WITH_TYPE = """### Epics
         * Awesome architecture
 
 ### Chapter 1 🛠
-- PR: #123 _Fixed bug_ developed by @user
+- PR: [#123](https://github.com/org/repo/pull/123) _Fixed bug_ developed by @user
   - Fixed bug
   - Improved performance
   + More nice code
@@ -388,11 +388,11 @@ RELEASE_NOTES_DATA_HIERARCHY_WITH_LABELS_WITH_TYPE = """### Epics
 All closed issues contain at least one of user defined labels.
 
 ### Closed Issues without Pull Request ⚠️
-- Bug: #121 _Fix the bug_ developed by @user
+- Bug: [#121](https://github.com/org/repo/issues/121) _Fix the bug_ developed by @user
   - Solo issue release note
 
 ### Merged PRs without Issue and User Defined Labels ⚠️
-- PR: #124 _Fixed bug_ developed by @user
+- PR: [#124](https://github.com/org/repo/pull/124) _Fixed bug_ developed by @user
   - Fixed bug
   - Improved performance
 
@@ -414,23 +414,23 @@ http://example.com/changelog
 
 
 RELEASE_NOTES_NO_DATA_HIERARCHY_NO_LABELS_NO_TYPE = """### Closed Issues without User Defined Labels ⚠️
-- 🔔 #121 _Fix the bug_
+- 🔔 [#121](https://github.com/org/repo/issues/121) _Fix the bug_
   - Solo issue release note
-- 🔔 Task: #450 _SI450 closed_
+- 🔔 Task: [#450](https://github.com/org/repo/issues/450) _SI450 closed_
   - Hierarchy level release note
-- #451 _SI451 closed_ in #150
-  - Hierarchy level release note
-  - Fixed bug
-  - Improved performance
-  + More nice code
-    * Awesome architecture
-- #452 _SI452 closed_ in #151
+- [#451](https://github.com/org/repo/issues/451) _SI451 closed_ in [#150](https://github.com/org/repo/pull/150)
   - Hierarchy level release note
   - Fixed bug
   - Improved performance
   + More nice code
     * Awesome architecture
-- #453 _SI453 closed_ in #152
+- [#452](https://github.com/org/repo/issues/452) _SI452 closed_ in [#151](https://github.com/org/repo/pull/151)
+  - Hierarchy level release note
+  - Fixed bug
+  - Improved performance
+  + More nice code
+    * Awesome architecture
+- [#453](https://github.com/org/repo/issues/453) _SI453 closed_ in [#152](https://github.com/org/repo/pull/152)
   - Hierarchy level release note
   - Fixed bug
   - Improved performance
@@ -438,18 +438,18 @@ RELEASE_NOTES_NO_DATA_HIERARCHY_NO_LABELS_NO_TYPE = """### Closed Issues without
     * Awesome architecture
 
 ### Closed Issues without Pull Request ⚠️
-- #121 _Fix the bug_
+- [#121](https://github.com/org/repo/issues/121) _Fix the bug_
   - Solo issue release note
-- #450 _SI450 closed_
+- [#450](https://github.com/org/repo/issues/450) _SI450 closed_
   - Hierarchy level release note
 
 ### Merged PRs without Issue and User Defined Labels ⚠️
-- PR: #124 _Fixed bug_
+- PR: [#124](https://github.com/org/repo/pull/124) _Fixed bug_
   - Fixed bug
   - Improved performance
 
 ### Closed PRs without Issue and User Defined Labels ⚠️
-- PR: #123 _Fixed bug_
+- PR: [#123](https://github.com/org/repo/pull/123) _Fixed bug_
   - Fixed bug
   - Improved performance
   + More nice code
@@ -470,28 +470,28 @@ http://example.com/changelog
 
 
 RELEASE_NOTES_NO_DATA_HIERARCHY_WITH_LABELS_NO_TYPE = """### Chapter 1 🛠
-- PR: #123 _Fixed bug_
+- PR: [#123](https://github.com/org/repo/pull/123) _Fixed bug_
   - Fixed bug
   - Improved performance
   + More nice code
     * Awesome architecture
 
 ### Closed Issues without User Defined Labels ⚠️
-- 🔔 #450 _SI450 closed_
+- 🔔 [#450](https://github.com/org/repo/issues/450) _SI450 closed_
   - Hierarchy level release note
-- #451 _SI451 closed_ in #150
-  - Hierarchy level release note
-  - Fixed bug
-  - Improved performance
-  + More nice code
-    * Awesome architecture
-- #452 _SI452 closed_ in #151
+- [#451](https://github.com/org/repo/issues/451) _SI451 closed_ in [#150](https://github.com/org/repo/pull/150)
   - Hierarchy level release note
   - Fixed bug
   - Improved performance
   + More nice code
     * Awesome architecture
-- #453 _SI453 closed_ in #152
+- [#452](https://github.com/org/repo/issues/452) _SI452 closed_ in [#151](https://github.com/org/repo/pull/151)
+  - Hierarchy level release note
+  - Fixed bug
+  - Improved performance
+  + More nice code
+    * Awesome architecture
+- [#453](https://github.com/org/repo/issues/453) _SI453 closed_ in [#152](https://github.com/org/repo/pull/152)
   - Hierarchy level release note
   - Fixed bug
   - Improved performance
@@ -499,13 +499,13 @@ RELEASE_NOTES_NO_DATA_HIERARCHY_WITH_LABELS_NO_TYPE = """### Chapter 1 🛠
     * Awesome architecture
 
 ### Closed Issues without Pull Request ⚠️
-- #121 _Fix the bug_
+- [#121](https://github.com/org/repo/issues/121) _Fix the bug_
   - Solo issue release note
-- #450 _SI450 closed_
+- [#450](https://github.com/org/repo/issues/450) _SI450 closed_
   - Hierarchy level release note
 
 ### Merged PRs without Issue and User Defined Labels ⚠️
-- PR: #124 _Fixed bug_
+- PR: [#124](https://github.com/org/repo/pull/124) _Fixed bug_
   - Fixed bug
   - Improved performance
 
@@ -527,21 +527,21 @@ http://example.com/changelog
 
 
 RELEASE_NOTES_NO_DATA_HIERARCHY_NO_LABELS_WITH_TYPE = """### Closed Issues without User Defined Labels ⚠️
-- 🔔 #450 _SI450 closed_
+- 🔔 [#450](https://github.com/org/repo/issues/450) _SI450 closed_
   - Hierarchy level release note
-- #451 _SI451 closed_ in #150
-  - Hierarchy level release note
-  - Fixed bug
-  - Improved performance
-  + More nice code
-    * Awesome architecture
-- #452 _SI452 closed_ in #151
+- [#451](https://github.com/org/repo/issues/451) _SI451 closed_ in [#150](https://github.com/org/repo/pull/150)
   - Hierarchy level release note
   - Fixed bug
   - Improved performance
   + More nice code
     * Awesome architecture
-- #453 _SI453 closed_ in #152
+- [#452](https://github.com/org/repo/issues/452) _SI452 closed_ in [#151](https://github.com/org/repo/pull/151)
+  - Hierarchy level release note
+  - Fixed bug
+  - Improved performance
+  + More nice code
+    * Awesome architecture
+- [#453](https://github.com/org/repo/issues/453) _SI453 closed_ in [#152](https://github.com/org/repo/pull/152)
   - Hierarchy level release note
   - Fixed bug
   - Improved performance
@@ -549,18 +549,18 @@ RELEASE_NOTES_NO_DATA_HIERARCHY_NO_LABELS_WITH_TYPE = """### Closed Issues witho
     * Awesome architecture
 
 ### Closed Issues without Pull Request ⚠️
-- #121 _Fix the bug_
+- [#121](https://github.com/org/repo/issues/121) _Fix the bug_
   - Solo issue release note
-- #450 _SI450 closed_
+- [#450](https://github.com/org/repo/issues/450) _SI450 closed_
   - Hierarchy level release note
 
 ### Merged PRs without Issue and User Defined Labels ⚠️
-- PR: #124 _Fixed bug_
+- PR: [#124](https://github.com/org/repo/pull/124) _Fixed bug_
   - Fixed bug
   - Improved performance
 
 ### Closed PRs without Issue and User Defined Labels ⚠️
-- PR: #123 _Fixed bug_
+- PR: [#123](https://github.com/org/repo/pull/123) _Fixed bug_
   - Fixed bug
   - Improved performance
   + More nice code
@@ -581,28 +581,28 @@ http://example.com/changelog
 
 
 RELEASE_NOTES_NO_DATA_HIERARCHY_WITH_LABELS_WITH_TYPE = """### Chapter 1 🛠
-- PR: #123 _Fixed bug_
+- PR: [#123](https://github.com/org/repo/pull/123) _Fixed bug_
   - Fixed bug
   - Improved performance
   + More nice code
     * Awesome architecture
 
 ### Closed Issues without User Defined Labels ⚠️
-- 🔔 #450 _SI450 closed_
+- 🔔 [#450](https://github.com/org/repo/issues/450) _SI450 closed_
   - Hierarchy level release note
-- #451 _SI451 closed_ in #150
-  - Hierarchy level release note
-  - Fixed bug
-  - Improved performance
-  + More nice code
-    * Awesome architecture
-- #452 _SI452 closed_ in #151
+- [#451](https://github.com/org/repo/issues/451) _SI451 closed_ in [#150](https://github.com/org/repo/pull/150)
   - Hierarchy level release note
   - Fixed bug
   - Improved performance
   + More nice code
     * Awesome architecture
-- #453 _SI453 closed_ in #152
+- [#452](https://github.com/org/repo/issues/452) _SI452 closed_ in [#151](https://github.com/org/repo/pull/151)
+  - Hierarchy level release note
+  - Fixed bug
+  - Improved performance
+  + More nice code
+    * Awesome architecture
+- [#453](https://github.com/org/repo/issues/453) _SI453 closed_ in [#152](https://github.com/org/repo/pull/152)
   - Hierarchy level release note
   - Fixed bug
   - Improved performance
@@ -610,13 +610,13 @@ RELEASE_NOTES_NO_DATA_HIERARCHY_WITH_LABELS_WITH_TYPE = """### Chapter 1 🛠
     * Awesome architecture
 
 ### Closed Issues without Pull Request ⚠️
-- #121 _Fix the bug_
+- [#121](https://github.com/org/repo/issues/121) _Fix the bug_
   - Solo issue release note
-- #450 _SI450 closed_
+- [#450](https://github.com/org/repo/issues/450) _SI450 closed_
   - Hierarchy level release note
 
 ### Merged PRs without Issue and User Defined Labels ⚠️
-- PR: #124 _Fixed bug_
+- PR: [#124](https://github.com/org/repo/pull/124) _Fixed bug_
   - Fixed bug
   - Improved performance
 
@@ -637,7 +637,7 @@ http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_CUSTOM_CHAPTERS_ONE_LABEL_HIERARCHY = """### Chapter 1 🛠
- - #122 _I1+bug_ in #123
+ - [#122](https://github.com/org/repo/issues/122) _I1+bug_ in [#123](https://github.com/org/repo/pull/123)
    - Fixed bug
    - Improved performance
    + More nice code
@@ -648,14 +648,14 @@ RELEASE_NOTES_DATA_CUSTOM_CHAPTERS_ONE_LABEL_HIERARCHY = """### Chapter 1 🛠
 
 
 ### New Epics
- - 🔔 _HI200 open_ #200
+ - 🔔 _HI200 open_ [#200](https://github.com/org/repo/issues/200)
 
 #### Full Changelog
 http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_CUSTOM_CHAPTERS_MORE_LABELS_DUPLICITY_REDUCTION_ON = """### Chapter 1 🛠
-- #122 _I1+bug-enhancement_ developed by @pr_author_101, @pr_author_102, @user in #101, #102
+- [#122](https://github.com/org/repo/issues/122) _I1+bug-enhancement_ developed by @pr_author_101, @pr_author_102, @user in [#101](https://github.com/org/repo/pull/101), [#102](https://github.com/org/repo/pull/102)
   - Fixed bug
   - Improved performance
   + More nice code
@@ -670,7 +670,7 @@ http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_CUSTOM_CHAPTERS_MORE_LABELS_DUPLICITY_REDUCTION_OFF = """### New Features 🎉
-- #1 _I1+0PR+2L-bug-enhancement_ in #101, #102
+- [#1](https://github.com/org/repo/issues/1) _I1+0PR+2L-bug-enhancement_ in [#101](https://github.com/org/repo/pull/101), [#102](https://github.com/org/repo/pull/102)
   - PR 101 1st release note
   - PR 101 2nd release note
   - PR 102 1st release note
@@ -683,10 +683,10 @@ http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_ISSUE_NO_PR_NO_USER_LABELS = """### Closed Issues without User Defined Labels ⚠️
-- 🔔 #121 _Fix the bug_ developed by @user
+- 🔔 [#121](https://github.com/org/repo/issues/121) _Fix the bug_ developed by @user
 
 ### Closed Issues without Pull Request ⚠️
-- #121 _Fix the bug_ developed by @user
+- [#121](https://github.com/org/repo/issues/121) _Fix the bug_ developed by @user
 
 #### Full Changelog
 http://example.com/changelog
@@ -694,7 +694,7 @@ http://example.com/changelog
 
 # pylint: disable=line-too-long
 RELEASE_NOTES_DATA_SERVICE_CHAPTERS_MERGED_PR_NO_ISSUE_NO_USER_LABELS = """### Merged PRs without Issue and User Defined Labels ⚠️
-- PR: #124 _Fixed bug_ developed by @author, @user
+- PR: [#124](https://github.com/org/repo/pull/124) _Fixed bug_ developed by @author, @user
   - Fixed bug
   - Improved performance
 
@@ -703,7 +703,7 @@ http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_PR_NO_ISSUE_NO_USER_LABELS = """### Closed PRs without Issue and User Defined Labels ⚠️
-- PR: #123 _Fixed bug_ developed by @author, @user
+- PR: [#123](https://github.com/org/repo/pull/123) _Fixed bug_ developed by @author, @user
   - Fixed bug
   - Improved performance
   + More nice code
@@ -718,7 +718,7 @@ RELEASE_NOTES_DATA_SERVICE_CHAPTERS_CLOSED_PR_NO_ISSUE_SKIP_USER_LABELS = (
 )
 
 RELEASE_NOTES_DATA_SERVICE_CHAPTERS_OPEN_ISSUE_AND_MERGED_PR_NO_USER_LABELS = """### Merged PRs Linked to 'Not Closed' Issue ⚠️
-- #122 _I1 open_ developed by @pr_author_101, @pr_author_102, @user in #101, #102
+- [#122](https://github.com/org/repo/issues/122) _I1 open_ developed by @pr_author_101, @pr_author_102, @user in [#101](https://github.com/org/repo/pull/101), [#102](https://github.com/org/repo/pull/102)
   - PR 101 1st release note
   - PR 101 2nd release note
   - PR 102 1st release note
@@ -729,7 +729,7 @@ http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_SERVICE_CHAPTERS_OPEN_ISSUE_AND_MERGED_PR_NO_USER_LABELS_ISSUE_NOT_PART_OF_RECORD = """### Others - No Topic ⚠️
-- PR: #101 _PR 101_
+- PR: [#101](https://github.com/org/repo/pull/101) _PR 101_
   - PR 101 1st release note
   - PR 101 2nd release note
   - PR 102 1st release note
@@ -740,14 +740,14 @@ http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_CLOSED_ISSUE_NO_PR_WITH_USER_LABELS = """### Closed Issues without Pull Request ⚠️
-- #121 _Fix the bug_ developed by @user
+- [#121](https://github.com/org/repo/issues/121) _Fix the bug_ developed by @user
 
 #### Full Changelog
 http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_PR_WITHOUT_USER_LABELS = """### Closed Issues without User Defined Labels ⚠️
-- #122 _I1_ developed by @pr_author_101, @pr_author_102, @user in #101, #102
+- [#122](https://github.com/org/repo/issues/122) _I1_ developed by @pr_author_101, @pr_author_102, @user in [#101](https://github.com/org/repo/pull/101), [#102](https://github.com/org/repo/pull/102)
   - Fixed bug
   - Improved performance
   + More nice code
@@ -762,7 +762,7 @@ http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_OPEN_PR_WITHOUT_ISSUE = """### Others - No Topic ⚠️
-- PR: #123 _Fix bug_ developed by @author, @user
+- PR: [#123](https://github.com/org/repo/pull/123) _Fix bug_ developed by @author, @user
   - Fixed bug
   - Improved performance
 
@@ -771,7 +771,7 @@ http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_MERGED_PR_WITH_USER_LABELS_DUPLICITY_REDUCTION_ON = """### Chapter 1 🛠
-- PR: #124 _Fixed bug_ developed by @author, @user
+- PR: [#124](https://github.com/org/repo/pull/124) _Fixed bug_ developed by @author, @user
   - Fixed bug
   - Improved performance
 
@@ -780,10 +780,10 @@ http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_MERGED_PRS_WITH_OPEN_ISSUES = """### Merged PRs Linked to 'Not Closed' Issue ⚠️
-- #122 _I1 open_ developed by @pr_author_101, @user in #101
+- [#122](https://github.com/org/repo/issues/122) _I1 open_ developed by @pr_author_101, @user in [#101](https://github.com/org/repo/pull/101)
   - PR 101 1st release note
   - PR 101 2nd release note
-- #123 _I2 open_ developed by @pr_author_102, @user in #102
+- [#123](https://github.com/org/repo/issues/123) _I2 open_ developed by @pr_author_102, @user in [#102](https://github.com/org/repo/pull/102)
   - PR 102 1st release note
   - PR 102 2nd release note
 
@@ -792,7 +792,7 @@ http://example.com/changelog
 """
 
 RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_MERGED_PRS_WITHOUT_USER_LABELS = """### Closed Issues without User Defined Labels ⚠️
-- #121 _Fix the bug_ developed by @pr_author_101, @user in #123
+- [#121](https://github.com/org/repo/issues/121) _Fix the bug_ developed by @pr_author_101, @user in [#123](https://github.com/org/repo/pull/123)
   - Fixed bug
   - Improved performance
   + More nice code
@@ -807,7 +807,7 @@ RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_MERGED_PRS_WITH_USER_LABELS_WITH_SKIP_LABEL
 )
 
 RELEASE_NOTES_DATA_CLOSED_ISSUE_WITH_MERGED_PRS_WITH_USER_LABELS = """### Chapter 1 🛠
-- #122 _I1+bug_ developed by @pr_author_124, @user in #124
+- [#122](https://github.com/org/repo/issues/122) _I1+bug_ developed by @pr_author_124, @user in [#124](https://github.com/org/repo/pull/124)
   - Fixed bug
   - Improved performance
   + More nice code

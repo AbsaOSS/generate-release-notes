@@ -31,6 +31,7 @@ from release_notes_generator.utils.record_utils import (
     get_rls_notes_default,
     get_rls_notes_code_rabbit,
     format_row_with_suppression,
+    markdown_number_link,
 )
 
 
@@ -153,7 +154,9 @@ class IssueRecord(Record):
 
         # collect format values
         format_values["type"] = f"{self._issue.type.name if self._issue.type else ''}"
-        format_values["number"] = f"#{self._issue.number}"
+        format_values["number"] = markdown_number_link(
+            self._issue.repository.full_name, self._issue.number, is_pull=False
+        )
         format_values["title"] = self._issue.title
         format_values["author"] = self.author
         format_values["assignees"] = ", ".join(self.assignees)
@@ -280,7 +283,7 @@ class IssueRecord(Record):
         if not self._pull_requests:
             return []
 
-        template = "#{number}"
-        res = [template.format(number=pull.number) for pull in self._pull_requests.values()]
+        full_name = self._issue.repository.full_name
+        res = [markdown_number_link(full_name, pull.number, is_pull=True) for pull in self._pull_requests.values()]
 
         return res
