@@ -241,3 +241,23 @@ def get_commit_subject(commit: Commit) -> str:
         The first line of the commit message, or empty string if message is None.
     """
     return commit.commit.message.splitlines()[0] if commit.commit.message else ""
+
+
+def markdown_number_link(full_name: str, number: int, is_pull: bool) -> str:
+    """
+    Format a record number as a fully specified markdown link.
+
+    Bare ``#N`` references are not rendered as links in a newly created
+    release draft - GitHub links them only after the draft is edited and
+    saved - so the generator emits the full URL instead.
+
+    Parameters:
+        full_name (str): The full name of the repository owning the record, e.g. ``owner/repo``.
+        number (int): The number of the issue or pull request.
+        is_pull (bool): True when the record is a pull request, False for an issue.
+
+    Returns:
+        str: The markdown link, e.g. ``[#123](https://github.com/owner/repo/pull/123)``.
+    """
+    kind = "pull" if is_pull else "issues"
+    return f"[#{number}](https://github.com/{full_name}/{kind}/{number})"
