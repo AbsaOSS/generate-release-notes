@@ -919,10 +919,10 @@ def test_generate_release_notes_latest_release_not_found(
     custom_chapters = CustomChapters(print_empty_chapters=True)
     release_notes = ReleaseNotesGenerator(github_mock, custom_chapters).generate()
     assert release_notes is not None
-    assert "- #121 _Fix the bug_" in release_notes
-    assert "- #122 _I1+bug_" in release_notes
-    assert "- PR: #101 _Fixed bug_" in release_notes
-    assert "- PR: #102 _Fixed bug_" in release_notes
+    assert "- [#121](https://github.com/org/repo/issues/121) _Fix the bug_" in release_notes
+    assert "- [#122](https://github.com/org/repo/issues/122) _I1+bug_" in release_notes
+    assert "- PR: [#101](https://github.com/org/repo/pull/101) _Fixed bug_" in release_notes
+    assert "- PR: [#102](https://github.com/org/repo/pull/102) _Fixed bug_" in release_notes
 
 
 def test_generate_release_notes_latest_release_found_by_created_at(
@@ -964,9 +964,9 @@ def test_generate_release_notes_latest_release_found_by_created_at(
     custom_chapters = CustomChapters(print_empty_chapters=True)
     release_notes = ReleaseNotesGenerator(github_mock, custom_chapters).generate()
     assert release_notes is not None
-    assert "- #122 _I1+bug_" in release_notes
-    assert "- PR: #101 _Fixed bug_" not in release_notes
-    assert "- PR: #102 _Fixed bug_" in release_notes
+    assert "- [#122](https://github.com/org/repo/issues/122) _I1+bug_" in release_notes
+    assert "- PR: [#101](https://github.com/org/repo/pull/101) _Fixed bug_" not in release_notes
+    assert "- PR: [#102](https://github.com/org/repo/pull/102) _Fixed bug_" in release_notes
 
 
 def test_generate_release_notes_latest_release_found_by_published_at(
@@ -1005,6 +1005,6 @@ def test_generate_release_notes_latest_release_found_by_published_at(
     custom_chapters = CustomChapters(print_empty_chapters=True)
     release_notes = ReleaseNotesGenerator(github_mock, custom_chapters).generate()
     assert release_notes is not None
-    assert "- #122 _I1+bug_" in release_notes
-    assert "- PR: #101 _Fixed bug_" not in release_notes
-    assert "- PR: #102 _Fixed bug_" in release_notes
+    assert "- [#122](https://github.com/org/repo/issues/122) _I1+bug_" in release_notes
+    assert "- PR: [#101](https://github.com/org/repo/pull/101) _Fixed bug_" not in release_notes
+    assert "- PR: [#102](https://github.com/org/repo/pull/102) _Fixed bug_" in release_notes

@@ -255,7 +255,7 @@ def test_progress_leaf_node_suppressed_in_row(mocker, make_hierarchy_issue):
 
     assert "progress" not in row.lower()
     assert "  " not in row  # no double spaces from suppressed token
-    assert row.endswith("_HI100_ #100"), f"Unexpected row: {row!r}"
+    assert row.endswith("_HI100_ [#100](https://github.com/org/repo/issues/100)"), f"Unexpected row: {row!r}"
 
 
 def test_progress_rendered_in_row(mocker, make_hierarchy_issue, make_sub_issue):
