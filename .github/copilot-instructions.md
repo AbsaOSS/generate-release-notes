@@ -119,6 +119,7 @@ Quality gates
   - mypy .
 - Dependency audit:
   - pip-audit -r requirements-dev.txt
+- Must put a non-placeholder Markdown bullet immediately below the `## Release Notes` heading in PR descriptions; `.github/workflows/check_pr_release_notes.yml` checks this format.
 
 Common pitfalls to avoid
 - Dependencies: must verify compatibility with target runtime.
