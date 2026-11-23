@@ -20,9 +20,13 @@ Control whether the same record (issue / PR / hierarchy issue / commit) can appe
 
 ## Configuration
 ```yaml
+- uses: actions/setup-python@v7
+  with:
+    python-version: '3.11'
+
 - name: Generate Release Notes
   id: release_notes_scrapper
-  uses: AbsaOSS/generate-release-notes@v1
+  uses: AbsaOSS/generate-release-notes@v1.4.0
   env:
     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   with:

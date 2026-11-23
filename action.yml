@@ -170,11 +170,11 @@ branding:
 runs:
   using: 'composite'
   steps:
-    # setup-python is not called as it is expected that it was done in the workflow that uses this action
+    # setup-python is not called: the calling workflow must set up Python 3.11 or newer (checked below)
     - name: Install Python dependencies
       run: |
         python_version=$(python --version 2>&1 | grep -oP '\d+\.\d+\.\d+')
-        minimal_required_version="3.14.0"
+        minimal_required_version="3.11.0"
         
         function version { echo "$@" | awk -F. '{ printf("%d%03d%03d\n", $1,$2,$3); }'; }
         

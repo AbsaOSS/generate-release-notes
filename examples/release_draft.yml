@@ -11,7 +11,6 @@ on:
 
 jobs:
   release-draft:
-    needs: check-tag
     runs-on: {your-runner}
 
     steps:
@@ -20,9 +19,10 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      # generate-release-notes requires Python 3.11 or newer
       - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548
         with:
-          python-version: '3.14'
+          python-version: '3.11'
 
       - name: Check format of received tag
         id: check-version-tag
@@ -46,7 +46,7 @@ jobs:
 
       - name: Generate Release Notes
         id: generate_release_notes
-        uses: AbsaOSS/generate-release-notes@B90223510d1704301a36a36f0d86a72a0e72f0cf
+        uses: AbsaOSS/generate-release-notes@v1.4.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -61,7 +61,7 @@ jobs:
             - { title: Silent-live 🤫, label: silent-live, order: 60 }
             - { title: Documentation 📜, label: documentation, order: 70 }
 
-          skip-release-notes-label: 'no RN'
+          skip-release-notes-labels: 'no RN'
           verbose: true
 
           warnings: true

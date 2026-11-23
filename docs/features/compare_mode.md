@@ -129,8 +129,12 @@ from-tag-name provided?
 ## Activation
 
 ```yaml
+- uses: actions/setup-python@v7
+  with:
+    python-version: '3.11'
+
 - name: Generate Release Notes
-  uses: AbsaOSS/generate-release-notes@v1
+  uses: AbsaOSS/generate-release-notes@v1.4.0
   env:
     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   with:

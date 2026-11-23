@@ -77,10 +77,10 @@ class ActionInputs:
     ROW_TYPE_PR = "PR"
     ROW_TYPE_HIERARCHY_ISSUE = "HierarchyIssue"
 
-    _row_format_hierarchy_issue = None
-    _row_format_issue = None
-    _row_format_pr = None
-    _row_format_link_pr = None
+    _row_format_hierarchy_issue: str | None = None
+    _row_format_issue: str | None = None
+    _row_format_pr: str | None = None
+    _row_format_link_pr: bool | None = None
     _owner = ""
     _repo_name = ""
     _super_chapters_raw: str | None = None

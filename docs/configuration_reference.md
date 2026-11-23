@@ -2,6 +2,8 @@
 
 This page lists all action inputs and outputs with defaults. Grouped for readability.
 
+> **Python requirement:** Version `v1.4.0` requires Python 3.11 or newer. Configure the runner with `actions/setup-python` before invoking the action.
+
 ## Inputs
 
 | Name | Required | Default | Description |

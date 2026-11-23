@@ -39,12 +39,16 @@ This Action was created to make structured release documentation effortless and 
 
 ## Quick Start
 
-Add the following step to your workflow to start generating release notes.
+Use the following steps to generate release notes. Version `v1.4.0` requires Python 3.11 or newer, so configure it explicitly.
 
 ```yaml
+- uses: actions/setup-python@v7
+  with:
+    python-version: '3.11'
+
 - name: Generate Release Notes
   id: release_notes_scrapper
-  uses: AbsaOSS/generate-release-notes@v1
+  uses: AbsaOSS/generate-release-notes@v1.4.0
   env:
     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   with:
@@ -104,7 +108,7 @@ To run this action successfully, make sure your environment meets the following 
 | Requirement                | Description                                                                                                                     |
 |----------------------------|---------------------------------------------------------------------------------------------------------------------------------|
 | **GitHub Token**           | A GitHub token with permission to read issues, pull requests, and releases. Usually available as `${{ secrets.GITHUB_TOKEN }}`. |
-| **Python 3.14+**           | The action internally runs on Python 3.14 or higher. If you’re developing locally or testing, ensure this version is available. |
+| **Python 3.11+**           | Version `v1.4.0` requires Python 3.11 or newer. Set the interpreter explicitly with `actions/setup-python` because the runner's default Python may differ. |
 | **Repository Permissions** | The action needs at least `read` access to issues and pull requests, and `write` access to create or update release drafts.     |
 | **YAML Chapters Config**   | Each chapter must have a `title`, and a `label` or `labels`. Example: `{"title": "Bugfixes 🛠", "labels": "bug, fix"}`.         |
 
@@ -129,63 +133,7 @@ For how label → chapter mapping and aggregation works, see [Custom Chapters Be
 
 ## Example Workflow
 
-You can integrate this Action with your release process.
-
-### Example — Manual Release Dispatch
-
-```yaml
-name: "Create Release & Notes"
-on:
-  workflow_dispatch:
-    inputs:
-      tag-name:
-        description: 'Tag name to create and use for this draft release. Syntax: "v[0-9]+.[0-9]+.[0-9]+".'
-        required: true
-      from-tag-name:
-        description: 'Existing tag to use as the start of the release range (compare mode). Syntax: "v[0-9]+.[0-9]+.[0-9]+". Must already exist in the repository.'
-        required: false
-
-jobs:
-  release:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Create and push tag
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag ${{ github.event.inputs.tag-name }}
-          git push origin ${{ github.event.inputs.tag-name }}
-
-      - name: Generate Release Notes
-        id: notes
-        uses: AbsaOSS/generate-release-notes@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag-name: ${{ github.event.inputs.tag-name }}
-          from-tag-name: ${{ github.event.inputs.from-tag-name }}
-          chapters: |
-            - {"title": "New Features 🎉", "labels": "enhancement, feature", "order": 10}
-            - {"title": "Bugfixes 🛠", "labels": "error, bug", "order": 20}
-            - {"title": "Infrastructure 🚧", "label": "infrastructure", "order": 30}
-            - {"title": "Documentation 📚", "label": "documentation"}
-            - {"title": "Internal Notes 📝", "labels": "internal", "hidden": true}
-            - {"title": "Not Implemented ⏳", "labels": "wip", "hidden": true}
-            
-      - name: Create Draft Release
-        uses: softprops/action-gh-release@v2
-        with:
-          name: ${{ github.event.inputs.tag-name }}
-          tag_name: ${{ github.event.inputs.tag-name }}
-          body: ${{ steps.notes.outputs.release_notes }}
-          draft: true
-```
-
-For more complex automation scenarios, see the [examples](examples) folder.
+For a complete manual-release workflow, see [examples/release_draft.yml](examples/release_draft.yml).
 
 ## Feature Tutorials
 
