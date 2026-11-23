@@ -35,13 +35,13 @@ The service chapters appear in the following order in the generated release note
 
 ## Configuration
 ```yaml
-- uses: actions/setup-python@v7  # v1.4.0 target; current @v1 needs Python 3.14
+- uses: actions/setup-python@v7
   with:
     python-version: '3.11'
 
 - name: Generate Release Notes
   id: release_notes_scrapper
-  uses: AbsaOSS/generate-release-notes@v1
+  uses: AbsaOSS/generate-release-notes@v1.4.0
   env:
     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   with:

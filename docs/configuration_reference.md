@@ -2,8 +2,7 @@
 
 This page lists all action inputs and outputs with defaults. Grouped for readability.
 
-> **Python requirement:** The in-progress v1.4.0 release supports Python 3.11 and newer. Until it moves the `v1` tag,
-> the currently published `@v1` still requires Python 3.14 or newer. Set up Python 3.11 or newer for v1.4.0.
+> **Python requirement:** Version `v1.4.0` requires Python 3.11 or newer. Configure the runner with `actions/setup-python` before invoking the action.
 
 ## Inputs
 
