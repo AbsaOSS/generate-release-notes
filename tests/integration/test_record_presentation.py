@@ -143,7 +143,7 @@ def test_custom_row_format_issue(
         },
     )
 
-    assert "#1 | Custom format bug |" in actual, "Custom row format must be applied"
+    assert "[#1](https://github.com/org/repo/issues/1) | Custom format bug |" in actual, "Custom row format must be applied"
     assert "developed by" not in actual, "Default format tokens must not appear with custom format"
 
 
@@ -317,7 +317,7 @@ def test_custom_row_format_pr(
         },
     )
 
-    assert "#99 -- Standalone PR --" in actual, "Custom PR row format must be applied"
+    assert "[#99](https://github.com/org/repo/pull/99) -- Standalone PR --" in actual, "Custom PR row format must be applied"
 
 
 # ---------------------------------------------------------------------------

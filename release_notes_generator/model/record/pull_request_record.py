@@ -28,7 +28,11 @@ from github.Repository import Repository
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.record.record import Record
 from release_notes_generator.utils.pull_request_utils import extract_issue_numbers_from_body
-from release_notes_generator.utils.record_utils import get_rls_notes_default, get_rls_notes_code_rabbit, markdown_number_link
+from release_notes_generator.utils.record_utils import (
+    get_rls_notes_default,
+    get_rls_notes_code_rabbit,
+    markdown_number_link,
+)
 
 
 class PullRequestRecord(Record):
