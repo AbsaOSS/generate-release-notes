@@ -2,9 +2,8 @@
 
 This page lists all action inputs and outputs with defaults. Grouped for readability.
 
-> **Python requirement:** the action runs on the Python interpreter set up earlier in the job and supports
-> **Python 3.11 and newer** (CI tests 3.11 and 3.14). Add an `actions/setup-python` step with
-> `python-version: '3.11'` or newer before calling the action.
+> **Python requirement:** The in-progress v1.4.0 release supports Python 3.11 and newer. Until it moves the `v1` tag,
+> the currently published `@v1` still requires Python 3.14 or newer. Set up Python 3.11 or newer for v1.4.0.
 
 ## Inputs
 

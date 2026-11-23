@@ -20,7 +20,7 @@ Control whether the same record (issue / PR / hierarchy issue / commit) can appe
 
 ## Configuration
 ```yaml
-- uses: actions/setup-python@v7  # the action requires Python 3.11+
+- uses: actions/setup-python@v7  # v1.4.0 target; current @v1 needs Python 3.14
   with:
     python-version: '3.11'
 

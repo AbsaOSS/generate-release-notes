@@ -20,11 +20,12 @@ cd generate-release-notes
 ```
 
 Python versions:
-- **Runtime:** the action supports Python 3.11 and newer; `action.yml` rejects older interpreters.
+- **Runtime:** this checkout supports Python 3.11 and newer; `action.yml` rejects older interpreters. The published `@v1` tag requires Python 3.14 until v1.4.0 is released.
 - **Local development and testing:** Python 3.14 is fine and matches the CI lint, format and type-check jobs.
   CI runs the unit and offline integration tests on both 3.11 and 3.14.
 - Pylint (`py-version`), mypy (`python_version`) and Black (`target-version`) are configured for 3.11,
-  so code that needs a newer Python is reported even when you run them on 3.14.
+  which helps catch some version-specific incompatibilities even when run on 3.14. These tools do not guarantee
+  runtime compatibility with every standard-library API; CI also runs tests on Python 3.11.
 
 Install the dependencies:
 
