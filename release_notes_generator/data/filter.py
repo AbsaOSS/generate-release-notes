@@ -21,7 +21,6 @@ from copy import deepcopy
 from typing import Optional
 
 from github.Issue import Issue
-from github.PullRequest import PullRequest
 from github.Repository import Repository
 
 from release_notes_generator.action_inputs import ActionInputs

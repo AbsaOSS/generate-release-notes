@@ -26,10 +26,10 @@ from typing import Any
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.chapters.base_chapters import BaseChapters
 from release_notes_generator.model.chapter import Chapter
-from release_notes_generator.utils.constants import UNCATEGORIZED_CHAPTER_TITLE
 from release_notes_generator.model.record.commit_record import CommitRecord
 from release_notes_generator.model.record.hierarchy_issue_record import HierarchyIssueRecord
 from release_notes_generator.model.record.record import Record
+from release_notes_generator.utils.constants import UNCATEGORIZED_CHAPTER_TITLE
 from release_notes_generator.utils.utils import normalize_labels
 
 logger = logging.getLogger(__name__)
@@ -472,8 +472,7 @@ class CustomChapters(BaseChapters):
                 return int(raw_order.strip())
             except ValueError:
                 logger.warning(
-                    "Chapter '%s' has invalid 'order' value: %s. Must be an integer."
-                    " Ignoring custom ordering input.",
+                    "Chapter '%s' has invalid 'order' value: %s. Must be an integer. Ignoring custom ordering input.",
                     title,
                     raw_order,
                 )

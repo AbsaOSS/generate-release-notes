@@ -26,9 +26,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  static-code-analysis:
+  quality-gates:
     runs-on: ubuntu-latest
-    name: Pylint Static Code Analysis
+    name: Python Quality Gates
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4
@@ -41,51 +41,11 @@ jobs:
           python-version: '3.14'
           cache: 'pip'
 
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
+      - name: Install development dependencies
+        run: python -m pip install -r requirements-dev.txt
 
-      - name: Analyze code with Pylint
-        id: analyze-code
-        run: |
-          pylint_score=$(pylint $(git ls-files '*.py')| grep 'rated at' | awk '{print $7}' | cut -d'/' -f1)
-          echo "score=$pylint_score" >> "$GITHUB_OUTPUT"
-
-      - name: Check Pylint score
-        run: |
-          score=${{ steps.analyze-code.outputs.score }}
-          echo "Pylint score is $score"
-          
-          if (( $(echo "$score < 9.5" | bc -l) )); then
-            echo "Failure: Pylint score is below 9.5 (project score: $score)."
-            exit 1
-          else
-            echo "Success: Pylint score is above 9.5 (project score: $score)."
-          fi
-
-  code-format-check:
-    runs-on: ubuntu-latest
-    name: Black Format Check
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4
-        with:
-          persist-credentials: false
-
-      - name: Set up Python
-        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v5
-        with:
-          python-version: '3.14'
-          cache: 'pip'
-
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-
-      - name: Check code format with Black
-        id: check-format
-        run: |
-          black --check $(git ls-files '*.py')
+      - name: Run local quality gates
+        run: make qa
 
   unit-test:
     name: Unit Tests (Python ${{ matrix.python-version }})
@@ -112,38 +72,15 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
 
-      - name: Install Python dependencies
+      - name: Install development dependencies
         run: |
-          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
 
       - name: Set PYTHONPATH environment variable
         run: echo "PYTHONPATH=${GITHUB_WORKSPACE}/release_notes_generator/release_notes_generator" >> $GITHUB_ENV
 
       - name: Check code coverage with Pytest
         run: pytest --cov=. -v tests/unit --cov-fail-under=80
-
-  mypy-check:
-    runs-on: ubuntu-latest
-    name: Mypy Type Check
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4
-        with:
-          persist-credentials: false
-
-      - name: Set up Python
-        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v5
-        with:
-          python-version: '3.14'
-          cache: 'pip'
-
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-      - name: Check types with Mypy
-        id: check-types
-        run: |
-          mypy .
 
   offline-integration-tests:
     name: Offline Integration Tests (Python ${{ matrix.python-version }})
@@ -170,9 +107,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
 
-      - name: Install Python dependencies
+      - name: Install development dependencies
         run: |
-          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
 
       - name: Set PYTHONPATH environment variable
         run: echo "PYTHONPATH=${GITHUB_WORKSPACE}" >> $GITHUB_ENV
@@ -201,9 +138,9 @@ jobs:
           python-version: '3.14'
           cache: 'pip'
 
-      - name: Install Python dependencies
+      - name: Install development dependencies
         run: |
-          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
 
       - name: Set PYTHONPATH environment variable
         run: echo "PYTHONPATH=${GITHUB_WORKSPACE}" >> $GITHUB_ENV

@@ -22,26 +22,25 @@ import logging
 import re
 import sys
 import traceback
-from concurrent.futures import ThreadPoolExecutor, as_completed, CancelledError
-from typing import Optional, Callable
+from concurrent.futures import CancelledError, ThreadPoolExecutor, as_completed
+from typing import Callable, Optional
 
 import semver
 from github import Github, GithubException, UnknownObjectException
+from github.Commit import Commit as GithubCommit
 from github.GitRelease import GitRelease
 from github.Issue import Issue
 from github.PullRequest import PullRequest
 from github.Repository import Repository
-from github.Commit import Commit as GithubCommit
 
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.data.utils.bulk_sub_issue_collector import BulkSubIssueCollector
-
-from release_notes_generator.model.record.issue_record import IssueRecord
 from release_notes_generator.model.mined_data import MinedData
+from release_notes_generator.model.record.issue_record import IssueRecord
 from release_notes_generator.model.record.pull_request_record import PullRequestRecord
 from release_notes_generator.utils.decorators import safe_call_decorator
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
-from release_notes_generator.utils.record_utils import get_id, parse_issue_id, get_commit_subject
+from release_notes_generator.utils.record_utils import get_commit_subject, get_id, parse_issue_id
 
 # GitHub PR references: merge/squash markers and bare #N from rebase-merge commits
 _PR_MERGE_ARTIFACT_RE = re.compile(r"\(#(\d+)\)|Merge pull request #(\d+)")
@@ -593,7 +592,8 @@ class DataMiner:
           - If release exists: fetch issues updated since the release timestamp AND all currently open issues
             (to include long-lived open issues not updated recently). De-duplicate by issue.number.
         """
-        assert data.home_repository is not None, "Repository must not be None"
+        if data.home_repository is None:
+            raise AssertionError("Repository must not be None")
         logger.info("Fetching issues from repository...")
 
         if data.release is None:

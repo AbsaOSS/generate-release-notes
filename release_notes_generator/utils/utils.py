@@ -20,7 +20,6 @@ This module contains utility functions for generating release notes.
 
 import logging
 import re
-
 from collections.abc import Iterable
 from typing import Any, Optional
 
@@ -130,7 +129,7 @@ def normalize_version_tag(tag: str) -> str:
     m = _SEMVER_SHORT_RE.match(tag)
     if not m:
         raise ValueError(
-            f"Invalid version tag format: {tag!r}. " "Expected vMAJOR.MINOR[.PATCH], e.g. 'v0.2' or 'v0.2.0'."
+            f"Invalid version tag format: {tag!r}. Expected vMAJOR.MINOR[.PATCH], e.g. 'v0.2' or 'v0.2.0'."
         )
 
     major = int(m.group("major"))

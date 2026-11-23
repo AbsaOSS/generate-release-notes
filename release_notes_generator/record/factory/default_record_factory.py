@@ -20,27 +20,26 @@ DefaultRecordFactory builds both flat and hierarchical issue records (Epics/Feat
 
 import logging
 from concurrent.futures import ThreadPoolExecutor
-from typing import cast, Optional
+from typing import Optional, cast
 
 from github import Github
 from github.Issue import Issue
 from github.PullRequest import PullRequest
 from github.Repository import Repository
 
+from release_notes_generator.action_inputs import ActionInputs
+from release_notes_generator.model.mined_data import MinedData
 from release_notes_generator.model.record.commit_record import CommitRecord
 from release_notes_generator.model.record.hierarchy_issue_record import HierarchyIssueRecord
 from release_notes_generator.model.record.issue_record import IssueRecord
-from release_notes_generator.model.mined_data import MinedData
-from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.record.pull_request_record import PullRequestRecord
 from release_notes_generator.model.record.record import Record
 from release_notes_generator.model.record.sub_issue_record import SubIssueRecord
 from release_notes_generator.record.factory.record_factory import RecordFactory
 from release_notes_generator.utils.decorators import safe_call_decorator
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
-
-from release_notes_generator.utils.pull_request_utils import get_issues_for_pr, extract_issue_numbers_from_body
-from release_notes_generator.utils.record_utils import get_id, parse_issue_id, get_commit_subject
+from release_notes_generator.utils.pull_request_utils import extract_issue_numbers_from_body, get_issues_for_pr
+from release_notes_generator.utils.record_utils import get_commit_subject, get_id, parse_issue_id
 
 logger = logging.getLogger(__name__)
 
@@ -159,8 +158,7 @@ class DefaultRecordFactory(RecordFactory):
             for issue_id in pull_issues:
                 if issue_id not in self._records:
                     logger.warning(
-                        "Detected PR %d linked to issue %s which is not in the list of received issues. "
-                        "Fetching ...",
+                        "Detected PR %d linked to issue %s which is not in the list of received issues. Fetching ...",
                         pull.number,
                         issue_id,
                     )

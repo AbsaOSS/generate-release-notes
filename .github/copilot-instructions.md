@@ -96,24 +96,29 @@ Testing
 - Must not add comments outside test methods in `test_*.py` files; use section-header comments (`# --- section ---`) only to separate logical groups of tests.
 
 Tooling
-- Must format with Black (pyproject.toml).
-- Must lint with Pylint (ignore tests/).
+- Must format and lint with Ruff (pyproject.toml; tests are excluded).
+- Must enable Ruff security (S) and complexity (C90) checks.
+- Must audit runtime and development dependencies with pip-audit.
 - Must type-check with mypy.
 - Must keep coverage ≥ 80% when running pytest-cov.
 
 Quality gates
 - Must run tests first, then format/lint/type-check.
+- Must run `make qa` as the complete local quality gate.
 - Tests:
-  - pytest tests/unit/
-  - pytest tests/
+  - make test
+  - pytest -v tests/integration/ --ignore=tests/integration/live
 - Coverage:
-  - pytest --ignore=tests/integration --cov=. tests/ --cov-fail-under=80 --cov-report=html
+  - make coverage
+  - make coverage-html
 - Format:
-  - black $(git ls-files '*.py')
+  - ruff format --check .
 - Lint:
-  - pylint --ignore=tests $(git ls-files '*.py')
+  - ruff check .
 - Types:
   - mypy .
+- Dependency audit:
+  - pip-audit -r requirements-dev.txt
 
 Common pitfalls to avoid
 - Dependencies: must verify compatibility with target runtime.
@@ -136,4 +141,5 @@ Repo additions
 - Commands:
   - python3 -m venv .venv
   - source .venv/bin/activate
-  - pip install -r requirements.txt
+  - make install
+  - make qa

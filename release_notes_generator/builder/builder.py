@@ -19,7 +19,6 @@ This module contains the ReleaseNotesBuilder class which is responsible for buil
 """
 
 import logging
-
 from itertools import chain
 
 from release_notes_generator.action_inputs import ActionInputs

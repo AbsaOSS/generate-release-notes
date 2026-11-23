@@ -24,9 +24,10 @@ import json
 import logging
 import time
 from dataclasses import dataclass
+
 import requests
 
-from release_notes_generator.utils.record_utils import parse_issue_id, format_issue_id
+from release_notes_generator.utils.record_utils import format_issue_id, parse_issue_id
 
 logger = logging.getLogger(__name__)
 

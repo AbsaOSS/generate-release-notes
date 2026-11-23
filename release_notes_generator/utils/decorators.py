@@ -19,11 +19,12 @@ This module contains the BaseChapters class which is responsible for representin
 """
 
 import logging
-
 from functools import wraps
-from typing import Callable, Optional, Any
+from typing import Any, Callable, Optional
+
 from github import GithubException
-from requests.exceptions import Timeout, RequestException
+from requests.exceptions import RequestException, Timeout
+
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
 
 logger = logging.getLogger(__name__)
