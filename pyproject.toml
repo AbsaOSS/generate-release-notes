@@ -21,3 +21,6 @@ omit = ["tests/*"]
 python_version = "3.11"
 check_untyped_defs = true
 exclude = "tests"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
