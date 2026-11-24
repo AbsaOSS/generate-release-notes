@@ -31,7 +31,7 @@ from pytest_mock import MockerFixture
 from release_notes_generator.data.miner import DataMiner
 from release_notes_generator.data.utils.bulk_sub_issue_collector import BulkSubIssueCollector
 from release_notes_generator.model.mined_data import MinedData
-from tests.unit.conftest import FakeRepo
+from tests.unit.conftest import FakeRepo, make_git_release
 
 
 class ChildBulkSubIssueCollector(BulkSubIssueCollector):
@@ -280,17 +280,12 @@ def test_get_latest_release_from_tag_name_defined_no_release(mocker, mock_repo):
 def test_get_latest_release_from_tag_name_prerelease(mocker, mock_repo):
     """from-tag-name 'v0.9.0rc1' fetches that pre-release by its tag name as given."""
     mocker.patch.dict("os.environ", {"INPUT_FROM_TAG_NAME": "v0.9.0rc1"})
+    mocker.patch("release_notes_generator.data.miner.safe_call_decorator", return_value=decorator_mock)
     mock_exit = mocker.patch("sys.exit")
-    github_mock = mocker.Mock(spec=Github)
-    rls_mock = mocker.Mock(spec=GitRelease)
-    rls_mock.tag_name = "v0.9.0rc1"
-    rls_mock.prerelease = True
+    rls_mock = make_git_release(mocker, "v0.9.0rc1", prerelease=True)
     mock_repo.get_release.return_value = rls_mock
 
-    release_notes_miner = DataMiner(github_mock, mocker.Mock())
-    release_notes_miner._safe_call = decorator_mock
-
-    latest_release = release_notes_miner.get_latest_release(mock_repo)
+    latest_release = DataMiner(mocker.Mock(spec=Github), mocker.Mock()).get_latest_release(mock_repo)
 
     assert rls_mock == latest_release
     mock_repo.get_release.assert_called_once_with("v0.9.0rc1")
@@ -300,23 +295,30 @@ def test_get_latest_release_from_tag_name_prerelease(mocker, mock_repo):
 def test_get_latest_release_from_tag_name_not_defined_skips_prerelease_flagged(mocker, mock_repo):
     """Without from-tag-name, releases flagged as pre-release are skipped; the newest final release wins."""
     mocker.patch.dict("os.environ", {"INPUT_FROM_TAG_NAME": ""})
-    github_mock = mocker.Mock(spec=Github)
-    releases = []
-    for tag_name, prerelease in [("v0.8.0", False), ("v0.9.0-RC1", True), ("v0.9.0rc2", True)]:
-        release = mocker.Mock(spec=GitRelease)
-        release.tag_name = tag_name
-        release.draft = False
-        release.prerelease = prerelease
-        releases.append(release)
+    mocker.patch("release_notes_generator.data.miner.safe_call_decorator", return_value=decorator_mock)
+    releases = [
+        make_git_release(mocker, "v0.8.0"),
+        make_git_release(mocker, "v0.9.0-RC1", prerelease=True),
+        make_git_release(mocker, "v0.9.0rc2", prerelease=True),
+    ]
     mock_repo.get_releases.return_value = releases
 
-    release_notes_miner = DataMiner(github_mock, mocker.Mock())
-    release_notes_miner._safe_call = decorator_mock
-
-    latest_release = release_notes_miner.get_latest_release(mock_repo)
+    latest_release = DataMiner(mocker.Mock(spec=Github), mocker.Mock()).get_latest_release(mock_repo)
 
     assert releases[0] == latest_release
     mock_repo.get_release.assert_not_called()
+
+
+def test_get_latest_release_from_tag_name_not_defined_uses_flag_not_tag_name(mocker, mock_repo):
+    """Without from-tag-name, a suffixed tag published without the pre-release flag is eligible and can win."""
+    mocker.patch.dict("os.environ", {"INPUT_FROM_TAG_NAME": ""})
+    mocker.patch("release_notes_generator.data.miner.safe_call_decorator", return_value=decorator_mock)
+    releases = [make_git_release(mocker, "v0.8.0"), make_git_release(mocker, "v0.9.0-RC1")]
+    mock_repo.get_releases.return_value = releases
+
+    latest_release = DataMiner(mocker.Mock(spec=Github), mocker.Mock()).get_latest_release(mock_repo)
+
+    assert releases[1] == latest_release
 
 
 def test_mine_data_repo_none_raises(mocker):
