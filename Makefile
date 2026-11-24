@@ -17,11 +17,13 @@ PIP ?= $(PYTHON) -m pip
 COV_MIN ?= 80
 
 .DEFAULT_GOAL := help
-.PHONY: help install qa format format-check lint types test coverage coverage-html audit
+.PHONY: help all install qa format format-check lint types test test-integration coverage coverage-html audit
 
 help: ## Show available targets.
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
-		| awk 'BEGIN {FS = ":.*?## "}; {printf "  %-14s %s\n", $$1, $$2}'
+		| awk 'BEGIN {FS = ":.*?## "}; {printf "  %-18s %s\n", $$1, $$2}'
+
+all: install qa ## Install dependencies and run the full local quality gate.
 
 install: ## Install runtime and development dependencies.
 	$(PIP) install -r requirements-dev.txt
@@ -42,13 +44,16 @@ types: ## Run the mypy type checker.
 	mypy .
 
 test: ## Run the unit test suite.
-	PYTHONPATH="$(CURDIR)/release_notes_generator/release_notes_generator:$${PYTHONPATH}" pytest -v tests/unit
+	pytest -v tests/unit
+
+test-integration: ## Run the offline integration tests (no GitHub token needed).
+	pytest -v tests/integration/ --ignore=tests/integration/live
 
 coverage: ## Run unit tests with the coverage threshold.
-	PYTHONPATH="$(CURDIR)/release_notes_generator/release_notes_generator:$${PYTHONPATH}" pytest --cov=. -v tests/unit --cov-fail-under=$(COV_MIN)
+	pytest --cov=. -v tests/unit --cov-fail-under=$(COV_MIN)
 
 coverage-html: ## Run unit tests with coverage and generate an HTML report.
-	PYTHONPATH="$(CURDIR)/release_notes_generator/release_notes_generator:$${PYTHONPATH}" pytest --cov=. -v tests/unit --cov-fail-under=$(COV_MIN) --cov-report=html
+	pytest --cov=. -v tests/unit --cov-fail-under=$(COV_MIN) --cov-report=html
 
 audit: ## Audit runtime and development dependencies for known vulnerabilities.
 	pip-audit -r requirements-dev.txt

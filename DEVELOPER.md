@@ -19,8 +19,8 @@ cd generate-release-notes
 
 Python versions:
 - **Runtime:** this checkout supports Python 3.11 and newer; `action.yml` rejects older interpreters.
-- **Local development and testing:** Python 3.14 matches the quality-gate job.
-  CI also runs unit and offline integration tests on both 3.11 and 3.14.
+- **Local development and testing:** Python 3.14 is recommended. CI runs the quality gate (`make all`)
+  and the offline integration tests on both 3.11 and 3.14.
 - Ruff (`target-version`) and mypy (`python_version`) are configured for 3.11,
   which helps catch some version-specific incompatibilities even when run on 3.14. These tools do not guarantee
   runtime compatibility with every standard-library API; CI also runs tests on Python 3.11.
@@ -48,8 +48,22 @@ make qa
 `make qa` runs unit tests with the 80% coverage threshold, Ruff format and lint checks, mypy, and `pip-audit`.
 The dependency audit queries the vulnerability database and therefore requires network access.
 
-Use `make format` to apply Ruff's safe fixes and formatting. Individual targets include `make lint`,
-`make format-check`, `make types`, `make test`, `make coverage`, and `make audit`.
+Run `make help` to list all targets. Each target maps to these commands:
+
+| Target                  | Runs                                                                               |
+|-------------------------|------------------------------------------------------------------------------------|
+| `make all`              | `make install`, then `make qa` (used by the CI quality-gate job)                   |
+| `make install`          | `pip install -r requirements-dev.txt` (runtime and development dependencies)       |
+| `make qa`               | `make coverage`, `make format-check`, `make lint`, `make types`, `make audit`      |
+| `make format`           | `ruff check --fix .` and `ruff format .` (modifies files)                          |
+| `make format-check`     | `ruff format --check .`                                                            |
+| `make lint`             | `ruff check .` (lint, import sorting, security `S` and complexity `C90` rules)     |
+| `make types`            | `mypy .`                                                                           |
+| `make test`             | `pytest -v tests/unit`                                                             |
+| `make test-integration` | `pytest -v tests/integration/ --ignore=tests/integration/live`                     |
+| `make coverage`         | `pytest --cov=. -v tests/unit --cov-fail-under=80`                                 |
+| `make coverage-html`    | `make coverage` plus an HTML report in `htmlcov/`                                  |
+| `make audit`            | `pip-audit -r requirements-dev.txt`                                                |
 
 ## Running Unit Tests
 
@@ -86,7 +100,7 @@ Each test calls `main.run()` directly with `INPUT_*` environment variables. The 
 Runs all integration tests except the live suite; safe to run locally and in CI.
 
 ```shell
-pytest tests/integration/ --ignore=tests/integration/live -v
+make test-integration
 ```
 
 ### Regenerate golden snapshot

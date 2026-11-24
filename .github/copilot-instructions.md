@@ -97,8 +97,6 @@ Testing
 
 Tooling
 - Must format and lint with Ruff (pyproject.toml; tests are excluded).
-- Must enable Ruff security (S) and complexity (C90) checks.
-- Must audit runtime and development dependencies with pip-audit.
 - Must type-check with mypy.
 - Must keep coverage ≥ 80% when running pytest-cov.
 
@@ -107,22 +105,23 @@ Quality gates
 - Must run `make qa` as the complete local quality gate.
 - Tests:
   - make test
-  - pytest -v tests/integration/ --ignore=tests/integration/live
+  - make test-integration
 - Coverage:
   - make coverage
   - make coverage-html
 - Format:
-  - ruff format --check .
+  - make format-check
 - Lint:
-  - ruff check .
+  - make lint
 - Types:
-  - mypy .
+  - make types
 - Dependency audit:
-  - pip-audit -r requirements-dev.txt
+  - make audit
 - Must put a non-placeholder Markdown bullet immediately below the `## Release Notes` heading in PR descriptions; `.github/workflows/check_pr_release_notes.yml` checks this format.
 
 Common pitfalls to avoid
 - Dependencies: must verify compatibility with target runtime.
+- Workflow actions: must pin to a full commit SHA with a `# vX.Y.Z` comment, and must update both the SHA and the comment together.
 - Untyped deps: avoid type: ignore unless required; document why.
 - Logging: must keep lazy % formatting.
 - Cleanup: must remove unused imports/variables.

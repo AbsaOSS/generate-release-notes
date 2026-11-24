@@ -27,28 +27,7 @@ concurrency:
 
 jobs:
   quality-gates:
-    runs-on: ubuntu-latest
-    name: Python Quality Gates
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4
-        with:
-          persist-credentials: false
-
-      - name: Set up Python
-        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v5
-        with:
-          python-version: '3.14'
-          cache: 'pip'
-
-      - name: Install development dependencies
-        run: python -m pip install -r requirements-dev.txt
-
-      - name: Run local quality gates
-        run: make qa
-
-  unit-test:
-    name: Unit Tests (Python ${{ matrix.python-version }})
+    name: Python Quality Gates (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
 
     strategy:
@@ -57,30 +36,20 @@ jobs:
         # 3.11 = minimum supported version, 3.14 = current runtime
         python-version: [ '3.11', '3.14' ]
 
-    defaults:
-      run:
-        shell: bash
-
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0
           persist-credentials: false
 
-      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v5
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
 
-      - name: Install development dependencies
-        run: |
-          pip install -r requirements-dev.txt
-
-      - name: Set PYTHONPATH environment variable
-        run: echo "PYTHONPATH=${GITHUB_WORKSPACE}/release_notes_generator/release_notes_generator" >> $GITHUB_ENV
-
-      - name: Check code coverage with Pytest
-        run: pytest --cov=. -v tests/unit --cov-fail-under=80
+      - name: Install Python development dependencies and run quality gates
+        run: make all
 
   offline-integration-tests:
     name: Offline Integration Tests (Python ${{ matrix.python-version }})
@@ -97,25 +66,21 @@ jobs:
         shell: bash
 
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
 
-      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v5
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
 
-      - name: Install development dependencies
-        run: |
-          pip install -r requirements-dev.txt
-
-      - name: Set PYTHONPATH environment variable
-        run: echo "PYTHONPATH=${GITHUB_WORKSPACE}" >> $GITHUB_ENV
+      - name: Install Python development dependencies
+        run: make install
 
       - name: Run offline integration tests
-        run: pytest -v tests/integration/ --ignore=tests/integration/live
+        run: make test-integration
 
   integration-test-real-api:
     name: Live Integration Tests
@@ -128,22 +93,18 @@ jobs:
         shell: bash
 
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
 
-      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: '3.14'
           cache: 'pip'
 
-      - name: Install development dependencies
-        run: |
-          pip install -r requirements-dev.txt
-
-      - name: Set PYTHONPATH environment variable
-        run: echo "PYTHONPATH=${GITHUB_WORKSPACE}" >> $GITHUB_ENV
+      - name: Install Python development dependencies
+        run: make install
 
       - name: Run live pytest tests (BulkSubIssueCollector smoke)
         env:
