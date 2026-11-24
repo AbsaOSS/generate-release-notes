@@ -25,7 +25,7 @@ from github.Issue import Issue
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.record.issue_record import IssueRecord
 from release_notes_generator.model.record.sub_issue_record import SubIssueRecord
-from release_notes_generator.utils.record_utils import format_row_with_suppression
+from release_notes_generator.utils.record_utils import format_row_with_suppression, markdown_number_link
 
 logger = logging.getLogger(__name__)
 
@@ -226,7 +226,9 @@ class HierarchyIssueRecord(IssueRecord):
     def _collect_format_values(self) -> dict[str, str]:
         """Collect template substitution values for the hierarchy issue row format string."""
         format_values: dict[str, str] = {}
-        format_values["number"] = f"#{self.issue.number}"
+        format_values["number"] = markdown_number_link(
+            self.issue.repository.full_name, self.issue.number, is_pull=False
+        )
         format_values["title"] = self.issue.title
         format_values["author"] = self.author
         format_values["assignees"] = ", ".join(self.assignees)
