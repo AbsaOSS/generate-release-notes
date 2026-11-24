@@ -550,6 +550,7 @@ def mock_pull_closed(mocker, mock_user):
     pull.state = PullRequestRecord.PR_STATE_CLOSED
     pull.body = "Release Notes:\n- Fixed bug\n- Improved performance\n+ More nice code\n  * Awesome architecture"
     pull.url = "http://example.com/pull/123"
+    pull.base.repo.full_name = "org/repo"
     pull.number = 123
     pull.merge_commit_sha = "merge_commit_sha"
     pull.title = "Fixed bug"
@@ -578,6 +579,7 @@ def mock_pull_closed_with_skip_label(mocker):
     pull.state = PullRequestRecord.PR_STATE_CLOSED
     pull.body = "Release Notes:\n- Fixed bug\n- Improved performance\n+ More nice code\n  * Awesome architecture"
     pull.url = "http://example.com/pull/123"
+    pull.base.repo.full_name = "org/repo"
     pull.number = 123
     pull.merge_commit_sha = "merge_commit_sha"
     pull.title = "Fixed bug"
@@ -599,6 +601,7 @@ def mock_pull_closed_with_skip_label(mocker):
 @pytest.fixture
 def mock_pull_closed_with_rls_notes_101(mocker, mock_user):
     pull = mocker.Mock(spec=PullRequest)
+    pull.base.repo.full_name = "org/repo"
     pull.state = PullRequestRecord.PR_STATE_CLOSED
     pull.body = "Release Notes:\n- PR 101 1st release note\n- PR 101 2nd release note\n"
     pull.url = "http://example.com/pull/101"
@@ -628,6 +631,7 @@ def mock_pull_closed_with_rls_notes_101(mocker, mock_user):
 @pytest.fixture
 def mock_pull_closed_with_rls_notes_102(mocker, mock_user):
     pull = mocker.Mock(spec=PullRequest)
+    pull.base.repo.full_name = "org/repo"
     pull.state = PullRequestRecord.PR_STATE_CLOSED
     pull.body = "Release Notes:\n- PR 102 1st release note\n- PR 102 2nd release note\n"
     pull.url = "http://example.com/pull/102"
@@ -657,6 +661,7 @@ def mock_pull_closed_with_rls_notes_102(mocker, mock_user):
 @pytest.fixture
 def mock_pull_merged_with_rls_notes_101(mocker):
     pull = mocker.Mock(spec=PullRequest)
+    pull.base.repo.full_name = "org/repo"
     pull.state = PullRequestRecord.PR_STATE_CLOSED
     pull.body = "Closes #122\n\nRelease Notes:\n- PR 101 1st release note\n- PR 101 2nd release note\n"
     pull.url = "http://example.com/pull/101"
@@ -679,6 +684,7 @@ def mock_pull_merged_with_rls_notes_101(mocker):
 @pytest.fixture
 def mock_pull_merged_with_rls_notes_102(mocker):
     pull = mocker.Mock(spec=PullRequest)
+    pull.base.repo.full_name = "org/repo"
     pull.state = PullRequestRecord.PR_STATE_CLOSED
     pull.body = "Closes #123\n\nRelease Notes:\n- PR 102 1st release note\n- PR 102 2nd release note\n"
     pull.url = "http://example.com/pull/102"
@@ -701,6 +707,7 @@ def mock_pull_merged_with_rls_notes_102(mocker):
 @pytest.fixture
 def mock_pull_merged(mocker, mock_user):
     pull = mocker.Mock(spec=PullRequest)
+    pull.base.repo.full_name = "org/repo"
     pull.state = PullRequestRecord.PR_STATE_CLOSED
     pull.body = "Release Notes:\n- Fixed bug\n- Improved performance\n"
     pull.url = "http://example.com/pull/124"
@@ -732,6 +739,7 @@ def mock_pull_open(mocker, mock_user):
     pull.state = PullRequestRecord.PR_STATE_OPEN
     pull.body = "Release Notes:\n- Fixed bug\n- Improved performance\n"
     pull.url = "http://example.com/pull/123"
+    pull.base.repo.full_name = "org/repo"
     pull.number = 123
     pull.merge_commit_sha = None
     pull.title = "Fix bug"
@@ -757,6 +765,7 @@ def mock_pull_open(mocker, mock_user):
 @pytest.fixture
 def mock_pull_no_rls_notes(mocker):
     pull = mocker.Mock(spec=PullRequest)
+    pull.base.repo.full_name = "org/repo"
     pull.state = PullRequestRecord.PR_STATE_CLOSED
     pull.body = None
     pull.number = 123

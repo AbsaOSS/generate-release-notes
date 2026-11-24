@@ -28,7 +28,11 @@ from github.Repository import Repository
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.record.record import Record
 from release_notes_generator.utils.pull_request_utils import extract_issue_numbers_from_body
-from release_notes_generator.utils.record_utils import get_rls_notes_default, get_rls_notes_code_rabbit
+from release_notes_generator.utils.record_utils import (
+    get_rls_notes_default,
+    get_rls_notes_code_rabbit,
+    markdown_number_link,
+)
 
 
 class PullRequestRecord(Record):
@@ -142,7 +146,9 @@ class PullRequestRecord(Record):
         format_values: dict[str, Any] = {}
 
         # collecting values for formatting
-        format_values["number"] = f"#{self._pull_request.number}"
+        format_values["number"] = markdown_number_link(
+            self._home_repository.full_name, self._pull_request.number, is_pull=True
+        )
         format_values["title"] = self._pull_request.title
         format_values["author"] = self.author
         format_values["assignees"] = ", ".join(self.assignees)

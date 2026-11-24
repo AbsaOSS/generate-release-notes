@@ -31,6 +31,7 @@ from release_notes_generator.utils.record_utils import (
     get_rls_notes_default,
     get_rls_notes_code_rabbit,
     format_row_with_suppression,
+    markdown_number_link,
 )
 
 
@@ -153,7 +154,9 @@ class IssueRecord(Record):
 
         # collect format values
         format_values["type"] = f"{self._issue.type.name if self._issue.type else ''}"
-        format_values["number"] = f"#{self._issue.number}"
+        format_values["number"] = markdown_number_link(
+            self._issue.repository.full_name, self._issue.number, is_pull=False
+        )
         format_values["title"] = self._issue.title
         format_values["author"] = self.author
         format_values["assignees"] = ", ".join(self.assignees)
@@ -280,7 +283,13 @@ class IssueRecord(Record):
         if not self._pull_requests:
             return []
 
-        template = "#{number}"
-        res = [template.format(number=pull.number) for pull in self._pull_requests.values()]
+        res = []
+        for pull in self._pull_requests.values():
+            # an issue can collect PRs opened in another repository (cross-repo references),
+            # so each link must be built from the PR's home repository, not the issue's
+            pr_full_name = self._issue.repository.full_name
+            if pull.base is not None and pull.base.repo is not None:
+                pr_full_name = pull.base.repo.full_name
+            res.append(markdown_number_link(pr_full_name, pull.number, is_pull=True))
 
         return res

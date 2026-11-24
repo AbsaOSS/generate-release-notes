@@ -116,6 +116,7 @@ def make_issue(mocker: MockerFixture, make_label: Callable[[str], object]) -> Ca
         body: str = "",
         user_login: str = "testuser",
         closed_at: datetime | None = None,
+        repo_full_name: str = "org/repo",
     ) -> Issue:
         issue = mocker.Mock(spec=Issue)
         issue.number = number
@@ -128,6 +129,11 @@ def make_issue(mocker: MockerFixture, make_label: Callable[[str], object]) -> Ca
         user = mocker.Mock()
         user.login = user_login
         issue.user = user
+        # Record rows render numbers as full markdown links, which read the
+        # issue's home repository. Give the mock a deterministic full_name so
+        # snapshots stay stable (a bare Mock leaks its id into the URL).
+        issue.repository = mocker.Mock()
+        issue.repository.full_name = repo_full_name
         issue.get_labels = mocker.Mock(return_value=[make_label(lbl) for lbl in labels])
         return issue
 
@@ -147,6 +153,7 @@ def make_pr(mocker: MockerFixture, make_label: Callable[[str], object]) -> Calla
         labels: list[str] | None = None,
         merged: bool = True,
         merge_commit_sha: str | None = None,
+        repo_full_name: str = "org/repo",
     ) -> PullRequest:
         pr = mocker.Mock(spec=PullRequest)
         pr.number = number
@@ -160,6 +167,10 @@ def make_pr(mocker: MockerFixture, make_label: Callable[[str], object]) -> Calla
         user.login = user_login
         pr.user = user
         pr.assignees = []
+        # Cross-repo PR links read pull.base.repo.full_name; keep it deterministic.
+        pr.base = mocker.Mock()
+        pr.base.repo = mocker.Mock()
+        pr.base.repo.full_name = repo_full_name
         pr.get_labels = mocker.Mock(return_value=[make_label(lbl) for lbl in (labels or [])])
         pr.get_commits = mocker.Mock(return_value=[])
         return pr
