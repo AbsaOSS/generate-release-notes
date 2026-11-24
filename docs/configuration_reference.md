@@ -8,8 +8,8 @@ This page lists all action inputs and outputs with defaults. Grouped for readabi
 
 | Name | Required | Default | Description |
 |------|----------|---------|-------------|
-| `tag-name` | Yes | – | Target release tag (must already exist). |
-| `from-tag-name` | No | "" | Explicit previous release tag; if empty semantic latest published release is used. |
+| `tag-name` | Yes | – | Target release tag (must already exist). `vMAJOR.MINOR[.PATCH]` with an optional pre-release suffix kept as given: SemVer (`v1.2.3-RC1`) or PEP 440 (`v1.2.3rc1`). See [Pre-release Tags](../README.md#pre-release-tags). |
+| `from-tag-name` | No | "" | Explicit previous release tag, same format as `tag-name`; if empty the semantic latest published release that isn't flagged as a pre-release is used. |
 | `chapters` | No | "" | YAML multi-line list of chapter entries (title + label or labels). Optional flags: `hidden: true` excludes chapter from output; `catch-open-hierarchy: true` marks the chapter as a Conditional Custom Chapter that intercepts all open hierarchy parent issues before label routing (requires `hierarchy: true`). Supports legacy `label` or multi `labels` definitions. |
 | `hierarchy` | No | `false` | Enable Issue Hierarchy Support. |
 | `published-at` | No | `false` | Use previous release `published_at` timestamp instead of `created_at`. |
@@ -122,6 +122,7 @@ Controlled by `duplicity-scope` and `duplicity-icon` (see [Duplicity Handling](f
 | Name | Description |
 |------|-------------|
 | `release-notes` | Final Markdown block of release notes (includes Service Chapters if enabled and a Full Changelog link). |
+| `prerelease` | `true` when `tag-name` has a pre-release suffix (e.g. `v1.2.3-RC1`, `v1.2.3rc1`), `false` otherwise. Pass it to the step that drafts the release. |
 
 ## Quick Selection Guide
 

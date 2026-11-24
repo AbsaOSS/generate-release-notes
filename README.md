@@ -119,7 +119,7 @@ Only a few inputs are required to get started:
 | Name           | Description                                                                  | Required | Default |
 |----------------|------------------------------------------------------------------------------|----------|---------|
 | `GITHUB_TOKEN` | GitHub token for authentication                                              | Yes      | -       |
-| `tag-name`     | Target tag for the release                                                   | Yes      | -       |
+| `tag-name`     | Target tag for the release; see [Pre-release Tags](#pre-release-tags)        | Yes      | -       |
 | `chapters`     | YAML multi-line list mapping titles to labels (supports `label` or `labels`) | No       | -       | 
 | `verbose`      | Enable detailed logging                                                      | No       | false   |
 
@@ -130,6 +130,25 @@ For how label → chapter mapping and aggregation works, see [Custom Chapters Be
 > `from-tag-name` must exist as git tags in the repository. The action checks each tag
 > via the GitHub API before calling compare and exits with a tag-specific error if either
 > is absent.
+
+### Pre-release Tags
+
+`tag-name` and `from-tag-name` accept a tag with a pre-release suffix. The action keeps the suffix as given in every
+tag name it uses, such as the Full Changelog link.
+
+| Form    | Examples                                |
+|---------|-----------------------------------------|
+| SemVer  | `v0.9.0-RC1`, `v1.0.0-alpha.1`          |
+| PEP 440 | `v0.9.0rc1`, `v0.9.0a1`, `v0.9.0b2`     |
+
+- The `prerelease` output is `true` when `tag-name` has a pre-release suffix and `false` otherwise. Pass it to the
+  step that drafts the release, as [examples/release_draft.yml](examples/release_draft.yml) does.
+- Without `from-tag-name`, the notes start at the newest published release that isn't a pre-release, so the notes of
+  a final release after candidates cover everything since the previous final release. This relies on the release's
+  GitHub **pre-release flag**, not on the tag name: a candidate published without the flag can become the start.
+- A hotfix suffix such as `v1.0.0-HF1` counts as a pre-release, as SemVer has it.
+- [AbsaOSS/version-tag-check](https://github.com/AbsaOSS/version-tag-check), used in the example workflow, accepts
+  `vX.Y.Z-RCn` from v1.0.0 on, but not the PEP 440 form `vX.Y.ZrcN`.
 
 ## Example Workflow
 
