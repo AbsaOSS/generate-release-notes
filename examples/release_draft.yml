@@ -3,10 +3,10 @@ on:
   workflow_dispatch:
     inputs:
       tag-name:
-        description: 'Name of git tag to be created, and then draft release created. Syntax: "v[0-9]+.[0-9]+.[0-9]+".'
+        description: 'Name of git tag to be created, and then draft release created. Syntax: "v[0-9]+.[0-9]+.[0-9]+", optionally with a pre-release suffix such as "-RC1".'
         required: true
       from-tag-name:
-        description: 'Name of the git tag from which to detect changes from. Default value: latest tag. Syntax: "v[0-9]+.[0-9]+.[0-9]+".'
+        description: 'Name of the git tag from which to detect changes from. Default value: latest non-pre-release tag. Syntax: "v[0-9]+.[0-9]+.[0-9]+", optionally with a pre-release suffix such as "-RC1".'
         required: false
 
 jobs:
@@ -24,9 +24,10 @@ jobs:
         with:
           python-version: '3.11'
 
+      # version-tag-check v1.0.0 accepts the SemVer pre-release form "vX.Y.Z-RCn", not the PEP 440 form "vX.Y.ZrcN"
       - name: Check format of received tag
         id: check-version-tag
-        uses: AbsaOSS/version-tag-check@36496be76eab24e1f14d45d3b8292311a2aebaaa
+        uses: AbsaOSS/version-tag-check@4145e48bf3f77a5afff2ec9afdd8afb6b53bce34 # v1.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -36,7 +37,7 @@ jobs:
       - name: Check format of received from tag
         if: ${{ github.event.inputs.from-tag-name }}
         id: check-version-from-tag
-        uses: AbsaOSS/version-tag-check@36496be76eab24e1f14d45d3b8292311a2aebaaa
+        uses: AbsaOSS/version-tag-check@4145e48bf3f77a5afff2ec9afdd8afb6b53bce34 # v1.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -95,4 +96,4 @@ jobs:
           body: ${{ steps.generate_release_notes.outputs.release-notes }}
           tag_name: ${{ github.event.inputs.tag-name }}
           draft: true
-          prerelease: false
+          prerelease: ${{ steps.generate_release_notes.outputs.prerelease }}

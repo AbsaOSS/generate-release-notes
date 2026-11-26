@@ -159,6 +159,15 @@ def mock_git_release(mocker):
     return release
 
 
+def make_git_release(mocker: MockerFixture, tag_name: str, prerelease: bool = False, draft: bool = False) -> GitRelease:
+    """Return a GitRelease mock with the given tag name and flags."""
+    release = mocker.Mock(spec=GitRelease)
+    release.tag_name = tag_name
+    release.prerelease = prerelease
+    release.draft = draft
+    return release
+
+
 @pytest.fixture
 def mock_git_releases(mocker):
     release_1 = mocker.Mock(spec=GitRelease)

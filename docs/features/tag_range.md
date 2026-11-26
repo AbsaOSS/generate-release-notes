@@ -8,8 +8,10 @@ Define the window of work (issues, PRs, commits) to include in the release notes
   - **Important**: this tag must exist in the repository; otherwise, the action fails.
 - Optional input `from-tag-name` sets an explicit starting tag. When provided, the action fetches that release directly.
 - If `from-tag-name` is NOT set, the action picks the latest published, non-draft, non-prerelease tag by semantic version ordering (may differ from most recently created chronologically if versions were pushed out-of-order).
+  - "Non-prerelease" means the release's GitHub pre-release flag is off; the tag name is not checked. Publish candidates with the flag on, or one can become the start of the next final release's notes.
   - If no prior release exists (first release), no filtering is applied; all issues/PRs are considered.
 - Tag normalization: both `1.6.0` and `v1.6.0` are treated as `v1.6.0` internally.
+- Pre-release tags: a SemVer (`v1.6.0-RC1`) or PEP 440 (`v1.6.0rc1`) suffix is accepted in both inputs and kept as given, e.g. `v1.6-RC1` → `v1.6.0-RC1`. See [Pre-release Tags](../../README.md#pre-release-tags).
 - The time boundary ("since" value) is derived from the selected previous release timestamp (see Date Selection for which timestamp field is used).
 
 ## Configuration

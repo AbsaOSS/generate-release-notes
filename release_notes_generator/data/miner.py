@@ -45,6 +45,7 @@ from release_notes_generator.utils.record_utils import get_commit_subject, get_i
 # GitHub PR references: merge/squash markers and bare #N from rebase-merge commits
 _PR_MERGE_ARTIFACT_RE = re.compile(r"\(#(\d+)\)|Merge pull request #(\d+)")
 _PR_NUMBER_RE = re.compile(r"\(#(\d+)\)|Merge pull request #(\d+)|^#(\d+)\b")
+_PEP440_PRERELEASE_RE = re.compile(r"(?P<release>[0-9]+\.[0-9]+\.[0-9]+)(?P<pre>a|b|rc)(?P<number>[0-9]+)")
 _COMPARE_COMMITS_MAX_RESULTS = 10_000
 _MAX_DIRECT_COMMIT_PR_LOOKUPS = 200  # Prevent API call explosion from large commit batches
 
@@ -648,6 +649,13 @@ class DataMiner:
         for release in published_releases:
             try:
                 version_str = release.tag_name.lstrip("v")
+                pep440_match = _PEP440_PRERELEASE_RE.fullmatch(version_str)
+                if pep440_match:
+                    version_str = "{0}-{1}.{2}".format(
+                        pep440_match.group("release"),
+                        pep440_match.group("pre"),
+                        int(pep440_match.group("number")),
+                    )
                 current_version: Optional[semver.Version] = semver.VersionInfo.parse(version_str)
             except ValueError:
                 logger.error("Skipping invalid value of version tag: %s", release.tag_name)
