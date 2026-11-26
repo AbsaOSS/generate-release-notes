@@ -321,6 +321,18 @@ def test_get_latest_release_from_tag_name_not_defined_uses_flag_not_tag_name(moc
     assert releases[1] == latest_release
 
 
+def test_get_latest_release_from_tag_name_not_defined_selects_pep440_prerelease(mocker, mock_repo):
+    """An unflagged PEP 440 prerelease is compared with regular releases."""
+    mocker.patch.dict("os.environ", {"INPUT_FROM_TAG_NAME": ""})
+    mocker.patch("release_notes_generator.data.miner.safe_call_decorator", return_value=decorator_mock)
+    releases = [make_git_release(mocker, "v0.8.0"), make_git_release(mocker, "v0.9.0rc1")]
+    mock_repo.get_releases.return_value = releases
+
+    latest_release = DataMiner(mocker.Mock(spec=Github), mocker.Mock()).get_latest_release(mock_repo)
+
+    assert latest_release == releases[1]
+
+
 def test_mine_data_repo_none_raises(mocker):
     github_mock = mocker.Mock(spec=Github)
     # Ensure github.get_repo returns None -> DataMiner.get_repository returns None

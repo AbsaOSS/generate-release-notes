@@ -96,8 +96,10 @@ def get_change_url(
     return changelog_url
 
 
+_SEMVER_PRERELEASE_IDENTIFIER = r"(?:0|[1-9][0-9]*|[0-9A-Za-z-]*[A-Za-z-][0-9A-Za-z-]*)"
+
 _SEMVER_SHORT_RE = re.compile(
-    r"""
+    rf"""
     ^\s*                # optional leading whitespace
     v?                  # optional leading 'v'
     (?P<major>[0-9]+)   # major (ASCII digits only, so the tag isn't rewritten to a different one)
@@ -105,7 +107,7 @@ _SEMVER_SHORT_RE = re.compile(
     (?P<minor>[0-9]+)   # minor
     (?:\.(?P<patch>[0-9]+))?  # optional .patch
     (?P<prerelease>     # optional pre-release suffix, kept as given
-        -[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*  # SemVer, e.g. '-RC1', '-alpha.1'
+        -{_SEMVER_PRERELEASE_IDENTIFIER}(?:\.{_SEMVER_PRERELEASE_IDENTIFIER})*  # SemVer prerelease identifiers
         |(?:a|b|rc)[0-9]+                   # PEP 440, e.g. 'a1', 'b2', 'rc1'
     )?
     \s*$                # optional trailing whitespace
