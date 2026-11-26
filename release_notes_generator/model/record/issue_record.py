@@ -19,7 +19,7 @@ A module that defines the IssueRecord class, which represents an issue record in
 """
 
 import re
-from typing import Optional, Any
+from typing import Any, Optional
 
 from github.Commit import Commit
 from github.Issue import Issue
@@ -28,9 +28,9 @@ from github.PullRequest import PullRequest
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.record.record import Record
 from release_notes_generator.utils.record_utils import (
-    get_rls_notes_default,
-    get_rls_notes_code_rabbit,
     format_row_with_suppression,
+    get_rls_notes_code_rabbit,
+    get_rls_notes_default,
     markdown_number_link,
 )
 

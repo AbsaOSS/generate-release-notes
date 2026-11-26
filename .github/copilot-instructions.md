@@ -96,27 +96,32 @@ Testing
 - Must not add comments outside test methods in `test_*.py` files; use section-header comments (`# --- section ---`) only to separate logical groups of tests.
 
 Tooling
-- Must format with Black (pyproject.toml).
-- Must lint with Pylint (ignore tests/).
+- Must format and lint with Ruff (pyproject.toml; tests are excluded).
 - Must type-check with mypy.
 - Must keep coverage ≥ 80% when running pytest-cov.
 
 Quality gates
 - Must run tests first, then format/lint/type-check.
+- Must run `make qa` as the complete local quality gate.
 - Tests:
-  - pytest tests/unit/
-  - pytest tests/
+  - make test
+  - make test-integration
 - Coverage:
-  - pytest --ignore=tests/integration --cov=. tests/ --cov-fail-under=80 --cov-report=html
+  - make coverage
+  - make coverage-html
 - Format:
-  - black $(git ls-files '*.py')
+  - make format-check
 - Lint:
-  - pylint --ignore=tests $(git ls-files '*.py')
+  - make lint
 - Types:
-  - mypy .
+  - make types
+- Dependency audit:
+  - make audit
+- Must put a non-placeholder Markdown bullet immediately below the `## Release Notes` heading in PR descriptions; `.github/workflows/check_pr_release_notes.yml` checks this format.
 
 Common pitfalls to avoid
 - Dependencies: must verify compatibility with target runtime.
+- Workflow actions: must pin to a full commit SHA with a `# vX.Y.Z` comment, and must update both the SHA and the comment together.
 - Untyped deps: avoid type: ignore unless required; document why.
 - Logging: must keep lazy % formatting.
 - Cleanup: must remove unused imports/variables.
@@ -136,4 +141,5 @@ Repo additions
 - Commands:
   - python3 -m venv .venv
   - source .venv/bin/activate
-  - pip install -r requirements.txt
+  - make install
+  - make qa

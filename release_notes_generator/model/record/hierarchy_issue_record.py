@@ -19,6 +19,7 @@ A module that defines the HierarchyIssueRecord class for hierarchical issue rend
 """
 
 import logging
+
 from github.Issue import Issue
 
 from release_notes_generator.action_inputs import ActionInputs

@@ -21,7 +21,8 @@ This module contains the GithubRateLimiter class which is responsible for rate l
 import logging
 import time
 from datetime import datetime
-from typing import Optional, Callable, Any
+from typing import Any, Callable, Optional
+
 from github import Github
 
 logger = logging.getLogger(__name__)

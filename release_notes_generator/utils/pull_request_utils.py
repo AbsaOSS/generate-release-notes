@@ -22,9 +22,9 @@ import re
 from functools import lru_cache
 
 from github import GithubException
-from github.Requester import Requester
 from github.PullRequest import PullRequest
 from github.Repository import Repository
+from github.Requester import Requester
 
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.utils.constants import ISSUES_FOR_PRS, LINKED_ISSUES_MAX

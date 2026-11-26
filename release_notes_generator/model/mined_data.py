@@ -19,15 +19,14 @@ This module contains data class MinedData, which is used to store the mined data
 """
 
 import logging
-
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 
+from github.Commit import Commit
 from github.GitRelease import GitRelease
 from github.Issue import Issue
 from github.PullRequest import PullRequest
-from github.Commit import Commit
 from github.Repository import Repository
 
 logger = logging.getLogger(__name__)

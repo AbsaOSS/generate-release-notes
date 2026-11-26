@@ -25,11 +25,11 @@ from typing import Optional
 
 from github import Github
 
-from release_notes_generator.data.filter import FilterByRelease
-from release_notes_generator.data.miner import DataMiner
 from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.builder.builder import ReleaseNotesBuilder
 from release_notes_generator.chapters.custom_chapters import CustomChapters
+from release_notes_generator.data.filter import FilterByRelease
+from release_notes_generator.data.miner import DataMiner
 from release_notes_generator.model.record.record import Record
 from release_notes_generator.record.factory.default_record_factory import DefaultRecordFactory
 from release_notes_generator.utils.github_rate_limiter import GithubRateLimiter
@@ -105,7 +105,8 @@ class ReleaseNotesGenerator:
             git_release=data_filtered_by_release.release,
         )
 
-        assert data_filtered_by_release.home_repository is not None, "Repository must not be None"
+        if data_filtered_by_release.home_repository is None:
+            raise AssertionError("Repository must not be None")
 
         rls_notes_records: dict[str, Record] = DefaultRecordFactory(
             github=self._github_instance, home_repository=data_filtered_by_release.home_repository

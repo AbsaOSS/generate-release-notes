@@ -1,10 +1,8 @@
 # Generate Release Notes Action—for Developers
 
 - [Get Started](#get-started)
-- [Run Static Code Analysis](#running-static-code-analysis)
-- [Run Black Tool Locally](#run-black-tool-locally)
-- [Run mypy Tool Locally](#run-mypy-tool-locally)
-- [Running Unit Test](#running-unit-test)
+- [Quality Gates](#quality-gates)
+- [Running Unit Tests](#running-unit-tests)
 - [Running Integration Tests](#running-integration-tests)
 - [Code Coverage](#code-coverage)
 - [Run Action Locally](#run-action-locally)
@@ -21,122 +19,58 @@ cd generate-release-notes
 
 Python versions:
 - **Runtime:** this checkout supports Python 3.11 and newer; `action.yml` rejects older interpreters.
-- **Local development and testing:** Python 3.14 is fine and matches the CI lint, format and type-check jobs.
-  CI runs the unit and offline integration tests on both 3.11 and 3.14.
-- Pylint (`py-version`), mypy (`python_version`) and Black (`target-version`) are configured for 3.11,
+- **Local development and testing:** Python 3.14 is recommended. CI runs the quality gate (`make all`)
+  and the offline integration tests on both 3.11 and 3.14.
+- Ruff (`target-version`) and mypy (`python_version`) are configured for 3.11,
   which helps catch some version-specific incompatibilities even when run on 3.14. These tools do not guarantee
   runtime compatibility with every standard-library API; CI also runs tests on Python 3.11.
 
-Install the dependencies:
+Set up the development environment:
 
-```shell
-pip install -r requirements.txt
-export PYTHONPATH=<your path>/generate-release-notes/src
-```
-
-## Running Static Code Analysis
-
-This project uses the Pylint tool for static code analysis. Pylint analyzes your code without actually running it. It checks for errors, enforces coding standards, looks for code smells, etc.
-
-Pylint displays a global evaluation score for the code, rated out of a maximum score of 10.0. We aim to keep our code quality above 9.5.
-
-### Set Up Python Environment
 ```shell
 python3 -m venv .venv
 source .venv/bin/activate
-pip install --upgrade pip
-pip install -r requirements.txt
+make install
 ```
 
-This command will also install a Pylint tool, since it is listed in the project requirements.
+## Quality Gates
 
-### Run Pylint
-Run Pylint on all files currently tracked by Git in the project.
+Ruff combines linting, import sorting, formatting, security checks, and complexity checks. The configuration is in
+[pyproject.toml](pyproject.toml), and the [Makefile](Makefile) provides the same commands used by the
+[pull-request workflow](.github/workflows/test.yml).
+
+Run the complete local gate from the repository root:
+
 ```shell
-pylint --ignore-paths='^tests/.*' $(git ls-files '*.py')
+make qa
 ```
 
-To run Pylint on a specific file, follow the pattern `pylint <path_to_file>/<name_of_file>.py`.
+`make qa` runs unit tests with the 80% coverage threshold, Ruff format and lint checks, mypy, and `pip-audit`.
+The dependency audit queries the vulnerability database and therefore requires network access.
 
-Example:
-```shell
-pylint release-notes-generator/generator.py
-``` 
+Run `make help` to list all targets. Each target maps to these commands:
 
-## Run Black Tool Locally
-This project uses the [Black](https://github.com/psf/black) tool for code formatting.
-Black aims for consistency, generality, readability, and reducing git diffs.
-The coding style used can be viewed as a strict subset of PEP 8.
+| Target                  | Runs                                                                               |
+|-------------------------|------------------------------------------------------------------------------------|
+| `make all`              | `make install`, then `make qa` (used by the CI quality-gate job)                   |
+| `make install`          | `pip install -r requirements-dev.txt` (runtime and development dependencies)       |
+| `make qa`               | `make coverage`, `make format-check`, `make lint`, `make types`, `make audit`      |
+| `make format`           | `ruff check --fix .` and `ruff format .` (modifies files)                          |
+| `make format-check`     | `ruff format --check .`                                                            |
+| `make lint`             | `ruff check .` (lint, import sorting, security `S` and complexity `C90` rules)     |
+| `make types`            | `mypy .`                                                                           |
+| `make test`             | `pytest -v tests/unit`                                                             |
+| `make test-integration` | `pytest -v tests/integration/ --ignore=tests/integration/live`                     |
+| `make coverage`         | `pytest --cov=. -v tests/unit --cov-fail-under=80`                                 |
+| `make coverage-html`    | `make coverage` plus an HTML report in `htmlcov/`                                  |
+| `make audit`            | `pip-audit -r requirements-dev.txt`                                                |
 
-The project root file `pyproject.toml` defines the Black tool configuration.
-In this project, we are accepting a line length of 120 characters.
-
-Follow these steps to format your code with Black locally:
-
-### Set Up Python Environment
-From the terminal in the root of the project, run the following command:
-
-```shell
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
-
-This command will also install a Black tool, since it is listed in the project requirements.
-
-### Run Black
-Run Black on all files currently tracked by Git in the project.
-```shell
-black $(git ls-files '*.py')
-```
-
-To run Black on a specific file, follow the pattern `black <path_to_file>/<name_of_file>.py`.
-
-Example:
-```shell
-black release_notes_generator/generator.py
-``` 
-
-### Expected Output
-This is the console's expected output example after running the tool:
-```
-All done! ✨ 🍰 ✨
-1 file reformatted.
-```
-
-
-## Run mypy Tool Locally
-
-This project uses the [my[py]](https://mypy.readthedocs.io/en/stable/) tool, a static type checker for Python.
-
-> Type checkers help ensure that you correctly use variables and functions in your code.
-> With mypy, add type hints (PEP 484) to your Python programs,
-> and mypy will warn you when you use those types incorrectly.
-my[py] configuration is in `pyproject.toml` file.
-
-Follow these steps to format your code with my[py] locally:
-
-### Run my[py]
-
-Run my[py] on all files in the project.
-```shell
-  mypy .
-```
-
-To run my[py] check on a specific file, follow the pattern `mypy <path_to_file>/<name_of_file>.py --check-untyped-defs`.
-
-Example:
-```shell
-   mypy living_documentation_regime/living_documentation_generator.py
-``` 
-
-
-## Running Unit Test
+## Running Unit Tests
 
 Unit tests are written using pytest. To run the tests, use the following command:
 
 ```shell
-pytest tests/unit
+make test
 ```
 
 This will execute all tests located in the tests/unit directory.
@@ -166,7 +100,7 @@ Each test calls `main.run()` directly with `INPUT_*` environment variables. The 
 Runs all integration tests except the live suite; safe to run locally and in CI.
 
 ```shell
-pytest tests/integration/ --ignore=tests/integration/live -v
+make test-integration
 ```
 
 ### Regenerate golden snapshot
@@ -187,16 +121,19 @@ pytest tests/integration/live/ -v
 
 ## Code Coverage
 
-Code coverage is collected using the pytest-cov coverage tool. To run the tests and collect coverage information, use the following command:
+Code coverage is collected using pytest-cov. Run the unit suite with the 80% coverage threshold:
 
 ```shell
-pytest --cov=. -v tests/unit --cov-fail-under=80                      # Check coverage threshold
-pytest --cov=. -v tests/unit --cov-fail-under=80 --cov-report=html    # Generate HTML report
+make coverage
 ```
 
-This will execute all tests in the tests directory and generate a code coverage report.
+To generate an HTML coverage report:
 
-See the coverage report on the path:
+```shell
+make coverage-html
+```
+
+Open the report at:
 
 ```shell
 open htmlcov/index.html

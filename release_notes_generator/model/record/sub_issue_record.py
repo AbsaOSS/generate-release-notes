@@ -21,7 +21,7 @@ A module for the SubIssueRecord class, which represents a sub-issue record in th
 import logging
 from typing import Optional
 
-from github.Issue import SubIssue, Issue
+from github.Issue import Issue, SubIssue
 
 from release_notes_generator.model.record.issue_record import IssueRecord
 

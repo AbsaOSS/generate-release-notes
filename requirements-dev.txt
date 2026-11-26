@@ -1,0 +1,15 @@
+-r requirements.txt
+
+# Quality tools.
+pip-audit==2.10.1
+ruff==0.17.4
+mypy==2.4.1
+mypy-extensions==1.2.0
+types-requests==2.33.0.20261030
+types-PyYAML==6.0.12.20261113
+
+# Test tools.
+pytest==9.2.0
+pytest-cov==7.1.0
+pytest-mock==3.17.0
+responses==0.26.3

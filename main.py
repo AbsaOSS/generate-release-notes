@@ -23,12 +23,12 @@ for the GH Action.
 import logging
 import warnings
 
-from github import Github, Auth
+from github import Auth, Github
 from urllib3.exceptions import InsecureRequestWarning
 
-from release_notes_generator.generator import ReleaseNotesGenerator
-from release_notes_generator.chapters.custom_chapters import CustomChapters
 from release_notes_generator.action_inputs import ActionInputs
+from release_notes_generator.chapters.custom_chapters import CustomChapters
+from release_notes_generator.generator import ReleaseNotesGenerator
 from release_notes_generator.utils.gh_action import set_action_output
 from release_notes_generator.utils.logging_config import setup_logging
 

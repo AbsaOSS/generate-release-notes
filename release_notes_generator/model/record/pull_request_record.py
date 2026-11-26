@@ -19,7 +19,7 @@ A module that defines the PullRequestRecord class, which represents a pull reque
 """
 
 import re
-from typing import Optional, Any
+from typing import Any, Optional
 
 from github.Commit import Commit
 from github.PullRequest import PullRequest
@@ -29,8 +29,8 @@ from release_notes_generator.action_inputs import ActionInputs
 from release_notes_generator.model.record.record import Record
 from release_notes_generator.utils.pull_request_utils import extract_issue_numbers_from_body
 from release_notes_generator.utils.record_utils import (
-    get_rls_notes_default,
     get_rls_notes_code_rabbit,
+    get_rls_notes_default,
     markdown_number_link,
 )
 
