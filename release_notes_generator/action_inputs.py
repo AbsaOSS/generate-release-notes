@@ -571,7 +571,9 @@ class ActionInputs:
         """
         Get the value controlling whether the row format should include a 'PR:' prefix when linking to PRs.
         """
-        return get_action_input(ROW_FORMAT_LINK_PR, "true").lower() == "true"
+        if ActionInputs._row_format_link_pr is None:
+            ActionInputs._row_format_link_pr = get_action_input(ROW_FORMAT_LINK_PR, "true").lower() == "true"
+        return ActionInputs._row_format_link_pr
 
     @staticmethod
     def _read_version_tag(getter: Callable[[], str], input_name: str, errors: list[str]) -> str | None:

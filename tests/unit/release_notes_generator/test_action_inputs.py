@@ -729,13 +729,43 @@ def test_get_service_chapter_order_int_input(mocker):
 
 
 def test_get_row_format_link_pr_true(mocker):
+    ActionInputs.reset_caches()
     mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="true")
     assert ActionInputs.get_row_format_link_pr() is True
+    ActionInputs.reset_caches()
 
 
 def test_get_row_format_link_pr_false(mocker):
+    ActionInputs.reset_caches()
     mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="false")
     assert ActionInputs.get_row_format_link_pr() is False
+    ActionInputs.reset_caches()
+
+
+def test_get_row_format_link_pr_caches_value(mocker):
+    ActionInputs.reset_caches()
+    mock_get_action_input = mocker.patch(
+        "release_notes_generator.action_inputs.get_action_input", side_effect=["true", "false"]
+    )
+    assert ActionInputs.get_row_format_link_pr() is True
+    assert ActionInputs.get_row_format_link_pr() is True
+    mock_get_action_input.assert_called_once()
+    ActionInputs.reset_caches()
+
+
+def test_reset_caches_clears_row_format_link_pr(mocker):
+    ActionInputs.reset_caches()
+    mock_get_action_input = mocker.patch(
+        "release_notes_generator.action_inputs.get_action_input", side_effect=["true", "false"]
+    )
+    assert ActionInputs.get_row_format_link_pr() is True
+    assert ActionInputs.get_row_format_link_pr() is True
+    mock_get_action_input.assert_called_once()
+
+    ActionInputs.reset_caches()
+    assert ActionInputs.get_row_format_link_pr() is False
+    assert mock_get_action_input.call_count == 2
+    ActionInputs.reset_caches()
 
 
 def test_get_github_owner_no_slash_in_repository_id(monkeypatch, mocker):

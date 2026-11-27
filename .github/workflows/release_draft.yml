@@ -58,6 +58,26 @@ jobs:
           version-tag: ${{ github.event.inputs.from-tag-name }}
           should-exist: true
 
+      - name: Create and Push Tag
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          TAG_NAME: ${{ github.event.inputs.tag-name }}
+        with:
+          script: |
+            const tag = process.env.TAG_NAME
+            const ref = `refs/tags/${tag}`;
+            const sha = context.sha; // The SHA of the commit to tag
+
+            await github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: ref,
+              sha: sha
+            });
+
+            console.log(`Tag created: ${tag}`);
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Generate Release Notes
         id: generate_release_notes
         uses: AbsaOSS/generate-release-notes@B90223510d1704301a36a36f0d86a72a0e72f0cf # v1.0.0
@@ -87,26 +107,6 @@ jobs:
           row-format-pr: '_{title}_ {developers} in {number}'
           row-format-link-pr: true
           hierarchy: true
-
-      - name: Create and Push Tag
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-        env:
-          TAG_NAME: ${{ github.event.inputs.tag-name }}
-        with:
-          script: |
-            const tag = process.env.TAG_NAME
-            const ref = `refs/tags/${tag}`;
-            const sha = context.sha; // The SHA of the commit to tag
-
-            await github.rest.git.createRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: ref,
-              sha: sha
-            });
-
-            console.log(`Tag created: ${tag}`);
-          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create Draft Release
         uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
