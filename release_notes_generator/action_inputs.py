@@ -22,6 +22,7 @@ import logging
 import os
 import re
 import sys
+from collections.abc import Callable
 from typing import Any
 
 import yaml
@@ -575,6 +576,25 @@ class ActionInputs:
         return ActionInputs._row_format_link_pr
 
     @staticmethod
+    def _read_version_tag(getter: Callable[[], str], input_name: str, errors: list[str]) -> str | None:
+        """
+        Read a version tag input, recording a malformed value as an input error.
+
+        Parameters:
+            getter: The ActionInputs getter that reads and normalizes the tag.
+            input_name: The action input name used to prefix the error.
+            errors: The error buffer that receives the error.
+
+        Returns:
+            The normalized tag, or None when the value is malformed.
+        """
+        try:
+            return getter()
+        except ValueError as error:
+            errors.append(f"{input_name}: {error}")
+            return None
+
+    @staticmethod
     def validate_inputs() -> None:
         """
         Validates the inputs provided for the release notes generator.
@@ -599,19 +619,20 @@ class ActionInputs:
         ):
             errors.append("Owner and Repo must be a non-empty string.")
 
-        tag_name = ActionInputs.get_tag_name()
-        if not isinstance(tag_name, str) or not tag_name.strip():
+        tag_name = ActionInputs._read_version_tag(ActionInputs.get_tag_name, TAG_NAME, errors)
+        if tag_name is not None and (not isinstance(tag_name, str) or not tag_name.strip()):
             errors.append("Tag name must be a non-empty string.")
 
-        from_tag_name = ActionInputs.get_from_tag_name()
+        from_tag_name = ActionInputs._read_version_tag(ActionInputs.get_from_tag_name, FROM_TAG_NAME, errors)
         raw_from_tag_name = get_action_input(FROM_TAG_NAME, default="")
-        if not isinstance(from_tag_name, str):
-            errors.append("From tag name must be a string.")
-        elif raw_from_tag_name != "" and from_tag_name == "":
-            errors.append(
-                "'from-tag-name' must not be empty when running in compare mode. "
-                "Both 'tag-name' and 'from-tag-name' must refer to existing tags in the repository."
-            )
+        if from_tag_name is not None:
+            if not isinstance(from_tag_name, str):
+                errors.append("From tag name must be a string.")
+            elif raw_from_tag_name != "" and from_tag_name == "":
+                errors.append(
+                    "'from-tag-name' must not be empty when running in compare mode. "
+                    "Both 'tag-name' and 'from-tag-name' must refer to existing tags in the repository."
+                )
 
         chapters = ActionInputs.get_chapters()
         if len(chapters) == 0:

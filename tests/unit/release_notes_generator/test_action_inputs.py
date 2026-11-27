@@ -151,9 +151,17 @@ def test_get_tag_name_invalid_format(mocker):
     mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="v1.2.beta")
     with pytest.raises(ValueError) as excinfo:
         ActionInputs.get_tag_name()
-    assert "Invalid version tag format: 'v1.2.beta'. Expected vMAJOR.MINOR[.PATCH], e.g. 'v0.2' or 'v0.2.0'." in str(
-        excinfo.value
+    assert (
+        "Invalid version tag format: 'v1.2.beta'. Expected vMAJOR.MINOR[.PATCH] with an optional pre-release suffix, "
+        "e.g. 'v0.2', 'v0.2.0', 'v0.2.0-RC1' or 'v0.2.0rc1'." in str(excinfo.value)
     )
+
+
+@pytest.mark.parametrize("raw, expected", [("v0.9.0rc1", "v0.9.0rc1"), ("v0.9.0-RC1", "v0.9.0-RC1")])
+def test_get_tag_name_prerelease(mocker, raw, expected):
+    """A pre-release tag-name is returned with its suffix as given."""
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value=raw)
+    assert ActionInputs.get_tag_name() == expected
 
 
 def test_get_tag_from_name_version_full(mocker):
@@ -207,9 +215,63 @@ def test_get_from_tag_name_invalid_format(mocker):
     mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value="v1.2.beta")
     with pytest.raises(ValueError) as excinfo:
         ActionInputs.get_from_tag_name()
-    assert "Invalid version tag format: 'v1.2.beta'. Expected vMAJOR.MINOR[.PATCH], e.g. 'v0.2' or 'v0.2.0'." in str(
-        excinfo.value
+    assert (
+        "Invalid version tag format: 'v1.2.beta'. Expected vMAJOR.MINOR[.PATCH] with an optional pre-release suffix, "
+        "e.g. 'v0.2', 'v0.2.0', 'v0.2.0-RC1' or 'v0.2.0rc1'." in str(excinfo.value)
     )
+
+
+@pytest.mark.parametrize("raw, expected", [("v0.9.0rc1", "v0.9.0rc1"), ("v0.9.0-RC1", "v0.9.0-RC1")])
+def test_get_from_tag_name_prerelease(mocker, raw, expected):
+    """A pre-release from-tag-name is returned with its suffix as given."""
+    mocker.patch("release_notes_generator.action_inputs.get_action_input", return_value=raw)
+    assert ActionInputs.get_from_tag_name() == expected
+
+
+# --- validate_inputs: version tags ---
+
+
+def test_validate_inputs_prerelease_tags_pass(mocker):
+    """tag-name 'v0.9.0-RC1' and from-tag-name 'v0.9.0rc1' pass validation without exit."""
+    case = success_case.copy()
+    del case["get_tag_name"]
+    del case["get_from_tag_name"]
+    patchers = apply_mocks(case, mocker)
+    try:
+        mocker.patch.dict("os.environ", {"INPUT_TAG_NAME": "v0.9.0-RC1", "INPUT_FROM_TAG_NAME": "v0.9.0rc1"})
+        mock_error = mocker.patch("release_notes_generator.action_inputs.logger.error")
+        mock_exit = mocker.patch("sys.exit")
+        ActionInputs.validate_inputs()
+        mock_error.assert_not_called()
+        mock_exit.assert_not_called()
+    finally:
+        stop_mocks(patchers)
+
+
+@pytest.mark.parametrize(
+    "env_name, input_name",
+    [("INPUT_TAG_NAME", "tag-name"), ("INPUT_FROM_TAG_NAME", "from-tag-name")],
+)
+def test_validate_inputs_malformed_tag_reports_input_error(mocker, env_name, input_name):
+    """A malformed tag fails validation with one error naming the input and accepted forms, then exit(1)."""
+    case = success_case.copy()
+    del case["get_tag_name"]
+    del case["get_from_tag_name"]
+    patchers = apply_mocks(case, mocker)
+    try:
+        env = {"INPUT_TAG_NAME": "v1.0.0", "INPUT_FROM_TAG_NAME": "v0.9.0"}
+        env[env_name] = "master"
+        mocker.patch.dict("os.environ", env)
+        mock_error = mocker.patch("release_notes_generator.action_inputs.logger.error")
+        mock_exit = mocker.patch("sys.exit")
+        ActionInputs.validate_inputs()
+        mock_error.assert_called_once_with(
+            "{}: Invalid version tag format: 'master'. Expected vMAJOR.MINOR[.PATCH] with an optional pre-release "
+            "suffix, e.g. 'v0.2', 'v0.2.0', 'v0.2.0-RC1' or 'v0.2.0rc1'.".format(input_name)
+        )
+        mock_exit.assert_called_once_with(1)
+    finally:
+        stop_mocks(patchers)
 
 
 def test_validate_inputs_compare_mode_whitespace_from_tag_name_fails(mocker):

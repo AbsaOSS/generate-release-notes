@@ -31,6 +31,7 @@ from release_notes_generator.chapters.custom_chapters import CustomChapters
 from release_notes_generator.generator import ReleaseNotesGenerator
 from release_notes_generator.utils.gh_action import set_action_output
 from release_notes_generator.utils.logging_config import setup_logging
+from release_notes_generator.utils.utils import is_prerelease_tag
 
 warnings.filterwarnings("ignore", category=InsecureRequestWarning)
 
@@ -63,6 +64,7 @@ def run() -> None:
         "release-notes",
         rls_notes if rls_notes is not None else "Failed to generate release notes. See logs for details.",
     )
+    set_action_output("prerelease", "true" if is_prerelease_tag(ActionInputs.get_tag_name()) else "false")
     logger.info("GitHub Action 'Release Notes Generator' completed successfully")
 
 

@@ -18,7 +18,10 @@ name: 'Release notes scraper'
 description: 'Automatically generates release notes for a given release tag, categorized into chapters based on labels.'
 inputs:
   tag-name:
-    description: 'The tag name of the release to generate notes for.'
+    description: |
+      The tag name of the release to generate notes for.
+      Format: vMAJOR.MINOR[.PATCH] with an optional pre-release suffix, kept as given:
+      SemVer (e.g. 'v1.2.3-RC1') or PEP 440 (e.g. 'v1.2.3rc1').
     required: true
   chapters:
     description: |
@@ -45,6 +48,7 @@ inputs:
     description: |
       The tag name of the previous release to use as a start reference point for the current release notes.
       When provided, activates compare mode. Both this tag and 'tag-name' must exist as git tags.
+      Takes the same format as 'tag-name', so a pre-release such as 'v1.2.3rc1' can be the start.
     required: false
     default: ''
   hierarchy:
@@ -162,6 +166,9 @@ outputs:
   release-notes:
     description: 'Generated release notes.'
     value: ${{ steps.release-notes-generator.outputs.release-notes }}
+  prerelease:
+    description: "'true' when 'tag-name' has a pre-release suffix (e.g. 'v1.2.3-RC1', 'v1.2.3rc1'), 'false' otherwise."
+    value: ${{ steps.release-notes-generator.outputs.prerelease }}
 
 branding:
   icon: 'book'

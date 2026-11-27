@@ -47,6 +47,9 @@ def set_action_output(name: str, value: str, default_output_path: str = "default
     with open(output_file, "a", encoding="utf-8") as f:
         f.write(f"{name}<<EOF\n")
         f.write(f"{value}")
+        # The closing delimiter must start its own line, or the runner can't find it.
+        if not value.endswith("\n"):
+            f.write("\n")
         f.write("EOF\n")
 
 

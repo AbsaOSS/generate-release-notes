@@ -66,6 +66,19 @@ def test_set_output_custom_path(mocker):
     handle.write.assert_any_call("EOF\n")
 
 
+def test_set_output_closing_delimiter_on_own_line(mocker, tmp_path):
+    """A value without a trailing newline gets one before the delimiter; a value with one is written unchanged."""
+    output_file = tmp_path / "github_output.txt"
+    mocker.patch.dict("os.environ", {"GITHUB_OUTPUT": str(output_file)})
+
+    set_action_output("prerelease", "true")
+    set_action_output("release-notes", "notes\n")
+
+    assert output_file.read_text(encoding="utf-8") == (
+        "prerelease<<EOF\ntrue\nEOF\nrelease-notes<<EOF\nnotes\nEOF\n"
+    )
+
+
 def test_set_failed(mocker):
     mock_print = mocker.patch("builtins.print", return_value=None)
     mock_exit = mocker.patch("sys.exit", return_value=None)

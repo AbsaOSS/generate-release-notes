@@ -96,14 +96,20 @@ def get_change_url(
     return changelog_url
 
 
+_SEMVER_PRERELEASE_IDENTIFIER = r"(?:0|[1-9][0-9]*|[0-9A-Za-z-]*[A-Za-z-][0-9A-Za-z-]*)"
+
 _SEMVER_SHORT_RE = re.compile(
-    r"""
+    rf"""
     ^\s*                # optional leading whitespace
     v?                  # optional leading 'v'
-    (?P<major>\d+)      # major
+    (?P<major>[0-9]+)   # major (ASCII digits only, so the tag isn't rewritten to a different one)
     \.                  # dot
-    (?P<minor>\d+)      # minor
-    (?:\.(?P<patch>\d+))?  # optional .patch
+    (?P<minor>[0-9]+)   # minor
+    (?:\.(?P<patch>[0-9]+))?  # optional .patch
+    (?P<prerelease>     # optional pre-release suffix, kept as given
+        -{_SEMVER_PRERELEASE_IDENTIFIER}(?:\.{_SEMVER_PRERELEASE_IDENTIFIER})*  # SemVer prerelease identifiers
+        |(?:a|b|rc)[0-9]+                   # PEP 440, e.g. 'a1', 'b2', 'rc1'
+    )?
     \s*$                # optional trailing whitespace
 """,
     re.VERBOSE,
@@ -112,13 +118,15 @@ _SEMVER_SHORT_RE = re.compile(
 
 def normalize_version_tag(tag: str) -> str:
     """
-    Normalize a tag to full 'vMAJOR.MINOR.PATCH' form.
+    Normalize a tag to full 'vMAJOR.MINOR.PATCH' form, keeping a pre-release suffix as given.
 
     Accepts:
-      - 'v1.2.3'  -> 'v1.2.3'
-      - 'v1.2'    -> 'v1.2.0'
-      - '1.2.3'   -> 'v1.2.3'
-      - '1.2'     -> 'v1.2.0'
+      - 'v1.2.3'      -> 'v1.2.3'
+      - 'v1.2'        -> 'v1.2.0'
+      - '1.2.3'       -> 'v1.2.3'
+      - '1.2'         -> 'v1.2.0'
+      - 'v1.2.3-RC1'  -> 'v1.2.3-RC1' (SemVer pre-release)
+      - 'v1.2.3rc1'   -> 'v1.2.3rc1'  (PEP 440 pre-release)
 
     Returns empty string if input is empty/whitespace.
     Raises ValueError on malformed versions.
@@ -129,11 +137,28 @@ def normalize_version_tag(tag: str) -> str:
     m = _SEMVER_SHORT_RE.match(tag)
     if not m:
         raise ValueError(
-            f"Invalid version tag format: {tag!r}. Expected vMAJOR.MINOR[.PATCH], e.g. 'v0.2' or 'v0.2.0'."
+            f"Invalid version tag format: {tag!r}. Expected vMAJOR.MINOR[.PATCH] with an optional pre-release suffix, "
+            "e.g. 'v0.2', 'v0.2.0', 'v0.2.0-RC1' or 'v0.2.0rc1'."
         )
 
     major = int(m.group("major"))
     minor = int(m.group("minor"))
     patch = int(m.group("patch")) if m.group("patch") is not None else 0
+    prerelease = m.group("prerelease") or ""
 
-    return f"v{major}.{minor}.{patch}"
+    return f"v{major}.{minor}.{patch}{prerelease}"
+
+
+def is_prerelease_tag(tag: str) -> bool:
+    """
+    Report whether a version tag carries a pre-release suffix.
+
+    Parameters:
+        tag: A raw or normalized version tag.
+
+    Returns:
+        True when the tag has the accepted format and a pre-release suffix; False otherwise,
+        including for an empty or malformed tag.
+    """
+    m = _SEMVER_SHORT_RE.match(tag or "")
+    return m is not None and m.group("prerelease") is not None
